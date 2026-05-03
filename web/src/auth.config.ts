@@ -10,11 +10,11 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname === "/login";
       const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
+      const isStaticAsset = /\.[^/]+$/.test(nextUrl.pathname);
       const isPublicRoute =
-        nextUrl.pathname === "/" ||
         nextUrl.pathname.startsWith("/_next") ||
         nextUrl.pathname.startsWith("/favicon") ||
-        nextUrl.pathname.startsWith("/public");
+        isStaticAsset;
 
       if (isApiAuthRoute) return true;
 

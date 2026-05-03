@@ -1,17 +1,14 @@
 import {
   BarChart3,
   BookOpen,
-  Home as HomeIcon,
   PenLine,
-  PlusCircle,
   RotateCcw,
-  UserCircle,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@/auth";
 import { getDashboardData } from "@/lib/dashboard";
 import LogoutButton from "@/components/LogoutButton";
+import BottomNav from "@/components/BottomNav";
+import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,16 +20,12 @@ const quickActions = [
   { label: "Laporan", href: "/reports", icon: BarChart3 },
 ];
 
-const navigation = [
-  { label: "Home", href: "/", icon: HomeIcon, active: true },
-  { label: "Santri", href: "/students", icon: Users, active: false },
-  { label: "Catat", href: "/quick-log", icon: PlusCircle, active: false },
-  { label: "Profil", href: "/profile", icon: UserCircle, active: false },
-];
+export const metadata = {
+  title: "Dashboard - TahfidzFlow",
+};
 
 export default async function DashboardPreview() {
-  const session = await auth();
-  const teacherId = session?.user?.teacherId ?? null;
+  const { session, teacherId } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId);
   const userName = session?.user?.name?.split(" ")[0] ?? "Ustadz";
 
@@ -136,12 +129,12 @@ export default async function DashboardPreview() {
                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
                       {record.status}
                     </span>
-                    <button
+                    <Link
                       className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
-                      type="button"
+                      href={`/students/${record.studentId}`}
                     >
                       Detail
-                    </button>
+                    </Link>
                   </div>
                 </article>
               ))
@@ -154,22 +147,7 @@ export default async function DashboardPreview() {
           </div>
         </section>
 
-        <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur">
-          {navigation.map((item) => (
-            <Link
-              className={
-                item.active
-                  ? "flex flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-2 py-3 text-white"
-                  : "flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition hover:bg-slate-100 hover:text-slate-900"
-              }
-              href={item.href}
-              key={item.label}
-            >
-              <item.icon aria-hidden="true" size={18} strokeWidth={2.2} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <BottomNav currentPath="/" />
       </section>
     </main>
   );

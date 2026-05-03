@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { UserRole } from "@/generated/prisma-next/enums";
+import { authConfig } from "@/auth.config";
 
 declare module "next-auth" {
   interface Session {
@@ -32,25 +33,31 @@ declare module "@auth/core/jwt" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
   providers: [
     Credentials({
       name: "credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        identifier: { label: "Login", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        const rawIdentifier =
+          typeof credentials?.identifier === "string"
+            ? credentials.identifier
+            : null;
+
+        if (!rawIdentifier || !credentials?.password) {
           return null;
         }
 
-        const email = credentials.email as string;
+        const identifier = rawIdentifier.trim().toLowerCase();
+        const email =
+          identifier === "admin"
+            ? "admin@tahfidzflow.local"
+            : identifier;
         const password = credentials.password as string;
 
         const user = await prisma.user.findUnique({
@@ -79,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

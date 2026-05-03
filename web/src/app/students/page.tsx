@@ -2,26 +2,21 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
-  Home as HomeIcon,
   PlusCircle,
   RotateCcw,
   Search,
   Target,
-  UserCircle,
-  Users,
 } from "lucide-react";
 import { getStudentsData } from "@/lib/students";
-import { auth } from "@/auth";
+import BottomNav from "@/components/BottomNav";
+import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const navigation = [
-  { label: "Home", href: "/", icon: HomeIcon, active: false },
-  { label: "Santri", href: "/students", icon: Users, active: true },
-  { label: "Catat", href: "/quick-log", icon: PlusCircle, active: false },
-  { label: "Profil", href: "#", icon: UserCircle, active: false },
-];
+export const metadata = {
+  title: "Santri - TahfidzFlow",
+};
 
 type StudentsPageProps = {
   searchParams?: Promise<{
@@ -31,8 +26,7 @@ type StudentsPageProps = {
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   const query = (await searchParams)?.q?.trim() ?? "";
-  const session = await auth();
-  const teacherId = session?.user?.role !== "ADMIN" ? session?.user?.teacherId : null;
+  const { teacherId } = await requireSessionScope();
   const students = await getStudentsData(query, teacherId);
 
   return (
@@ -55,7 +49,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             </p>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
-            <Users aria-hidden="true" size={22} strokeWidth={2.3} />
+            <PlusCircle aria-hidden="true" size={22} strokeWidth={2.3} />
           </div>
         </header>
 
@@ -207,22 +201,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
           </div>
         </section>
 
-        <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur">
-          {navigation.map((item) => (
-            <Link
-              className={
-                item.active
-                  ? "flex flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-2 py-3 text-white"
-                  : "flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition hover:bg-slate-100 hover:text-slate-900"
-              }
-              href={item.href}
-              key={item.label}
-            >
-              <item.icon aria-hidden="true" size={18} strokeWidth={2.2} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <BottomNav currentPath="/students" />
       </section>
     </main>
   );

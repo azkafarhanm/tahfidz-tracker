@@ -5,39 +5,15 @@ import { redirect } from "next/navigation";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import {
+  readString,
+  readOptionalString,
+  readInt,
+  createFailFn,
+  parseRecordDateTime,
+} from "@/lib/form-helpers";
 
 const validStatuses = new Set<string>(Object.values(RecordStatus));
-
-function readString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function readOptionalString(formData: FormData, key: string) {
-  const value = readString(formData, key);
-  return value.length > 0 ? value : null;
-}
-
-function readInt(formData: FormData, key: string) {
-  const value = readString(formData, key);
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function fail(studentId: string, message: string): never {
-  redirect(
-    `/students/${studentId}/murojaah/new?error=${encodeURIComponent(message)}`,
-  );
-}
-
-function parseRecordDateTime(dateValue: string, timeValue: string) {
-  if (!dateValue || !timeValue) {
-    return new Date();
-  }
-
-  const parsed = new Date(`${dateValue}T${timeValue}:00`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
 
 export async function createMurojaahRecord(
   studentId: string,
@@ -46,23 +22,19 @@ export async function createMurojaahRecord(
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const fail = createFailFn(`/students/${studentId}/murojaah/new`);
+
   const student = await prisma.student.findFirst({
-    where: {
-      id: studentId,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      teacherId: true,
-    },
+    where: { id: studentId, isActive: true },
+    select: { id: true, teacherId: true },
   });
 
   if (!student) {
-    fail(studentId, "Santri tidak ditemukan atau sudah tidak aktif.");
+    fail("Santri tidak ditemukan atau sudah tidak aktif.");
   }
 
-  if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
-    fail(student.id, "Anda tidak berhak mencatat untuk santri ini.");
+  if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
+    fail("Anda tidak berhak mencatat untuk santri ini.");
   }
 
   const surah = readString(formData, "surah");
@@ -77,41 +49,41 @@ export async function createMurojaahRecord(
   const notes = readOptionalString(formData, "notes");
 
   if (!surah || surah.length > 80) {
-    fail(student.id, "Nama surah wajib diisi dan maksimal 80 karakter.");
+    fail("Nama surah wajib diisi dan maksimal 80 karakter.");
   }
 
-  if (!fromAyah || !toAyah || fromAyah < 1 || toAyah < 1) {
-    fail(student.id, "Nomor ayat harus berupa angka positif.");
+  if (fromAyah === null || toAyah === null || fromAyah < 1 || toAyah < 1) {
+    fail("Nomor ayat harus berupa angka positif.");
   }
 
-  if (toAyah < fromAyah) {
-    fail(student.id, "Ayat akhir tidak boleh lebih kecil dari ayat awal.");
+  if (toAyah! < fromAyah!) {
+    fail("Ayat akhir tidak boleh lebih kecil dari ayat awal.");
   }
 
-  if (toAyah > 286) {
-    fail(student.id, "Nomor ayat terlalu besar. Periksa kembali rentangnya.");
+  if (toAyah! > 286) {
+    fail("Nomor ayat terlalu besar. Periksa kembali rentangnya.");
   }
 
   if (!date) {
-    fail(student.id, "Tanggal dan waktu catatan tidak valid.");
+    fail("Tanggal dan waktu catatan tidak valid.");
   }
 
   if (!validStatuses.has(statusValue)) {
-    fail(student.id, "Status murojaah tidak valid.");
+    fail("Status murojaah tidak valid.");
   }
 
   if (score !== null && (score < 0 || score > 100)) {
-    fail(student.id, "Nilai harus berada di antara 0 sampai 100.");
+    fail("Nilai harus berada di antara 0 sampai 100.");
   }
 
   await prisma.revisionRecord.create({
     data: {
-      studentId: student.id,
-      teacherId: student.teacherId,
+      studentId: student!.id,
+      teacherId: student!.teacherId,
       surah,
-      fromAyah,
-      toAyah,
-      date,
+      fromAyah: fromAyah!,
+      toAyah: toAyah!,
+      date: date!,
       status: statusValue as RecordStatus,
       score,
       notes,
@@ -120,6 +92,6 @@ export async function createMurojaahRecord(
 
   revalidatePath("/");
   revalidatePath("/students");
-  revalidatePath(`/students/${student.id}`);
-  redirect(`/students/${student.id}`);
+  revalidatePath(`/students/${student!.id}`);
+  redirect(`/students/${student!.id}`);
 }

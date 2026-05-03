@@ -1,60 +1,17 @@
 import {
   Gender,
-  HalaqahLevel,
   RecordStatus,
   TargetStatus,
   TargetType,
 } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
-
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
-const statusLabels: Record<RecordStatus, string> = {
-  [RecordStatus.LANCAR]: "Lancar",
-  [RecordStatus.CUKUP]: "Cukup",
-  [RecordStatus.PERLU_MUROJAAH]: "Perlu murojaah",
-};
-
-const genderLabels: Record<Gender, string> = {
-  [Gender.MALE]: "Laki-laki",
-  [Gender.FEMALE]: "Perempuan",
-};
-
-const targetTypeLabels: Record<TargetType, string> = {
-  [TargetType.HAFALAN]: "Hafalan",
-  [TargetType.MUROJAAH]: "Murojaah",
-};
-
-const halaqahLevelLabels: Record<HalaqahLevel, string> = {
-  [HalaqahLevel.LOW]: "Low",
-  [HalaqahLevel.MEDIUM]: "Medium",
-  [HalaqahLevel.HIGH]: "High",
-};
-
-function formatRange(surah: string, fromAyah: number, toAyah: number) {
-  return `${surah} ${fromAyah}-${toAyah}`;
-}
-
-function formatClassSummary(student: {
-  academicClass: { name: string } | null;
-  classGroup: { name: string; level: HalaqahLevel };
-}) {
-  const academicClassName = student.academicClass?.name ?? "Kelas belum diisi";
-  const halaqahLabel = `${student.classGroup.name} ${
-    halaqahLevelLabels[student.classGroup.level]
-  }`;
-
-  return {
-    academicClassName,
-    halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-    classSummary: `${academicClassName} - ${halaqahLabel}`,
-  };
-}
+import {
+  dateFormatter,
+  statusLabels,
+  halaqahLevelLabels,
+  formatRange,
+  formatClassSummary,
+} from "@/lib/format";
 
 function formatLatestRecord(
   record:
@@ -125,6 +82,16 @@ function formatTarget(target: {
   };
 }
 
+const targetTypeLabels: Record<TargetType, string> = {
+  [TargetType.HAFALAN]: "Hafalan",
+  [TargetType.MUROJAAH]: "Murojaah",
+};
+
+const genderLabels: Record<Gender, string> = {
+  [Gender.MALE]: "Laki-laki",
+  [Gender.FEMALE]: "Perempuan",
+};
+
 export async function getStudentsData(query = "", teacherId?: string | null) {
   const students = await prisma.student.findMany({
     where: {
@@ -191,12 +158,12 @@ export async function getStudentsData(query = "", teacherId?: string | null) {
     const needsReview = Boolean(
       latestHafalan?.needsReview || latestMurojaah?.needsReview,
     );
-    const classSummary = formatClassSummary(student);
+    const classInfo = formatClassSummary(student);
 
     return {
       id: student.id,
       fullName: student.fullName,
-      ...classSummary,
+      ...classInfo,
       notes: student.notes,
       activeTargetCount: student.targets.length,
       latestHafalan,
@@ -281,12 +248,12 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
   const needsReviewCount = recentActivity.filter(
     (record) => record.needsReview,
   ).length;
-  const classSummary = formatClassSummary(student);
+  const classInfo = formatClassSummary(student);
 
   return {
     id: student.id,
     fullName: student.fullName,
-    ...classSummary,
+    ...classInfo,
     gender: student.gender ? genderLabels[student.gender] : "Belum diisi",
     joinDate: dateFormatter.format(student.joinDate),
     notes: student.notes,

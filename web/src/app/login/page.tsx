@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -18,13 +18,13 @@ export default function LoginPage() {
 
     try {
       const result = await signIn("credentials", {
-        email,
+        identifier,
         password,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Email atau password salah");
+        setError("Login atau password salah");
         setIsLoading(false);
         return;
       }
@@ -58,23 +58,23 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email Field */}
+            {/* Login Field */}
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="block text-sm font-medium text-gray-700 mb-1.5"
               >
-                Email
+                Login
               </label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="identifier"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors outline-none text-gray-900"
-                placeholder="ustadz@email.com"
-                autoComplete="email"
+                placeholder="Username"
+                autoComplete="username"
               />
             </div>
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors outline-none text-gray-900"
-                  placeholder="••••••••"
+                  placeholder="Password"
                   autoComplete="current-password"
                 />
                 <button

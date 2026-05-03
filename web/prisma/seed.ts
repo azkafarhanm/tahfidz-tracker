@@ -35,7 +35,7 @@ async function main() {
     { grade: 9, section: "C" },
   ];
 
-  const passwordHash = await bcrypt.hash("tahfidz2025", 10);
+  const passwordHash = await bcrypt.hash("2026", 10);
 
   // Create admin user
   await prisma.user.upsert({

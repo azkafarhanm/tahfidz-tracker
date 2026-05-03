@@ -6,25 +6,15 @@ import {
   CalendarDays,
   CheckCircle2,
   ClipboardList,
-  Home as HomeIcon,
-  PlusCircle,
   RotateCcw,
   Target,
-  UserCircle,
-  Users,
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
-import { auth } from "@/auth";
+import BottomNav from "@/components/BottomNav";
+import { getSessionScope, requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-const navigation = [
-  { label: "Home", href: "/", icon: HomeIcon, active: false },
-  { label: "Santri", href: "/students", icon: Users, active: true },
-  { label: "Catat", href: "/quick-log", icon: PlusCircle, active: false },
-  { label: "Profil", href: "#", icon: UserCircle, active: false },
-];
 
 type StudentDetail = NonNullable<
   Awaited<ReturnType<typeof getStudentDetailData>>
@@ -149,12 +139,23 @@ function ActivityRow({ record }: { record: RecordItem }) {
   );
 }
 
+export async function generateMetadata({ params }: StudentDetailPageProps) {
+  const { id } = await params;
+  const scope = await getSessionScope();
+  if (!scope) {
+    return { title: "Santri - TahfidzFlow" };
+  }
+
+  const teacherId = scope.teacherId;
+  const student = await getStudentDetailData(id, teacherId);
+  return { title: student ? `${student.fullName} - TahfidzFlow` : "Santri - TahfidzFlow" };
+}
+
 export default async function StudentDetailPage({
   params,
 }: StudentDetailPageProps) {
   const { id } = await params;
-  const session = await auth();
-  const teacherId = session?.user?.role !== "ADMIN" ? session?.user?.teacherId : null;
+  const { teacherId } = await requireSessionScope();
   const student = await getStudentDetailData(id, teacherId);
 
   if (!student) {
@@ -312,22 +313,7 @@ export default async function StudentDetailPage({
           </div>
         </section>
 
-        <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur">
-          {navigation.map((item) => (
-            <Link
-              className={
-                item.active
-                  ? "flex flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-2 py-3 text-white"
-                  : "flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition hover:bg-slate-100 hover:text-slate-900"
-              }
-              href={item.href}
-              key={item.label}
-            >
-              <item.icon aria-hidden="true" size={18} strokeWidth={2.2} />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <BottomNav currentPath="/students" />
       </section>
     </main>
   );

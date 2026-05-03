@@ -13,7 +13,12 @@ import {
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { getStudentFormContext } from "@/lib/students";
 import { createHafalanRecord } from "../actions";
-import { auth } from "@/auth";
+import {
+  todayInputValue,
+  nowTimeValue,
+  recordStatusOptions,
+} from "@/lib/format";
+import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,28 +32,16 @@ type NewHafalanPageProps = {
   }>;
 };
 
-const statusOptions = [
-  { value: RecordStatus.LANCAR, label: "Lancar" },
-  { value: RecordStatus.CUKUP, label: "Cukup" },
-  { value: RecordStatus.PERLU_MUROJAAH, label: "Perlu murojaah" },
-];
-
-function todayInputValue() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nowTimeValue() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
+export const metadata = {
+  title: "Tambah Hafalan - TahfidzFlow",
+};
 
 export default async function NewHafalanPage({
   params,
   searchParams,
 }: NewHafalanPageProps) {
   const { id } = await params;
-  const session = await auth();
-  const teacherId = session?.user?.role !== "ADMIN" ? session?.user?.teacherId : null;
+  const { teacherId } = await requireSessionScope();
   const student = await getStudentFormContext(id, teacherId);
   const error = (await searchParams)?.error;
 
@@ -126,6 +119,7 @@ export default async function NewHafalanPage({
                   />
                   <input
                     className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                    max={286}
                     min={1}
                     name="fromAyah"
                     required
@@ -147,6 +141,7 @@ export default async function NewHafalanPage({
                   />
                   <input
                     className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                    max={286}
                     min={1}
                     name="toAyah"
                     required
@@ -179,7 +174,7 @@ export default async function NewHafalanPage({
                   name="status"
                   required
                 >
-                  {statusOptions.map((option) => (
+                  {recordStatusOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

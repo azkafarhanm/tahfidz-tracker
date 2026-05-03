@@ -1,5 +1,9 @@
-import { HalaqahLevel, RecordStatus } from "@/generated/prisma-next/enums";
+import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import {
+  formatClassSummary as formatStudentClassSummary,
+  statusLabels,
+} from "@/lib/format";
 
 export type QuickLogRecordType = "HAFALAN" | "MUROJAAH";
 
@@ -35,29 +39,7 @@ export const quickLogTypeLabels: Record<QuickLogRecordType, string> = {
   MUROJAAH: "Murojaah",
 };
 
-export const quickLogStatusLabels: Record<RecordStatus, string> = {
-  [RecordStatus.LANCAR]: "Lancar",
-  [RecordStatus.CUKUP]: "Cukup",
-  [RecordStatus.PERLU_MUROJAAH]: "Perlu murojaah",
-};
-
-const halaqahLevelLabels: Record<HalaqahLevel, string> = {
-  [HalaqahLevel.LOW]: "Low",
-  [HalaqahLevel.MEDIUM]: "Medium",
-  [HalaqahLevel.HIGH]: "High",
-};
-
-function formatClassSummary(student: {
-  academicClass: { name: string } | null;
-  classGroup: { name: string; level: HalaqahLevel };
-}) {
-  const academicClassName = student.academicClass?.name ?? "Kelas belum diisi";
-  const halaqahLabel = `${student.classGroup.name} ${
-    halaqahLevelLabels[student.classGroup.level]
-  }`;
-
-  return `${academicClassName} - ${halaqahLabel}`;
-}
+export const quickLogStatusLabels = statusLabels;
 
 function normalizeSpaces(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -300,7 +282,7 @@ export async function getQuickLogStudents(teacherId?: string | null) {
   return students.map((student) => ({
     id: student.id,
     fullName: student.fullName,
-    classSummary: formatClassSummary(student),
+    classSummary: formatStudentClassSummary(student).classSummary,
   }));
 }
 
@@ -377,13 +359,6 @@ export function parseQuickLogInput(
     };
   }
 
-  if ("error" in studentMatch) {
-    return {
-      ok: false,
-      errors: [studentMatch.error],
-    };
-  }
-
   const fromAyah = rangeResult.fromAyah;
   const toAyah = rangeResult.toAyah;
 
@@ -391,6 +366,13 @@ export function parseQuickLogInput(
     return {
       ok: false,
       errors: ["Rentang ayat tidak valid."],
+    };
+  }
+
+  if ("error" in studentMatch) {
+    return {
+      ok: false,
+      errors: [studentMatch.error],
     };
   }
 

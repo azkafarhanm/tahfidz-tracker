@@ -1,19 +1,12 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
   CalendarDays,
   CheckCircle2,
   Clock,
-  ClipboardList,
   Hash,
-  Home as HomeIcon,
   PenLine,
-  PlusCircle,
-  RotateCcw,
   Save,
-  UserCircle,
-  Users,
 } from "lucide-react";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import {
@@ -22,8 +15,10 @@ import {
   quickLogStatusLabels,
   quickLogTypeLabels,
 } from "@/lib/quick-log";
+import { todayInputValue, nowTimeValue } from "@/lib/format";
 import { createQuickLogRecord } from "./actions";
-import { auth } from "@/auth";
+import BottomNav from "@/components/BottomNav";
+import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,21 +30,9 @@ type QuickLogPageProps = {
   }>;
 };
 
-const navigation = [
-  { label: "Home", href: "/", icon: HomeIcon, active: false },
-  { label: "Santri", href: "/students", icon: Users, active: false },
-  { label: "Catat", href: "/quick-log", icon: PlusCircle, active: true },
-  { label: "Profil", href: "#", icon: UserCircle, active: false },
-];
-
-function todayInputValue() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function nowTimeValue() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
+export const metadata = {
+  title: "Catat Cepat - TahfidzFlow",
+};
 
 export default async function QuickLogPage({
   searchParams,
@@ -57,8 +40,7 @@ export default async function QuickLogPage({
   const params = await searchParams;
   const input = params?.text?.trim() ?? "";
   const error = params?.error;
-  const session = await auth();
-  const teacherId = session?.user?.role !== "ADMIN" ? session?.user?.teacherId : null;
+  const { teacherId } = await requireSessionScope();
   const students = await getQuickLogStudents(teacherId);
   const parseResult = input ? parseQuickLogInput(input, students) : null;
   const parsedRecord = parseResult?.ok ? parseResult.record : null;
@@ -127,8 +109,8 @@ export default async function QuickLogPage({
           <section className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <p className="font-semibold">Belum bisa diparse</p>
             <div className="mt-2 space-y-1">
-              {parseResult.errors.map((message) => (
-                <p key={message}>{message}</p>
+              {parseResult.errors.map((message, i) => (
+                <p key={i}>{message}</p>
               ))}
             </div>
           </section>
@@ -139,15 +121,7 @@ export default async function QuickLogPage({
             <input name="sourceText" type="hidden" value={input} />
 
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <Users
-                  aria-hidden="true"
-                  className="text-emerald-800"
-                  size={18}
-                  strokeWidth={2.2}
-                />
-                <h2 className="font-semibold">Santri</h2>
-              </div>
+              <h2 className="font-semibold">Santri</h2>
 
               <label className="mt-4 block">
                 <span className="text-sm font-medium text-slate-700">
@@ -169,15 +143,7 @@ export default async function QuickLogPage({
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <BookOpen
-                  aria-hidden="true"
-                  className="text-emerald-800"
-                  size={18}
-                  strokeWidth={2.2}
-                />
-                <h2 className="font-semibold">Materi</h2>
-              </div>
+              <h2 className="font-semibold">Materi</h2>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block">
@@ -229,6 +195,7 @@ export default async function QuickLogPage({
                     <input
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
                       defaultValue={parsedRecord.fromAyah}
+                      max={286}
                       min={1}
                       name="fromAyah"
                       required
@@ -251,6 +218,7 @@ export default async function QuickLogPage({
                     <input
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
                       defaultValue={parsedRecord.toAyah}
+                      max={286}
                       min={1}
                       name="toAyah"
                       required
@@ -262,15 +230,7 @@ export default async function QuickLogPage({
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <RotateCcw
-                  aria-hidden="true"
-                  className="text-emerald-800"
-                  size={18}
-                  strokeWidth={2.2}
-                />
-                <h2 className="font-semibold">Penilaian</h2>
-              </div>
+              <h2 className="font-semibold">Penilaian</h2>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block">
@@ -351,15 +311,7 @@ export default async function QuickLogPage({
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2">
-                <ClipboardList
-                  aria-hidden="true"
-                  className="text-emerald-800"
-                  size={18}
-                  strokeWidth={2.2}
-                />
-                <h2 className="font-semibold">Catatan</h2>
-              </div>
+              <h2 className="font-semibold">Catatan</h2>
 
               <textarea
                 className="mt-4 min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
@@ -388,22 +340,7 @@ export default async function QuickLogPage({
         ) : null}
 
         {!parsedRecord ? (
-          <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur">
-            {navigation.map((item) => (
-              <Link
-                className={
-                  item.active
-                    ? "flex flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-2 py-3 text-white"
-                    : "flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition hover:bg-slate-100 hover:text-slate-900"
-                }
-                href={item.href}
-                key={item.label}
-              >
-                <item.icon aria-hidden="true" size={18} strokeWidth={2.2} />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <BottomNav currentPath="/quick-log" />
         ) : null}
       </section>
     </main>

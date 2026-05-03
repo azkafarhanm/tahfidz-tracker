@@ -5,7 +5,5 @@ export function getDatabaseUrl() {
     throw new Error("DATABASE_URL is not configured.");
   }
 
-  const url = new URL(connectionString);
-
-  return url.toString();
+  return connectionString;
 }

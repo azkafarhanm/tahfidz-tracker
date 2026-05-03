@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, BarChart3 } from "lucide-react";
+import { requireSessionScope } from "@/lib/session";
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  await requireSessionScope();
+
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 py-5 sm:max-w-3xl sm:px-8">

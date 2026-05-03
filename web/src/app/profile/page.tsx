@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, UserCircle } from "lucide-react";
+import { requireSessionScope } from "@/lib/session";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  await requireSessionScope();
+
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 py-5 sm:max-w-3xl sm:px-8">
@@ -12,9 +15,6 @@ export default function ProfilePage() {
           <h1 className="mt-6 text-2xl font-semibold">Profil</h1>
           <p className="mt-2 text-slate-600">
             Fitur profil dan pengaturan sedang dalam pengembangan
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Tersedia setelah implementasi autentikasi
           </p>
         </div>
 

@@ -1,23 +1,16 @@
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
-
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
+import {
+  dateFormatter,
+  statusLabels,
+  formatRange,
+} from "@/lib/format";
 
 const timeFormatter = new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit",
   minute: "2-digit",
   hour12: false,
 });
-
-const statusLabels: Record<RecordStatus, string> = {
-  [RecordStatus.LANCAR]: "Lancar",
-  [RecordStatus.CUKUP]: "Cukup",
-  [RecordStatus.PERLU_MUROJAAH]: "Perlu murojaah",
-};
 
 function startOfToday() {
   const date = new Date();
@@ -31,10 +24,6 @@ function startOfWeek() {
   const diff = day === 0 ? 6 : day - 1;
   date.setDate(date.getDate() - diff);
   return date;
-}
-
-function formatRange(surah: string, fromAyah: number, toAyah: number) {
-  return `${surah} ${fromAyah}-${toAyah}`;
 }
 
 function countAyahs(fromAyah: number, toAyah: number) {
@@ -55,6 +44,7 @@ export async function getDashboardData(teacherId?: string | null) {
     weeklyRevision,
     activeTargets,
     completedTargets,
+    needsReviewCount,
   ] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: teacherFilter,
@@ -89,11 +79,21 @@ export async function getDashboardData(teacherId?: string | null) {
     prisma.target.count({
       where: { ...teacherFilter, status: TargetStatus.COMPLETED },
     }),
+    (async () => {
+      const mem = await prisma.memorizationRecord.count({
+        where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+      });
+      const rev = await prisma.revisionRecord.count({
+        where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+      });
+      return mem + rev;
+    })(),
   ]);
 
   const recentRecords = [
     ...memorizationRecords.map((record) => ({
       id: `hafalan-${record.id}`,
+      studentId: record.studentId,
       student: record.student.fullName,
       type: "Hafalan",
       range: formatRange(record.surah, record.fromAyah, record.toAyah),
@@ -105,6 +105,7 @@ export async function getDashboardData(teacherId?: string | null) {
     })),
     ...revisionRecords.map((record) => ({
       id: `murojaah-${record.id}`,
+      studentId: record.studentId,
       student: record.student.fullName,
       type: "Murojaah",
       range: formatRange(record.surah, record.fromAyah, record.toAyah),
@@ -136,7 +137,7 @@ export async function getDashboardData(teacherId?: string | null) {
   return {
     todayRecordCount: todayMemorizationCount + todayRevisionCount,
     targetProgress,
-    needsReviewCount: recentRecords.filter((record) => record.needsReview).length,
+    needsReviewCount,
     recentRecords,
   };
 }

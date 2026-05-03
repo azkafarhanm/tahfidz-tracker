@@ -9,45 +9,17 @@ import {
 } from "@/lib/quick-log";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import {
+  readString,
+  readOptionalString,
+  readInt,
+  createFailFn,
+  parseRecordDateTime,
+} from "@/lib/form-helpers";
 
 const validStatuses = new Set<string>(Object.values(RecordStatus));
 const validTypes = new Set<string>(Object.keys(quickLogTypeLabels));
-
-function readString(formData: FormData, key: string) {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function readOptionalString(formData: FormData, key: string) {
-  const value = readString(formData, key);
-  return value.length > 0 ? value : null;
-}
-
-function readInt(formData: FormData, key: string) {
-  const value = readString(formData, key);
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function fail(sourceText: string, message: string): never {
-  const params = new URLSearchParams();
-
-  if (sourceText) {
-    params.set("text", sourceText);
-  }
-
-  params.set("error", message);
-  redirect(`/quick-log?${params.toString()}`);
-}
-
-function parseRecordDateTime(dateValue: string, timeValue: string) {
-  if (!dateValue || !timeValue) {
-    return new Date();
-  }
-
-  const parsed = new Date(`${dateValue}T${timeValue}:00`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
+const fail = createFailFn("/quick-log");
 
 export async function createQuickLogRecord(formData: FormData) {
   const session = await auth();
@@ -68,63 +40,57 @@ export async function createQuickLogRecord(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
 
   const student = await prisma.student.findFirst({
-    where: {
-      id: studentId,
-      isActive: true,
-    },
-    select: {
-      id: true,
-      teacherId: true,
-    },
+    where: { id: studentId, isActive: true },
+    select: { id: true, teacherId: true },
   });
 
   if (!student) {
-    fail(sourceText, "Santri tidak ditemukan atau sudah tidak aktif.");
+    fail("Santri tidak ditemukan atau sudah tidak aktif.", sourceText ? { text: sourceText } : undefined);
   }
 
-  if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
-    fail(sourceText, "Anda tidak berhak mencatat untuk santri ini.");
+  if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
+    fail("Anda tidak berhak mencatat untuk santri ini.", sourceText ? { text: sourceText } : undefined);
   }
 
   if (!validTypes.has(typeValue)) {
-    fail(sourceText, "Jenis catatan tidak valid.");
+    fail("Jenis catatan tidak valid.", sourceText ? { text: sourceText } : undefined);
   }
 
   if (!surah || surah.length > 80) {
-    fail(sourceText, "Nama surah wajib diisi dan maksimal 80 karakter.");
+    fail("Nama surah wajib diisi dan maksimal 80 karakter.", sourceText ? { text: sourceText } : undefined);
   }
 
-  if (!fromAyah || !toAyah || fromAyah < 1 || toAyah < 1) {
-    fail(sourceText, "Nomor ayat harus berupa angka positif.");
+  if (fromAyah === null || toAyah === null || fromAyah < 1 || toAyah < 1) {
+    fail("Nomor ayat harus berupa angka positif.", sourceText ? { text: sourceText } : undefined);
   }
 
-  if (toAyah < fromAyah) {
-    fail(sourceText, "Ayat akhir tidak boleh lebih kecil dari ayat awal.");
+  if (toAyah! < fromAyah!) {
+    fail("Ayat akhir tidak boleh lebih kecil dari ayat awal.", sourceText ? { text: sourceText } : undefined);
   }
 
-  if (toAyah > 286) {
-    fail(sourceText, "Nomor ayat terlalu besar. Periksa kembali rentangnya.");
+  if (toAyah! > 286) {
+    fail("Nomor ayat terlalu besar. Periksa kembali rentangnya.", sourceText ? { text: sourceText } : undefined);
   }
 
   if (!date) {
-    fail(sourceText, "Tanggal dan waktu catatan tidak valid.");
+    fail("Tanggal dan waktu catatan tidak valid.", sourceText ? { text: sourceText } : undefined);
   }
 
   if (!validStatuses.has(statusValue)) {
-    fail(sourceText, "Status catatan tidak valid.");
+    fail("Status catatan tidak valid.", sourceText ? { text: sourceText } : undefined);
   }
 
   if (score !== null && (score < 0 || score > 100)) {
-    fail(sourceText, "Nilai harus berada di antara 0 sampai 100.");
+    fail("Nilai harus berada di antara 0 sampai 100.", sourceText ? { text: sourceText } : undefined);
   }
 
   const data = {
-    studentId: student.id,
-    teacherId: student.teacherId,
+    studentId: student!.id,
+    teacherId: student!.teacherId,
     surah,
-    fromAyah,
-    toAyah,
-    date,
+    fromAyah: fromAyah!,
+    toAyah: toAyah!,
+    date: date!,
     status: statusValue as RecordStatus,
     score,
     notes,
@@ -138,7 +104,7 @@ export async function createQuickLogRecord(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/students");
-  revalidatePath(`/students/${student.id}`);
+  revalidatePath(`/students/${student!.id}`);
   revalidatePath("/quick-log");
-  redirect(`/students/${student.id}`);
+  redirect(`/students/${student!.id}`);
 }
