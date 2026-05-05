@@ -45,16 +45,18 @@ export function formatClassSummary(student: {
   academicClass: { name: string } | null;
   classGroup: { name: string; level: HalaqahLevel };
 }) {
-  const academicClassName = student.academicClass?.name ?? "Kelas belum diisi";
-  const halaqahLabel = `${student.classGroup.name} ${
-    halaqahLevelLabels[student.classGroup.level]
-  }`;
+  const academicClassName = student.academicClass?.name ?? null;
+  const halaqahLabel = `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`;
+
+  const classSummary = academicClassName
+    ? `${academicClassName} · ${halaqahLabel}`
+    : halaqahLabel;
 
   return {
-    academicClassName,
+    academicClassName: academicClassName ?? "Kelas belum diisi",
     halaqahName: student.classGroup.name,
     halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-    classSummary: `${academicClassName} - ${halaqahLabel}`,
+    classSummary,
   };
 }
 

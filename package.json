@@ -1,0 +1,17 @@
+{
+  "name": "tahfidz-tracker",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start",
+    "lint": "npm --prefix web run lint",
+    "typecheck": "npm --prefix web run typecheck",
+    "verify:fast": "npm --prefix web run lint && npm --prefix web run typecheck",
+    "verify": "npm --prefix web run verify",
+    "db:generate": "npm --prefix web run db:generate",
+    "db:deploy": "npm --prefix web exec prisma migrate deploy",
+    "db:validate": "npm --prefix web run db:validate",
+    "db:seed": "npm --prefix web run db:seed"
+  }
+}

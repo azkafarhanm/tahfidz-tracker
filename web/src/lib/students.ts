@@ -267,6 +267,45 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
   };
 }
 
+export async function getTeacherStudentFormOptions(teacherId: string) {
+  const [classGroups, academicClasses] = await Promise.all([
+    prisma.classGroup.findMany({
+      where: {
+        teacherId,
+        isActive: true,
+      },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        level: true,
+      },
+    }),
+    prisma.academicClass.findMany({
+      where: { isActive: true },
+      orderBy: [{ grade: "asc" }, { section: "asc" }],
+      select: {
+        id: true,
+        name: true,
+      },
+    }),
+  ]);
+
+  return {
+    classGroups: classGroups.map((cg) => ({
+      id: cg.id,
+      name: cg.name,
+      level: halaqahLevelLabels[cg.level],
+      label: `${cg.name} (${halaqahLevelLabels[cg.level]})`,
+    })),
+    academicClasses: academicClasses.map((ac) => ({
+      id: ac.id,
+      name: ac.name,
+      label: ac.name,
+    })),
+  };
+}
+
 export async function getStudentFormContext(studentId: string, teacherId?: string | null) {
   const student = await prisma.student.findFirst({
     where: {

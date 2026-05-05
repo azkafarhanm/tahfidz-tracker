@@ -65,7 +65,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           include: { teacher: true },
         });
 
-        if (!user || !user.passwordHash) {
+        if (!user || !user.passwordHash || !user.isActive) {
+          return null;
+        }
+
+        if (user.role === "TEACHER" && (!user.teacher || !user.teacher.isActive)) {
           return null;
         }
 

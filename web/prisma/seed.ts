@@ -28,6 +28,7 @@ async function main() {
   const academicClassSeeds = [
     { grade: 7, section: "A" },
     { grade: 7, section: "B" },
+    { grade: 7, section: "C" },
     { grade: 8, section: "A" },
     { grade: 8, section: "B" },
     { grade: 9, section: "A" },
@@ -117,42 +118,75 @@ async function main() {
     academicClasses.map((academicClass) => [academicClass.name, academicClass]),
   );
 
-  const existingHalaqah = await prisma.classGroup.findFirst({
-    where: {
-      teacherId: teacher.id,
-      OR: [
-        { name: "Halaqoh Ust Azka" },
-        { name: "Halaqah 8" },
-        { name: "Halaqah Pagi" },
-      ],
-    },
-    orderBy: { createdAt: "asc" },
-  });
-  const classGroup = existingHalaqah
-    ? await prisma.classGroup.update({
-        where: { id: existingHalaqah.id },
-        data: {
-          name: "Halaqoh Ust Azka",
-          level: HalaqahLevel.LOW,
-          description: "Kelompok tahfidz simulasi Ust Azka dengan level low.",
-          isActive: true,
-        },
-      })
-    : await prisma.classGroup.create({
-        data: {
-          teacherId: teacher.id,
-          name: "Halaqoh Ust Azka",
-          level: HalaqahLevel.LOW,
-          description: "Kelompok tahfidz simulasi Ust Azka dengan level low.",
-        },
-      });
+  async function upsertClassGroup({
+    teacherId,
+    academicYear,
+    grade,
+    name,
+    level,
+    description,
+    lookupNames,
+  }: {
+    teacherId: string;
+    academicYear: string;
+    grade: number;
+    name: string;
+    level: HalaqahLevel;
+    description: string;
+    lookupNames: string[];
+  }) {
+    const existingHalaqah = await prisma.classGroup.findFirst({
+      where: {
+        OR: [
+          {
+            teacherId,
+            academicYear,
+            grade,
+          },
+          {
+            teacherId,
+            OR: lookupNames.map((groupName) => ({ name: groupName })),
+          },
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return existingHalaqah
+      ? prisma.classGroup.update({
+          where: { id: existingHalaqah.id },
+          data: {
+            name,
+            level,
+            description,
+            academicYear,
+            grade,
+            teacherId,
+            isActive: true,
+          },
+        })
+      : prisma.classGroup.create({
+          data: {
+            teacherId,
+            academicYear,
+            grade,
+            name,
+            level,
+            description,
+          },
+        });
+  }
 
   async function upsertStudent({
+    teacherId,
+    classGroupId,
     lookupNames,
     fullName,
     gender,
     academicClassName,
   }: {
+    teacherId: string;
+    classGroupId: string;
     lookupNames: string[];
     fullName: string;
     gender: Gender;
@@ -166,7 +200,7 @@ async function main() {
 
     const existingStudent = await prisma.student.findFirst({
       where: {
-        teacherId: teacher.id,
+        teacherId,
         fullName: {
           in: lookupNames,
         },
@@ -174,8 +208,8 @@ async function main() {
     });
 
     const data = {
-      teacherId: teacher.id,
-      classGroupId: classGroup.id,
+      teacherId,
+      classGroupId,
       academicClassId: academicClass.id,
       fullName,
       gender,
@@ -190,24 +224,143 @@ async function main() {
       : prisma.student.create({ data });
   }
 
-  const [afdal, nasuha, jureid] = await Promise.all([
+  const primaryClassGroup = await upsertClassGroup({
+    teacherId: teacher.id,
+    academicYear,
+    grade: 9,
+    name: "Ustadzah Nur Aisyah - Kelas 9",
+    level: HalaqahLevel.MEDIUM,
+    description: "Halaqah Kelas 9 bersama Ustadzah Nur Aisyah untuk santri dari beberapa rombel kelas 9.",
+    lookupNames: ["Halaqoh Ust Azka", "Halaqah 9C", "Halaqah Pagi", "Ustadzah Nur Aisyah - Kelas 9"],
+  });
+
+  const secondPrimaryClassGroup = await upsertClassGroup({
+    teacherId: teacher.id,
+    academicYear,
+    grade: 8,
+    name: "Ustadzah Nur Aisyah - Kelas 8",
+    level: HalaqahLevel.HIGH,
+    description: "Halaqah Kelas 8 bersama Ustadzah Nur Aisyah untuk santri dari beberapa rombel kelas 8.",
+    lookupNames: ["Halaqah 8A", "Ustadzah Nur Aisyah - Kelas 8"],
+  });
+
+  const thirdPrimaryClassGroup = await upsertClassGroup({
+    teacherId: teacher.id,
+    academicYear,
+    grade: 7,
+    name: "Ustadzah Nur Aisyah - Kelas 7",
+    level: HalaqahLevel.HIGH,
+    description: "Halaqah Kelas 7 bersama Ustadzah Nur Aisyah untuk santri dari beberapa rombel kelas 7.",
+    lookupNames: ["Halaqah 7B", "Ustadzah Nur Aisyah - Kelas 7"],
+  });
+
+  const secondUser = await prisma.user.upsert({
+    where: { email: "teacher.salwa@tahfidzflow.local" },
+    update: {
+      name: "Ustadzah Salwa Rahmah",
+      role: UserRole.TEACHER,
+      locale: "id",
+      isActive: true,
+      passwordHash,
+    },
+    create: {
+      name: "Ustadzah Salwa Rahmah",
+      email: "teacher.salwa@tahfidzflow.local",
+      role: UserRole.TEACHER,
+      locale: "id",
+      passwordHash,
+    },
+  });
+
+  const secondTeacher = await prisma.teacher.upsert({
+    where: { userId: secondUser.id },
+    update: {
+      fullName: "Ustadzah Salwa Rahmah",
+      phoneNumber: "080000000001",
+      isActive: true,
+    },
+    create: {
+      userId: secondUser.id,
+      fullName: "Ustadzah Salwa Rahmah",
+      phoneNumber: "080000000001",
+    },
+  });
+
+  const secondClassGroup = await upsertClassGroup({
+    teacherId: secondTeacher.id,
+    academicYear,
+    grade: 8,
+    name: "Ustadzah Salwa Rahmah - Kelas 8",
+    level: HalaqahLevel.MEDIUM,
+    description: "Halaqah Kelas 8 bersama Ustadzah Salwa Rahmah untuk santri dari beberapa rombel kelas 8.",
+    lookupNames: [
+      "Halaqah Ustadzah Salwa",
+      "Halaqah Salwa",
+      "Halaqah Sore",
+      "Ustadzah Salwa Rahmah - Kelas 8",
+    ],
+  });
+
+  const thirdClassGroup = await upsertClassGroup({
+    teacherId: secondTeacher.id,
+    academicYear,
+    grade: 7,
+    name: "Ustadzah Salwa Rahmah - Kelas 7",
+    level: HalaqahLevel.LOW,
+    description: "Halaqah Kelas 7 bersama Ustadzah Salwa Rahmah untuk santri dari beberapa rombel kelas 7.",
+    lookupNames: ["Halaqah 7A", "Ustadzah Salwa Rahmah - Kelas 7"],
+  });
+
+  await upsertClassGroup({
+    teacherId: secondTeacher.id,
+    academicYear,
+    grade: 9,
+    name: "Ustadzah Salwa Rahmah - Kelas 9",
+    level: HalaqahLevel.HIGH,
+    description: "Halaqah Kelas 9 bersama Ustadzah Salwa Rahmah untuk santri dari beberapa rombel kelas 9.",
+    lookupNames: ["Ustadzah Salwa Rahmah - Kelas 9"],
+  });
+
+  const [afdal, nasuha, jureid, naila, maryam] = await Promise.all([
     upsertStudent({
+      teacherId: teacher.id,
+      classGroupId: primaryClassGroup.id,
       lookupNames: ["Ahmad F.", "Afdal Fauzan Nurrohman"],
       fullName: "Afdal Fauzan Nurrohman",
       gender: Gender.MALE,
       academicClassName: "9C",
     }),
     upsertStudent({
+      teacherId: teacher.id,
+      classGroupId: secondPrimaryClassGroup.id,
       lookupNames: ["Zahra A.", "Muhammad Nasuha"],
       fullName: "Muhammad Nasuha",
       gender: Gender.MALE,
       academicClassName: "8A",
     }),
     upsertStudent({
+      teacherId: teacher.id,
+      classGroupId: thirdPrimaryClassGroup.id,
       lookupNames: ["Bilal R.", "Jureid Sholahuddin"],
       fullName: "Jureid Sholahuddin",
       gender: Gender.MALE,
       academicClassName: "7B",
+    }),
+    upsertStudent({
+      teacherId: secondTeacher.id,
+      classGroupId: secondClassGroup.id,
+      lookupNames: ["Naila Z.", "Naila Azzahra Putri"],
+      fullName: "Naila Azzahra Putri",
+      gender: Gender.FEMALE,
+      academicClassName: "8B",
+    }),
+    upsertStudent({
+      teacherId: secondTeacher.id,
+      classGroupId: thirdClassGroup.id,
+      lookupNames: ["Maryam S.", "Maryam Safitri"],
+      fullName: "Maryam Safitri",
+      gender: Gender.FEMALE,
+      academicClassName: "7A",
     }),
   ]);
 
@@ -341,6 +494,39 @@ async function main() {
       toAyah: 40,
       startDate: atTime(-1, 0, 0),
       endDate: atTime(5, 23, 59),
+      status: TargetStatus.ACTIVE,
+    }),
+    ensureMemorizationRecord({
+      studentId: naila.id,
+      teacherId: secondTeacher.id,
+      surah: "Ar-Rahman",
+      fromAyah: 1,
+      toAyah: 13,
+      date: atTime(0, 9, 20),
+      status: RecordStatus.LANCAR,
+      score: 95,
+      notes: "Setoran baru sangat rapi dan stabil.",
+    }),
+    ensureRevisionRecord({
+      studentId: maryam.id,
+      teacherId: secondTeacher.id,
+      surah: "Al-Waqi'ah",
+      fromAyah: 1,
+      toAyah: 20,
+      date: atTime(-1, 10, 5),
+      status: RecordStatus.CUKUP,
+      score: 84,
+      notes: "Perlu penguatan transisi antar ayat.",
+    }),
+    ensureTarget({
+      studentId: naila.id,
+      teacherId: secondTeacher.id,
+      type: TargetType.HAFALAN,
+      surah: "Ar-Rahman",
+      fromAyah: 1,
+      toAyah: 24,
+      startDate: atTime(-2, 0, 0),
+      endDate: atTime(6, 23, 59),
       status: TargetStatus.ACTIVE,
     }),
   ]);

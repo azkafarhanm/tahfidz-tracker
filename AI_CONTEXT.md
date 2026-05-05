@@ -4,7 +4,7 @@ This document summarizes the current state, architecture, modules, and phased pl
 
 ---
 
-## ⚠️ CURRENT ISSUES & KNOWN PROBLEMS
+## Current Issues and Known Problems
 
 ### No Critical Issues
 
@@ -31,13 +31,13 @@ Prisma 7 requires adapter-based setup:
 8. **Overlapping sticky bottom bars** - Nav hidden when quick-log form is visible
 9. **sslmode=verify-full forced in database-url.ts** - Removed the SSL override
 10. **@types/bcryptjs in wrong section** - Moved from `dependencies` to `devDependencies`
-11. **Progress bar animation hardcoded** - Changed from `width: 12%→72%` to `scaleX(0)→scaleX(1)` with `origin-left`
+11. **Progress bar animation hardcoded** - Changed from `width: 12% to 72%` to `scaleX(0) to scaleX(1)` with `origin-left`
 12. **Missing AUTH_URL** - Added to `.env`
 13. **TypeScript errors** - Fixed `User.id` optional type, added explicit return type to `matchStudent()`
 14. **ESLint errors in fix-env.js** - Added to ESLint `globalIgnores`
 15. **SSL warning from pg** - Changed connection string `sslmode=require` to `sslmode=verify-full`
 
-### Bug Fix Sweep 2 (Completed - 34 fixes, full codebase cleanup)
+### Bug Fix Sweep 2 (Completed - full codebase cleanup)
 
 **HIGH severity:**
 1. **Timezone mismatch in date input** - `todayInputValue()` used UTC date via `toISOString()` while time was local. Fixed to use local date formatting.
@@ -59,7 +59,7 @@ Prisma 7 requires adapter-based setup:
 13. **Unreachable dead code** - Removed duplicate error check in `parseQuickLogInput`.
 14. **No-op database-url.ts** - Simplified to passthrough (removed unnecessary URL parse/serialize).
 15. **Profile page misleading text** - Removed "Tersedia setelah implementasi autentikasi" since auth is done.
-16. **English halaqah labels** - Changed `Low/Medium/High` to Indonesian `Rendah/Sedang/Tinggi`.
+16. **Shared halaqah level labels** - Standardized labels in `src/lib/format.ts`. Current UI uses English `Low/Medium/High`.
 17. **Inconsistent LogoutButton styling** - Changed from `gray-*` + `rounded-lg` to `slate-*` + `rounded-2xl`.
 18. **Nav "Profil" linked to `#`** - Fixed to `/profile`.
 19. **Potential duplicate React keys** - Changed error list key from message string to index.
@@ -67,6 +67,11 @@ Prisma 7 requires adapter-based setup:
 21. **Missing page metadata** - Added `metadata` exports to dashboard, students, student detail, quick-log, hafalan, murojaah pages.
 22. **No custom 404** - Created `src/app/not-found.tsx`.
 23. **Unconventional bracket notation** - `prisma.config.ts` changed from `process.env["DATABASE_URL"]` to `process.env.DATABASE_URL`.
+24. **Edge runtime warning on auth route** - Forced `src/app/api/auth/[...nextauth]/route.ts` to use `runtime = "nodejs"` to avoid `next-auth` / `jose` Edge Runtime warnings.
+25. **Admin login simplified** - Credentials auth now accepts `admin` as a simple login alias and maps it to the seeded admin account.
+26. **Demo password updated** - Seeded login password changed from `tahfidz2025` to `2026`.
+27. **Login placeholders simplified** - Login form placeholders now read `Username` and `Password`.
+28. **Shared session guard** - Added `src/lib/session.ts` so protected pages use one consistent auth and teacher-scope check.
 
 ---
 
@@ -79,7 +84,7 @@ Remove-Item -Recurse -Force "D:\tahfidz-tracker\web\.next" -ErrorAction Silently
 # 2. Regenerate Prisma
 cd D:\tahfidz-tracker\web; npm run db:generate
 
-# 3. Run migration (needed for new Account/Session/VerificationToken tables)
+# 3. Run migration if your local database is behind the current schema
 cd D:\tahfidz-tracker\web; npm run db:migrate -- --name add_auth_models
 
 # 4. Run seed
@@ -117,6 +122,7 @@ Primary goals:
 **Authentication is fully implemented and working:**
 - NextAuth with credentials provider
 - Login page at /login
+- Auth API route forced to Node.js runtime
 - Password hashing with bcrypt
 - Middleware for route protection
 - Session-based auth with JWT
@@ -126,10 +132,11 @@ Primary goals:
 
 **Codebase quality improvements completed:**
 - Shared utilities extracted (`form-helpers.ts`, `format.ts`)
+- Shared session helper extracted (`session.ts`)
 - Shared BottomNav component
 - Loading skeleton, error boundary, custom 404
 - All duplicated code consolidated
-- Full Indonesian UI labels
+- Indonesian-first UI with English halaqah level labels (`Low/Medium/High`)
 - Consistent design system (slate palette, rounded-2xl)
 
 ---
@@ -196,6 +203,10 @@ tahfidz-tracker/
         not-found.tsx          Custom 404
         page.tsx               Dashboard
         globals.css
+        api/
+          auth/
+            [...nextauth]/
+              route.ts         NextAuth route forced to Node.js runtime
         login/
           page.tsx
         quick-log/
@@ -228,6 +239,7 @@ tahfidz-tracker/
         dashboard.ts           Dashboard data queries
         students.ts            Student data queries
         quick-log.ts           Quick-log parser + data queries
+        session.ts             Shared auth/session scope helper
 ```
 
 ## Completed Work
@@ -284,16 +296,19 @@ Murojaah and time field implementation:
 Authentication (Phase 3):
 
 - Implemented NextAuth v5 with credentials provider.
+- Auth route `src/app/api/auth/[...nextauth]/route.ts` forced to Node.js runtime.
 - JWT session strategy with role and teacherId in token.
 - Middleware route protection via `auth.config.ts`.
 - Server actions verify authentication + teacher-student ownership.
 - Data pages filter by teacherId (admins see all).
-- Seed script creates admin and teacher demo accounts.
+- Seed script creates admin and teacher demo accounts with password `2026`.
+- Login accepts `admin` as a simple alias for the admin account.
 
 Code quality sweep:
 
 - Extracted shared form helpers to `src/lib/form-helpers.ts`.
 - Extracted shared format utilities to `src/lib/format.ts`.
+- Extracted shared session guard to `src/lib/session.ts`.
 - Created shared `BottomNav` component replacing 4 duplicated nav arrays.
 - Created `loading.tsx` (skeleton), `error.tsx` (error boundary), `not-found.tsx` (404).
 - Deleted dead `students/components/` directory (11 unused files).
@@ -302,15 +317,17 @@ Code quality sweep:
 - Fixed dashboard needsReviewCount to use actual DB count.
 - Fixed dashboard "Detail" button to link to student page.
 - Consolidated all duplicated labels, formatters, constants.
-- Changed halaqah level labels to Indonesian.
+- Standardized halaqah level labels in shared formatter. Current display uses English `Low/Medium/High`.
 - Added page-specific metadata exports.
 - Added `max={286}` to ayah number inputs.
+- Simplified login placeholders to `Username` and `Password`.
 - Unified design system (slate colors, rounded-2xl).
 
 Verification:
 
 ```bash
 npx tsc --noEmit   # 0 errors
+npm run typecheck   # 0 errors
 npm run lint        # 0 errors, 0 warnings
 npx prisma validate # valid
 npx prisma generate # success
@@ -381,7 +398,7 @@ Important data design decisions:
 
 ### Authentication
 
-Status: ✅ Fully implemented.
+Status: Complete.
 
 - NextAuth v5 (Auth.js) with credentials provider.
 - JWT session strategy with role and teacherId.
@@ -391,7 +408,7 @@ Status: ✅ Fully implemented.
 
 ### Teacher Dashboard
 
-Status: ✅ Fully implemented on `/`.
+Status: Complete on `/`.
 
 - Reads real Neon data, filtered by teacher.
 - Loading skeleton, error boundary.
@@ -399,7 +416,7 @@ Status: ✅ Fully implemented on `/`.
 
 ### Students / Santri
 
-Status: ✅ Fully implemented on `/students` and `/students/[id]`.
+Status: Complete on `/students` and `/students/[id]`.
 
 - Student cards show academic class and halaqah summary.
 - Search works through the `q` query string.
@@ -407,21 +424,21 @@ Status: ✅ Fully implemented on `/students` and `/students/[id]`.
 
 ### Hafalan Records
 
-Status: ✅ Fully implemented on `/students/[id]/hafalan/new`.
+Status: Complete on `/students/[id]/hafalan/new`.
 
 - Server action validates input and saves a `MemorizationRecord`.
 - Auth + ownership verification.
 
 ### Murojaah Records
 
-Status: ✅ Fully implemented on `/students/[id]/murojaah/new`.
+Status: Complete on `/students/[id]/murojaah/new`.
 
 - Server action validates input and saves a `RevisionRecord`.
 - Auth + ownership verification.
 
 ### Quick Log
 
-Status: ✅ Fully implemented on `/quick-log`.
+Status: Complete on `/quick-log`.
 
 - Natural language parser.
 - Confirmation form with editable fields.
@@ -445,7 +462,7 @@ Status: Not started.
 
 ### Multilingual Support
 
-Status: Not implemented. UI text is Indonesian.
+Status: Not implemented. UI is Indonesian-first, with a few English-facing labels such as halaqah levels (`Low/Medium/High`) and login field placeholders.
 
 ### Telegram Integration
 
@@ -459,24 +476,24 @@ Status: Not implemented.
 
 ### Phase 1: Foundation
 
-Status: ✅ Complete.
+Status: Complete.
 
 ### Phase 2: Mobile Teacher Workflow
 
-Status: ✅ Complete (100%).
+Status: Complete (100%).
 
 Teachers can:
-1. ✅ View dashboard with today's summary
-2. ✅ List and search all assigned students
-3. ✅ Record hafalan for a student (with time)
-4. ✅ Record murojaah for a student (with time)
-5. ✅ Use Quick Log for fast entries with confirmation
-6. ✅ Navigate smoothly between all main sections
-7. ✅ See recent activities with accurate timestamps
+1. View dashboard with today's summary
+2. List and search all assigned students
+3. Record hafalan for a student with time
+4. Record murojaah for a student with time
+5. Use Quick Log for fast entries with confirmation
+6. Navigate smoothly between all main sections
+7. See recent activities with accurate timestamps
 
 ### Phase 3: Auth and Permissions
 
-Status: ✅ Complete.
+Status: Complete.
 
 - Admin and teacher login with NextAuth.
 - Role-based access (ADMIN, TEACHER).
@@ -542,6 +559,8 @@ Run from `web/`:
 ```bash
 npm run dev
 npm run lint
+npm run typecheck
+npm run verify
 npm run build
 npm run db:validate
 npm run db:generate
@@ -615,7 +634,7 @@ Avoid:
 
 ---
 
-## ✅ STRENGTHS
+## Strengths
 
 1. **Clean Architecture** - Well-organized with shared utilities in `lib/`, shared components in `components/`
 2. **Mobile-First Design** - Responsive UI optimized for smartphones
@@ -628,11 +647,11 @@ Avoid:
 9. **Quick Log Parser** - Natural language input parsing for fast entry
 10. **UX Polish** - Loading skeletons, error boundary, custom 404, consistent design system
 11. **Code Quality** - 0 ESLint errors, 0 TypeScript errors, no dead code
-12. **Indonesian UI** - All labels in Bahasa Indonesia including halaqah levels
+12. **Indonesian-First UI** - Most labels are in Bahasa Indonesia, with halaqah levels currently displayed as `Low/Medium/High`
 
 ---
 
-## ❌ AREAS FOR IMPROVEMENT
+## Areas for Improvement
 
 ### High Priority (Next Phase)
 1. **No Admin Panel** - Can't manage teachers, classes, students via UI
@@ -656,7 +675,7 @@ Avoid:
 
 ---
 
-## 🎯 RECOMMENDED NEXT STEPS
+## Recommended Next Steps
 
 ### Step 1: Phase 4 - Admin Management (recommended next)
 - [ ] Teacher CRUD (create, read, update, delete)
@@ -679,5 +698,5 @@ Avoid:
 
 **Recommended path:**
 ```
-Phase 4 (Admin) → Phase 5 (Reports) → Phase 6 (PWA/i18n)
+Phase 4 (Admin) -> Phase 5 (Reports) -> Phase 6 (PWA/i18n)
 ```

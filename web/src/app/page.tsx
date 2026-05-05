@@ -3,6 +3,7 @@ import {
   BookOpen,
   PenLine,
   RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { getDashboardData } from "@/lib/dashboard";
@@ -13,21 +14,23 @@ import { requireSessionScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const quickActions = [
-  { label: "Hafalan", href: "/students", icon: BookOpen },
-  { label: "Murojaah", href: "/students", icon: RotateCcw },
-  { label: "Quick Log", href: "/quick-log", icon: PenLine },
-  { label: "Laporan", href: "/reports", icon: BarChart3 },
-];
-
 export const metadata = {
   title: "Dashboard - TahfidzFlow",
 };
 
 export default async function DashboardPreview() {
-  const { session, teacherId } = await requireSessionScope();
+  const { session, teacherId, isAdmin } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId);
   const userName = session?.user?.name?.split(" ")[0] ?? "Ustadz";
+  const quickActions = [
+    { label: "Hafalan", href: "/students", icon: BookOpen },
+    { label: "Murojaah", href: "/students", icon: RotateCcw },
+    { label: "Quick Log", href: "/quick-log", icon: PenLine },
+    ...(isAdmin
+      ? [{ label: "Admin", href: "/admin", icon: ShieldCheck }]
+      : []),
+    { label: "Laporan", href: "/reports", icon: BarChart3 },
+  ];
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950">

@@ -97,21 +97,26 @@ model AcademicClass {
 }
 
 model ClassGroup {
-  id          String       @id @default(cuid())
-  teacherId   String
-  name        String
-  description String?
-  level       HalaqahLevel @default(LOW)
-  isActive    Boolean      @default(true)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(cuid())
+  teacherId    String
+  academicYear String       @default("2025/2026")
+  grade        Int          @default(7)
+  name         String
+  description  String?
+  level        HalaqahLevel @default(LOW)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   teacher  Teacher   @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   students Student[]
 
   @@index([teacherId])
+  @@index([academicYear])
+  @@index([grade])
   @@index([level])
   @@index([isActive])
+  @@unique([teacherId, academicYear, grade])
 }
 
 model Student {

@@ -5,7 +5,9 @@ import {
   PlusCircle,
   RotateCcw,
   Search,
+  ShieldCheck,
   Target,
+  Users,
 } from "lucide-react";
 import { getStudentsData } from "@/lib/students";
 import BottomNav from "@/components/BottomNav";
@@ -21,12 +23,15 @@ export const metadata = {
 type StudentsPageProps = {
   searchParams?: Promise<{
     q?: string;
+    success?: string;
+    error?: string;
   }>;
 };
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
-  const query = (await searchParams)?.q?.trim() ?? "";
-  const { teacherId } = await requireSessionScope();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
+  const { teacherId, isAdmin } = await requireSessionScope();
   const students = await getStudentsData(query, teacherId);
 
   return (
@@ -48,10 +53,32 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               Pantau hafalan, murojaah, dan target aktif.
             </p>
           </div>
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
-            <PlusCircle aria-hidden="true" size={22} strokeWidth={2.3} />
+          <div className="flex items-center gap-3">
+            {isAdmin ? (
+              <Link
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
+                href="/admin/students"
+              >
+                <ShieldCheck aria-hidden="true" size={16} strokeWidth={2.2} />
+                Kelola
+              </Link>
+            ) : null}
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
+              <Users aria-hidden="true" size={22} strokeWidth={2.3} />
+            </div>
           </div>
         </header>
+
+        {params?.success ? (
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+            {params.success}
+          </div>
+        ) : null}
+        {params?.error ? (
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+            {params.error}
+          </div>
+        ) : null}
 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -94,9 +121,20 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Daftar santri</h2>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
-              {students.length} aktif
-            </span>
+            <div className="flex items-center gap-2">
+              {!isAdmin ? (
+                <Link
+                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
+                  href="/students/new"
+                >
+                  <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
+                  Tambah
+                </Link>
+              ) : null}
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                {students.length} aktif
+              </span>
+            </div>
           </div>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -195,7 +233,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2">
                 {query
                   ? "Tidak ada santri yang cocok dengan pencarian ini."
-                  : "Belum ada santri aktif. Tambahkan santri dari halaman admin setelah modul pengelolaan tersedia."}
+                  : "Belum ada santri aktif untuk ditampilkan saat ini."}
               </div>
             )}
           </div>

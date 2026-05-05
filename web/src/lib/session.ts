@@ -39,3 +39,13 @@ export async function requireSessionScope() {
 
   return scope;
 }
+
+export async function requireAdminScope() {
+  const scope = await requireSessionScope();
+
+  if (!scope.isAdmin) {
+    redirect("/");
+  }
+
+  return scope;
+}
