@@ -25,54 +25,55 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const html = `
-    <h1>${data.fullName}</h1>
-    <div class="meta">
-      <div class="meta-item"><div class="meta-label">Halaqah</div><div class="meta-value">${data.halaqahName} (${data.halaqahLevel})</div></div>
-      <div class="meta-item"><div class="meta-label">Kelas</div><div class="meta-value">${data.academicClassName}</div></div>
-    </div>
+  const pdfBuffer = await generatePdf(`${data.fullName} - TahfidzFlow`, [
+    { type: "title", text: data.fullName },
+    { type: "subtitle", text: "Info" },
+    {
+      type: "cards",
+      items: [
+        { label: "HALAQAH", value: `${data.halaqahName} (${data.halaqahLevel})` },
+        { label: "KELAS", value: data.academicClassName },
+        { label: "HAFALAN", value: data.hafalanCount },
+        { label: "MUROJAAH", value: data.murojaahCount },
+        { label: "SKOR", value: data.avgScore || "-" },
+      ],
+    },
+    ...(data.activeTargets.length > 0
+      ? [
+          { type: "subtitle" as const, text: "Target Aktif" },
+          {
+            type: "table" as const,
+            headers: ["Tipe", "Ayat", "Mulai", "Target"],
+            rows: data.activeTargets.map((t) => [
+              t.type,
+              t.range,
+              t.startDate,
+              t.endDate,
+            ]),
+          },
+        ]
+      : []),
+    { type: "subtitle", text: "Riwayat Hafalan & Murojaah" },
+    ...(data.records.length > 0
+      ? [
+          {
+            type: "table" as const,
+            headers: ["Tanggal", "Tipe", "Ayat", "Skor", "Status"],
+            rows: data.records.map((r) => [
+              r.date,
+              r.type,
+              r.range,
+              String(r.score ?? "-"),
+              r.status,
+            ]),
+          },
+        ]
+      : [{ type: "text" as const, text: "Belum ada catatan." }]),
+  ]);
 
-    <div class="cards">
-      <div class="card"><div class="card-label">Hafalan</div><div class="card-value">${data.hafalanCount}</div></div>
-      <div class="card"><div class="card-label">Murojaah</div><div class="card-value">${data.murojaahCount}</div></div>
-      <div class="card"><div class="card-label">Skor Rata-rata</div><div class="card-value green">${data.avgScore || "-"}</div></div>
-      <div class="card"><div class="card-label">Total Catatan</div><div class="card-value">${data.records.length}</div></div>
-    </div>
-
-    ${data.activeTargets.length > 0 ? `
-      <h2>Target Aktif</h2>
-      <table>
-        <thead><tr><th>Tipe</th><th>Ayat</th><th>Mulai</th><th>Target Selesai</th><th>Catatan</th></tr></thead>
-        <tbody>${data.activeTargets.map((t) => `<tr>
-          <td><span class="badge ${t.type === "Hafalan" ? "badge-green" : "badge-blue"}">${t.type}</span></td>
-          <td>${t.range}</td>
-          <td>${t.startDate}</td>
-          <td>${t.endDate}</td>
-          <td>${t.notes ?? "-"}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-    ` : ""}
-
-    <h2>Riwayat Hafalan &amp; Murojaah</h2>
-    ${data.records.length > 0 ? `
-      <table>
-        <thead><tr><th>Tanggal</th><th>Tipe</th><th>Ayat</th><th>Skor</th><th>Status</th></tr></thead>
-        <tbody>${data.records.map((r) => `<tr>
-          <td>${r.date}</td>
-          <td><span class="badge ${r.type === "Hafalan" ? "badge-green" : "badge-blue"}">${r.type}</span></td>
-          <td>${r.range}</td>
-          <td><strong>${r.score ?? "-"}</strong></td>
-          <td>${r.needsReview ? `<span class="badge badge-amber">${r.status}</span>` : r.status}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-    ` : '<p style="color:#94a3b8;">Belum ada catatan.</p>'}
-  `;
-
-  const pdfBuffer = await generatePdf(html, `${data.fullName} - TahfidzFlow`);
   const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();
   const date = new Date().toISOString().split("T")[0];
-
-  return new NextResponse(Buffer.from(pdfBuffer), {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

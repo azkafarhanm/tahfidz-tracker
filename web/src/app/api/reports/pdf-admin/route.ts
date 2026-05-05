@@ -14,34 +14,34 @@ export async function GET() {
 
   const data = await getAdminReportData();
 
-  const html = `
-    <h1>Laporan Admin</h1>
-    <p class="subtitle">Ringkasan keseluruhan sistem TahfidzFlow</p>
+  const pdfBuffer = await generatePdf("Laporan Admin - TahfidzFlow", [
+    { type: "title", text: "Laporan Admin" },
+    { type: "subtitle", text: "Ringkasan" },
+    {
+      type: "cards",
+      items: [
+        { label: "GURU", value: data.totalTeachers },
+        { label: "SANTRI", value: data.totalStudents },
+        { label: "HAFALAN", value: data.totalHafalan },
+        { label: "MUROJAAH", value: data.totalMurojaah },
+        { label: "TARGET", value: data.totalActiveTargets },
+      ],
+    },
+    { type: "subtitle", text: "Data Guru" },
+    {
+      type: "table",
+      headers: ["Nama", "Email", "Santri", "Halaqah"],
+      rows: data.teachers.map((t) => [
+        t.fullName,
+        t.email,
+        String(t.studentCount),
+        String(t.classGroupCount),
+      ]),
+    },
+  ]);
 
-    <div class="cards">
-      <div class="card"><div class="card-label">Guru</div><div class="card-value">${data.totalTeachers}</div></div>
-      <div class="card"><div class="card-label">Santri</div><div class="card-value">${data.totalStudents}</div></div>
-      <div class="card"><div class="card-label">Hafalan</div><div class="card-value">${data.totalHafalan}</div></div>
-      <div class="card"><div class="card-label">Murojaah</div><div class="card-value">${data.totalMurojaah}</div></div>
-      <div class="card"><div class="card-label">Target Aktif</div><div class="card-value">${data.totalActiveTargets}</div></div>
-    </div>
-
-    <h2>Data Guru</h2>
-    <table>
-      <thead><tr><th>Nama</th><th>Email</th><th>Santri</th><th>Halaqah</th></tr></thead>
-      <tbody>${data.teachers.map((t) => `<tr>
-        <td><strong>${t.fullName}</strong></td>
-        <td>${t.email}</td>
-        <td>${t.studentCount}</td>
-        <td>${t.classGroupCount}</td>
-      </tr>`).join("")}</tbody>
-    </table>
-  `;
-
-  const pdfBuffer = await generatePdf(html, "Laporan Admin - TahfidzFlow");
   const date = new Date().toISOString().split("T")[0];
-
-  return new NextResponse(Buffer.from(pdfBuffer), {
+  return new NextResponse(new Uint8Array(pdfBuffer), {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

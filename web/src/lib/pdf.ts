@@ -1,83 +1,171 @@
-import chromium from "@sparticuz/chromium";
-import puppeteerCore, { type Browser } from "puppeteer-core";
+import PDFDocument from "pdfkit";
 
-let _browser: Browser | null = null;
+type PdfSection =
+  | { type: "title"; text: string }
+  | { type: "subtitle"; text: string }
+  | { type: "cards"; items: { label: string; value: string | number }[] }
+  | {
+      type: "table";
+      headers: string[];
+      rows: (string | number)[][];
+    }
+  | { type: "text"; text: string };
 
-async function launchBrowser() {
-  if (process.env.VERCEL) {
-    return puppeteerCore.launch({
-      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
-      executablePath: await chromium.executablePath(),
-      headless: true,
+export async function generatePdf(
+  title: string,
+  sections: PdfSection[],
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    const doc = new PDFDocument({
+      size: "A4",
+      margins: { top: 40, bottom: 40, left: 45, right: 45 },
+      info: {
+        Title: title,
+        Creator: "TahfidzFlow",
+      },
     });
-  }
 
-  const puppeteer = await import("puppeteer");
+    doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
 
-  return puppeteer.default.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    const green = "#064e3b";
+    const dark = "#0f172a";
+    const muted = "#64748b";
+    const lightBg = "#f1f5f9";
+    const headerBg = "#064e3b";
+    const amber = "#b45309";
+
+    for (const section of sections) {
+      switch (section.type) {
+        case "title":
+          doc.fontSize(20).fillColor(green).text(section.text, { align: "left" });
+          doc.moveDown(0.3);
+          break;
+
+        case "subtitle":
+          doc.moveDown(0.8);
+          doc.fontSize(11).fillColor(green).text(section.text);
+          doc
+            .moveTo(doc.x, doc.y)
+            .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+            .strokeColor(green)
+            .lineWidth(1.5)
+            .stroke();
+          doc.moveDown(0.5);
+          break;
+
+        case "cards": {
+          const cardWidth = 110;
+          const cardHeight = 45;
+          const gap = 10;
+          const startX = doc.x;
+          let x = startX;
+          const y = doc.y;
+
+          for (const item of section.items) {
+            if (x + cardWidth > doc.page.width - doc.page.margins.right) {
+              x = startX;
+            }
+
+            doc
+              .roundedRect(x, y, cardWidth, cardHeight, 4)
+              .fillAndStroke(lightBg, "#e2e8f0");
+            doc
+              .fontSize(7)
+              .fillColor(muted)
+              .text(item.label, x + 8, y + 6, { width: cardWidth - 16 });
+            doc
+              .fontSize(16)
+              .fillColor(dark)
+              .text(String(item.value), x + 8, y + 20, {
+                width: cardWidth - 16,
+              });
+
+            x += cardWidth + gap;
+          }
+
+          doc.y = y + cardHeight + 10;
+          doc.x = startX;
+          break;
+        }
+
+        case "table": {
+          const tableWidth =
+            doc.page.width - doc.page.margins.left - doc.page.margins.right;
+          const colCount = section.headers.length;
+          const colWidth = tableWidth / colCount;
+          const startX = doc.x;
+          const headerHeight = 22;
+          const rowHeight = 20;
+
+          let needsNewPage = doc.y + headerHeight + rowHeight * 2 > doc.page.height - doc.page.margins.bottom;
+          if (needsNewPage) doc.addPage();
+
+          let y = doc.y;
+
+          doc
+            .rect(startX, y, tableWidth, headerHeight)
+            .fill(headerBg);
+          section.headers.forEach((header, i) => {
+            doc
+              .fontSize(8)
+              .fillColor("#ffffff")
+              .text(header, startX + i * colWidth + 6, y + 6, {
+                width: colWidth - 12,
+                lineBreak: false,
+              });
+          });
+          y += headerHeight;
+
+          section.rows.forEach((row, rowIdx) => {
+            if (y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+              doc.addPage();
+              y = doc.y;
+            }
+
+            if (rowIdx % 2 === 1) {
+              doc.rect(startX, y, tableWidth, rowHeight).fill(lightBg);
+            }
+
+            row.forEach((cell, i) => {
+              doc
+                .fontSize(8)
+                .fillColor(dark)
+                .text(String(cell), startX + i * colWidth + 6, y + 5, {
+                  width: colWidth - 12,
+                  lineBreak: false,
+                });
+            });
+            y += rowHeight;
+          });
+
+          doc.y = y + 5;
+          doc.x = startX;
+          break;
+        }
+
+        case "text":
+          doc.fontSize(9).fillColor(muted).text(section.text);
+          doc.moveDown(0.3);
+          break;
+      }
+    }
+
+    doc.moveDown(2);
+    doc
+      .fontSize(7)
+      .fillColor(muted)
+      .text(
+        `Dicetak dari TahfidzFlow pada ${new Date().toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })}`,
+        { align: "center" },
+      );
+
+    doc.end();
   });
-}
-
-export async function getBrowser() {
-  if (!_browser) {
-    _browser = await launchBrowser();
-  }
-
-  return _browser;
-}
-
-export async function generatePdf(htmlContent: string, title: string) {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-
-  const fullHtml = `<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="utf-8" />
-  <title>${title}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a; padding: 40px; font-size: 13px; line-height: 1.5; }
-    h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-    h2 { font-size: 16px; font-weight: 600; margin-top: 24px; margin-bottom: 12px; color: #064e3b; border-bottom: 2px solid #064e3b; padding-bottom: 6px; }
-    h3 { font-size: 14px; font-weight: 600; margin-top: 16px; margin-bottom: 8px; }
-    .subtitle { font-size: 12px; color: #64748b; margin-bottom: 20px; }
-    .meta { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
-    .meta-item { }
-    .meta-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; }
-    .meta-value { font-size: 14px; font-weight: 600; }
-    .cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-    .card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; min-width: 120px; }
-    .card-label { font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-    .card-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
-    .card-value.green { color: #064e3b; }
-    .card-value.amber { color: #b45309; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 12px; }
-    th { background: #064e3b; color: white; padding: 8px 10px; text-align: left; font-weight: 600; font-size: 11px; }
-    td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
-    tr:nth-child(even) td { background: #f8fafc; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-    .badge-green { background: #ecfdf5; color: #064e3b; }
-    .badge-amber { background: #fef3c7; color: #92400e; }
-    .badge-blue { background: #eff6ff; color: #1e40af; }
-    .footer { margin-top: 32px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; }
-    @page { margin: 15mm; }
-  </style>
-</head>
-<body>
-${htmlContent}
-<div class="footer">Dicetak dari TahfidzFlow pada ${new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
-</body>
-</html>`;
-
-  await page.setContent(fullHtml, { waitUntil: "networkidle0" });
-  const pdfBuffer = await page.pdf({
-    format: "A4",
-    printBackground: true,
-    margin: { top: "15mm", bottom: "15mm", left: "15mm", right: "15mm" },
-  });
-  await page.close();
-  return pdfBuffer;
 }
