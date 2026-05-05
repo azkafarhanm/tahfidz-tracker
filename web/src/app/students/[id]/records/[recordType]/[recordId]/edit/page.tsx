@@ -12,10 +12,10 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
-import { recordStatusOptions, statusLabels } from "@/lib/format";
+import { recordStatusOptions } from "@/lib/format";
 import { getStudentFormContext } from "@/lib/students";
 import { getRecordData } from "@/lib/records";
-import { updateRecord, deleteRecord } from "@/lib/record-actions";
+import { updateRecord } from "@/lib/record-actions";
 import DeleteRecordButton from "./DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
 

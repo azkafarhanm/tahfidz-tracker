@@ -1,14 +1,30 @@
-import puppeteer, { type Browser } from "puppeteer";
+import chromium from "@sparticuz/chromium";
+import puppeteerCore, { type Browser } from "puppeteer-core";
 
 let _browser: Browser | null = null;
 
-export async function getBrowser() {
-  if (!_browser) {
-    _browser = await puppeteer.launch({
+async function launchBrowser() {
+  if (process.env.VERCEL) {
+    return puppeteerCore.launch({
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   }
+
+  const puppeteer = await import("puppeteer");
+
+  return puppeteer.default.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+}
+
+export async function getBrowser() {
+  if (!_browser) {
+    _browser = await launchBrowser();
+  }
+
   return _browser;
 }
 

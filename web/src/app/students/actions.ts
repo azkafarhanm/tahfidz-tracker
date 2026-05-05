@@ -14,14 +14,8 @@ import { requireSessionScope } from "@/lib/session";
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
 
-const levelLabels: Record<string, string> = {
-  LOW: "Low",
-  MEDIUM: "Medium",
-  HIGH: "High",
-};
-
 export async function createTeacherStudent(formData: FormData) {
-  const { teacherId, session } = await requireSessionScope();
+  const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
     redirect("/students?error=Hanya+guru+yang+dapat+menambah+santri.");

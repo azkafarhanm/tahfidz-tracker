@@ -2,13 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
-  BookOpen,
   Download,
   FileText,
   PencilLine,
-  RotateCcw,
   Target,
-  TrendingUp,
   AlertTriangle,
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";

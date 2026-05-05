@@ -5,9 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
-  CalendarDays,
   CheckCircle2,
-  Clock,
   Hash,
   PenLine,
   RotateCcw,

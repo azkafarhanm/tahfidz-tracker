@@ -5,10 +5,6 @@ import {
   Download,
   FileText,
   ShieldCheck,
-  Users,
-  BookOpen,
-  Target,
-  TrendingUp,
 } from "lucide-react";
 import { getAdminReportData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";

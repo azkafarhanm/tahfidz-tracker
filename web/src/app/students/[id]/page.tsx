@@ -11,7 +11,6 @@ import {
   PencilLine,
   RotateCcw,
   Target,
-  TrendingUp,
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
 import { getStudentProgressData } from "@/lib/reports";

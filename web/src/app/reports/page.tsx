@@ -1,13 +1,9 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
   BarChart3,
   Download,
   FileText,
-  RotateCcw,
-  Target,
-  TrendingUp,
   AlertTriangle,
   ShieldCheck,
 } from "lucide-react";
