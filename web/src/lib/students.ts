@@ -316,11 +316,15 @@ export async function getStudentFormContext(studentId: string, teacherId?: strin
     select: {
       id: true,
       fullName: true,
+      gender: true,
+      joinDate: true,
+      notes: true,
+      academicClassId: true,
       classGroup: {
-        select: { name: true, level: true },
+        select: { id: true, name: true, level: true, grade: true },
       },
       academicClass: {
-        select: { name: true },
+        select: { id: true, name: true },
       },
     },
   });
@@ -333,5 +337,13 @@ export async function getStudentFormContext(studentId: string, teacherId?: strin
     id: student.id,
     fullName: student.fullName,
     ...formatClassSummary(student),
+    gender: student.gender ?? "",
+    joinDate: dateFormatter.format(student.joinDate),
+    joinDateRaw: student.joinDate.toISOString().split("T")[0],
+    notes: student.notes ?? "",
+    academicClassId: student.academicClassId ?? "",
+    classGroupId: student.classGroup.id,
+    classGroupLevel: student.classGroup.level,
+    classGroupGrade: student.classGroup.grade.toString(),
   };
 }

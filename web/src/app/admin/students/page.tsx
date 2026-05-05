@@ -179,9 +179,12 @@ export default async function AdminStudentsPage({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950">
+                      <Link
+                        className="truncate font-semibold text-slate-950 transition hover:text-emerald-800"
+                        href={`/admin/students/${student.id}`}
+                      >
                         {student.fullName}
-                      </p>
+                      </Link>
                       <p className="mt-1 text-xs text-slate-500">
                         {student.gender} - Bergabung {student.joinDate}
                       </p>
