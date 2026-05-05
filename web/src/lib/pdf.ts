@@ -35,7 +35,6 @@ export async function generatePdf(
     const muted = "#64748b";
     const lightBg = "#f1f5f9";
     const headerBg = "#064e3b";
-    const amber = "#b45309";
 
     for (const section of sections) {
       switch (section.type) {
@@ -100,7 +99,7 @@ export async function generatePdf(
           const headerHeight = 22;
           const rowHeight = 20;
 
-          let needsNewPage = doc.y + headerHeight + rowHeight * 2 > doc.page.height - doc.page.margins.bottom;
+          const needsNewPage = doc.y + headerHeight + rowHeight * 2 > doc.page.height - doc.page.margins.bottom;
           if (needsNewPage) doc.addPage();
 
           let y = doc.y;
