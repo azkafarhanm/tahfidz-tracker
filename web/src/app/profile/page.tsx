@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowLeft,
+  KeyRound,
   Mail,
   ShieldCheck,
   UserCircle,
@@ -16,8 +17,15 @@ export const metadata = {
   title: "Profil - TahfidzFlow",
 };
 
-export default async function ProfilePage() {
+type ProfilePageProps = {
+  searchParams?: Promise<{
+    success?: string;
+  }>;
+};
+
+export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const { session, isAdmin } = await requireSessionScope();
+  const query = await searchParams;
   const roleDescription = isAdmin
     ? "Memiliki akses untuk melihat ringkasan sistem dan melanjutkan fondasi Phase 4."
     : "Memiliki akses untuk mencatat hafalan, murojaah, dan memantau santri sendiri.";
@@ -48,6 +56,12 @@ export default async function ProfilePage() {
             <UserCircle aria-hidden="true" size={22} strokeWidth={2.2} />
           </div>
         </header>
+
+        {query?.success ? (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {query.success}
+          </div>
+        ) : null}
 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <p className="text-sm text-emerald-100">Akun aktif</p>
@@ -112,6 +126,13 @@ export default async function ProfilePage() {
               href="/students"
             >
               Lihat Santri
+            </Link>
+            <Link
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+              href="/profile/change-password"
+            >
+              <KeyRound aria-hidden="true" size={15} strokeWidth={2.2} />
+              Ubah Password
             </Link>
             <LogoutButton />
           </div>

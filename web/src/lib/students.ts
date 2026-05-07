@@ -173,6 +173,26 @@ export async function getStudentsData(query = "", teacherId?: string | null) {
   });
 }
 
+export async function getInactiveStudentsData(teacherId?: string | null) {
+  const students = await prisma.student.findMany({
+    where: {
+      isActive: false,
+      ...(teacherId ? { teacherId } : {}),
+    },
+    orderBy: { fullName: "asc" },
+    include: {
+      classGroup: { select: { name: true, level: true } },
+      academicClass: { select: { name: true } },
+    },
+  });
+
+  return students.map((s) => ({
+    id: s.id,
+    fullName: s.fullName,
+    ...formatClassSummary(s),
+  }));
+}
+
 export async function getStudentDetailData(studentId: string, teacherId?: string | null) {
   const student = await prisma.student.findFirst({
     where: {

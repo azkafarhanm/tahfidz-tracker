@@ -9,8 +9,9 @@ import {
   Target,
   Users,
 } from "lucide-react";
-import { getStudentsData } from "@/lib/students";
+import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
 import BottomNav from "@/components/BottomNav";
+import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -33,6 +34,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const query = params?.q?.trim() ?? "";
   const { teacherId, isAdmin } = await requireSessionScope();
   const students = await getStudentsData(query, teacherId);
+  const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
@@ -238,6 +240,29 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             )}
           </div>
         </section>
+
+        {!isAdmin && inactiveStudents.length > 0 ? (
+          <section className="mt-6">
+            <h2 className="text-lg font-semibold">Santri Nonaktif</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Santri yang sudah dinonaktifkan. Aktifkan kembali jika diperlukan.
+            </p>
+            <div className="mt-3 space-y-3">
+              {inactiveStudents.map((s) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  key={s.id}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-slate-950">{s.fullName}</p>
+                    <p className="mt-1 text-sm text-slate-600">{s.classSummary}</p>
+                  </div>
+                  <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <BottomNav currentPath="/students" />
       </section>

@@ -152,3 +152,29 @@ export async function deactivateTeacherStudent(studentId: string) {
   revalidatePath("/students");
   redirect("/students?success=Santri berhasil dinonaktifkan.");
 }
+
+export async function reactivateTeacherStudent(studentId: string) {
+  const { teacherId } = await requireSessionScope();
+
+  if (!teacherId) {
+    redirect("/students?error=Hanya+guru+yang+dapat+mengaktifkan+santri.");
+  }
+
+  const student = await prisma.student.findFirst({
+    where: { id: studentId, teacherId, isActive: false },
+    select: { id: true },
+  });
+
+  if (!student) {
+    redirect("/students?error=Santri+tidak+ditemukan.");
+  }
+
+  await prisma.student.update({
+    where: { id: studentId },
+    data: { isActive: true },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/students");
+  redirect("/students?success=Santri berhasil diaktifkan kembali.");
+}

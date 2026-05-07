@@ -248,3 +248,32 @@ export async function toggleTeacherActive(
       : `Akun ${teacher.fullName} berhasil dinonaktifkan.`,
   );
 }
+
+export async function deleteTeacher(teacherId: string) {
+  await requireAdminScope();
+
+  const teacher = await prisma.teacher.findUnique({
+    where: { id: teacherId },
+    select: { id: true, userId: true, fullName: true },
+  });
+
+  if (!teacher) {
+    redirectAdminTeachersWithMessage("error", "Guru tidak ditemukan.");
+  }
+
+  const studentCount = await prisma.student.count({
+    where: { teacherId: teacher.id },
+  });
+
+  if (studentCount > 0) {
+    redirectAdminTeachersWithMessage("error", `Tidak bisa menghapus ${teacher.fullName} — masih ada ${studentCount} santri terdaftar. Nonaktifkan akun sebagai gantinya.`);
+  }
+
+  await prisma.$transaction([
+    prisma.teacher.delete({ where: { id: teacher.id } }),
+    prisma.user.delete({ where: { id: teacher.userId } }),
+  ]);
+
+  revalidateAdminTeacherPaths();
+  redirectAdminTeachersWithMessage("success", `Akun ${teacher.fullName} berhasil dihapus.`);
+}
