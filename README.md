@@ -434,146 +434,72 @@ These features can be added later after the core workflow is stable.
 
 ## Rebuild Phases
 
-### Phase 1: Project Foundation
+### Phase 1: Project Foundation ✅ COMPLETE
 
-Goal: Build the base Next.js application.
+Result: Clean Vercel-friendly Next.js app with TypeScript, Tailwind CSS, Prisma 7, Neon PostgreSQL, seed data.
 
-Tasks:
+### Phase 2: Mobile Teacher Dashboard ✅ COMPLETE
 
-- Move the old Python bot files into `legacy-bot`.
-- Create the new Next.js app inside `web`.
-- Configure TypeScript.
-- Configure Tailwind CSS.
-- Configure Prisma.
-- Connect PostgreSQL.
-- Configure environment variables.
-- Prepare authentication.
-- Prepare role structure for admin and teacher.
-- Prepare multilingual structure.
-- Set Indonesian as the default language.
-- Prepare English and Arabic language options.
-- Prepare PWA basics.
-- Move secrets out of source code.
-- Rotate leaked Telegram and Gemini keys before reuse.
+Result: Teacher dashboard, student list/detail, hafalan/murojaah forms, Quick Log (guided flow), bottom navigation, mobile-first design.
 
-Result:
+### Phase 3: Auth & Permissions ✅ COMPLETE
 
-The project has a clean Vercel-friendly web app foundation with database, auth direction, mobile-first styling, and multilingual structure.
+Result: NextAuth v5 with credentials, JWT sessions, ADMIN/TEACHER roles, middleware protection, teacher-scoped data filtering.
 
-### Phase 2: Mobile Teacher Dashboard
+### Phase 4: Admin Management ✅ COMPLETE
 
-Goal: Build the main daily workflow for teachers on smartphone.
+Result: Admin dashboard, teacher CRUD, academic class CRUD, halaqah group CRUD, student CRUD with assignments, admin student detail.
+
+### Phase 5: Reports & Export ✅ COMPLETE
+
+Result: Teacher/admin/student reports, Excel export (exceljs), PDF export (pdfkit), progress tracking with score badges and history tables.
+
+### Phase 6: Edit & Polish ✅ ~95% COMPLETE
+
+Result: Edit student/records, deactivate/reactivate students, delete teacher, change password, guided Quick Log, format improvements.
+
+### Phase 7: Target Management ❌ NEXT
+
+Goal: Full CRUD for hafalan/murojaah targets with progress tracking.
 
 Tasks:
 
-- Create teacher home screen.
-- Add bottom navigation.
-- Show assigned classes.
-- Show assigned students.
-- Add student search.
-- Add hafalan form.
-- Add murojaah form.
-- Add Quick Log page.
-- Show recent records.
-- Allow teachers to edit their own records.
-- Add smooth mobile interactions and save confirmations.
+- [ ] Create target form (surah, ayah range, deadline, type)
+- [ ] Edit target
+- [ ] Cancel/complete target
+- [ ] Progress percentage tracking
+- [ ] Behind-target alerts
+- [ ] Target overview on dashboard
 
-Result:
+### Phase 8: Notifications & UX Polish ❌ PLANNED
 
-Teachers can use the phone-friendly web dashboard to record and manage daily Tahfidz progress.
-
-### Phase 3: Admin Management
-
-Goal: Give admins control over the system.
+Goal: Production-ready UX polish.
 
 Tasks:
 
-- Manage teacher accounts.
-- Manage classes.
-- Manage students.
-- Assign teachers to classes.
-- View all records.
-- Correct data when needed.
+- [ ] Toast notifications for success/error
+- [ ] Better loading states
+- [ ] Pagination for large lists
+- [ ] PWA install support
+- [ ] Rate limiting on server actions
+- [ ] Responsive tweaks
 
-Result:
+### Phase 9: Telegram Integration — FUTURE
 
-The system can support many teachers, many classes, and many students in an organized way.
+- [ ] Telegram webhook route
+- [ ] Teacher Telegram ID linking
+- [ ] Quick commands
 
-### Phase 4: Reports and Export
+### Phase 10: AI Parser — FUTURE
 
-Goal: Make the system useful for monitoring and reporting.
+- [ ] AI parsing service module
+- [ ] Fallback parsing when AI unavailable
 
-Tasks:
+### Phase 11: Multilingual & PWA — FUTURE
 
-- Add student progress report.
-- Add class progress report.
-- Add teacher activity report.
-- Add weekly summary.
-- Add monthly summary.
-- Add students-behind-target report.
-- Add Excel export.
-- Add PDF export later.
-
-Result:
-
-Teachers and admins can understand progress clearly and produce useful reports.
-
-### Phase 5: Telegram Integration
-
-Goal: Add Telegram as a quick input channel.
-
-Tasks:
-
-- Add Telegram user ID to teacher profile.
-- Use Telegram webhook instead of long-running polling.
-- Connect Telegram records to the same PostgreSQL database.
-- Validate teacher identity by Telegram ID.
-- Match student names only inside the teacher's assigned students.
-- Save Telegram records into the same database.
-- Add quick commands such as add, view, today, stats, and murojaah.
-
-Result:
-
-Each teacher can log progress quickly through Telegram while the web dashboard remains the main system.
-
-### Phase 6: AI Parser
-
-Goal: Improve natural language logging after the normal system is stable.
-
-Tasks:
-
-- Separate AI parsing into its own service module.
-- Parse flexible teacher messages.
-- Validate AI output before saving.
-- Keep manual forms working without AI.
-- Add fallback parsing when AI is unavailable.
-
-Result:
-
-Teachers can use more natural messages, but the system does not depend completely on AI.
-
-### Phase 7: Polish and Deployment
-
-Goal: Prepare the project for real use.
-
-Tasks:
-
-- Improve mobile and desktop dashboard design.
-- Refine elegant visual identity.
-- Refine smooth animation and micro-interactions.
-- Complete Indonesian interface text.
-- Add English translation.
-- Add Arabic translation.
-- Improve Arabic right-to-left layout support.
-- Add PWA install support.
-- Add backup strategy.
-- Add Vercel deployment configuration.
-- Add setup documentation.
-- Add test coverage for important flows.
-
-Result:
-
-The project is ready to be tested by real teachers and improved based on feedback.
+- [ ] Indonesian (default), English, Arabic
+- [ ] RTL layout for Arabic
+- [ ] PWA offline support
 
 ## First Milestone
 
@@ -661,7 +587,35 @@ The database URL contains a password, so it should never be pasted into chat, sc
 - Design every main teacher flow for smartphone use.
 - Make the UI beautiful, smooth, and memorable without reducing the dignity of the Tahfidz purpose.
 
-## Final Direction
+## Current Project Status — ~75% Complete
+
+The project has completed Phases 1–6 and is production-functional. Core features remaining: Target Management and UX Polish.
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Foundation (Next.js, Prisma, DB, seed) | ✅ Complete |
+| 2 | Mobile Teacher Workflow (dashboard, students, hafalan, murojaah, quick-log) | ✅ Complete |
+| 3 | Auth & Permissions (NextAuth, roles, middleware) | ✅ Complete |
+| 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ Complete |
+| 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ Complete |
+| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ ~95% |
+| 7 | Target Management (CRUD targets, progress tracking) | ❌ Not started |
+| 8 | Notifications & UX Polish (toasts, PWA, loading states) | ❌ Not started |
+
+### What Works Now
+
+- **Teacher workflow**: Login → dashboard → view students → record hafalan/murojaah → view progress → export reports
+- **Admin workflow**: Login → manage teachers/classes/halaqahs/students → view all reports → export data
+- **Quick Log**: Guided structured input (search student → pick surah/ayah → submit)
+- **Reports**: Excel + PDF export for teacher, admin, and per-student views
+- **Edit/Delete**: Edit student data, edit/delete records, deactivate/reactivate students, delete teachers (admin), change password
+- **Auth**: NextAuth v5 with JWT, role-based access, teacher-scoped data
+
+### Demo Accounts
+
+- Admin: `admin` / `2026`
+- Teacher 1: `teacher.demo@tahfidzflow.local` / `2026`
+- Teacher 2: `teacher.salwa@tahfidzflow.local` / `2026`
 
 The best version of this project is a teacher-only, mobile-first Tahfidz management system with a Vercel-deployed web dashboard as the core and Telegram as a future quick logging helper.
 

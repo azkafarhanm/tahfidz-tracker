@@ -4,74 +4,43 @@ This document summarizes the current state, architecture, modules, and phased pl
 
 ---
 
-## Current Issues and Known Problems
+## Current Status — ~75% Complete (Phases 1-6 Done)
 
-### No Critical Issues
+### Completed Phases
 
-All known critical issues and code quality problems have been resolved across two bug fix sweeps.
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Foundation (Next.js, Prisma, DB, seed) | ✅ 100% |
+| 2 | Mobile Teacher Workflow (dashboard, students, hafalan, murojaah, quick-log) | ✅ 100% |
+| 3 | Auth & Permissions (NextAuth, roles, middleware) | ✅ 100% |
+| 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ 100% |
+| 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ 100% |
+| 6 | Edit & Polish (edit/delete records, deactivate/reactivate students, change password, delete teacher) | ✅ ~95% |
 
-### Prisma 7 Configuration Notes
+### Remaining Phases
 
-Prisma 7 requires adapter-based setup:
-- Uses `@prisma/adapter-pg` with `PrismaPg` adapter
-- Must use `new PrismaClient({ adapter })` constructor
-- Enums exported from `enums` file, not `client`
-- All enum imports must use `from "@/generated/prisma-next/enums"`
-- Prisma's `node:crypto` causes issues with Next.js 15 Turbopack. Use legacy webpack (disable turbopack in next.config.ts)
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 7 | Target Management (CRUD for hafalan/murojaah targets, progress %) | ❌ 0% |
+| 8 | Notifications & UX Polish (loading states, toasts, PWA) | ❌ 0% |
 
-### Bug Fix Sweep 1 (Completed - 15 fixes)
+---
 
-1. **Missing AUTH_SECRET** - Added to `web/.env`
-2. **Missing Prisma models** - Added `Account`, `Session`, `VerificationToken` models + User relations for `PrismaAdapter`
-3. **No auth checks in server actions** - Added `auth()` + `redirect("/login")` to all 3 action files
-4. **No teacher-student ownership verification** - Actions now verify student belongs to logged-in teacher (admins bypass)
-5. **No teacher-based data filtering** - Added `teacherId` filter to data functions, passed from all calling pages
-6. **Score of 0 never displayed** - Changed `record.score ?` to `record.score !== null ?`
-7. **Race condition in login redirect** - Replaced `router.refresh()` + `router.push()` with `window.location.href = "/"`
-8. **Overlapping sticky bottom bars** - Nav hidden when quick-log form is visible
-9. **sslmode=verify-full forced in database-url.ts** - Removed the SSL override
-10. **@types/bcryptjs in wrong section** - Moved from `dependencies` to `devDependencies`
-11. **Progress bar animation hardcoded** - Changed from `width: 12% to 72%` to `scaleX(0) to scaleX(1)` with `origin-left`
-12. **Missing AUTH_URL** - Added to `.env`
-13. **TypeScript errors** - Fixed `User.id` optional type, added explicit return type to `matchStudent()`
-14. **ESLint errors in fix-env.js** - Added to ESLint `globalIgnores`
-15. **SSL warning from pg** - Changed connection string `sslmode=require` to `sslmode=verify-full`
+## Constraints & Preferences
 
-### Bug Fix Sweep 2 (Completed - full codebase cleanup)
-
-**HIGH severity:**
-1. **Timezone mismatch in date input** - `todayInputValue()` used UTC date via `toISOString()` while time was local. Fixed to use local date formatting.
-2. **Silent fallback to `new Date()`** - `parseRecordDateTime` now returns `null` for empty inputs instead of silently defaulting to "now".
-
-**MEDIUM severity (architecture):**
-3. **Dashboard needsReviewCount inaccurate** - Was derived from only 5 recent records. Now uses dedicated DB count queries.
-4. **Dead components directory** - Deleted unused `students/components/` (11 files, ~300 lines of dead code).
-5. **Triplicated utility functions** - Extracted shared `readString`, `readOptionalString`, `readInt`, `parseRecordDateTime`, `createFailFn` to `src/lib/form-helpers.ts`.
-6. **Duplicated labels, formatters, nav** - Consolidated `dateFormatter`, `statusLabels`, `halaqahLevelLabels`, `formatRange`, `formatClassSummary`, `todayInputValue`, `nowTimeValue`, `getNavigation` into `src/lib/format.ts`.
-7. **Dashboard "Detail" button was dead** - Converted to `<Link>` navigating to `/students/{studentId}`. Added `studentId` to dashboard record data.
-8. **Missing packages in serverExternalPackages** - Added `@prisma/adapter-pg` and `pg` to Next.js config.
-9. **Shared BottomNav component** - Created `src/components/BottomNav.tsx`, replaced duplicated nav in 4 pages.
-10. **No loading skeleton** - Created `src/app/loading.tsx` with animated skeleton UI.
-11. **No error boundary** - Created `src/app/error.tsx` with styled error page.
-12. **Duplicated auth config** - `auth.ts` now spreads `authConfig` instead of duplicating `pages` and `callbacks`.
-
-**LOW severity (polish):**
-13. **Unreachable dead code** - Removed duplicate error check in `parseQuickLogInput`.
-14. **No-op database-url.ts** - Simplified to passthrough (removed unnecessary URL parse/serialize).
-15. **Profile page misleading text** - Removed "Tersedia setelah implementasi autentikasi" since auth is done.
-16. **Shared halaqah level labels** - Standardized labels in `src/lib/format.ts`. Current UI uses English `Low/Medium/High`.
-17. **Inconsistent LogoutButton styling** - Changed from `gray-*` + `rounded-lg` to `slate-*` + `rounded-2xl`.
-18. **Nav "Profil" linked to `#`** - Fixed to `/profile`.
-19. **Potential duplicate React keys** - Changed error list key from message string to index.
-20. **Missing `max={286}` on ayah inputs** - Added to all ayah number inputs.
-21. **Missing page metadata** - Added `metadata` exports to dashboard, students, student detail, quick-log, hafalan, murojaah pages.
-22. **No custom 404** - Created `src/app/not-found.tsx`.
-23. **Unconventional bracket notation** - `prisma.config.ts` changed from `process.env["DATABASE_URL"]` to `process.env.DATABASE_URL`.
-24. **Edge runtime warning on auth route** - Forced `src/app/api/auth/[...nextauth]/route.ts` to use `runtime = "nodejs"` to avoid `next-auth` / `jose` Edge Runtime warnings.
-25. **Admin login simplified** - Credentials auth now accepts `admin` as a simple login alias and maps it to the seeded admin account.
-26. **Demo password updated** - Seeded login password changed from `tahfidz2025` to `2026`.
-27. **Login placeholders simplified** - Login form placeholders now read `Username` and `Password`.
-28. **Shared session guard** - Added `src/lib/session.ts` so protected pages use one consistent auth and teacher-scope check.
+- Mobile-first, Indonesian-first UI with calm/respectful Tahfidz design
+- Next.js 15.5.15 pinned (Next.js 16 breaks on Windows SWC/Turbopack)
+- Prisma 7 with `@prisma/adapter-pg` adapter pattern, enums from `@/generated/prisma-next/enums`
+- All enum imports must use `from "@/generated/prisma-next/enums"`, never from `/client`
+- Legacy webpack only (Turbopack disabled due to `node:crypto` issues)
+- Password for all demo accounts is `2026`
+- Admin login alias is `admin` (maps to `admin@tahfidzflow.local`)
+- Teacher logins: `teacher.demo@tahfidzflow.local`, `teacher.salwa@tahfidzflow.local`
+- Halaqah level labels intentionally kept English: `Low/Medium/High`
+- SMP only — grades restricted to 7, 8, 9 (not 10-12)
+- Halaqah auto-create names follow pattern: `"Teacher Name - Kelas X"` (level shown separately in parentheses)
+- Puppeteer NOT usable on Vercel — use PDFKit instead for PDF generation
+- Lucide icon components cannot be passed as props from Server to Client Components — use string keys + `iconMap` lookup inside client components
 
 ---
 
@@ -117,28 +86,6 @@ Primary goals:
 - Prepare for Indonesian, English, and Arabic interface support.
 - Add Telegram and AI later after the web workflow is stable.
 
-### Current Status - Phase 3 Complete, Codebase Cleaned
-
-**Authentication is fully implemented and working:**
-- NextAuth with credentials provider
-- Login page at /login
-- Auth API route forced to Node.js runtime
-- Password hashing with bcrypt
-- Middleware for route protection
-- Session-based auth with JWT
-- Teacher-scoped data filtering
-- Demo user: `teacher.demo@tahfidzflow.local` / `2026`
-- Admin user: `admin` / `2026`
-
-**Codebase quality improvements completed:**
-- Shared utilities extracted (`form-helpers.ts`, `format.ts`)
-- Shared session helper extracted (`session.ts`)
-- Shared BottomNav component
-- Loading skeleton, error boundary, custom 404
-- All duplicated code consolidated
-- Indonesian-first UI with English halaqah level labels (`Low/Medium/High`)
-- Consistent design system (slate palette, rounded-2xl)
-
 ---
 
 ## Current Architecture
@@ -153,14 +100,12 @@ Current stack:
 - Prisma adapter: `@prisma/adapter-pg`
 - Auth: NextAuth v5 (Auth.js) beta
 - Icons: `lucide-react`
+- PDF: `pdfkit`
+- Excel: `exceljs`
 - Hosting target: Vercel
 - Local dev URL: `http://127.0.0.1:3000`
 
-Important decision:
-
-- The project uses Next.js instead of Django because free-first Vercel deployment and smartphone web access are high priorities.
-- The legacy Python Telegram bot is kept as reference and should not be deleted.
-- School structure uses separate academic classes and halaqah groups. Academic classes are normal school classes like `7A`, `8B`, and `9C`. Halaqah groups are tahfidz groups such as `Halaqah 8`, with levels `LOW`, `MEDIUM`, or `HIGH`.
+---
 
 ## Current Project Structure
 
@@ -187,11 +132,6 @@ tahfidz-tracker/
       schema.prisma
       seed.ts
       migrations/
-        20260428061120_init/
-          migration.sql
-        20260428190000_academic_classes_halaqah_levels/
-          migration.sql
-        migration_lock.toml
     src/
       auth.ts                 NextAuth config (spreads auth.config.ts)
       auth.config.ts          Auth pages + authorized callback
@@ -207,15 +147,31 @@ tahfidz-tracker/
           auth/
             [...nextauth]/
               route.ts         NextAuth route forced to Node.js runtime
+          reports/
+            export-teacher/    Excel export (exceljs)
+            export-admin/      Excel export admin
+            export-student/    Excel export per student
+            pdf-teacher/       PDF export (pdfkit)
+            pdf-admin/         PDF export admin
+            pdf-student/       PDF export per student
         login/
           page.tsx
         quick-log/
           page.tsx
-          actions.ts
+          GuidedQuickLog.tsx   Guided client component (search → select → structured form)
+          actions.ts           createGuidedRecord server action
         students/
-          page.tsx
-          [id]/
+          page.tsx             Student list + inactive students section
+          actions.ts           createTeacherStudent with grade + auto-create halaqah
+          new/
+            StudentForm.tsx    Student form with Kelas (7/8/9) + Level cards
             page.tsx
+          [id]/
+            page.tsx           Student detail with edit/export/deactivate
+            edit/
+              EditStudentForm.tsx
+              actions.ts       updateStudent, deactivateStudent, reactivateTeacherStudent
+            DeactivateButton.tsx
             hafalan/
               actions.ts
               new/
@@ -224,155 +180,155 @@ tahfidz-tracker/
               actions.ts
               new/
                 page.tsx
+            records/
+              [recordType]/
+                [recordId]/
+                  edit/
+                    page.tsx     Edit record (hafalan/murojaah)
+                    DeleteRecordButton.tsx
         reports/
-          page.tsx
+          page.tsx             Teacher report page with Excel/PDF buttons
         profile/
-          page.tsx
+          page.tsx             Profile page with success banner
+          change-password/
+            page.tsx           Change password form
+            actions.ts         changePassword server action
+        admin/
+          page.tsx             Admin dashboard
+          teachers/
+            page.tsx           Teacher directory
+            TeacherForm.tsx    Shared teacher form
+            actions.ts         createTeacher, updateTeacher, toggleTeacherActive, deleteTeacher
+            new/
+              page.tsx
+            [id]/
+              edit/
+                page.tsx       Edit teacher + delete section
+                DeleteTeacherButton.tsx
+          classes/
+            page.tsx
+            actions.ts
+            new/page.tsx
+            [id]/edit/page.tsx
+          halaqah/
+            page.tsx
+            actions.ts
+            new/page.tsx
+            [id]/edit/page.tsx
+          students/
+            page.tsx           Admin student directory with clickable names
+            StudentForm.tsx
+            actions.ts
+            new/page.tsx
+            [id]/
+              page.tsx         Admin student detail with full history
+              edit/page.tsx    Admin edit student
+          reports/
+            page.tsx           Admin report page
       components/
         BottomNav.tsx          Shared bottom navigation
         LogoutButton.tsx
+        ReactivateStudentButton.tsx
       lib/
         prisma.ts              Prisma client singleton
         database-url.ts        DATABASE_URL validation
         form-helpers.ts        Shared form parsing utilities
         format.ts              Shared formatters, labels, date/time, navigation
-        dashboard.ts           Dashboard data queries
-        students.ts            Student data queries
-        quick-log.ts           Quick-log parser + data queries
         session.ts             Shared auth/session scope helper
+        dashboard.ts           Dashboard data queries
+        students.ts            Student data queries, getInactiveStudentsData
+        quick-log.ts           Quick-log parser (legacy, no longer used by page)
+        admin.ts               All admin data queries
+        reports.ts             Teacher/admin/student report queries
+        records.ts             Single record data fetch (hafalan or murojaah)
+        record-actions.ts      Shared updateRecord, deleteRecord server actions
+        pdf.ts                 PDFKit-based PDF generation
 ```
+
+---
 
 ## Completed Work
 
-Planning and organization:
+### Phase 1: Foundation — Complete
 
-- Created `README.md` with purpose, direction, architecture, roles, phases, mobile-first design, PWA direction, multilingual direction, and deployment strategy.
-- Chosen product name: `TahfidzFlow`.
-- Preserved old Python bot files in `legacy-bot/`.
-- Added root `.gitignore` and `.env.example`.
-- Rotated Telegram/Gemini secrets outside the codebase according to the user's report.
+- Next.js app with TypeScript, Tailwind CSS, ESLint
+- Prisma 7 with Neon PostgreSQL
+- Seed script with demo data (2 teachers, halaqahs, students, records)
+- Mobile-first dashboard
 
-Next.js foundation:
+### Phase 2: Mobile Teacher Workflow — Complete
 
-- Created `web/` Next.js app.
-- Pinned app to Next.js 15.5.15 after Next.js 16 caused a local Windows SWC/Turbopack issue.
-- Configured TypeScript, Tailwind CSS, ESLint, and app router.
-- Added `lucide-react` icons.
-- Created mobile-first dashboard preview with elegant TahfidzFlow branding.
+- Teacher dashboard with today's summary, recent activities
+- Student list with search, hafalan/murojaah summaries, target count
+- Student detail with full history table, targets, score badges
+- Add hafalan/murojaah forms with surah/ayah pickers
+- Quick Log (guided flow): search student → structured form → submit
+- Bottom navigation
 
-Database foundation:
+### Phase 3: Auth & Permissions — Complete
 
-- Created Neon PostgreSQL database.
-- Added `DATABASE_URL` to `web/.env` locally.
-- Created Prisma schema.
-- Ran first migration successfully.
-- Generated Prisma Client.
-- Added database helper files.
-- Added idempotent seed script.
-- Seeded sample teacher, halaqah group, academic classes, students, hafalan records, murojaah record, and targets into Neon.
-- Updated home dashboard to read data from Neon instead of hardcoded arrays.
-- Added `/students` student list page.
-- Added `/students/[id]` student detail page.
-- Added `/students/[id]/hafalan/new` add-hafalan form and server action.
-- Added school structure direction: students belong to both an academic class and a halaqah group; halaqah groups have levels.
+- NextAuth v5 with credentials provider
+- JWT session with role (ADMIN/TEACHER) and teacherId
+- Middleware route protection
+- Teacher-scoped data filtering
+- Server actions verify auth + ownership
 
-Quick Log implementation:
+### Phase 4: Admin Management — Complete
 
-- Added `/quick-log` page for fast teacher entries.
-- Created quick-log parser in `src/lib/quick-log.ts` to parse natural language entries.
-- Added server action to save parsed entries as Hafalan or Murojaah records.
-- Updated navigation to link to `/quick-log`.
-- Updated student detail page layout with better mobile navigation.
+- Admin dashboard with system overview
+- Teacher CRUD (create, edit, activate/deactivate, delete)
+- Academic Class CRUD
+- Halaqah Group CRUD
+- Student CRUD with teacher/class/halaqah assignment
+- Admin student detail with full history
 
-Murojaah and time field implementation:
+### Phase 5: Reports & Export — Complete
 
-- Fixed TypeScript strict guard issues in quick-log parser.
-- Added `/students/[id]/murojaah/new` form page for recording revision (murojaah).
-- Added server action to save RevisionRecord.
-- Added time input field to both hafalan and murojaah forms.
-- All timestamp records now capture actual recording time, not just midnight.
-- Teachers can review and adjust date/time before confirming Quick Log entries.
+- Teacher report: halaqah summary, student progress table, avg score, needs review count
+- Admin report: all teachers/students overview
+- Student progress detail with full history + targets + score badges
+- Excel export (exceljs): colored headers, multiple sheets, yellow highlights for needs-review
+- PDF export (pdfkit): tables, stat cards, footer timestamp
+- Export buttons on all report and detail pages
 
-Authentication (Phase 3):
+### Phase 6: Edit & Polish — ~95% Complete
 
-- Implemented NextAuth v5 with credentials provider.
-- Auth route `src/app/api/auth/[...nextauth]/route.ts` forced to Node.js runtime.
-- JWT session strategy with role and teacherId in token.
-- Middleware route protection via `auth.config.ts`.
-- Server actions verify authentication + teacher-student ownership.
-- Data pages filter by teacherId (admins see all).
-- Seed script creates admin and teacher demo accounts with password `2026`.
-- Login accepts `admin` as a simple alias for the admin account.
+- Edit student (teacher + admin) with pre-filled forms
+- Deactivate/reactivate students with 2-step confirmation
+- Inactive students section on `/students` page
+- Edit/delete records (hafalan & murojaah) with pre-filled forms + delete confirmation
+- Edit record button (pencil icon) on each activity row
+- Quick Log refactored from NLP to guided structured flow
+- "Kelas" field (7/8/9) on teacher add-student form
+- Auto-create halaqah with grade + duplicate check
+- `formatClassSummary` shows `"AcademicClass · HalaqahName (Level)"`
+- Admin student list: clickable student names
+- Admin dashboard: "Laporan" card
+- Delete teacher account (admin) with student-count safety check
+- Change password page at `/profile/change-password`
+- Profile page: "Ubah Password" button + success banner
 
-Code quality sweep:
+### Bug Fix Sweeps
 
-- Extracted shared form helpers to `src/lib/form-helpers.ts`.
-- Extracted shared format utilities to `src/lib/format.ts`.
-- Extracted shared session guard to `src/lib/session.ts`.
-- Created shared `BottomNav` component replacing 4 duplicated nav arrays.
-- Created `loading.tsx` (skeleton), `error.tsx` (error boundary), `not-found.tsx` (404).
-- Deleted dead `students/components/` directory (11 unused files).
-- Fixed timezone issue in date inputs (UTC vs local).
-- Fixed silent date fallback in `parseRecordDateTime`.
-- Fixed dashboard needsReviewCount to use actual DB count.
-- Fixed dashboard "Detail" button to link to student page.
-- Consolidated all duplicated labels, formatters, constants.
-- Standardized halaqah level labels in shared formatter. Current display uses English `Low/Medium/High`.
-- Added page-specific metadata exports.
-- Added `max={286}` to ayah number inputs.
-- Simplified login placeholders to `Username` and `Password`.
-- Unified design system (slate colors, rounded-2xl).
+**Sweep 1 (15 fixes):** AUTH_SECRET, Prisma models, auth checks, teacher-student ownership, score display, race condition, overlapping nav, SSL, bcryptjs types, progress animation, AUTH_URL, TypeScript errors, ESLint, SSL mode
 
-Verification:
+**Sweep 2 (28 fixes):** Timezone date input, silent date fallback, dashboard needsReviewCount, dead components, shared utilities (form-helpers, format, session), BottomNav, loading skeleton, error boundary, custom 404, dead code, no-op database-url, profile text, halaqah labels, LogoutButton styling, nav links, React keys, max ayah, page metadata, bracket notation, edge runtime, admin login alias, demo password, login placeholders, shared session guard
 
-```bash
-npx tsc --noEmit   # 0 errors
-npm run typecheck   # 0 errors
-npm run lint        # 0 errors, 0 warnings
-npx prisma validate # valid
-npx prisma generate # success
-```
-
-## Current App Behavior
-
-The home page at `web/src/app/page.tsx` is a dynamic server-rendered dashboard.
-
-It displays:
-
-- TahfidzFlow branding with personalized greeting.
-- Today's record count from database.
-- Weekly target progress from database.
-- Quick action buttons.
-- Recent hafalan and murojaah activities with clickable "Detail" links.
-- Total count of records needing review (accurate DB count).
-- Bottom navigation for mobile-first teacher workflow.
-
-When navigating, users see a skeleton loading state. On errors, a styled error boundary is shown. Unknown routes show a custom 404 page.
-
-The seeded data currently includes:
-
-- Teacher: Ustadzah Nur Aisyah
-- Academic classes: 7A, 7B, 8A, 8B, 9A, 9B, 9C
-- Halaqah group: Halaqoh Ust Azka, level LOW
-- Students: Afdal Fauzan Nurrohman, Muhammad Nasuha, Jureid Sholahuddin
-- Hafalan and murojaah sample records.
-- Active targets.
+---
 
 ## Core Data Models
 
 Current Prisma models:
 
-- `User`
-- `Teacher`
-- `AcademicClass`
-- `ClassGroup`
-- `Student`
-- `MemorizationRecord`
-- `RevisionRecord`
-- `Target`
-- `Account` (required by PrismaAdapter for NextAuth)
-- `Session` (required by PrismaAdapter for NextAuth)
-- `VerificationToken` (required by PrismaAdapter for NextAuth)
+- `User` — login, role, isActive
+- `Teacher` — profile linked to User, fullName, phone, isActive
+- `AcademicClass` — school class (7A, 8B, etc.), grade, section, academicYear
+- `ClassGroup` — halaqah group, teacher, level (LOW/MEDIUM/HIGH), grade, academicYear
+- `Student` — fullName, gender, joinDate, isActive, notes, linked to teacher, academicClass, classGroup
+- `MemorizationRecord` — hafalan record (surah, ayah range, status, score, date)
+- `RevisionRecord` — murojaah record (surah, ayah range, score, date)
+- `Target` — student goal (type, surah, ayah range, dates, status)
+- `Account`, `Session`, `VerificationToken` — NextAuth PrismaAdapter
 
 Current enums:
 
@@ -383,217 +339,63 @@ Current enums:
 - `TargetType`: `HAFALAN`, `MUROJAAH`
 - `TargetStatus`: `ACTIVE`, `COMPLETED`, `MISSED`, `CANCELLED`
 
-Important data design decisions:
+---
 
-- Students and records use IDs, not only names.
-- Students have separate academic class and halaqah group relationships.
-- Academic classes represent school classes like `7A`, `8B`, and `9C`.
-- `ClassGroup` currently means halaqah group in the product, with a `level` field. A later cleanup may rename it to `HalaqahGroup`.
-- Halaqah groups are not schedule-based because tahfidz time is flexible/random by day.
-- Hafalan and murojaah are separate models.
-- Teacher ownership exists on students, records, and targets.
-- Telegram ID is planned on the teacher profile for later bot integration.
+## Key Design Decisions
 
-## Main Modules To Build
+- Students use IDs, not only names
+- Students have separate academic class and halaqah group relationships
+- `ClassGroup` = halaqah group in product (may rename later)
+- Hafalan and murojaah are separate models
+- Teacher ownership on students, records, and targets
+- Puppeteer replaced with PDFKit for Vercel compatibility
+- Quick Log moved from NLP parsing to guided structured input
+- Grade pool fixed to [7, 8, 9] (SMP only)
+- Auto-create halaqah finds existing by `(teacherId, grade)` not `(teacherId, grade, level)`
+- Record actions (`updateRecord`, `deleteRecord`) in `@/lib/record-actions.ts` for shared access from deeply nested routes
+- Delete teacher checks student count before allowing deletion
+- Change password requires current password verification
 
-### Authentication
+---
 
-Status: Complete.
-
-- NextAuth v5 (Auth.js) with credentials provider.
-- JWT session strategy with role and teacherId.
-- Middleware route protection.
-- Server actions verify authentication + teacher-student ownership.
-- Data pages filter by teacherId (admins see all).
-
-### Teacher Dashboard
-
-Status: Complete on `/`.
-
-- Reads real Neon data, filtered by teacher.
-- Loading skeleton, error boundary.
-- "Detail" links navigate to student pages.
-
-### Students / Santri
-
-Status: Complete on `/students` and `/students/[id]`.
-
-- Student cards show academic class and halaqah summary.
-- Search works through the `q` query string.
-- Teacher-scoped data filtering.
-
-### Hafalan Records
-
-Status: Complete on `/students/[id]/hafalan/new`.
-
-- Server action validates input and saves a `MemorizationRecord`.
-- Auth + ownership verification.
-
-### Murojaah Records
-
-Status: Complete on `/students/[id]/murojaah/new`.
-
-- Server action validates input and saves a `RevisionRecord`.
-- Auth + ownership verification.
-
-### Quick Log
-
-Status: Complete on `/quick-log`.
-
-- Natural language parser.
-- Confirmation form with editable fields.
-- Date + time pickers.
-- Auth + ownership verification.
-
-### Targets
-
-Status: Display only. No CRUD yet.
-
-- Student detail page shows active targets.
-- No UI for creating/editing targets.
-
-### Reports
-
-Status: Placeholder page only.
-
-### Admin Management
-
-Status: Not started.
-
-### Multilingual Support
-
-Status: Not implemented. UI is Indonesian-first, with a few English-facing labels such as halaqah levels (`Low/Medium/High`) and login field placeholders.
-
-### Telegram Integration
-
-Status: Not implemented. Legacy bot preserved for reference.
-
-### AI Parser
-
-Status: Not implemented.
-
-## Phased Plan
-
-### Phase 1: Foundation
-
-Status: Complete.
-
-### Phase 2: Mobile Teacher Workflow
-
-Status: Complete (100%).
-
-Teachers can:
-1. View dashboard with today's summary
-2. List and search all assigned students
-3. Record hafalan for a student with time
-4. Record murojaah for a student with time
-5. Use Quick Log for fast entries with confirmation
-6. Navigate smoothly between all main sections
-7. See recent activities with accurate timestamps
-
-### Phase 3: Auth and Permissions
-
-Status: Complete.
-
-- Admin and teacher login with NextAuth.
-- Role-based access (ADMIN, TEACHER).
-- Teacher data scoping via session.teacherId.
-- Protected routes via middleware.
-- Server actions verify auth + ownership.
-- Loading skeleton, error boundary, custom 404.
-
-### Phase 4: Admin Management
-
-Status: Not started.
-
-Build:
-
-- Teacher CRUD.
-- Academic class CRUD.
-- Halaqah group CRUD.
-- Student CRUD.
-- Assign teachers/halaqah groups.
-
-### Phase 5: Reports and Export
-
-Status: Not started.
-
-Build:
-
-- Student report.
-- Academic class report.
-- Halaqah group report.
-- Weekly/monthly reports.
-- Behind-target report.
-- Excel export.
-- PDF export later.
-
-### Phase 6: PWA, Multilingual, and Polish
-
-Status: Not started.
-
-Build:
-
-- PWA install support.
-- Indonesian translation structure.
-- English translation.
-- Arabic translation and RTL handling.
-- More refined motion and visual polish.
-
-### Phase 7: Telegram and AI
-
-Status: Future.
-
-Build:
-
-- Telegram webhook route.
-- Teacher Telegram ID linking.
-- Telegram quick commands.
-- Quick Log parser reuse.
-- Optional AI parser service.
-
-## Current Commands
-
-Run from `web/`:
+## Verification
 
 ```bash
-npm run dev
-npm run lint
-npm run typecheck
-npm run verify
-npm run build
-npm run db:validate
-npm run db:generate
-npm run db:migrate -- --name <name>
-npm run db:seed
-npm run db:studio
+npx tsc --noEmit   # 0 errors
+npx next build     # 0 errors, 0 warnings
+npx prisma validate # valid
 ```
 
-Current dev server:
+---
 
-```text
-http://127.0.0.1:3000
-```
+## Recommended Next Steps
+
+### Phase 7: Target Management
+- [ ] Create target form (set surah, ayah range, deadline)
+- [ ] Edit target
+- [ ] Cancel/complete target
+- [ ] Target progress tracking (percentage, behind-target alerts)
+- [ ] Target overview on dashboard
+
+### Phase 8: Notifications & UX Polish
+- [ ] Toast notifications for success/error feedback
+- [ ] Better loading states
+- [ ] Pagination for large lists
+- [ ] PWA install support
+- [ ] Responsive tweaks
+- [ ] Rate limiting on server actions
+
+### Future
+- [ ] Telegram integration (webhook)
+- [ ] AI parser for Quick Log
+- [ ] Multilingual (English, Arabic)
+- [ ] PWA offline support
+
+---
 
 ## Environment Notes
 
-Important files:
-
-- `web/.env` contains the real Neon `DATABASE_URL`, `AUTH_SECRET`, and `AUTH_URL`.
-- `web/.env` must never be committed.
-- `legacy-bot/config.py` is ignored and contains local legacy secrets only.
-- Root `.gitignore` and `web/.gitignore` are intended to keep secrets, virtualenv, node modules, build output, and local data out of Git.
-
-### Prisma 7 Migration Notes
-
-**Important:** This project uses Prisma 7 which has breaking changes:
-
-1. **Datasource URL** - No longer in schema.prisma. Use `prisma.config.ts` for migrations.
-2. **PrismaClient** - Must use adapter: `new PrismaClient({ adapter })`
-3. **Enums** - Exported from `/enums` file, not from `/client`
-4. **Middleware** - Prisma's `node:crypto` causes issues with Next.js 15 Turbopack. Use legacy webpack.
-
-## Required .env Variables
+Required `.env` variables in `web/.env`:
 
 ```
 DATABASE_URL=postgresql://...?sslmode=verify-full
@@ -601,18 +403,28 @@ AUTH_SECRET=your-secret-key-here
 AUTH_URL=http://localhost:3000
 ```
 
-Security:
+- `web/.env` must never be committed
+- `legacy-bot/config.py` is ignored and contains local legacy secrets only
+- Root `.gitignore` and `web/.gitignore` keep secrets, node_modules, build output out of Git
 
-- Do not paste database URLs, Telegram tokens, or Gemini keys into chat, README, screenshots, or GitHub.
-- The legacy bot previously had secrets in code. The user reported rotating Telegram and Gemini keys.
+### Prisma 7 Migration Notes
+
+1. **Datasource URL** — No longer in schema.prisma. Use `prisma.config.ts` for migrations.
+2. **PrismaClient** — Must use adapter: `new PrismaClient({ adapter })`
+3. **Enums** — Exported from `/enums` file, not from `/client`
+4. **Middleware** — Prisma's `node:crypto` causes issues with Next.js 15 Turbopack. Use legacy webpack.
+
+---
 
 ## Known Local Environment Notes
 
 - Node.js was installed during the rebuild.
-- PowerShell blocks direct `npm` PowerShell script execution, so commands were run through `npm.cmd` when needed.
-- Next.js 16 initially caused local Windows SWC/Turbopack issues. The project was pinned to Next.js 15.5.15 for stability.
-- Prisma 7 generated client is output to `web/src/generated/prisma-next`, which is ignored by `web/.gitignore`.
-- Windows Application Control blocked Prisma's `schema-engine-windows.exe` and blocked `tsx`/esbuild child-process spawning. Migrations were applied manually through the `pg` driver.
+- PowerShell blocks direct `npm` PowerShell script execution.
+- Next.js 16 caused local Windows SWC/Turbopack issues. Project pinned to Next.js 15.5.15.
+- Prisma 7 generated client output to `web/src/generated/prisma-next`, ignored by `.gitignore`.
+- Windows Application Control blocked Prisma engines and `tsx` child-process spawning.
+
+---
 
 ## Design Direction
 
@@ -634,69 +446,19 @@ Avoid:
 
 ---
 
-## Strengths
+## Current Commands
 
-1. **Clean Architecture** - Well-organized with shared utilities in `lib/`, shared components in `components/`
-2. **Mobile-First Design** - Responsive UI optimized for smartphones
-3. **TypeScript** - Full type safety, 0 errors on `tsc --noEmit`
-4. **Prisma ORM** - Modern database access with type-safe queries
-5. **PostgreSQL (Neon)** - Serverless, scalable database
-6. **Authentication** - NextAuth v5 with credentials, JWT sessions, role-based access
-7. **Teacher Scoping** - Data filtered by teacherId, ownership verification in actions
-8. **Shared Utilities** - `form-helpers.ts`, `format.ts`, `BottomNav` eliminate duplication
-9. **Quick Log Parser** - Natural language input parsing for fast entry
-10. **UX Polish** - Loading skeletons, error boundary, custom 404, consistent design system
-11. **Code Quality** - 0 ESLint errors, 0 TypeScript errors, no dead code
-12. **Indonesian-First UI** - Most labels are in Bahasa Indonesia, with halaqah levels currently displayed as `Low/Medium/High`
+Run from `web/`:
 
----
-
-## Areas for Improvement
-
-### High Priority (Next Phase)
-1. **No Admin Panel** - Can't manage teachers, classes, students via UI
-2. **No Student CRUD** - Can't add/edit/delete students from UI
-3. **No Reports** - Placeholder page only
-4. **No Role-Based UI** - No admin vs teacher views
-5. **No Target CRUD** - Targets shown but can't be created/edited
-
-### Medium Priority
-6. **Single Teacher Demo** - Seeded data is for one teacher only
-7. **No Pagination** - Student list could grow large
-8. **No Rate Limiting** - Server actions have no throttle
-9. **Client-side Filtering** - Student search filters in JS, not DB
-
-### Nice to Have
-10. **No PWA Support** - Can't install as app on phone
-11. **No i18n** - Indonesian only
-12. **No Telegram Integration** - Legacy bot not connected
-13. **No AI Parser** - Quick Log uses regex only
-14. **No Export** - Can't export to Excel/PDF
-
----
-
-## Recommended Next Steps
-
-### Step 1: Phase 4 - Admin Management (recommended next)
-- [ ] Teacher CRUD (create, read, update, delete)
-- [ ] Academic Class CRUD
-- [ ] Halaqah Group CRUD
-- [ ] Student CRUD with assignment
-- [ ] Admin dashboard view
-
-### Step 2: Phase 5 - Reports & Export
-- [ ] Student progress report
-- [ ] Class/Halaqah summary
-- [ ] Excel export
-- [ ] Behind-target alerts
-
-### Step 3: Phase 6 - Polish
-- [ ] PWA support
-- [ ] Pagination for large lists
-- [ ] Rate limiting on server actions
-- [ ] DB-level search filtering
-
-**Recommended path:**
-```
-Phase 4 (Admin) -> Phase 5 (Reports) -> Phase 6 (PWA/i18n)
+```bash
+npm run dev
+npm run lint
+npm run typecheck
+npm run verify
+npm run build
+npm run db:validate
+npm run db:generate
+npm run db:migrate -- --name <name>
+npm run db:seed
+npm run db:studio
 ```
