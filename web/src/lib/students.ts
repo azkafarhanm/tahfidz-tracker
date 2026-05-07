@@ -72,6 +72,12 @@ function formatTarget(target: {
   endDate: Date;
   notes: string | null;
 }) {
+  const now = new Date();
+  const totalDays = target.endDate.getTime() - target.startDate.getTime();
+  const elapsed = now.getTime() - target.startDate.getTime();
+  const timeProgress = totalDays > 0 ? Math.min(100, Math.max(0, Math.round((elapsed / totalDays) * 100))) : 0;
+  const isOverdue = now > target.endDate;
+
   return {
     id: target.id,
     type: targetTypeLabels[target.type],
@@ -79,6 +85,8 @@ function formatTarget(target: {
     startDate: dateFormatter.format(target.startDate),
     endDate: dateFormatter.format(target.endDate),
     notes: target.notes,
+    timeProgress,
+    isOverdue,
   };
 }
 
