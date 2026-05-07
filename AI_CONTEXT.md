@@ -4,7 +4,7 @@ This document summarizes the current state, architecture, modules, and phased pl
 
 ---
 
-## Current Status — ~75% Complete (Phases 1-6 Done)
+## Current Status — ~90% Complete (Phases 1-8 Done)
 
 ### Completed Phases
 
@@ -15,14 +15,18 @@ This document summarizes the current state, architecture, modules, and phased pl
 | 3 | Auth & Permissions (NextAuth, roles, middleware) | ✅ 100% |
 | 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ 100% |
 | 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ 100% |
-| 6 | Edit & Polish (edit/delete records, deactivate/reactivate students, change password, delete teacher) | ✅ ~95% |
+| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ ~95% |
+| 7 | Target Management (CRUD targets, progress bar, complete/cancel) | ✅ 100% |
+| 8 | UX Polish (toast notifications, loading skeletons) | ✅ 100% |
 
-### Remaining Phases
+### Remaining / Future
 
 | Phase | Feature | Status |
 |-------|---------|--------|
-| 7 | Target Management (CRUD for hafalan/murojaah targets, progress %) | ❌ 0% |
-| 8 | Notifications & UX Polish (loading states, toasts, PWA) | ❌ 0% |
+| 9 | PWA install support | ❌ Future |
+| 10 | Telegram Integration | ❌ Future |
+| 11 | AI Parser | ❌ Future |
+| 12 | Multilingual (English, Arabic) | ❌ Future |
 
 ---
 
@@ -167,7 +171,8 @@ tahfidz-tracker/
             StudentForm.tsx    Student form with Kelas (7/8/9) + Level cards
             page.tsx
           [id]/
-            page.tsx           Student detail with edit/export/deactivate
+            page.tsx           Student detail with edit/export/deactivate + target cards
+            loading.tsx        Skeleton loading for student detail
             edit/
               EditStudentForm.tsx
               actions.ts       updateStudent, deactivateStudent, reactivateTeacherStudent
@@ -186,6 +191,13 @@ tahfidz-tracker/
                   edit/
                     page.tsx     Edit record (hafalan/murojaah)
                     DeleteRecordButton.tsx
+            targets/
+              new/
+                page.tsx       Create target form
+              [targetId]/
+                edit/
+                  page.tsx     Edit target form
+        loading.tsx            Skeleton loading for students list
         reports/
           page.tsx             Teacher report page with Excel/PDF buttons
         profile/
@@ -229,6 +241,8 @@ tahfidz-tracker/
         BottomNav.tsx          Shared bottom navigation
         LogoutButton.tsx
         ReactivateStudentButton.tsx
+        TargetActions.tsx      Cancel/complete target buttons
+        ToastMessenger.tsx     URL param → toast notification bridge
       lib/
         prisma.ts              Prisma client singleton
         database-url.ts        DATABASE_URL validation
@@ -236,12 +250,13 @@ tahfidz-tracker/
         format.ts              Shared formatters, labels, date/time, navigation
         session.ts             Shared auth/session scope helper
         dashboard.ts           Dashboard data queries
-        students.ts            Student data queries, getInactiveStudentsData
+        students.ts            Student data queries, getInactiveStudentsData, target progress
         quick-log.ts           Quick-log parser (legacy, no longer used by page)
         admin.ts               All admin data queries
         reports.ts             Teacher/admin/student report queries
         records.ts             Single record data fetch (hafalan or murojaah)
         record-actions.ts      Shared updateRecord, deleteRecord server actions
+        target-actions.ts      Create, update, cancel, complete target server actions
         pdf.ts                 PDFKit-based PDF generation
 ```
 
@@ -307,6 +322,25 @@ tahfidz-tracker/
 - Delete teacher account (admin) with student-count safety check
 - Change password page at `/profile/change-password`
 - Profile page: "Ubah Password" button + success banner
+
+### Phase 7: Target Management — Complete
+
+- Create target form at `/students/[id]/targets/new` (type hafalan/murojaah, surah, ayah range, start/end dates, notes)
+- Edit target at `/students/[id]/targets/[targetId]/edit` with pre-filled values
+- Complete target button — marks as COMPLETED
+- Cancel target button — marks as CANCELLED
+- Progress bar on each target card showing time elapsed percentage
+- Overdue indicator (red "Lewat" badge) when past end date
+- Edit link (pencil icon) on each target card
+- "Tambah" button on target section header
+- Server actions in `src/lib/target-actions.ts` with teacher ownership verification
+
+### Phase 8: UX Polish — Complete
+
+- Toast notifications via `sonner` library for success/error feedback across all actions
+- `ToastMessenger` client component reads `?success=`/`?error=` URL params, shows toast, cleans URL
+- Loading skeletons for `/students` and `/students/[id]` routes
+- Root layout includes `<Toaster>` and `<ToastMessenger>`
 
 ### Bug Fix Sweeps
 

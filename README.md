@@ -587,9 +587,9 @@ The database URL contains a password, so it should never be pasted into chat, sc
 - Design every main teacher flow for smartphone use.
 - Make the UI beautiful, smooth, and memorable without reducing the dignity of the Tahfidz purpose.
 
-## Current Project Status — ~75% Complete
+## Current Project Status — ~90% Complete
 
-The project has completed Phases 1–6 and is production-functional. Core features remaining: Target Management and UX Polish.
+The project has completed Phases 1–8 and is production-ready. Remaining phases are future enhancements.
 
 | Phase | Feature | Status |
 |-------|---------|--------|
@@ -599,16 +599,18 @@ The project has completed Phases 1–6 and is production-functional. Core featur
 | 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ Complete |
 | 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ Complete |
 | 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ ~95% |
-| 7 | Target Management (CRUD targets, progress tracking) | ❌ Not started |
-| 8 | Notifications & UX Polish (toasts, PWA, loading states) | ❌ Not started |
+| 7 | Target Management (CRUD targets, progress bar, complete/cancel) | ✅ Complete |
+| 8 | UX Polish (toast notifications, loading skeletons) | ✅ Complete |
 
 ### What Works Now
 
-- **Teacher workflow**: Login → dashboard → view students → record hafalan/murojaah → view progress → export reports
+- **Teacher workflow**: Login → dashboard → view students → record hafalan/murojaah → set targets → view progress → export reports
 - **Admin workflow**: Login → manage teachers/classes/halaqahs/students → view all reports → export data
+- **Target Management**: Create/edit/cancel/complete targets with progress bars and overdue tracking
 - **Quick Log**: Guided structured input (search student → pick surah/ayah → submit)
 - **Reports**: Excel + PDF export for teacher, admin, and per-student views
 - **Edit/Delete**: Edit student data, edit/delete records, deactivate/reactivate students, delete teachers (admin), change password
+- **Toast Notifications**: Success/error feedback on all actions via sonner
 - **Auth**: NextAuth v5 with JWT, role-based access, teacher-scoped data
 
 ### Demo Accounts
