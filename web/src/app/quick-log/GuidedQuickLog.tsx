@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useActionState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
   CheckCircle2,
   Hash,
+  Loader2,
   PenLine,
   RotateCcw,
-  Save,
   Search,
   X,
 } from "lucide-react";
@@ -22,7 +22,7 @@ type Student = {
 };
 
 type GuidedQuickLogProps = {
-  action: (formData: FormData) => Promise<void>;
+  action: (prev: unknown, formData: FormData) => Promise<void>;
   students: Student[];
   todayDate: string;
   nowTime: string;
@@ -49,6 +49,8 @@ export default function GuidedQuickLog({
   error,
   success,
 }: GuidedQuickLogProps) {
+  const [, formAction, isPending] = useActionState(action, null);
+
   const [query, setQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -59,8 +61,6 @@ export default function GuidedQuickLog({
   const [status, setStatus] = useState("LANCAR");
   const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
-  const [date] = useState(todayDate);
-  const [time] = useState(nowTime);
 
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -96,10 +96,6 @@ export default function GuidedQuickLog({
   function handleClearStudent() {
     setSelectedStudent(null);
     setQuery("");
-  }
-
-  async function handleSubmit(formData: FormData) {
-    await action(formData);
   }
 
   return (
@@ -138,7 +134,7 @@ export default function GuidedQuickLog({
           </div>
         ) : null}
 
-        <form action={handleSubmit} className="mt-6 space-y-4">
+        <form action={formAction} className="mt-6 space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Search
@@ -378,8 +374,8 @@ export default function GuidedQuickLog({
                 </label>
               </section>
 
-              <input name="date" type="hidden" value={date} />
-              <input name="time" type="hidden" value={time} />
+              <input name="date" type="hidden" value={todayDate} />
+              <input name="time" type="hidden" value={nowTime} />
 
               <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
                 <Link
@@ -390,11 +386,13 @@ export default function GuidedQuickLog({
                 </Link>
                 <button
                   className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-                  disabled={!canSubmit}
+                  disabled={isPending || !canSubmit}
                   type="submit"
                 >
-                  <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-                  Simpan
+                  {isPending ? (
+                    <Loader2 aria-hidden="true" className="animate-spin" size={17} />
+                  ) : null}
+                  {isPending ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
             </>
