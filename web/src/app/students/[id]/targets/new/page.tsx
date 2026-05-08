@@ -83,7 +83,7 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
                 <input className="sr-only" defaultChecked name="type" type="radio" value="HAFALAN" />
                 Hafalan
               </label>
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-300 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50 has-[:checked]:text-blue-900">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900">
                 <input className="sr-only" name="type" type="radio" value="MUROJAAH" />
                 Murojaah
               </label>
