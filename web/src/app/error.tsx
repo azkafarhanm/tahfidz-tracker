@@ -13,10 +13,10 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 py-5 sm:max-w-3xl sm:px-8">
         <div className="text-center">
-          <div className="grid h-16 w-16 place-items-center rounded-3xl bg-red-100 text-red-900 shadow-lg">
+          <div className="grid h-16 w-16 place-items-center rounded-3xl bg-red-100 text-red-900 shadow-lg dark:bg-red-950 dark:text-red-400">
             <svg
               className="h-7 w-7"
               fill="none"
@@ -32,7 +32,7 @@ export default function Error({
             </svg>
           </div>
           <h1 className="mt-6 text-2xl font-semibold">Terjadi kesalahan</h1>
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-slate-600 dark:text-slate-400">
             {process.env.NODE_ENV === "development" && error.message
               ? error.message
               : "Silakan coba lagi nanti."}
