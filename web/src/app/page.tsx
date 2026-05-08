@@ -11,6 +11,7 @@ import { getDashboardData } from "@/lib/dashboard";
 import LogoutButton from "@/components/LogoutButton";
 import BottomNav from "@/components/BottomNav";
 import { requireSessionScope } from "@/lib/session";
+import { getDailyMotivation } from "@/lib/motivations";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +23,9 @@ export const metadata = {
 export default async function DashboardPreview() {
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId);
-  const userName = session?.user?.name?.split(" ")[0] ?? "Ustadz";
+  const userName = session?.user?.name ?? "Ustadz";
+  const firstName = userName.split(" ")[0];
+  const motivation = getDailyMotivation();
   const quickActions = [
     { label: "Hafalan", href: "/students", icon: BookOpen },
     { label: "Murojaah", href: "/students", icon: RotateCcw },
@@ -39,10 +42,10 @@ export default async function DashboardPreview() {
         <header className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-emerald-700">
-              Assalamu&apos;alaikum
+              Assalamu&apos;alaikum Warahmatullahi Wabarakatuh
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-              {userName}
+              {isAdmin ? `Admin ${firstName}` : `Ust. ${firstName}`}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
               {new Date().toLocaleDateString("id-ID", {
@@ -56,12 +59,24 @@ export default async function DashboardPreview() {
           <div className="flex items-center gap-3">
             <LogoutButton />
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-lg font-semibold text-white shadow-lg shadow-emerald-900/20">
-              {userName.charAt(0).toUpperCase()}
+              {firstName.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className="mt-5 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm">
+          <p className="text-center font-arabic text-lg leading-relaxed text-emerald-900" dir="rtl">
+            {motivation.arabic}
+          </p>
+          <p className="mt-3 text-center text-sm italic text-slate-600">
+            &ldquo;{motivation.translation}&rdquo;
+          </p>
+          <p className="mt-2 text-center text-xs font-medium text-emerald-700">
+            — QS. {motivation.surah}: {motivation.ayah}
+          </p>
+        </section>
+
+        <section className="mt-5 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">Ringkasan hari ini</p>
