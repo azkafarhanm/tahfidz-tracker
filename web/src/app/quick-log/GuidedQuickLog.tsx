@@ -13,6 +13,7 @@ import {
   Search,
   X,
 } from "lucide-react";
+import SurahInput from "@/components/SurahInput";
 
 type Student = {
   id: string;
@@ -55,7 +56,6 @@ export default function GuidedQuickLog({
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [recordType, setRecordType] = useState("HAFALAN");
-  const [surah, setSurah] = useState("");
   const [fromAyah, setFromAyah] = useState("");
   const [toAyah, setToAyah] = useState("");
   const [status, setStatus] = useState("LANCAR");
@@ -84,7 +84,6 @@ export default function GuidedQuickLog({
 
   const canSubmit =
     selectedStudent &&
-    surah.trim().length > 0 &&
     fromAyah &&
     toAyah &&
     Number(fromAyah) > 0 &&
@@ -270,15 +269,9 @@ export default function GuidedQuickLog({
                   <span className="text-sm font-medium text-slate-700">
                     Surah
                   </span>
-                  <input
-                    className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                    name="surah"
-                    onChange={(e) => setSurah(e.target.value)}
-                    placeholder="Contoh: Al-Mulk"
-                    required
-                    type="text"
-                    value={surah}
-                  />
+                  <div className="mt-2">
+                    <SurahInput />
+                  </div>
                 </label>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">

@@ -18,6 +18,7 @@ import { getRecordData } from "@/lib/records";
 import { updateRecord } from "@/lib/record-actions";
 import DeleteRecordButton from "./DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
+import SurahInput from "@/components/SurahInput";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,14 +108,9 @@ export default async function EditRecordPage({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700">Surah</span>
-              <input
-                autoComplete="off"
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
-                defaultValue={record.surah}
-                name="surah"
-                required
-                type="text"
-              />
+              <div className="mt-2">
+                <SurahInput defaultValue={record.surah} id="surah" />
+              </div>
             </label>
 
             <div className="mt-4 grid grid-cols-2 gap-3">

@@ -11,6 +11,7 @@ import { updateTarget } from "@/lib/target-actions";
 import { requireSessionScope } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { TargetStatus } from "@/generated/prisma-next/enums";
+import SurahInput from "@/components/SurahInput";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -134,16 +135,7 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
             <div className="mt-3 space-y-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="surah">Surah</label>
-                <input
-                  autoComplete="off"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                  defaultValue={target.surah}
-                  id="surah"
-                  name="surah"
-                  placeholder="Contoh: Al-Mulk"
-                  required
-                  type="text"
-                />
+                <SurahInput defaultValue={target.surah} id="surah" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
