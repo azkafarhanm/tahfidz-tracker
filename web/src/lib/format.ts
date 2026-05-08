@@ -9,6 +9,7 @@ import {
   HalaqahLevel,
   RecordStatus,
 } from "@/generated/prisma-next/enums";
+import { getJuzLabel } from "@/lib/juz";
 
 export const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
@@ -38,7 +39,8 @@ export const halaqahLevelLabels: Record<HalaqahLevel, string> = {
 };
 
 export function formatRange(surah: string, fromAyah: number, toAyah: number) {
-  return `${surah} ${fromAyah}-${toAyah}`;
+  const juz = getJuzLabel(surah, fromAyah, toAyah);
+  return `${surah} ${fromAyah}-${toAyah}${juz ? ` · ${juz}` : ""}`;
 }
 
 export function formatClassSummary(student: {
