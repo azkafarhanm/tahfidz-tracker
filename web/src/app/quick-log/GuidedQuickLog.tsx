@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -49,8 +49,6 @@ export default function GuidedQuickLog({
   error,
   success,
 }: GuidedQuickLogProps) {
-  const [isPending, startTransition] = useTransition();
-
   const [query, setQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -100,10 +98,8 @@ export default function GuidedQuickLog({
     setQuery("");
   }
 
-  function handleSubmit(formData: FormData) {
-    startTransition(async () => {
-      await action(formData);
-    });
+  async function handleSubmit(formData: FormData) {
+    await action(formData);
   }
 
   return (
@@ -394,11 +390,11 @@ export default function GuidedQuickLog({
                 </Link>
                 <button
                   className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-                  disabled={isPending || !canSubmit}
+                  disabled={!canSubmit}
                   type="submit"
                 >
                   <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-                  {isPending ? "Menyimpan..." : "Simpan"}
+                  Simpan
                 </button>
               </div>
             </>
