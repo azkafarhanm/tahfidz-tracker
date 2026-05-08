@@ -93,5 +93,5 @@ export async function createMurojaahRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${student!.id}`);
-  redirect(`/students/${student!.id}`);
+  redirect(`/students/${student!.id}?success=Murojaah berhasil dicatat.`);
 }

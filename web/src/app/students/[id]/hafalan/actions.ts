@@ -93,5 +93,5 @@ export async function createHafalanRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${student!.id}`);
-  redirect(`/students/${student!.id}`);
+  redirect(`/students/${student!.id}?success=Hafalan berhasil dicatat.`);
 }
