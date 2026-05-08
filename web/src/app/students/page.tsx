@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import { requireSessionScope } from "@/lib/session";
 
@@ -32,13 +32,12 @@ type StudentsPageProps = {
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
-  const { teacherId, isAdmin } = await requireSessionScope();
+  const { session, teacherId, isAdmin } = await requireSessionScope();
   const students = await getStudentsData(query, teacherId);
   const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
+    <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -264,8 +263,6 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
           </section>
         ) : null}
 
-        <BottomNav currentPath="/students" />
-      </section>
-    </main>
+      </AppShell>
   );
 }

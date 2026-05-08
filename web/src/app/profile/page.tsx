@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import { requireSessionScope } from "@/lib/session";
@@ -35,8 +35,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     : "Gunakan halaman ini untuk membuka area utama guru dan keluar dari akun.";
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
+    <AppShell currentPath="/profile" userName={session.user.name} isAdmin={isAdmin}>
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -147,8 +146,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </section>
 
-        <BottomNav currentPath="/profile" />
-      </section>
-    </main>
+      </AppShell>
   );
 }

@@ -8,8 +8,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getDashboardData } from "@/lib/dashboard";
+import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
-import BottomNav from "@/components/BottomNav";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 
@@ -35,8 +35,7 @@ export default async function DashboardPreview() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
+    <AppShell currentPath="/" userName={userName} isAdmin={isAdmin}>
         <header className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
@@ -185,9 +184,6 @@ export default async function DashboardPreview() {
             )}
           </div>
         </section>
-
-        <BottomNav currentPath="/" />
-      </section>
-    </main>
+    </AppShell>
   );
 }

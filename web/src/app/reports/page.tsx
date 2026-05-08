@@ -8,7 +8,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { getTeacherReportData } from "@/lib/reports";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -19,7 +19,7 @@ export const metadata = {
 };
 
 export default async function ReportsPage() {
-  const { teacherId, isAdmin } = await requireSessionScope();
+  const { session, teacherId, isAdmin } = await requireSessionScope();
 
   if (!teacherId) {
     return (
@@ -49,8 +49,7 @@ export default async function ReportsPage() {
   const data = await getTeacherReportData(teacherId);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
+    <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -223,8 +222,6 @@ export default async function ReportsPage() {
           </section>
         ) : null}
 
-        <BottomNav currentPath="/reports" />
-      </section>
-    </main>
+      </AppShell>
   );
 }

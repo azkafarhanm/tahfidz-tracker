@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
-  CheckCircle2,
   Hash,
   Loader2,
   PenLine,
@@ -123,9 +122,8 @@ export default function GuidedQuickLog({
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
-         <header className="flex items-center justify-between gap-4">
+    <>
+     <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
@@ -428,42 +426,6 @@ export default function GuidedQuickLog({
             </div>
           )}
         </form>
-
-        <BottomNav currentPath="/quick-log" />
-      </section>
-    </main>
-  );
-}
-
-function BottomNav({ currentPath }: { currentPath: string }) {
-  const navItems = [
-    { label: "Home", href: "/", Icon: ArrowLeft },
-    { label: "Santri", href: "/students", Icon: BookOpen },
-    { label: "Catat", href: "/quick-log", Icon: PenLine },
-    { label: "Laporan", href: "/reports", Icon: CheckCircle2 },
-  ];
-
-  return (
-    <nav className="mt-6">
-      <div className="flex items-center justify-around rounded-2xl border border-slate-200 bg-white/95 py-2 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-        {navItems.map(({ label, href, Icon }) => {
-          const active = href === currentPath;
-          return (
-            <Link
-              className={`flex flex-col items-center gap-1 px-3 py-1.5 text-[10px] font-semibold transition ${
-                active
-                  ? "text-emerald-800 dark:text-emerald-400"
-                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-              }`}
-              href={href}
-              key={href}
-            >
-              <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 2} />
-              {label}
-            </Link>
-          );
-        })}
-      </div>
-    </nav>
-  );
+    </>
+   );
 }

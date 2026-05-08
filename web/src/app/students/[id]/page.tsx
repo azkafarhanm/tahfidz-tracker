@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
 import { getStudentProgressData } from "@/lib/reports";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
@@ -200,7 +200,7 @@ export default async function StudentDetailPage({
 }: StudentDetailPageProps) {
   const { id } = await params;
   const pageParams = await searchParams;
-  const { teacherId, isAdmin } = await requireSessionScope();
+  const { session, teacherId, isAdmin } = await requireSessionScope();
   const student = await getStudentDetailData(id, teacherId);
 
   if (!student) {
@@ -210,8 +210,7 @@ export default async function StudentDetailPage({
   const progress = await getStudentProgressData(id, isAdmin ? null : teacherId);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
+    <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
@@ -478,8 +477,6 @@ export default async function StudentDetailPage({
           </section>
         ) : null}
 
-        <BottomNav currentPath="/students" />
-      </section>
-    </main>
+      </AppShell>
   );
 }
