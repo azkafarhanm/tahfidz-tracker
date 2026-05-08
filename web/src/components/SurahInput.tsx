@@ -13,6 +13,7 @@ export default function SurahInput({
   const [query, setQuery] = useState(defaultValue ?? "");
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  const justSelected = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -46,6 +47,16 @@ export default function SurahInput({
     }
   }, [highlightIndex, isOpen]);
 
+  function selectSurah(name: string) {
+    setQuery(name);
+    setIsOpen(false);
+    justSelected.current = true;
+    inputRef.current?.focus();
+    setTimeout(() => {
+      justSelected.current = false;
+    }, 200);
+  }
+
   return (
     <div className="relative" ref={containerRef}>
       <input
@@ -57,7 +68,11 @@ export default function SurahInput({
           setQuery(e.target.value);
           setIsOpen(true);
         }}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => {
+          if (!justSelected.current) {
+            setIsOpen(true);
+          }
+        }}
         onKeyDown={(e) => {
           if (!isOpen) return;
           if (e.key === "ArrowDown") {
@@ -68,9 +83,7 @@ export default function SurahInput({
             setHighlightIndex((i) => Math.max(i - 1, 0));
           } else if (e.key === "Enter" && filtered.length > 0) {
             e.preventDefault();
-            const selected = filtered[highlightIndex];
-            setQuery(selected.name);
-            setIsOpen(false);
+            selectSurah(filtered[highlightIndex].name);
           } else if (e.key === "Escape") {
             setIsOpen(false);
           }
@@ -96,11 +109,7 @@ export default function SurahInput({
                     ? "bg-emerald-50 text-emerald-900"
                     : "text-slate-700 hover:bg-slate-50"
                 }`}
-                onClick={() => {
-                  setQuery(surah.name);
-                  setIsOpen(false);
-                  inputRef.current?.focus();
-                }}
+                onClick={() => selectSurah(surah.name)}
                 onMouseEnter={() => setHighlightIndex(i)}
                 role="option"
                 type="button"
