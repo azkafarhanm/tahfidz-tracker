@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Amiri } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
 import ThemeProvider from "@/components/ThemeProvider";
@@ -15,6 +16,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const amiri = Amiri({
+  variable: "--font-amiri",
+  weight: ["400", "700"],
+  subsets: ["arabic"],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
           {children}

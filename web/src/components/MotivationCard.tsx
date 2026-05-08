@@ -120,7 +120,7 @@ export default function MotivationCard() {
     >
       {showArabic && (
         <p
-          className="text-center text-lg leading-relaxed text-emerald-900 min-h-[2rem] dark:text-emerald-300"
+          className="text-center text-xl leading-loose text-emerald-900 min-h-[2rem] font-arabic dark:text-emerald-300"
           dir="rtl"
         >
           {arabicVisible}
