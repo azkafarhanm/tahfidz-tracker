@@ -9,7 +9,7 @@ export default function TargetActions({ targetId }: { targetId: string }) {
   return (
     <div className="mt-3 flex items-center gap-2">
       <button
-        className="rounded-xl border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60"
+        className="rounded-xl border-2 border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-60"
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
@@ -21,7 +21,7 @@ export default function TargetActions({ targetId }: { targetId: string }) {
         Selesai
       </button>
       <button
-        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 transition hover:bg-slate-50 disabled:opacity-60"
+        className="rounded-xl border-2 border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-60"
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
