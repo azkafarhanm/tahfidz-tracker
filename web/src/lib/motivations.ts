@@ -128,6 +128,10 @@ const motivations: QuranMotivation[] = [
   },
 ];
 
+export function getAllMotivations(): QuranMotivation[] {
+  return motivations;
+}
+
 export function getDailyMotivation(): QuranMotivation {
   const today = new Date();
   const dayOfYear = Math.floor(
