@@ -52,11 +52,12 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
         })}
       </nav>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2">
-        <MotivationCard />
-      </div>
+      <div className="flex-1" />
 
-      <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 p-4">
+      <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
+        <div className="mb-4">
+          <MotivationCard />
+        </div>
         <div className="flex items-center justify-between">
           <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
             {userName}
