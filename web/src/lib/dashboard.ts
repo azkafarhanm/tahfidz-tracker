@@ -45,6 +45,7 @@ export async function getDashboardData(teacherId?: string | null) {
     activeTargets,
     completedTargets,
     needsReviewCount,
+    overdueTargets,
   ] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: teacherFilter,
@@ -88,6 +89,22 @@ export async function getDashboardData(teacherId?: string | null) {
       });
       return mem + rev;
     })(),
+    prisma.target.findMany({
+      where: {
+        ...teacherFilter,
+        status: TargetStatus.ACTIVE,
+        endDate: { lt: new Date() },
+      },
+      select: {
+        id: true,
+        surah: true,
+        fromAyah: true,
+        toAyah: true,
+        endDate: true,
+        student: { select: { id: true, fullName: true } },
+      },
+      take: 5,
+    }),
   ]);
 
   const recentRecords = [
@@ -139,5 +156,12 @@ export async function getDashboardData(teacherId?: string | null) {
     targetProgress,
     needsReviewCount,
     recentRecords,
+    overdueTargets: overdueTargets.map((t) => ({
+      id: t.id,
+      studentId: t.student.id,
+      studentName: t.student.fullName,
+      range: formatRange(t.surah, t.fromAyah, t.toAyah),
+      endDate: dateFormatter.format(t.endDate),
+    })),
   };
 }

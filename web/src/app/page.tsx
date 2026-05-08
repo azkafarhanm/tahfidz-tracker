@@ -1,6 +1,7 @@
 import {
   BarChart3,
   BookOpen,
+  Clock,
   PenLine,
   RotateCcw,
   ShieldCheck,
@@ -98,6 +99,38 @@ export default async function DashboardPreview() {
             </Link>
           ))}
         </section>
+
+        {dashboard.overdueTargets.length > 0 ? (
+          <section className="mt-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Target terlambat</h2>
+              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                {dashboard.overdueTargets.length} lewat deadline
+              </span>
+            </div>
+            <div className="mt-3 space-y-3">
+              {dashboard.overdueTargets.map((t) => (
+                <Link
+                  className="block rounded-2xl border border-red-200 bg-white p-4 shadow-sm transition hover:border-red-300 hover:shadow-md"
+                  href={`/students/${t.studentId}`}
+                  key={t.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-950">{t.studentName}</p>
+                      <p className="mt-1 text-sm text-slate-600">{t.range}</p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                      <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
+                      Lewat
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">Deadline: {t.endDate}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
