@@ -19,6 +19,7 @@
   --font-mono: var(--font-geist-mono);
   --font-arabic: var(--font-amiri);
   --animate-progress: progress 900ms ease-out both;
+  --animate-fadein: fadein 200ms ease-out both;
 }
 
 body {
@@ -41,6 +42,14 @@ a {
   }
 }
 
-@theme inline {
-  --animate-progress: progress 900ms ease-out both;
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
