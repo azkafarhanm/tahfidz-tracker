@@ -24,7 +24,6 @@ export default async function DashboardPreview() {
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId);
   const userName = session?.user?.name ?? "Ustadz";
-  const firstName = userName.split(" ")[0];
   const motivation = getDailyMotivation();
   const quickActions = [
     { label: "Hafalan", href: "/students", icon: BookOpen },
@@ -45,7 +44,7 @@ export default async function DashboardPreview() {
               Assalamu&apos;alaikum Warahmatullahi Wabarakatuh
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950">
-              {isAdmin ? `Admin ${firstName}` : `Ust. ${firstName}`}
+              {userName}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
               {new Date().toLocaleDateString("id-ID", {
@@ -59,7 +58,7 @@ export default async function DashboardPreview() {
           <div className="flex items-center gap-3">
             <LogoutButton />
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-lg font-semibold text-white shadow-lg shadow-emerald-900/20">
-              {firstName.charAt(0).toUpperCase()}
+              {userName.charAt(0).toUpperCase()}
             </div>
           </div>
         </header>
