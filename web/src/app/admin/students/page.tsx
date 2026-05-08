@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { toggleStudentActive } from "./actions";
 import { getAdminStudentsData } from "@/lib/admin";
-import { requireAdminScope } from "@/lib/session";
+import InitialsAvatar from "@/components/InitialsAvatar";
+
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,15 +33,14 @@ type AdminStudentsPageProps = {
 export default async function AdminStudentsPage({
   searchParams,
 }: AdminStudentsPageProps) {
-  await requireAdminScope();
+
 
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
   const { counts, students } = await getAdminStudentsData(query);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
+    <>
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -178,17 +178,20 @@ export default async function AdminStudentsPage({
                   key={student.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <Link
-                        className="truncate font-semibold text-slate-950 transition hover:text-emerald-800 dark:text-white dark:hover:text-emerald-300"
-                        href={`/admin/students/${student.id}`}
-                      >
-                        {student.fullName}
-                      </Link>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {student.gender} - Bergabung {student.joinDate}
-                      </p>
-                    </div>
+                     <div className="min-w-0">
+                       <div className="flex items-center gap-3">
+                         <InitialsAvatar name={student.fullName} />
+                         <Link
+                           className="truncate font-semibold text-slate-950 transition hover:text-emerald-800 dark:text-white dark:hover:text-emerald-300"
+                           href={`/admin/students/${student.id}`}
+                         >
+                           {student.fullName}
+                         </Link>
+                       </div>
+                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                         {student.gender} - Bergabung {student.joinDate}
+                       </p>
+                     </div>
                     <span
                       className={
                         student.isActive
@@ -201,15 +204,10 @@ export default async function AdminStudentsPage({
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                      <UserRound
-                        aria-hidden="true"
-                        className="shrink-0 text-emerald-800 dark:text-emerald-400"
-                        size={16}
-                        strokeWidth={2.2}
-                      />
-                      <span className="truncate">{student.teacherName}</span>
-                    </div>
+                     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                       <InitialsAvatar name={student.teacherName} size="sm" />
+                       <span className="truncate">{student.teacherName}</span>
+                     </div>
                     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       <BookOpen
                         aria-hidden="true"
@@ -301,7 +299,6 @@ export default async function AdminStudentsPage({
             )}
           </div>
         </section>
-      </section>
-    </main>
+    </>
   );
 }

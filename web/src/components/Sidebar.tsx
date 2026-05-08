@@ -2,26 +2,52 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Home, PlusCircle, UserCircle, Users } from "lucide-react";
+import {
+  BookOpen,
+  Home,
+  PlusCircle,
+  UserCircle,
+  Users,
+  ShieldCheck,
+  GraduationCap,
+  ClipboardList,
+  UserRound,
+  BarChart3,
+} from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import MotivationCard from "@/components/MotivationCard";
 
-const navItems = [
+const teacherNav = [
   { label: "Dashboard", href: "/", icon: Home },
   { label: "Santri", href: "/students", icon: Users },
   { label: "Catat Cepat", href: "/quick-log", icon: PlusCircle },
   { label: "Profil", href: "/profile", icon: UserCircle },
 ];
 
+const adminNav = [
+  { label: "Dashboard", href: "/admin", icon: ShieldCheck },
+  { label: "Guru", href: "/admin/teachers", icon: Users },
+  { label: "Kelas", href: "/admin/classes", icon: GraduationCap },
+  { label: "Halaqah", href: "/admin/halaqah", icon: BookOpen },
+  { label: "Santri", href: "/admin/students", icon: UserRound },
+  { label: "Laporan", href: "/admin/reports", icon: BarChart3 },
+  { label: "Laporan Guru", href: "/reports", icon: ClipboardList },
+];
+
 export default function Sidebar({ userName, isAdmin }: { userName: string; isAdmin: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? adminNav : teacherNav;
 
   return (
     <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 sm:z-40 sm:flex sm:h-screen sm:w-64 sm:flex-col sm:overflow-hidden">
       <div className="shrink-0 p-5 border-b border-slate-100 dark:border-slate-800">
-        <Link className="flex items-center gap-3" href="/">
+        <Link className="flex items-center gap-3" href={isAdmin ? "/admin" : "/"}>
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
-            <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
+            {isAdmin ? (
+              <ShieldCheck aria-hidden="true" size={20} strokeWidth={2.2} />
+            ) : (
+              <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
+            )}
           </div>
           <div>
             <h1 className="text-lg font-bold text-slate-950 dark:text-white">TahfidzFlow</h1>
@@ -33,8 +59,8 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
       </div>
 
       <nav className="shrink-0 p-3 space-y-1">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+        {items.map(({ label, href, icon: Icon }) => {
+          const active = pathname === href || (href !== "/" && href !== "/admin" && pathname.startsWith(href));
           return (
             <Link
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowLeft,
   BookOpen,
   ClipboardList,
   GraduationCap,
@@ -9,7 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { getAdminDashboardData } from "@/lib/admin";
-import { requireAdminScope } from "@/lib/session";
+import InitialsAvatar from "@/components/InitialsAvatar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,33 +56,23 @@ const managementAreas = [
 ];
 
 export default async function AdminDashboardPage() {
-  const { session } = await requireAdminScope();
   const dashboard = await getAdminDashboardData();
-  const userName = session.user.name?.split(" ")[0] ?? "Admin";
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
-        <header className="flex items-center justify-between gap-4">
-          <div>
-            <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
-              href="/"
-            >
-              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Dashboard
-            </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Panel Admin
-            </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Ringkasan sistem untuk {userName} dan fondasi Phase 4.
-            </p>
-          </div>
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
-            <ShieldCheck aria-hidden="true" size={22} strokeWidth={2.2} />
-          </div>
-        </header>
+    <>
+      <header className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">
+            Panel Admin
+          </h1>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Ringkasan sistem dan fondasi Phase 4.
+          </p>
+        </div>
+        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
+          <ShieldCheck aria-hidden="true" size={22} strokeWidth={2.2} />
+        </div>
+      </header>
 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -218,9 +207,12 @@ export default async function AdminDashboardPage() {
                     className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                     key={teacher.id}
                   >
-                    <p className="font-semibold text-slate-950 dark:text-white">
-                      {teacher.fullName}
-                    </p>
+                    <div className="flex items-center gap-3">
+                       <InitialsAvatar name={teacher.fullName} />
+                       <p className="font-semibold text-slate-950 dark:text-white">
+                         {teacher.fullName}
+                       </p>
+                     </div>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{teacher.email}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium">
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
@@ -279,7 +271,6 @@ export default async function AdminDashboardPage() {
             </Link>
           </div>
         </section>
-      </section>
-    </main>
+    </>
   );
 }

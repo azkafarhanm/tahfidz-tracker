@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import SurahInput from "@/components/SurahInput";
+import InitialsAvatar from "@/components/InitialsAvatar";
 
 type Student = {
   id: string;
@@ -170,14 +171,17 @@ export default function GuidedQuickLog({
 
             {selectedStudent ? (
               <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 p-3 dark:border-emerald-400 dark:bg-emerald-950">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-950 dark:text-white">
-                    {selectedStudent.fullName}
-                  </p>
-                  <p className="truncate text-xs text-slate-600 dark:text-slate-400">
-                    {selectedStudent.classSummary}
-                  </p>
-                </div>
+                <div className="flex items-center gap-3 min-w-0">
+                   <InitialsAvatar name={selectedStudent.fullName} />
+                   <div className="min-w-0">
+                     <p className="truncate font-semibold text-slate-950 dark:text-white">
+                       {selectedStudent.fullName}
+                     </p>
+                     <p className="truncate text-xs text-slate-600 dark:text-slate-400">
+                       {selectedStudent.classSummary}
+                     </p>
+                   </div>
+                 </div>
                 <button
                   className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-100 hover:text-slate-700 dark:hover:bg-emerald-900 dark:hover:text-slate-300"
                   onClick={handleClearStudent}
@@ -213,19 +217,13 @@ export default function GuidedQuickLog({
                 {showDropdown && filtered.length > 0 ? (
                   <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
                     {filtered.map((s) => (
-                      <button
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 dark:hover:bg-slate-800"
-                        key={s.id}
-                        onClick={() => handleSelectStudent(s)}
-                        type="button"
-                      >
-                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                          {s.fullName
-                            .split(" ")
-                            .slice(0, 2)
-                            .map((n) => n[0])
-                            .join("")}
-                        </div>
+                       <button
+                         className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 dark:hover:bg-slate-800"
+                         key={s.id}
+                         onClick={() => handleSelectStudent(s)}
+                         type="button"
+                       >
+                         <InitialsAvatar name={s.fullName} size="sm" />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-slate-950 dark:text-white">
                             {s.fullName}

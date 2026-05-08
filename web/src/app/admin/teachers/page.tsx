@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toggleTeacherActive } from "./actions";
 import { getAdminTeachersData } from "@/lib/admin";
-import { requireAdminScope } from "@/lib/session";
+import InitialsAvatar from "@/components/InitialsAvatar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,15 +32,12 @@ type AdminTeachersPageProps = {
 export default async function AdminTeachersPage({
   searchParams,
 }: AdminTeachersPageProps) {
-  await requireAdminScope();
-
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
   const { counts, teachers } = await getAdminTeachersData(query);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
+    <>
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -180,14 +177,17 @@ export default async function AdminTeachersPage({
                   key={teacher.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950 dark:text-white">
-                        {teacher.fullName}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Bergabung {teacher.joinedAt}
-                      </p>
-                    </div>
+                     <div className="min-w-0">
+                       <div className="flex items-center gap-3">
+                         <InitialsAvatar name={teacher.fullName} />
+                         <p className="truncate font-semibold text-slate-950 dark:text-white">
+                           {teacher.fullName}
+                         </p>
+                       </div>
+                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                         Bergabung {teacher.joinedAt}
+                       </p>
+                     </div>
                     <span
                       className={
                         teacher.isActive
@@ -284,7 +284,6 @@ export default async function AdminTeachersPage({
             )}
           </div>
         </section>
-      </section>
-    </main>
+    </>
   );
 }

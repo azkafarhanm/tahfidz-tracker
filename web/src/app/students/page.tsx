@@ -12,6 +12,7 @@ import {
 import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
+import InitialsAvatar from "@/components/InitialsAvatar";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -147,13 +148,16 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   key={student.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950 dark:text-white">
-                        {student.fullName}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                        {student.classSummary}
-                      </p>
+                    <div className="flex items-start gap-3">
+                      <InitialsAvatar name={student.fullName} />
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-slate-950 dark:text-white">
+                          {student.fullName}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                          {student.classSummary}
+                        </p>
+                      </div>
                     </div>
                     <span
                       className={
@@ -252,9 +256,12 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   key={s.id}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-950 dark:text-white">{s.fullName}</p>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.classSummary}</p>
+                  <div className="flex items-center gap-3">
+                    <InitialsAvatar name={s.fullName} />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-slate-950 dark:text-white">{s.fullName}</p>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.classSummary}</p>
+                    </div>
                   </div>
                   <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
                 </div>

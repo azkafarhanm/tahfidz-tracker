@@ -12,6 +12,7 @@ import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
+import InitialsAvatar from "@/components/InitialsAvatar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -118,10 +119,13 @@ export default async function DashboardPreview() {
                   key={t.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                       <p className="truncate font-semibold text-slate-950 dark:text-white">{t.studentName}</p>
+                     <div className="min-w-0">
+                       <div className="flex items-center gap-3">
+                         <InitialsAvatar name={t.studentName} />
+                         <p className="truncate font-semibold text-slate-950 dark:text-white">{t.studentName}</p>
+                       </div>
                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.range}</p>
-                    </div>
+                     </div>
                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
                       <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
                       Lewat

@@ -16,6 +16,7 @@ import {
 import { getStudentDetailData } from "@/lib/students";
 import { getStudentProgressData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
+import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
@@ -211,8 +212,10 @@ export default async function StudentDetailPage({
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
-        <header className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
+         <header className="flex items-center justify-between gap-4">
+           <div className="flex items-start gap-3 min-w-0">
+             <InitialsAvatar name={student.fullName} size="lg" />
+             <div className="min-w-0">
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/students"
@@ -226,7 +229,8 @@ export default async function StudentDetailPage({
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {student.classSummary}
             </p>
-          </div>
+            </div>
+           </div>
           <div className="flex items-center gap-2">
             <Link
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
