@@ -1,24 +1,33 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAllMotivations } from "@/lib/motivations";
+import { getAllMotivations, Motivation } from "@/lib/motivations";
 
-type Phase = "typing-arabic" | "pause" | "typing-translation" | "show-ref" | "hold" | "fadeout";
+type Phase =
+  | "typing-arabic"
+  | "pause"
+  | "typing-text"
+  | "show-ref"
+  | "hold"
+  | "fadeout";
 
 const SPEED_ARABIC = 55;
-const SPEED_TRANSLATION = 30;
+const SPEED_TEXT = 28;
 const PAUSE_MS = 600;
-const HOLD_MS = 5000;
+const HOLD_MS = 5500;
 const FADE_MS = 1200;
 
 export default function MotivationCard() {
   const verses = getAllMotivations();
-  const [verseIdx, setVerseIdx] = useState(() => Math.floor(Math.random() * verses.length));
+  const [verseIdx, setVerseIdx] = useState(() =>
+    Math.floor(Math.random() * verses.length)
+  );
   const [phase, setPhase] = useState<Phase>("typing-arabic");
   const [charCount, setCharCount] = useState(0);
   const [opacity, setOpacity] = useState(1);
 
   const verse = verses[verseIdx];
+  const hasArabic = Boolean(verse.arabic);
 
   const goNext = useCallback(() => {
     setOpacity(0);
@@ -30,7 +39,12 @@ export default function MotivationCard() {
 
     switch (phase) {
       case "typing-arabic":
-        if (charCount < verse.arabic.length) {
+        if (!hasArabic) {
+          setCharCount(0);
+          setPhase("typing-text");
+          break;
+        }
+        if (charCount < (verse.arabic?.length ?? 0)) {
           timer = setTimeout(() => setCharCount((c) => c + 1), SPEED_ARABIC);
         } else {
           timer = setTimeout(() => setPhase("pause"), 200);
@@ -40,13 +54,13 @@ export default function MotivationCard() {
       case "pause":
         timer = setTimeout(() => {
           setCharCount(0);
-          setPhase("typing-translation");
+          setPhase("typing-text");
         }, PAUSE_MS);
         break;
 
-      case "typing-translation":
-        if (charCount < verse.translation.length) {
-          timer = setTimeout(() => setCharCount((c) => c + 1), SPEED_TRANSLATION);
+      case "typing-text":
+        if (charCount < verse.text.length) {
+          timer = setTimeout(() => setCharCount((c) => c + 1), SPEED_TEXT);
         } else {
           timer = setTimeout(() => setPhase("show-ref"), 300);
         }
@@ -71,19 +85,33 @@ export default function MotivationCard() {
     }
 
     return () => clearTimeout(timer);
-  }, [phase, charCount, verse, goNext, verses.length]);
+  }, [phase, charCount, verse, goNext, verses.length, hasArabic]);
 
-  const arabicVisible = phase === "typing-arabic"
-    ? verse.arabic.slice(0, charCount)
-    : (phase === "fadeout" ? "" : verse.arabic);
+  const arabicVisible =
+    phase === "typing-arabic"
+      ? (verse.arabic ?? "").slice(0, charCount)
+      : phase !== "fadeout"
+      ? verse.arabic ?? ""
+      : "";
 
-  const showArabic = phase !== "fadeout";
-  const showTranslation = phase === "typing-translation" || phase === "show-ref" || phase === "hold";
+  const showArabic = hasArabic && phase !== "fadeout";
+  const showText =
+    phase === "typing-text" ||
+    phase === "show-ref" ||
+    phase === "hold";
   const showRef = phase === "show-ref" || phase === "hold";
 
-  const transVisible = phase === "typing-translation"
-    ? verse.translation.slice(0, charCount)
-    : verse.translation;
+  const textVisible =
+    phase === "typing-text"
+      ? verse.text.slice(0, charCount)
+      : verse.text;
+
+  const sourceIcon =
+    verse.type === "quran"
+      ? "📖"
+      : verse.type === "hadith"
+      ? "📜"
+      : "✨";
 
   return (
     <div
@@ -91,21 +119,30 @@ export default function MotivationCard() {
       style={{ opacity }}
     >
       {showArabic && (
-        <p className="text-center text-lg leading-relaxed text-emerald-900 min-h-[2rem]" dir="rtl">
+        <p
+          className="text-center text-lg leading-relaxed text-emerald-900 min-h-[2rem]"
+          dir="rtl"
+        >
           {arabicVisible}
           {phase === "typing-arabic" && (
-            <span className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle" style={{ height: "1em" }} />
+            <span
+              className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle"
+              style={{ height: "1em" }}
+            />
           )}
         </p>
       )}
-      <div className="mt-3 text-center text-sm italic text-slate-600 min-h-[2.5rem]">
-        {showTranslation && (
+      <div className="mt-2 text-center text-sm italic text-slate-600 min-h-[2.5rem]">
+        {showText && (
           <>
-            &ldquo;{transVisible}
-            {phase === "typing-translation" && (
-              <span className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle" style={{ height: "1em" }} />
+            &ldquo;{textVisible}
+            {phase === "typing-text" && (
+              <span
+                className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle"
+                style={{ height: "1em" }}
+              />
             )}
-            {phase !== "typing-translation" && <span>&rdquo;</span>}
+            {phase !== "typing-text" && <span>&rdquo;</span>}
           </>
         )}
       </div>
@@ -114,7 +151,7 @@ export default function MotivationCard() {
           showRef ? "opacity-100" : "opacity-0"
         }`}
       >
-        — QS. {verse.surah}: {verse.ayah}
+        {sourceIcon} {verse.source}
       </p>
     </div>
   );
