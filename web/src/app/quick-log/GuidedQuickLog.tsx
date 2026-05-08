@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -50,7 +49,6 @@ export default function GuidedQuickLog({
   error,
   success,
 }: GuidedQuickLogProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
@@ -63,6 +61,7 @@ export default function GuidedQuickLog({
   const [status, setStatus] = useState("LANCAR");
   const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
+  const [surahInputKey, setSurahInputKey] = useState(0);
 
   const formRef = useRef<HTMLFormElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -105,26 +104,22 @@ export default function GuidedQuickLog({
     if (!formRef.current || !canSubmit) return;
     const formData = new FormData(formRef.current);
     startTransition(async () => {
-      try {
-        await action(formData);
-      } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "";
-        if (msg.includes("NEXT_REDIRECT")) {
-          router.refresh();
-          return;
-        }
-      }
+      await action(formData);
     });
   }
 
   function handleCancel() {
+    formRef.current?.reset();
     setSelectedStudent(null);
+    setQuery("");
+    setShowDropdown(false);
     setRecordType("HAFALAN");
     setFromAyah("");
     setToAyah("");
     setStatus("LANCAR");
     setScore("");
     setNotes("");
+    setSurahInputKey((value) => value + 1);
   }
 
   return (
@@ -291,7 +286,7 @@ export default function GuidedQuickLog({
                     Surah
                   </span>
                   <div className="mt-2">
-                    <SurahInput />
+                    <SurahInput key={surahInputKey} />
                   </div>
                 </label>
 

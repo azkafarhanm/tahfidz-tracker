@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAllMotivations, Motivation } from "@/lib/motivations";
+import { getAllMotivations } from "@/lib/motivations";
 
 type Phase =
   | "typing-arabic"
