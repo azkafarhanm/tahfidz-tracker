@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useActionState } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -22,7 +23,7 @@ type Student = {
 };
 
 type GuidedQuickLogProps = {
-  action: (prev: unknown, formData: FormData) => Promise<void>;
+  action: (formData: FormData) => Promise<void>;
   students: Student[];
   todayDate: string;
   nowTime: string;
@@ -49,7 +50,8 @@ export default function GuidedQuickLog({
   error,
   success,
 }: GuidedQuickLogProps) {
-  const [, formAction, isPending] = useActionState(action, null);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -62,6 +64,7 @@ export default function GuidedQuickLog({
   const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
 
+  const formRef = useRef<HTMLFormElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +99,32 @@ export default function GuidedQuickLog({
   function handleClearStudent() {
     setSelectedStudent(null);
     setQuery("");
+  }
+
+  function handleSubmit() {
+    if (!formRef.current || !canSubmit) return;
+    const formData = new FormData(formRef.current);
+    startTransition(async () => {
+      try {
+        await action(formData);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "";
+        if (msg.includes("NEXT_REDIRECT")) {
+          router.refresh();
+          return;
+        }
+      }
+    });
+  }
+
+  function handleCancel() {
+    setSelectedStudent(null);
+    setRecordType("HAFALAN");
+    setFromAyah("");
+    setToAyah("");
+    setStatus("LANCAR");
+    setScore("");
+    setNotes("");
   }
 
   return (
@@ -134,7 +163,7 @@ export default function GuidedQuickLog({
           </div>
         ) : null}
 
-        <form action={formAction} className="mt-6 space-y-4">
+        <form ref={formRef} className="mt-6 space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Search
@@ -378,16 +407,18 @@ export default function GuidedQuickLog({
               <input name="time" type="hidden" value={nowTime} />
 
               <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-                <Link
+                <button
                   className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                  href="/quick-log"
+                  onClick={handleCancel}
+                  type="button"
                 >
                   Batal
-                </Link>
+                </button>
                 <button
                   className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
                   disabled={isPending || !canSubmit}
-                  type="submit"
+                  onClick={handleSubmit}
+                  type="button"
                 >
                   {isPending ? (
                     <Loader2 aria-hidden="true" className="animate-spin" size={17} />

@@ -21,7 +21,7 @@ const validStatuses = new Set<string>(Object.values(RecordStatus));
 const validTypes = new Set<string>(Object.keys(quickLogTypeLabels));
 const fail = createFailFn("/quick-log");
 
-export async function createGuidedRecord(_prev: unknown, formData: FormData) {
+export async function createGuidedRecord(formData: FormData) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
