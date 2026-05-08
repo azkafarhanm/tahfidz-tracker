@@ -256,11 +256,9 @@ export default async function AdminDashboardPage() {
               <ClipboardList aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             <div>
-              <h2 className="font-semibold text-slate-950">Langkah terbaik berikutnya</h2>
+              <h2 className="font-semibold text-slate-950">Menu Laporan</h2>
               <p className="mt-1 text-sm text-slate-600">
-                Fondasi admin sekarang sudah ada. Langkah implementasi paling
-                bernilai berikutnya adalah CRUD santri, guru, kelas akademik,
-                dan halaqah agar aplikasi tidak lagi bergantung pada seed data.
+                Kelola dan pantau seluruh data tahfidz. Pilih jenis laporan di bawah untuk melihat detail.
               </p>
             </div>
           </div>
