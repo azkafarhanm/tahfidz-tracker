@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
-import { getDailyMotivation } from "@/lib/motivations";
+import MotivationCard from "@/components/MotivationCard";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
@@ -11,7 +11,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const motivation = getDailyMotivation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,16 +131,8 @@ export default function LoginPage() {
         </div>
 
         {/* Daily Quran Motivation */}
-        <div className="mt-6 rounded-2xl border border-emerald-100 bg-white/60 px-5 py-4 text-center">
-          <p className="font-arabic text-base leading-relaxed text-emerald-900" dir="rtl">
-            {motivation.arabic}
-          </p>
-          <p className="mt-2 text-sm italic text-slate-600">
-            &ldquo;{motivation.translation}&rdquo;
-          </p>
-          <p className="mt-1 text-xs font-medium text-emerald-700">
-            QS. {motivation.surah}: {motivation.ayah}
-          </p>
+        <div className="mt-6">
+          <MotivationCard />
         </div>
 
         {/* Footer */}
