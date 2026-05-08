@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Home, PlusCircle, UserCircle, Users } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import MotivationCard from "@/components/MotivationCard";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
@@ -16,8 +17,8 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
   const pathname = usePathname();
 
   return (
-    <aside className="hidden sm:flex sm:w-64 sm:flex-col sm:fixed sm:inset-y-0 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-      <div className="p-5 border-b border-slate-100 dark:border-slate-800">
+    <aside className="hidden sm:flex sm:w-64 sm:flex-col sm:fixed sm:inset-y-0 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
+      <div className="shrink-0 p-5 border-b border-slate-100 dark:border-slate-800">
         <Link className="flex items-center gap-3" href="/">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -31,7 +32,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
         </Link>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="shrink-0 p-3 space-y-1">
         {navItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
@@ -51,7 +52,11 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
         })}
       </nav>
 
-      <div className="border-t border-slate-100 dark:border-slate-800 p-4">
+      <div className="flex-1 min-h-0 px-3 py-2">
+        <MotivationCard />
+      </div>
+
+      <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 p-4">
         <div className="flex items-center justify-between">
           <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
             {userName}
