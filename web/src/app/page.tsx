@@ -35,17 +35,17 @@ export default async function DashboardPreview() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-emerald-700">
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
               Assalamu&apos;alaikum Warahmatullahi Wabarakatuh
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">
               {userName}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {new Date().toLocaleDateString("id-ID", {
                 weekday: "long",
                 day: "numeric",
@@ -91,11 +91,11 @@ export default async function DashboardPreview() {
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {quickActions.map((action) => (
             <Link
-              className="flex min-h-20 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md active:scale-[0.98]"
+              className="flex min-h-20 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
               href={action.href}
               key={action.label}
             >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <action.icon aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               {action.label}
@@ -107,28 +107,28 @@ export default async function DashboardPreview() {
           <section className="mt-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Target terlambat</h2>
-              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
                 {dashboard.overdueTargets.length} lewat deadline
               </span>
             </div>
             <div className="mt-3 space-y-3">
               {dashboard.overdueTargets.map((t) => (
                 <Link
-                  className="block rounded-2xl border border-red-200 bg-white p-4 shadow-sm transition hover:border-red-300 hover:shadow-md"
+                  className="block rounded-2xl border border-red-200 bg-white p-4 shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-red-900 dark:bg-slate-900 dark:shadow-none"
                   href={`/students/${t.studentId}`}
                   key={t.id}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950">{t.studentName}</p>
-                      <p className="mt-1 text-sm text-slate-600">{t.range}</p>
+                       <p className="truncate font-semibold text-slate-950 dark:text-white">{t.studentName}</p>
+                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.range}</p>
                     </div>
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
                       <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
                       Lewat
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">Deadline: {t.endDate}</p>
+                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Deadline: {t.endDate}</p>
                 </Link>
               ))}
             </div>
@@ -138,7 +138,7 @@ export default async function DashboardPreview() {
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Aktivitas terbaru</h2>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
+             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400">
               {dashboard.needsReviewCount} perlu cek
             </span>
           </div>
@@ -147,29 +147,29 @@ export default async function DashboardPreview() {
             {dashboard.recentRecords.length > 0 ? (
               dashboard.recentRecords.map((record) => (
                 <article
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md"
+                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   key={record.id}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-slate-950">
-                        {record.student}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-600">
+                       <p className="font-semibold text-slate-950 dark:text-white">
+                         {record.student}
+                       </p>
+                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                         {record.type} - {record.range}
                       </p>
                     </div>
-                    <div className="shrink-0 text-right text-xs font-medium text-slate-500">
+                     <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                       <p>{record.date}</p>
                       <p className="mt-1">{record.time}</p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                       {record.status}
                     </span>
                     <Link
-                      className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+                       className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
                       href={`/students/${record.studentId}`}
                     >
                       Detail
@@ -178,7 +178,7 @@ export default async function DashboardPreview() {
                 </article>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600">
+               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
                 Belum ada aktivitas. Mulai dengan mencatat hafalan atau
                 murojaah pertama.
               </div>

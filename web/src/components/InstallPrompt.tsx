@@ -29,14 +29,14 @@ export default function InstallPrompt() {
   if (!showPrompt || !deferredPrompt) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl sm:left-auto sm:right-8">
+    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-emerald-800 dark:bg-slate-900 sm:left-auto sm:right-8">
       <div className="flex items-start gap-3">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-900 text-white">
           <Download aria-hidden="true" size={18} strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-950">Install TahfidzFlow</p>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="font-semibold text-slate-950 dark:text-white">Install TahfidzFlow</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Tambahkan ke home screen untuk akses cepat seperti aplikasi biasa.
           </p>
         </div>
@@ -54,7 +54,7 @@ export default function InstallPrompt() {
           Install
         </button>
         <button
-          className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
           onClick={() => {
             setShowPrompt(false);
             localStorage.setItem("pwa-dismissed", "1");

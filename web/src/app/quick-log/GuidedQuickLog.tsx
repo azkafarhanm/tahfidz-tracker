@@ -107,21 +107,21 @@ export default function GuidedQuickLog({
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
-        <header className="flex items-center justify-between gap-4">
+         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               Dashboard
             </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               Catat Cepat
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Pilih santri, isi data hafalan/murojaah.
             </p>
           </div>
@@ -131,23 +131,23 @@ export default function GuidedQuickLog({
         </header>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             {error}
           </div>
         ) : null}
 
         {success ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
             {success}
           </div>
         ) : null}
 
         <form action={handleSubmit} className="mt-6 space-y-4">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Search
                 aria-hidden="true"
-                className="text-emerald-800"
+                className="text-emerald-800 dark:text-emerald-400"
                 size={18}
                 strokeWidth={2.2}
               />
@@ -155,17 +155,17 @@ export default function GuidedQuickLog({
             </div>
 
             {selectedStudent ? (
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 p-3">
+              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 p-3 dark:border-emerald-400 dark:bg-emerald-950">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-950">
+                  <p className="truncate font-semibold text-slate-950 dark:text-white">
                     {selectedStudent.fullName}
                   </p>
-                  <p className="truncate text-xs text-slate-600">
+                  <p className="truncate text-xs text-slate-600 dark:text-slate-400">
                     {selectedStudent.classSummary}
                   </p>
                 </div>
                 <button
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-100 hover:text-slate-700"
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-100 hover:text-slate-700 dark:hover:bg-emerald-900 dark:hover:text-slate-300"
                   onClick={handleClearStudent}
                   type="button"
                 >
@@ -174,16 +174,16 @@ export default function GuidedQuickLog({
               </div>
             ) : (
               <div className="relative mt-4" ref={wrapperRef}>
-                <div className="flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100">
+                <div className="flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                   <Search
                     aria-hidden="true"
-                    className="shrink-0 text-slate-400"
+                    className="shrink-0 text-slate-400 dark:text-slate-500"
                     size={17}
                     strokeWidth={2.2}
                   />
                   <input
                     autoComplete="off"
-                    className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
                     name="studentSearch"
                     onChange={(e) => {
                       setQuery(e.target.value);
@@ -197,15 +197,15 @@ export default function GuidedQuickLog({
                 </div>
 
                 {showDropdown && filtered.length > 0 ? (
-                  <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg">
+                  <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
                     {filtered.map((s) => (
                       <button
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-emerald-50"
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 dark:hover:bg-slate-800"
                         key={s.id}
                         onClick={() => handleSelectStudent(s)}
                         type="button"
                       >
-                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-xs font-semibold text-emerald-800">
+                        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-xs font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                           {s.fullName
                             .split(" ")
                             .slice(0, 2)
@@ -213,10 +213,10 @@ export default function GuidedQuickLog({
                             .join("")}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-950">
+                          <p className="truncate text-sm font-medium text-slate-950 dark:text-white">
                             {s.fullName}
                           </p>
-                          <p className="truncate text-xs text-slate-500">
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {s.classSummary}
                           </p>
                         </div>
@@ -224,7 +224,7 @@ export default function GuidedQuickLog({
                     ))}
                   </div>
                 ) : showDropdown && query.length > 0 && filtered.length === 0 ? (
-                  <div className="absolute inset-x-0 top-full z-10 mt-1 rounded-2xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-500 shadow-lg">
+                  <div className="absolute inset-x-0 top-full z-10 mt-1 rounded-2xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-500 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                     Tidak ada santri dengan nama &quot;{query}&quot;
                   </div>
                 ) : null}
@@ -236,15 +236,15 @@ export default function GuidedQuickLog({
 
           {selectedStudent ? (
             <>
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">Jenis Catatan</h2>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {typeOptions.map((t) => (
                     <button
                       className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 p-3 text-center text-sm font-bold transition active:scale-[0.97] ${
                         recordType === t.value
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm ring-2 ring-emerald-200"
-                          : "border-slate-200 bg-white text-slate-950 hover:border-emerald-300 hover:bg-emerald-50/50"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-900"
+                          : "border-slate-200 bg-white text-slate-950 hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
                       }`}
                       key={t.value}
                       onClick={() => setRecordType(t.value)}
@@ -262,11 +262,11 @@ export default function GuidedQuickLog({
                 <input name="type" type="hidden" value={recordType} />
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">Materi</h2>
 
                 <label className="mt-4 block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Surah
                   </span>
                   <div className="mt-2">
@@ -276,18 +276,18 @@ export default function GuidedQuickLog({
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Ayat awal
                     </span>
-                    <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100">
+                    <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                       <Hash
                         aria-hidden="true"
-                        className="shrink-0 text-slate-400"
+                        className="shrink-0 text-slate-400 dark:text-slate-500"
                         size={16}
                         strokeWidth={2.2}
                       />
                       <input
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                         max={286}
                         min={1}
                         name="fromAyah"
@@ -301,18 +301,18 @@ export default function GuidedQuickLog({
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Ayat akhir
                     </span>
-                    <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100">
+                    <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                       <Hash
                         aria-hidden="true"
-                        className="shrink-0 text-slate-400"
+                        className="shrink-0 text-slate-400 dark:text-slate-500"
                         size={16}
                         strokeWidth={2.2}
                       />
                       <input
-                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                         max={286}
                         min={1}
                         name="toAyah"
@@ -327,16 +327,16 @@ export default function GuidedQuickLog({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">Penilaian</h2>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Status
                     </span>
                     <select
-                      className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                       name="status"
                       onChange={(e) => setStatus(e.target.value)}
                       value={status}
@@ -350,11 +350,11 @@ export default function GuidedQuickLog({
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       Nilai
                     </span>
                     <input
-                      className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                       max={100}
                       min={0}
                       name="score"
@@ -367,13 +367,13 @@ export default function GuidedQuickLog({
                 </div>
               </section>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <label className="block">
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Catatan
                   </span>
                   <textarea
-                    className="mt-2 min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                    className="mt-2 min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                     name="notes"
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Opsional"
@@ -385,9 +385,9 @@ export default function GuidedQuickLog({
               <input name="date" type="hidden" value={date} />
               <input name="time" type="hidden" value={time} />
 
-              <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur">
+              <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
                 <Link
-                  className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+                  className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                   href="/quick-log"
                 >
                   Batal
@@ -403,7 +403,7 @@ export default function GuidedQuickLog({
               </div>
             </>
           ) : (
-            <div className="mt-2 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm text-slate-500">
+            <div className="mt-2 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
               Pilih santri terlebih dahulu untuk mulai mencatat.
             </div>
           )}
@@ -425,15 +425,15 @@ function BottomNav({ currentPath }: { currentPath: string }) {
 
   return (
     <nav className="mt-6">
-      <div className="flex items-center justify-around rounded-2xl border border-slate-200 bg-white/95 py-2 shadow-lg backdrop-blur">
+      <div className="flex items-center justify-around rounded-2xl border border-slate-200 bg-white/95 py-2 shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
         {navItems.map(({ label, href, Icon }) => {
           const active = href === currentPath;
           return (
             <Link
               className={`flex flex-col items-center gap-1 px-3 py-1.5 text-[10px] font-semibold transition ${
                 active
-                  ? "text-emerald-800"
-                  : "text-slate-400 hover:text-slate-600"
+                  ? "text-emerald-800 dark:text-emerald-400"
+                  : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
               }`}
               href={href}
               key={href}

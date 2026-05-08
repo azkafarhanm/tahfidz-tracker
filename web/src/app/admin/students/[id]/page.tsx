@@ -35,12 +35,12 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/admin/students"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -53,7 +53,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
           </div>
           <div className="flex items-center gap-2">
             <Link
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href={`/admin/students/${id}/edit`}
             >
               <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
@@ -67,7 +67,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
               Excel
             </a>
             <a
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href={`/api/reports/pdf-student?studentId=${id}`}
             >
               <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
@@ -104,23 +104,23 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {data.activeTargets.map((t, i) => (
                 <article
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   key={i}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
                       className={
                         t.type === "Hafalan"
-                          ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"
-                          : "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800"
+                          ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                          : "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                       }
                     >
                       {t.type}
                     </span>
-                    <Target className="text-emerald-800" size={16} strokeWidth={2.2} />
+                    <Target className="text-emerald-800 dark:text-emerald-400" size={16} strokeWidth={2.2} />
                   </div>
-                  <p className="mt-2 font-semibold text-slate-950">{t.range}</p>
-                  <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-2 font-semibold text-slate-950 dark:text-white">{t.range}</p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     {t.startDate} — {t.endDate}
                   </p>
                 </article>
@@ -135,30 +135,30 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[550px] text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-left">
-                    <th className="pb-3 pr-4 font-semibold text-slate-700">Tanggal</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700">Tipe</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700">Ayat</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 text-center">Skor</th>
-                    <th className="pb-3 font-semibold text-slate-700">Status</th>
+                  <tr className="border-b border-slate-200 text-left dark:border-slate-700">
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Tanggal</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Tipe</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Ayat</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">Skor</th>
+                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.records.map((r) => (
-                    <tr className="border-b border-slate-100" key={r.id}>
-                      <td className="py-3 pr-4 text-slate-600">{r.date}</td>
+                    <tr className="border-b border-slate-100 dark:border-slate-800" key={r.id}>
+                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{r.date}</td>
                       <td className="py-3 pr-4">
                         <span
                           className={
                             r.type === "Hafalan"
-                              ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800"
-                              : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800"
+                              ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                              : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                           }
                         >
                           {r.type}
                         </span>
                       </td>
-                      <td className="py-3 pr-4 font-medium text-slate-950">{r.range}</td>
+                       <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">{r.range}</td>
                       <td className="py-3 pr-4 text-center">
                         <span
                           className={
@@ -181,7 +181,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
                             {r.status}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800">
+                           <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                             {r.status}
                           </span>
                         )}
@@ -192,7 +192,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
               </table>
             </div>
           ) : (
-            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600">
+            <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
               Belum ada catatan hafalan atau murojaah.
             </div>
           )}

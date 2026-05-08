@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
+import ThemeProvider from "@/components/ThemeProvider";
 import ToastMessenger from "@/components/ToastMessenger";
 import InstallPrompt from "@/components/InstallPrompt";
 import "./globals.css";
@@ -41,14 +42,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body>
-        {children}
-        <Suspense>
-          <ToastMessenger />
-        </Suspense>
-        <Toaster position="top-center" richColors closeButton />
-        <InstallPrompt />
+        <ThemeProvider>
+          {children}
+          <Suspense>
+            <ToastMessenger />
+          </Suspense>
+          <Toaster position="top-center" richColors closeButton />
+          <InstallPrompt />
+        </ThemeProvider>
       </body>
     </html>
   );

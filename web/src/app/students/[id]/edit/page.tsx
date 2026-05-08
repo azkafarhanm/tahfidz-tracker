@@ -25,8 +25,8 @@ export default async function EditStudentPage({
 
   if (!teacherId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee]">
-        <p className="text-sm text-slate-600">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Hanya guru yang dapat mengedit santri.
         </p>
       </div>
@@ -41,8 +41,8 @@ export default async function EditStudentPage({
 
   if (!context) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee]">
-        <p className="text-sm text-slate-600">Santri tidak ditemukan.</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
+        <p className="text-sm text-slate-600 dark:text-slate-400">Santri tidak ditemukan.</p>
       </div>
     );
   }

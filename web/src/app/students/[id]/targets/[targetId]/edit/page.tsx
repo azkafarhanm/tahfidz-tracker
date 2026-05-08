@@ -65,11 +65,11 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
             href={`/students/${studentId}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -80,8 +80,8 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
               <Target aria-hidden="true" size={20} strokeWidth={2.2} />
             </span>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Ubah Target</h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">Ubah Target</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 {target.surah} {target.fromAyah}-{target.toAyah}
               </p>
             </div>
@@ -89,7 +89,7 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
         </header>
 
         {query?.error ? (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
             {query.error}
           </div>
         ) : null}
@@ -98,13 +98,13 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
           action={action}
           className="mt-5 space-y-5"
         >
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <Target aria-hidden="true" className="text-emerald-800" size={17} strokeWidth={2.2} />
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <Target aria-hidden="true" className="text-emerald-800 dark:text-emerald-400" size={17} strokeWidth={2.2} />
               Jenis target
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-600 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:text-emerald-400">
                 <input
                   className="sr-only"
                   defaultChecked={target.type === "HAFALAN"}
@@ -114,7 +114,7 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
                 />
                 Hafalan
               </label>
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:checked]:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-600 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:text-emerald-400">
                 <input
                   className="sr-only"
                   defaultChecked={target.type === "MUROJAAH"}
@@ -127,23 +127,23 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <Target aria-hidden="true" className="text-emerald-800" size={17} strokeWidth={2.2} />
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <Target aria-hidden="true" className="text-emerald-800 dark:text-emerald-400" size={17} strokeWidth={2.2} />
               Materi target
             </div>
             <div className="mt-3 space-y-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="surah">Surah</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="surah">Surah</label>
                 <SurahInput defaultValue={target.surah} id="surah" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="fromAyah">Ayat awal</label>
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
-                    <Hash aria-hidden="true" className="text-slate-400" size={14} strokeWidth={2.2} />
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="fromAyah">Ayat awal</label>
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-400/20">
+                    <Hash aria-hidden="true" className="text-slate-400 dark:text-slate-500" size={14} strokeWidth={2.2} />
                     <input
-                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                       defaultValue={target.fromAyah}
                       id="fromAyah"
                       max={286}
@@ -155,11 +155,11 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="toAyah">Ayat akhir</label>
-                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20">
-                    <Hash aria-hidden="true" className="text-slate-400" size={14} strokeWidth={2.2} />
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="toAyah">Ayat akhir</label>
+                  <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-400/20">
+                    <Hash aria-hidden="true" className="text-slate-400 dark:text-slate-500" size={14} strokeWidth={2.2} />
                     <input
-                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                       defaultValue={target.toAyah}
                       id="toAyah"
                       max={286}
@@ -174,16 +174,16 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <CalendarDays aria-hidden="true" className="text-emerald-800" size={17} strokeWidth={2.2} />
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <CalendarDays aria-hidden="true" className="text-emerald-800 dark:text-emerald-400" size={17} strokeWidth={2.2} />
               Jadwal
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="startDate">Mulai</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="startDate">Mulai</label>
                 <input
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
                   defaultValue={toDateString(target.startDate)}
                   id="startDate"
                   name="startDate"
@@ -192,9 +192,9 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="endDate">Target selesai</label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="endDate">Target selesai</label>
                 <input
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
                   defaultValue={toDateString(target.endDate)}
                   id="endDate"
                   name="endDate"
@@ -205,13 +205,13 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-              <ClipboardList aria-hidden="true" className="text-emerald-800" size={17} strokeWidth={2.2} />
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <ClipboardList aria-hidden="true" className="text-emerald-800 dark:text-emerald-400" size={17} strokeWidth={2.2} />
               Catatan
             </div>
             <textarea
-              className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               defaultValue={target.notes ?? ""}
               name="notes"
               placeholder="Opsional — catatan tambahan tentang target ini"
@@ -219,9 +219,9 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
             />
           </section>
 
-          <div className="sticky bottom-0 -mx-4 flex items-center gap-3 bg-[#f7f4ee]/90 px-4 pb-5 pt-3 backdrop-blur-sm sm:-mx-8 sm:px-8">
+          <div className="sticky bottom-0 -mx-4 flex items-center gap-3 bg-[#f7f4ee]/90 px-4 pb-5 pt-3 backdrop-blur-sm sm:-mx-8 sm:px-8 dark:bg-[#0c0f1a]/90">
             <Link
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-900"
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:hover:border-emerald-600 dark:hover:text-emerald-400"
               href={`/students/${studentId}`}
             >
               Batal

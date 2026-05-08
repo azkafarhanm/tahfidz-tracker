@@ -23,14 +23,14 @@ export default async function ReportsPage() {
 
   if (!teacherId) {
     return (
-      <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+      <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
         <section className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 sm:max-w-3xl sm:px-8">
           <div className="text-center">
             <div className="grid h-16 w-16 place-items-center rounded-3xl bg-blue-100 text-blue-900 shadow-lg">
               <BarChart3 size={28} strokeWidth={2} />
             </div>
             <h1 className="mt-6 text-2xl font-semibold">Laporan</h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2 text-slate-600 dark:text-slate-400">
               Laporan tersedia untuk akun guru.
             </p>
           </div>
@@ -49,19 +49,19 @@ export default async function ReportsPage() {
   const data = await getTeacherReportData(teacherId);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               Dashboard
             </Link>
             <h1 className="mt-3 text-2xl font-semibold">Laporan</h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Ringkasan progres halaqah dan santri Anda.
             </p>
           </div>
@@ -74,7 +74,7 @@ export default async function ReportsPage() {
               Excel
             </a>
             <a
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href="/api/reports/pdf-teacher"
             >
               <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
@@ -103,20 +103,20 @@ export default async function ReportsPage() {
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Santri aktif</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Santri aktif</p>
             <p className="mt-2 text-2xl font-semibold">{data.studentCount}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Hafalan</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Hafalan</p>
             <p className="mt-2 text-2xl font-semibold">{data.totalHafalan}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Murojaah</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Murojaah</p>
             <p className="mt-2 text-2xl font-semibold">{data.totalMurojaah}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Target aktif</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Target aktif</p>
             <p className="mt-2 text-2xl font-semibold">{data.activeTargetCount}</p>
           </article>
         </section>
@@ -127,16 +127,16 @@ export default async function ReportsPage() {
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {data.classGroups.map((cg) => (
                 <article
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   key={cg.id}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-slate-950">{cg.name}</p>
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+                    <p className="font-semibold text-slate-950 dark:text-white">{cg.name}</p>
+                    <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                       {cg.level}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                     {cg.studentCount} santri
                   </p>
                 </article>
@@ -150,30 +150,30 @@ export default async function ReportsPage() {
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[600px] text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left">
-                  <th className="pb-3 pr-4 font-semibold text-slate-700">Nama</th>
-                  <th className="pb-3 pr-4 font-semibold text-slate-700">Halaqah</th>
-                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center">Hafalan</th>
-                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center">Murojaah</th>
-                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center">Skor</th>
-                  <th className="pb-3 pr-4 font-semibold text-slate-700">Terakhir</th>
-                  <th className="pb-3 font-semibold text-slate-700 text-center">Status</th>
+                <tr className="border-b border-slate-200 text-left dark:border-slate-700">
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Nama</th>
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Halaqah</th>
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">Hafalan</th>
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">Murojaah</th>
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">Skor</th>
+                  <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Terakhir</th>
+                  <th className="pb-3 font-semibold text-slate-700 text-center dark:text-slate-300">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {data.students.map((s) => (
                   <tr
-                    className="border-b border-slate-100"
+                    className="border-b border-slate-100 dark:border-slate-800"
                     key={s.id}
                   >
-                    <td className="py-3 pr-4 font-medium text-slate-950">
+                    <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
                       {s.fullName}
                     </td>
-                    <td className="py-3 pr-4 text-slate-600">{s.halaqahName}</td>
-                    <td className="py-3 pr-4 text-center text-slate-900">
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.halaqahName}</td>
+                    <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
                       {s.hafalanCount}
                     </td>
-                    <td className="py-3 pr-4 text-center text-slate-900">
+                    <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
                       {s.murojaahCount}
                     </td>
                     <td className="py-3 pr-4 text-center">
@@ -191,7 +191,7 @@ export default async function ReportsPage() {
                         {s.avgScore || "-"}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-slate-600">{s.lastRange}</td>
+                    <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>
                     <td className="py-3 text-center">
                       {s.needsReview ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
@@ -199,7 +199,7 @@ export default async function ReportsPage() {
                           Cek
                         </span>
                       ) : (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800">
+                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                           {s.lastStatus}
                         </span>
                       )}
@@ -214,7 +214,7 @@ export default async function ReportsPage() {
         {isAdmin ? (
           <section className="mt-6">
             <Link
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href="/admin/reports"
             >
               <ShieldCheck aria-hidden="true" size={16} strokeWidth={2.2} />

@@ -30,8 +30,8 @@ export default async function NewStudentPage({
 
   if (!teacherId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee]">
-        <p className="text-sm text-slate-600">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           Hanya guru yang dapat menambah santri.
         </p>
       </div>

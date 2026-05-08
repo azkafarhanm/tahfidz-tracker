@@ -115,30 +115,30 @@ export default function MotivationCard() {
 
   return (
     <div
-      className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition-opacity duration-[1200ms] ease-in-out"
+      className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition-opacity duration-[1200ms] ease-in-out dark:border-emerald-900 dark:bg-slate-900"
       style={{ opacity }}
     >
       {showArabic && (
         <p
-          className="text-center text-lg leading-relaxed text-emerald-900 min-h-[2rem]"
+          className="text-center text-lg leading-relaxed text-emerald-900 min-h-[2rem] dark:text-emerald-300"
           dir="rtl"
         >
           {arabicVisible}
           {phase === "typing-arabic" && (
             <span
-              className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle"
+              className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle dark:bg-emerald-400"
               style={{ height: "1em" }}
             />
           )}
         </p>
       )}
-      <div className="mt-2 text-center text-sm italic text-slate-600 min-h-[2.5rem]">
+      <div className="mt-2 text-center text-sm italic text-slate-600 min-h-[2.5rem] dark:text-slate-400">
         {showText && (
           <>
             &ldquo;{textVisible}
             {phase === "typing-text" && (
               <span
-                className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle"
+                className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle dark:bg-emerald-400"
                 style={{ height: "1em" }}
               />
             )}
@@ -147,7 +147,7 @@ export default function MotivationCard() {
         )}
       </div>
       <p
-        className={`mt-2 text-center text-xs font-medium text-emerald-700 transition-opacity duration-500 ${
+        className={`mt-2 text-center text-xs font-medium text-emerald-700 transition-opacity duration-500 dark:text-emerald-400 ${
           showRef ? "opacity-100" : "opacity-0"
         }`}
       >

@@ -37,21 +37,21 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               Dashboard
             </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               Santri
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Pantau hafalan, murojaah, dan target aktif.
             </p>
           </div>
@@ -72,7 +72,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         </header>
 
         {params?.success ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
             {params.success}
           </div>
         ) : null}
@@ -102,11 +102,11 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
         <form
           action="/students"
-          className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100"
+          className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-900"
         >
           <Search aria-hidden="true" size={18} strokeWidth={2.2} />
           <input
-            className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+            className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder-slate-500"
             defaultValue={query}
             name="q"
             placeholder="Cari nama santri"
@@ -133,7 +133,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   Tambah
                 </Link>
               ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 {students.length} aktif
               </span>
             </div>
@@ -143,16 +143,16 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             {students.length > 0 ? (
               students.map((student) => (
                 <Link
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md active:scale-[0.99]"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   href={`/students/${student.id}`}
                   key={student.id}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950">
+                      <p className="truncate font-semibold text-slate-950 dark:text-white">
                         {student.fullName}
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                         {student.classSummary}
                       </p>
                     </div>
@@ -160,7 +160,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       className={
                         student.needsReview
                           ? "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800"
-                          : "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"
+                          : "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                       }
                     >
                       {student.needsReview ? "Cek" : "Aktif"}
@@ -168,22 +168,22 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3">
+                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
                       <BookOpen
                         aria-hidden="true"
-                        className="mt-0.5 shrink-0 text-emerald-800"
+                        className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={17}
                         strokeWidth={2.2}
                       />
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-500">
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                           Hafalan terakhir
                         </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                        <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {student.latestHafalan?.range ?? "Belum ada catatan"}
                         </p>
                         {student.latestHafalan ? (
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {student.latestHafalan.date} -{" "}
                             {student.latestHafalan.status}
                           </p>
@@ -191,23 +191,23 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3">
+                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
                       <RotateCcw
                         aria-hidden="true"
-                        className="mt-0.5 shrink-0 text-emerald-800"
+                        className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={17}
                         strokeWidth={2.2}
                       />
                       <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-500">
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                           Murojaah terakhir
                         </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                        <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {student.latestMurojaah?.range ??
                             "Belum ada catatan"}
                         </p>
                         {student.latestMurojaah ? (
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                             {student.latestMurojaah.date} -{" "}
                             {student.latestMurojaah.status}
                           </p>
@@ -216,8 +216,8 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-                    <span className="inline-flex items-center gap-2 font-medium text-slate-600">
+                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
+                    <span className="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
                       <Target
                         aria-hidden="true"
                         size={16}
@@ -225,14 +225,14 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       />
                       {student.activeTargetCount} target aktif
                     </span>
-                    <span className="font-semibold text-emerald-800">
+                    <span className="font-semibold text-emerald-800 dark:text-emerald-400">
                       Detail
                     </span>
                   </div>
                 </Link>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2">
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
                   ? "Tidak ada santri yang cocok dengan pencarian ini."
                   : "Belum ada santri aktif untuk ditampilkan saat ini."}
@@ -244,18 +244,18 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         {!isAdmin && inactiveStudents.length > 0 ? (
           <section className="mt-6">
             <h2 className="text-lg font-semibold">Santri Nonaktif</h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Santri yang sudah dinonaktifkan. Aktifkan kembali jika diperlukan.
             </p>
             <div className="mt-3 space-y-3">
               {inactiveStudents.map((s) => (
                 <div
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   key={s.id}
                 >
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-slate-950">{s.fullName}</p>
-                    <p className="mt-1 text-sm text-slate-600">{s.classSummary}</p>
+                    <p className="truncate font-semibold text-slate-950 dark:text-white">{s.fullName}</p>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.classSummary}</p>
                   </div>
                   <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
                 </div>

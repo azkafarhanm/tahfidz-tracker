@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import LogoutButton from "@/components/LogoutButton";
+import ThemeToggle from "@/components/ThemeToggle";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -101,7 +102,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           ) : null}
         </section>
 
-        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tampilan</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Pilih tema tampilan aplikasi.</p>
+          <div className="mt-3">
+            <ThemeToggle />
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800">
               <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.2} />

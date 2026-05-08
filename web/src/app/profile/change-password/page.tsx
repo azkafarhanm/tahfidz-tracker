@@ -12,12 +12,12 @@ export default function ChangePasswordPage() {
   const [isPending, startTransition] = useTransition();
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
-            href="/profile"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              href="/profile"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             Profil
@@ -27,8 +27,8 @@ export default function ChangePasswordPage() {
               <KeyRound aria-hidden="true" size={20} strokeWidth={2.2} />
             </span>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Ubah Password</h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">Ubah Password</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 Perbarui password login akun Anda.
               </p>
             </div>
@@ -36,7 +36,7 @@ export default function ChangePasswordPage() {
         </header>
 
         {error ? (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
             {error}
           </div>
         ) : null}
@@ -50,12 +50,12 @@ export default function ChangePasswordPage() {
           }}
         >
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="currentPassword">
+            <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="currentPassword">
               Password saat ini
             </label>
             <input
               autoComplete="current-password"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               id="currentPassword"
               name="currentPassword"
               required
@@ -64,12 +64,12 @@ export default function ChangePasswordPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="newPassword">
+            <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="newPassword">
               Password baru
             </label>
             <input
               autoComplete="new-password"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               id="newPassword"
               maxLength={72}
               minLength={4}
@@ -77,16 +77,16 @@ export default function ChangePasswordPage() {
               required
               type="password"
             />
-            <p className="mt-1 text-xs text-slate-500">Minimal 4 karakter.</p>
+             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Minimal 4 karakter.</p>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700" htmlFor="confirmPassword">
+            <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="confirmPassword">
               Konfirmasi password baru
             </label>
             <input
               autoComplete="new-password"
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               id="confirmPassword"
               maxLength={72}
               minLength={4}

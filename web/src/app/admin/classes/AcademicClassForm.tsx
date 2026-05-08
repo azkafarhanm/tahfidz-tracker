@@ -41,21 +41,21 @@ export default function AcademicClassForm({
   values,
 }: AcademicClassFormProps) {
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
-        <header className="flex items-center justify-between gap-4">
+         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {backLabel}
             </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {title}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">{description}</p>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</p>
           </div>
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <Icon aria-hidden="true" size={22} strokeWidth={2.3} />
@@ -63,17 +63,17 @@ export default function AcademicClassForm({
         </header>
 
         {error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             {error}
           </div>
         ) : null}
 
         <form action={action} className="mt-6 space-y-4">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Hash
                 aria-hidden="true"
-                className="text-emerald-800"
+                className="text-emerald-800 dark:text-emerald-400"
                 size={18}
                 strokeWidth={2.2}
               />
@@ -81,11 +81,11 @@ export default function AcademicClassForm({
             </div>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Tingkat kelas
               </span>
               <input
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.grade}
                 max={12}
                 min={1}
@@ -97,11 +97,11 @@ export default function AcademicClassForm({
             </label>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Ruang kelas
               </span>
               <input
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.section}
                 maxLength={5}
                 name="section"
@@ -112,20 +112,20 @@ export default function AcademicClassForm({
             </label>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Nama kelas
               </span>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Dibuat otomatis dari tingkat dan ruang kelas (contoh: 7A).
               </p>
             </label>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <CalendarRange
                 aria-hidden="true"
-                className="text-emerald-800"
+                className="text-emerald-800 dark:text-emerald-400"
                 size={18}
                 strokeWidth={2.2}
               />
@@ -133,11 +133,11 @@ export default function AcademicClassForm({
             </div>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Tahun ajaran
               </span>
               <select
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.academicYear}
                 name="academicYear"
                 required
@@ -150,7 +150,7 @@ export default function AcademicClassForm({
               </select>
             </label>
 
-            <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
               <input
                 className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-900 focus:ring-emerald-500"
                 defaultChecked={values.isActive}
@@ -158,24 +158,24 @@ export default function AcademicClassForm({
                 type="checkbox"
               />
               <div>
-                <span className="text-sm font-medium text-slate-800">
+                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
                   Kelas aktif
                 </span>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                   Jika dinonaktifkan, kelas tidak akan muncul di pilihan santri.
                 </p>
               </div>
             </label>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <GraduationCap aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <div>
-                <h2 className="font-semibold text-slate-950">Catatan admin</h2>
-                <p className="mt-1 text-sm text-slate-600">
+                <h2 className="font-semibold text-slate-950 dark:text-white">Catatan admin</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                   Nama kelas dibuat otomatis dari kombinasi tingkat dan ruang
                   kelas. Pastikan tidak ada duplikat untuk tahun ajaran yang
                   sama.
@@ -184,9 +184,9 @@ export default function AcademicClassForm({
             </div>
           </section>
 
-          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur">
+          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
             <Link
-              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
               Batal

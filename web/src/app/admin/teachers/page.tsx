@@ -39,21 +39,21 @@ export default async function AdminTeachersPage({
   const { counts, teachers } = await getAdminTeachersData(query);
 
   return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950">
+    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-6xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               Panel Admin
             </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               Direktori Guru
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Tinjau akun guru, sebaran santri, dan status akses secara terpusat.
             </p>
           </div>
@@ -63,13 +63,13 @@ export default async function AdminTeachersPage({
         </header>
 
         {params?.success ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
             {params.success}
           </div>
         ) : null}
 
         {params?.error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900">
+          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
             {params.error}
           </div>
         ) : null}
@@ -97,43 +97,43 @@ export default async function AdminTeachersPage({
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Total guru</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total guru</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.teacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500">seluruh akun guru</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">seluruh akun guru</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Aktif</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aktif</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.activeTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500">siap digunakan</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">siap digunakan</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Nonaktif</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Nonaktif</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.inactiveTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500">butuh tindak lanjut</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">butuh tindak lanjut</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">Ditampilkan</p>
+          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Ditampilkan</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.filteredTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500">sesuai pencarian</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">sesuai pencarian</p>
           </article>
         </section>
 
         <form
           action="/admin/teachers"
-          className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100"
+          className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:focus-within:ring-emerald-400/20"
         >
           <Search aria-hidden="true" size={18} strokeWidth={2.2} />
           <input
-            className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+            className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             defaultValue={query}
             name="q"
             placeholder="Cari nama guru, email, atau nomor telepon"
@@ -160,13 +160,13 @@ export default async function AdminTeachersPage({
               </Link>
               {query ? (
                 <Link
-                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200"
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   href="/admin/teachers"
                 >
                   Reset pencarian
                 </Link>
               ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 {counts.filteredTeacherCount} terlihat
               </span>
             </div>
@@ -176,23 +176,23 @@ export default async function AdminTeachersPage({
             {teachers.length > 0 ? (
               teachers.map((teacher) => (
                 <article
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md"
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
                   key={teacher.id}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950">
+                      <p className="truncate font-semibold text-slate-950 dark:text-white">
                         {teacher.fullName}
                       </p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         Bergabung {teacher.joinedAt}
                       </p>
                     </div>
                     <span
                       className={
                         teacher.isActive
-                          ? "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"
-                          : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800"
+                          ? "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+                          : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-400"
                       }
                     >
                       {teacher.isActive ? "Aktif" : "Nonaktif"}
@@ -200,20 +200,20 @@ export default async function AdminTeachersPage({
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       <Mail
                         aria-hidden="true"
-                        className="shrink-0 text-emerald-800"
+                        className="shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={16}
                         strokeWidth={2.2}
                       />
                       <span className="truncate">{teacher.email}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                       <Phone
                         aria-hidden="true"
-                        className="shrink-0 text-emerald-800"
+                        className="shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={16}
                         strokeWidth={2.2}
                       />
@@ -222,16 +222,16 @@ export default async function AdminTeachersPage({
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                      <p className="text-xs font-medium text-slate-500">Santri</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Santri</p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
                         <Users aria-hidden="true" size={16} strokeWidth={2.2} />
                         {teacher.studentCount}
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-                      <p className="text-xs font-medium text-slate-500">Halaqah</p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Halaqah</p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
                         <BookOpen
                           aria-hidden="true"
                           size={16}
@@ -244,7 +244,7 @@ export default async function AdminTeachersPage({
 
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900"
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
                       href={`/admin/teachers/${teacher.id}/edit`}
                     >
                       <PencilLine
@@ -264,8 +264,8 @@ export default async function AdminTeachersPage({
                       <button
                         className={
                           teacher.isActive
-                            ? "inline-flex min-h-11 items-center justify-center rounded-2xl bg-amber-100 px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-200"
-                            : "inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200"
+                            ? "inline-flex min-h-11 items-center justify-center rounded-2xl bg-amber-100 px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-400 dark:hover:bg-amber-800"
+                            : "inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
                         }
                         type="submit"
                       >
@@ -276,7 +276,7 @@ export default async function AdminTeachersPage({
                 </article>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3">
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
                   ? "Tidak ada guru yang cocok dengan pencarian ini."
                   : "Belum ada data guru untuk ditampilkan."}
