@@ -5,7 +5,7 @@ export default function BottomNav({ currentPath }: { currentPath: string }) {
   const navigation = getNavigation(currentPath);
 
   return (
-    <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-400">
+    <nav className="sticky bottom-4 mt-6 grid grid-cols-4 rounded-3xl border border-slate-200 bg-white/95 p-2 text-center text-xs font-medium text-slate-500 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-400 sm:hidden">
       {navigation.map((item: NavItem) => (
         <Link
           className={

@@ -17,7 +17,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
   const pathname = usePathname();
 
   return (
-    <aside className="hidden sm:flex sm:w-64 sm:flex-col sm:fixed sm:inset-y-0 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
+    <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 sm:z-40 sm:flex sm:h-screen sm:w-64 sm:flex-col sm:overflow-hidden">
       <div className="shrink-0 p-5 border-b border-slate-100 dark:border-slate-800">
         <Link className="flex items-center gap-3" href="/">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -52,7 +52,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
         })}
       </nav>
 
-      <div className="flex-1 min-h-0 px-3 py-2">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2">
         <MotivationCard />
       </div>
 
