@@ -587,9 +587,9 @@ The database URL contains a password, so it should never be pasted into chat, sc
 - Design every main teacher flow for smartphone use.
 - Make the UI beautiful, smooth, and memorable without reducing the dignity of the Tahfidz purpose.
 
-## Current Project Status — ~90% Complete
+## Current Project Status — ~95% Complete
 
-The project has completed Phases 1–8 and is production-ready. Remaining phases are future enhancements.
+The project has completed Phases 1–9 and is production-ready. Remaining phases are future enhancements.
 
 | Phase | Feature | Status |
 |-------|---------|--------|
@@ -598,9 +598,10 @@ The project has completed Phases 1–8 and is production-ready. Remaining phases
 | 3 | Auth & Permissions (NextAuth, roles, middleware) | ✅ Complete |
 | 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ Complete |
 | 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ Complete |
-| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ ~95% |
+| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ Complete |
 | 7 | Target Management (CRUD targets, progress bar, complete/cancel) | ✅ Complete |
-| 8 | UX Polish (toast notifications, loading skeletons) | ✅ Complete |
+| 8 | UX Polish (toast notifications with sound, loading skeletons) | ✅ Complete |
+| 9 | PWA + Enhancements (installable app, surah autocomplete, juz auto-calculate, overdue targets) | ✅ Complete |
 
 ### What Works Now
 
@@ -609,8 +610,12 @@ The project has completed Phases 1–8 and is production-ready. Remaining phases
 - **Target Management**: Create/edit/cancel/complete targets with progress bars and overdue tracking
 - **Quick Log**: Guided structured input (search student → pick surah/ayah → submit)
 - **Reports**: Excel + PDF export for teacher, admin, and per-student views
+- **Surah Autocomplete**: All 114 surahs with searchable dropdown, keyboard navigation, ayah count
+- **Juz Auto-Display**: Automatically shows juz number on all surah ranges (e.g. "Al-Mulk 1-20 · Juz 29")
+- **Overdue Targets**: Dashboard shows students with past-due targets with red warning cards
+- **Toast Notifications**: Success/error feedback with sound on all actions via sonner
+- **PWA Install**: Installable to phone home screen or desktop (Chrome/Edge)
 - **Edit/Delete**: Edit student data, edit/delete records, deactivate/reactivate students, delete teachers (admin), change password
-- **Toast Notifications**: Success/error feedback on all actions via sonner
 - **Auth**: NextAuth v5 with JWT, role-based access, teacher-scoped data
 
 ### Demo Accounts

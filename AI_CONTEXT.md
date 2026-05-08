@@ -4,7 +4,7 @@ This document summarizes the current state, architecture, modules, and phased pl
 
 ---
 
-## Current Status — ~90% Complete (Phases 1-8 Done)
+## Current Status — ~95% Complete (Phases 1-9 Done)
 
 ### Completed Phases
 
@@ -15,15 +15,16 @@ This document summarizes the current state, architecture, modules, and phased pl
 | 3 | Auth & Permissions (NextAuth, roles, middleware) | ✅ 100% |
 | 4 | Admin Management (teacher/class/halaqah/student CRUD) | ✅ 100% |
 | 5 | Reports & Export (Excel, PDF, progress tracking) | ✅ 100% |
-| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ ~95% |
+| 6 | Edit & Polish (edit/delete records, deactivate/reactivate, change password, delete teacher) | ✅ 100% |
 | 7 | Target Management (CRUD targets, progress bar, complete/cancel) | ✅ 100% |
-| 8 | UX Polish (toast notifications, loading skeletons) | ✅ 100% |
+| 8 | UX Polish (toast notifications with sound, loading skeletons) | ✅ 100% |
+| 9 | PWA + Enhancements (installable app, surah autocomplete, juz auto-calculate, overdue targets) | ✅ 100% |
 
 ### Remaining / Future
 
 | Phase | Feature | Status |
 |-------|---------|--------|
-| 9 | PWA install support | ❌ Future |
+| 10 | Telegram Integration | ❌ Future |
 | 10 | Telegram Integration | ❌ Future |
 | 11 | AI Parser | ❌ Future |
 | 12 | Multilingual (English, Arabic) | ❌ Future |
@@ -239,17 +240,19 @@ tahfidz-tracker/
             page.tsx           Admin report page
       components/
         BottomNav.tsx          Shared bottom navigation
+        InstallPrompt.tsx      PWA install banner
         LogoutButton.tsx
         ReactivateStudentButton.tsx
+        SurahInput.tsx         Surah autocomplete dropdown (114 surahs)
         TargetActions.tsx      Cancel/complete target buttons
-        ToastMessenger.tsx     URL param → toast notification bridge
+        ToastMessenger.tsx     URL param → toast notification with sound
       lib/
         prisma.ts              Prisma client singleton
         database-url.ts        DATABASE_URL validation
         form-helpers.ts        Shared form parsing utilities
-        format.ts              Shared formatters, labels, date/time, navigation
+        format.ts              Shared formatters, labels, date/time, navigation, juz in ranges
         session.ts             Shared auth/session scope helper
-        dashboard.ts           Dashboard data queries
+        dashboard.ts           Dashboard data queries + overdue targets
         students.ts            Student data queries, getInactiveStudentsData, target progress
         quick-log.ts           Quick-log parser (legacy, no longer used by page)
         admin.ts               All admin data queries
@@ -258,6 +261,8 @@ tahfidz-tracker/
         record-actions.ts      Shared updateRecord, deleteRecord server actions
         target-actions.ts      Create, update, cancel, complete target server actions
         pdf.ts                 PDFKit-based PDF generation
+        surahs.ts              All 114 surahs data (number, name, ayah count)
+        juz.ts                 Juz auto-calculation from surah + ayah
 ```
 
 ---
@@ -338,9 +343,18 @@ tahfidz-tracker/
 ### Phase 8: UX Polish — Complete
 
 - Toast notifications via `sonner` library for success/error feedback across all actions
+- Two-tone melody sound: ascending chime for success, descending tone for error
 - `ToastMessenger` client component reads `?success=`/`?error=` URL params, shows toast, cleans URL
 - Loading skeletons for `/students` and `/students/[id]` routes
 - Root layout includes `<Toaster>` and `<ToastMessenger>`
+
+### Phase 9: PWA + Enhancements — Complete
+
+- **PWA install support**: `manifest.json`, SVG icon, `<InstallPrompt>` component with "Install TahfidzFlow" banner
+- **Surah autocomplete**: all 114 surahs with number, name, ayah count — searchable dropdown on all forms (hafalan, murojaah, target, quick log, edit record)
+- **Juz auto-calculate**: `getJuz()` and `getJuzLabel()` functions auto-display juz from surah + ayah range (e.g. "Al-Mulk 1-20 · Juz 29")
+- **Overdue targets on dashboard**: "Target terlambat" section with red cards showing student name, range, deadline, "Lewat" badge
+- **Consistent button styling**: all radio buttons and action buttons use same green/white color scheme
 
 ### Bug Fix Sweeps
 
