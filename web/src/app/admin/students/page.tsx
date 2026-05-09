@@ -7,7 +7,6 @@ import {
   PlusCircle,
   Search,
   ShieldCheck,
-  UserRound,
   Users,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";

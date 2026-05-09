@@ -65,12 +65,12 @@ export default async function RootLayout({
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             {children}
+            <Suspense>
+              <ToastMessenger />
+            </Suspense>
+            <Toaster position="top-center" richColors closeButton />
+            <InstallPrompt />
           </NextIntlClientProvider>
-          <Suspense>
-            <ToastMessenger />
-          </Suspense>
-          <Toaster position="top-center" richColors closeButton />
-          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
