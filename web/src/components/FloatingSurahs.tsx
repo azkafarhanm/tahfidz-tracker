@@ -66,7 +66,7 @@ export default function FloatingSurahs() {
         x: Math.random() * w(),
         y: h() + 30,
         speed: 0.15 + Math.random() * 0.35,
-        size: 18 + Math.random() * 18,
+        size: 24 + Math.random() * 22,
         opacity: 0,
         phase: Math.random() * Math.PI * 2,
       };
