@@ -66,7 +66,7 @@ export default function FloatingSurahs() {
         x: Math.random() * w(),
         y: h() + 30,
         speed: 0.15 + Math.random() * 0.35,
-        size: 10 + Math.random() * 14,
+        size: 18 + Math.random() * 18,
         opacity: 0,
         phase: Math.random() * Math.PI * 2,
       };
@@ -86,16 +86,16 @@ export default function FloatingSurahs() {
       ctx.clearRect(0, 0, w(), h());
 
       const isDark = document.documentElement.classList.contains("dark");
-      const baseColor = isDark ? "180, 220, 180" : "20, 80, 50";
+      const baseColor = isDark ? "52, 211, 153" : "6, 78, 59";
 
       for (const p of particlesRef.current) {
         p.y -= p.speed;
         p.phase += 0.008;
         p.x += Math.sin(p.phase) * 0.3;
 
-        const fadeIn = Math.min(1, (h() - p.y + 60) / 120);
-        const fadeOut = Math.min(1, p.y / 80);
-        p.opacity = fadeIn * fadeOut * (0.06 + 0.06 * Math.sin(p.phase * 0.7));
+        const fadeIn = Math.min(1, (h() - p.y + 80) / 150);
+        const fadeOut = Math.min(1, p.y / 100);
+        p.opacity = fadeIn * fadeOut * (0.12 + 0.08 * Math.sin(p.phase * 0.7));
 
         ctx.save();
         ctx.globalAlpha = p.opacity;
