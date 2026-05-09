@@ -7,6 +7,7 @@ import {
   Search,
   Users,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { toggleAcademicClassActive } from "./actions";
 import { getAdminAcademicClassesData } from "@/lib/admin";
 
@@ -29,7 +30,7 @@ type AdminClassesPageProps = {
 export default async function AdminClassesPage({
   searchParams,
 }: AdminClassesPageProps) {
-
+  const t = await getTranslations("AdminClasses");
 
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
@@ -44,13 +45,13 @@ export default async function AdminClassesPage({
                href="/admin"
              >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Panel Admin
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Kelas Akademik
+              {t("heading")}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Kelola kelas sekolah dan tahun ajaran untuk penempatan santri.
+              {t("description")}
             </p>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -73,18 +74,18 @@ export default async function AdminClassesPage({
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">Kelas akademik</p>
+              <p className="text-sm text-emerald-100">{t("heroLabel")}</p>
               <p className="mt-3 text-4xl font-semibold">
                 {counts.filteredCount}
               </p>
               <p className="mt-1 text-sm text-slate-300">
                 {query
-                  ? `hasil untuk "${query}"`
-                  : "tercatat dalam sistem"}
+                  ? t("heroSearchResult", { query })
+                  : t("heroSubtext")}
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">Aktif</p>
+              <p className="text-xs text-slate-300">{t("badgeAktif")}</p>
               <p className="mt-1 text-xl font-semibold">
                 {counts.activeCount}
               </p>
@@ -94,30 +95,30 @@ export default async function AdminClassesPage({
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total kelas</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statTotalLabel")}</p>
             <p className="mt-2 text-2xl font-semibold">{counts.totalCount}</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">seluruh kelas</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statTotalSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aktif</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeAktif")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.activeCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">siap digunakan</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statAktifSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Nonaktif</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeNonaktif")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.inactiveCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">butuh tindak lanjut</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statNonaktifSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Ditampilkan</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statFilteredLabel")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.filteredCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">sesuai pencarian</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statFilteredSubtext")}</p>
           </article>
         </section>
 
@@ -130,38 +131,38 @@ export default async function AdminClassesPage({
              className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             defaultValue={query}
             name="q"
-            placeholder="Cari nama kelas atau tahun ajaran"
+            placeholder={t("searchPlaceholder")}
             type="search"
           />
           <button
             className="rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
             type="submit"
           >
-            Cari
+            {t("searchButton")}
           </button>
         </form>
 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Daftar kelas</h2>
+            <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
               <Link
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
                 href="/admin/classes/new"
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
-                Tambah kelas
+                {t("addButton")}
               </Link>
               {query ? (
                 <Link
                    className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                    href="/admin/classes"
                  >
-                  Reset pencarian
+                  {t("resetSearch")}
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {counts.filteredCount} terlihat
+                {t("visibleCount", { count: counts.filteredCount })}
               </span>
             </div>
           </div>
@@ -179,7 +180,7 @@ export default async function AdminClassesPage({
                         {academicClass.name}
                       </p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Tahun ajaran {academicClass.academicYear}
+                        {t("academicYearLabel")} {academicClass.academicYear}
                       </p>
                     </div>
                     <span
@@ -189,14 +190,14 @@ export default async function AdminClassesPage({
                           : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400"
                       }
                     >
-                      {academicClass.isActive ? "Aktif" : "Nonaktif"}
+                      {academicClass.isActive ? t("badgeAktif") : t("badgeNonaktif")}
                     </span>
                   </div>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Tingkat
+                        {t("gradeLabel")}
                       </p>
                       <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
                         {academicClass.grade}
@@ -204,7 +205,7 @@ export default async function AdminClassesPage({
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Santri
+                        {t("studentLabel")}
                       </p>
                       <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
                         <Users
@@ -227,7 +228,7 @@ export default async function AdminClassesPage({
                         size={16}
                         strokeWidth={2.2}
                       />
-                      Ubah
+                      {t("editButton")}
                     </Link>
                     <form
                       action={toggleAcademicClassActive.bind(
@@ -244,7 +245,7 @@ export default async function AdminClassesPage({
                         }
                         type="submit"
                       >
-                        {academicClass.isActive ? "Nonaktifkan" : "Aktifkan"}
+                        {academicClass.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
                   </div>
@@ -253,8 +254,8 @@ export default async function AdminClassesPage({
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
-                  ? "Tidak ada kelas yang cocok dengan pencarian ini."
-                  : "Belum ada data kelas untuk ditampilkan."}
+                  ? t("emptySearch")
+                  : t("emptyNoData")}
               </div>
             )}
           </div>

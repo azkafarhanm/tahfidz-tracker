@@ -7,6 +7,7 @@ import {
   Users,
   BookOpen,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
 
@@ -29,7 +30,7 @@ type AdminHalaqahPageProps = {
 export default async function AdminHalaqahPage({
   searchParams,
 }: AdminHalaqahPageProps) {
-
+  const t = await getTranslations("AdminHalaqah");
 
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
@@ -44,13 +45,13 @@ export default async function AdminHalaqahPage({
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Panel Admin
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Halaqah
+              {t("heading")}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Kelola halaqah per guru, per kelas 7, 8, dan 9, beserta level pembelajarannya.
+              {t("description")}
             </p>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -73,18 +74,18 @@ export default async function AdminHalaqahPage({
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">Grup halaqah</p>
+              <p className="text-sm text-emerald-100">{t("heroLabel")}</p>
               <p className="mt-3 text-4xl font-semibold">
                 {counts.filteredCount}
               </p>
               <p className="mt-1 text-sm text-slate-300">
                 {query
-                  ? `hasil untuk "${query}"`
-                  : "tercatat dalam sistem"}
+                  ? t("heroSearchResult", { query })
+                  : t("heroSubtext")}
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">Aktif</p>
+              <p className="text-xs text-slate-300">{t("badgeAktif")}</p>
               <p className="mt-1 text-xl font-semibold">
                 {counts.activeCount}
               </p>
@@ -94,30 +95,30 @@ export default async function AdminHalaqahPage({
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total halaqah</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statTotalLabel")}</p>
             <p className="mt-2 text-2xl font-semibold">{counts.totalCount}</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">seluruh grup</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statTotalSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Aktif</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeAktif")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.activeCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">siap digunakan</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statAktifSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Nonaktif</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeNonaktif")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.inactiveCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">butuh tindak lanjut</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statNonaktifSubtext")}</p>
           </article>
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Ditampilkan</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statFilteredLabel")}</p>
             <p className="mt-2 text-2xl font-semibold">
               {counts.filteredCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">sesuai pencarian</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statFilteredSubtext")}</p>
           </article>
         </section>
 
@@ -130,38 +131,38 @@ export default async function AdminHalaqahPage({
              className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             defaultValue={query}
             name="q"
-            placeholder="Cari nama halaqah, kelas 7/8/9, tahun ajaran, atau guru"
+            placeholder={t("searchPlaceholder")}
             type="search"
           />
           <button
             className="rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
             type="submit"
           >
-            Cari
+            {t("searchButton")}
           </button>
         </form>
 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Daftar halaqah</h2>
+            <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
               <Link
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
                 href="/admin/halaqah/new"
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
-                Tambah halaqah
+                {t("addButton")}
               </Link>
               {query ? (
                 <Link
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   href="/admin/halaqah"
                 >
-                  Reset pencarian
+                  {t("resetSearch")}
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {counts.filteredCount} terlihat
+                {t("visibleCount", { count: counts.filteredCount })}
               </span>
             </div>
           </div>
@@ -179,7 +180,7 @@ export default async function AdminHalaqahPage({
                         {classGroup.name}
                       </p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        Guru: {classGroup.teacherName}
+                        {t("teacherLabel")} {classGroup.teacherName}
                       </p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {classGroup.gradeLabel} - {classGroup.academicYear}
@@ -192,7 +193,7 @@ export default async function AdminHalaqahPage({
                           : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400"
                       }
                     >
-                      {classGroup.isActive ? "Aktif" : "Nonaktif"}
+                      {classGroup.isActive ? t("badgeAktif") : t("badgeNonaktif")}
                     </span>
                   </div>
 
@@ -205,7 +206,7 @@ export default async function AdminHalaqahPage({
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Level
+                        {t("levelLabel")}
                       </p>
                       <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
                         {classGroup.level}
@@ -213,7 +214,7 @@ export default async function AdminHalaqahPage({
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Santri
+                        {t("studentLabel")}
                       </p>
                       <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
                         <BookOpen
@@ -228,8 +229,7 @@ export default async function AdminHalaqahPage({
 
                   {!classGroup.teacherIsActive && classGroup.isActive ? (
                     <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
-                      Guru pembimbing sedang nonaktif. Halaqah ini mungkin
-                      tidak berfungsi optimal.
+                      {t("inactiveTeacherWarning")}
                     </div>
                   ) : null}
 
@@ -243,7 +243,7 @@ export default async function AdminHalaqahPage({
                         size={16}
                         strokeWidth={2.2}
                       />
-                      Ubah
+                      {t("editButton")}
                     </Link>
                     <form
                       action={toggleClassGroupActive.bind(
@@ -260,7 +260,7 @@ export default async function AdminHalaqahPage({
                         }
                         type="submit"
                       >
-                        {classGroup.isActive ? "Nonaktifkan" : "Aktifkan"}
+                        {classGroup.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
                   </div>
@@ -269,8 +269,8 @@ export default async function AdminHalaqahPage({
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
-                  ? "Tidak ada halaqah yang cocok dengan pencarian ini."
-                  : "Belum ada data halaqah untuk ditampilkan."}
+                  ? t("emptySearch")
+                  : t("emptyNoData")}
               </div>
             )}
           </div>

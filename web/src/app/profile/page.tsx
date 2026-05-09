@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -25,14 +26,15 @@ type ProfilePageProps = {
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
+  const t = await getTranslations("Profile");
   const { session, isAdmin } = await requireSessionScope();
   const query = await searchParams;
   const roleDescription = isAdmin
-    ? "Memiliki akses untuk melihat ringkasan sistem dan melanjutkan fondasi Phase 4."
-    : "Memiliki akses untuk mencatat hafalan, murojaah, dan memantau santri sendiri.";
+    ? t("roleDescriptionAdmin")
+    : t("roleDescriptionTeacher");
   const actionsDescription = isAdmin
-    ? "Gunakan halaman ini untuk berpindah ke area penting sesuai role Anda."
-    : "Gunakan halaman ini untuk membuka area utama guru dan keluar dari akun.";
+    ? t("actionsDescriptionAdmin")
+    : t("actionsDescriptionTeacher");
 
   return (
     <AppShell currentPath="/profile" userName={session.user.name} isAdmin={isAdmin}>
@@ -43,13 +45,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Dashboard
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Profil
+              {t("heading")}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Ringkasan akun dan akses Anda saat ini.
+              {t("description")}
             </p>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -64,7 +66,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ) : null}
 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
-          <p className="text-sm text-emerald-100">Akun aktif</p>
+          <p className="text-sm text-emerald-100">{t("activeAccountLabel")}</p>
           <h2 className="mt-3 text-3xl font-semibold">{session.user.name}</h2>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-slate-100">
@@ -72,7 +74,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               {session.user.email}
             </span>
             <span className="rounded-full bg-emerald-400/15 px-3 py-1 font-medium text-emerald-100">
-              {isAdmin ? "ADMIN" : "TEACHER"}
+              {isAdmin ? t("roleBadgeAdmin") : t("roleBadgeTeacher")}
             </span>
           </div>
         </section>
@@ -81,29 +83,29 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           className={`mt-5 grid gap-3 ${isAdmin ? "sm:grid-cols-2" : ""}`}
         >
           <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Peran akun</p>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("accountRoleLabel")}</p>
             <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-              {isAdmin ? "Administrator" : "Guru"}
+              {isAdmin ? t("roleAdmin") : t("roleTeacher")}
             </p>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{roleDescription}</p>
           </article>
 
           {isAdmin ? (
             <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Akses admin</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("adminAccessLabel")}</p>
               <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                Tersedia
+                {t("adminAccessAvailable")}
               </p>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Buka panel admin untuk melihat ringkasan data sistem.
+                {t("adminAccessDescription")}
               </p>
             </article>
           ) : null}
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tampilan</p>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Pilih tema tampilan aplikasi.</p>
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("themeLabel")}</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("themeDescription")}</p>
           <div className="mt-3">
             <ThemeToggle />
           </div>
@@ -115,7 +117,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             <div>
-              <h2 className="font-semibold text-slate-950 dark:text-white">Aksi akun</h2>
+              <h2 className="font-semibold text-slate-950 dark:text-white">{t("accountActionsHeading")}</h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{actionsDescription}</p>
             </div>
           </div>
@@ -126,21 +128,21 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
                 href="/admin"
               >
-                Buka Panel Admin
+                 {t("openAdminPanelButton")}
               </Link>
             ) : null}
             <Link
               className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
               href="/students"
             >
-              Lihat Santri
+               {t("viewStudentsButton")}
             </Link>
             <Link
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
               href="/profile/change-password"
             >
               <KeyRound aria-hidden="true" size={15} strokeWidth={2.2} />
-              Ubah Password
+               {t("changePasswordButton")}
             </Link>
             <LogoutButton />
           </div>

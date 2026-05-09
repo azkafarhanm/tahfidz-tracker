@@ -2,12 +2,15 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function Error({
   error,
 }: {
   error: Error & { digest?: string };
 }) {
+  const t = useTranslations("Error");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -31,17 +34,17 @@ export default function Error({
               />
             </svg>
           </div>
-          <h1 className="mt-6 text-2xl font-semibold">Terjadi kesalahan</h1>
+          <h1 className="mt-6 text-2xl font-semibold">{t("heading")}</h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
             {process.env.NODE_ENV === "development" && error.message
               ? error.message
-              : "Silakan coba lagi nanti."}
+              : t("fallbackMessage")}
           </p>
           <Link
             className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
             href="/"
           >
-            Kembali ke Home
+            {t("backToHome")}
           </Link>
         </div>
       </section>

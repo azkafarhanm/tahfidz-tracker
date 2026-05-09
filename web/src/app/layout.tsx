@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Amiri } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "sonner";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastMessenger from "@/components/ToastMessenger";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -48,16 +50,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          {children}
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
           <Suspense>
             <ToastMessenger />
           </Suspense>

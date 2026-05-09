@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import MotivationCard from "@/components/MotivationCard";
 
 export default function LoginPage() {
+  const t = useTranslations("Login");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,14 +27,14 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Login atau password salah");
+        setError(t("errorWrongCredentials"));
         setIsLoading(false);
         return;
       }
 
       window.location.href = "/";
     } catch {
-      setError("Terjadi kesalahan. Silakan coba lagi.");
+      setError(t("errorGeneric"));
       setIsLoading(false);
     }
   };
@@ -46,7 +48,7 @@ export default function LoginPage() {
             <BookOpen className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">TahfidzFlow</h1>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">Masuk ke akun Anda</p>
+          <p className="text-gray-500 dark:text-slate-400 mt-1">{t("subtitle")}</p>
         </div>
 
         {/* Login Card */}
@@ -65,7 +67,7 @@ export default function LoginPage() {
                 htmlFor="identifier"
                 className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5"
               >
-                Login
+                {t("labelLogin")}
               </label>
               <input
                 id="identifier"
@@ -74,7 +76,7 @@ export default function LoginPage() {
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
                 className="w-full px-4 py-3 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:focus:ring-emerald-400 dark:focus:border-emerald-400 transition-colors outline-none text-gray-900 dark:text-white dark:placeholder-slate-500"
-                placeholder="Username"
+                placeholder={t("placeholderUsername")}
                 autoComplete="username"
               />
             </div>
@@ -85,7 +87,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5"
               >
-                Password
+                {t("labelPassword")}
               </label>
               <div className="relative">
                 <input
@@ -95,7 +97,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full px-4 py-3 pr-12 border border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:focus:ring-emerald-400 dark:focus:border-emerald-400 transition-colors outline-none text-gray-900 dark:text-white dark:placeholder-slate-500"
-                  placeholder="Password"
+                  placeholder={t("placeholderPassword")}
                   autoComplete="current-password"
                 />
                 <button
@@ -121,10 +123,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Masuk...</span>
+                   <span>{t("buttonLoggingIn")}</span>
                 </>
               ) : (
-                <span>Masuk</span>
+                <span>{t("buttonLogin")}</span>
               )}
             </button>
           </form>

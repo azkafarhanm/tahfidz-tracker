@@ -4,6 +4,7 @@ import { createGuidedRecord } from "./actions";
 import GuidedQuickLog from "./GuidedQuickLog";
 import AppShell from "@/components/AppShell";
 import { requireSessionScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,15 +16,17 @@ type QuickLogPageProps = {
   }>;
 };
 
-export const metadata = {
-  title: "Catat Cepat - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("QuickLog");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
 
 export default async function QuickLogPage({ searchParams }: QuickLogPageProps) {
   const params = await searchParams;
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const students = await getQuickLogStudents(teacherId);
-  const userName = session?.user?.name ?? "Ustadz";
+  const t = await getTranslations("QuickLog");
+  const userName = session?.user?.name ?? t("defaultUserName");
 
   return (
     <AppShell currentPath="/quick-log" userName={userName} isAdmin={isAdmin}>

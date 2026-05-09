@@ -7,6 +7,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getDashboardData } from "@/lib/dashboard";
 import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
@@ -22,17 +23,18 @@ export const metadata = {
 };
 
 export default async function DashboardPreview() {
+  const t = await getTranslations("Dashboard");
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId);
-  const userName = session?.user?.name ?? "Ustadz";
+  const userName = session?.user?.name ?? t("defaultUserName");
   const quickActions = [
-    { label: "Hafalan", href: "/students", icon: BookOpen },
-    { label: "Murojaah", href: "/students", icon: RotateCcw },
-    { label: "Quick Log", href: "/quick-log", icon: PenLine },
+    { label: t("quickActionHafalan"), href: "/students", icon: BookOpen },
+    { label: t("quickActionMurojaah"), href: "/students", icon: RotateCcw },
+    { label: t("quickActionQuickLog"), href: "/quick-log", icon: PenLine },
     ...(isAdmin
-      ? [{ label: "Admin", href: "/admin", icon: ShieldCheck }]
+      ? [{ label: t("quickActionAdmin"), href: "/admin", icon: ShieldCheck }]
       : []),
-    { label: "Laporan", href: "/reports", icon: BarChart3 },
+    { label: t("quickActionLaporan"), href: "/reports", icon: BarChart3 },
   ];
 
   return (
@@ -40,7 +42,7 @@ export default async function DashboardPreview() {
         <header className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-              Assalamu&apos;alaikum Warahmatullahi Wabarakatuh
+              {t("greeting")}
             </p>
             <h1 className="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">
               {userName}
@@ -67,14 +69,14 @@ export default async function DashboardPreview() {
         <section className="mt-5 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">Ringkasan hari ini</p>
+              <p className="text-sm text-emerald-100">{t("summaryTodayLabel")}</p>
               <p className="mt-3 text-4xl font-semibold">
                 {dashboard.todayRecordCount}
               </p>
-              <p className="mt-1 text-sm text-slate-300">setoran tercatat</p>
+              <p className="mt-1 text-sm text-slate-300">{t("summaryTodaySubtext")}</p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">Target pekan ini</p>
+              <p className="text-xs text-slate-300">{t("weeklyTargetLabel")}</p>
               <p className="mt-1 text-xl font-semibold">
                 {dashboard.targetProgress}%
               </p>
@@ -106,32 +108,32 @@ export default async function DashboardPreview() {
         {dashboard.overdueTargets.length > 0 ? (
           <section className="mt-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Target terlambat</h2>
+               <h2 className="text-lg font-semibold">{t("overdueTargetsHeading")}</h2>
               <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
-                {dashboard.overdueTargets.length} lewat deadline
+                {dashboard.overdueTargets.length} {t("overdueDeadlineBadge")}
               </span>
             </div>
             <div className="mt-3 space-y-3">
-              {dashboard.overdueTargets.map((t) => (
+              {dashboard.overdueTargets.map((ot) => (
                 <Link
                   className="block rounded-2xl border border-red-200 bg-white p-4 shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-red-900 dark:bg-slate-900 dark:shadow-none"
-                  href={`/students/${t.studentId}`}
-                  key={t.id}
+                  href={`/students/${ot.studentId}`}
+                  key={ot.id}
                 >
                   <div className="flex items-start justify-between gap-3">
                      <div className="min-w-0">
                        <div className="flex items-center gap-3">
-                         <InitialsAvatar name={t.studentName} />
-                         <p className="truncate font-semibold text-slate-950 dark:text-white">{t.studentName}</p>
+                          <InitialsAvatar name={ot.studentName} />
+                          <p className="truncate font-semibold text-slate-950 dark:text-white">{ot.studentName}</p>
                        </div>
-                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.range}</p>
+                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{ot.range}</p>
                      </div>
                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
                       <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
-                      Lewat
+                      {t("overdueBadgeLewat")}
                     </span>
                   </div>
-                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Deadline: {t.endDate}</p>
+                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("overdueDeadlineLabel")} {ot.endDate}</p>
                 </Link>
               ))}
             </div>
@@ -140,9 +142,9 @@ export default async function DashboardPreview() {
 
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Aktivitas terbaru</h2>
+             <h2 className="text-lg font-semibold">{t("recentActivityHeading")}</h2>
              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-              {dashboard.needsReviewCount} perlu cek
+              {dashboard.needsReviewCount} {t("needsReviewBadge")}
             </span>
           </div>
 
@@ -175,16 +177,15 @@ export default async function DashboardPreview() {
                        className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
                       href={`/students/${record.studentId}`}
                     >
-                      Detail
+                       {t("detailLink")}
                     </Link>
                   </div>
                 </article>
               ))
             ) : (
                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
-                Belum ada aktivitas. Mulai dengan mencatat hafalan atau
-                murojaah pertama.
-              </div>
+                 {t("emptyState")}
+               </div>
             )}
           </div>
         </section>

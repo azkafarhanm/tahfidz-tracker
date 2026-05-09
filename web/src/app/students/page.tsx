@@ -14,6 +14,7 @@ import AppShell from "@/components/AppShell";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { requireSessionScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const students = await getStudentsData(query, teacherId);
   const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
+  const t = await getTranslations("Students");
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -46,13 +48,13 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Dashboard
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Santri
+              {t("heading")}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Pantau hafalan, murojaah, dan target aktif.
+              {t("description")}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -85,14 +87,14 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">Santri aktif</p>
+              <p className="text-sm text-emerald-100">{t("activeStudentsLabel")}</p>
               <p className="mt-3 text-4xl font-semibold">{students.length}</p>
               <p className="mt-1 text-sm text-slate-300">
-                siap dicatat hari ini
+                {t("activeStudentsSubtext")}
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">Perlu cek</p>
+              <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
               <p className="mt-1 text-xl font-semibold">
                 {students.filter((student) => student.needsReview).length}
               </p>
@@ -109,20 +111,20 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder-slate-500"
             defaultValue={query}
             name="q"
-            placeholder="Cari nama santri"
+            placeholder={t("searchPlaceholder")}
             type="search"
           />
           <button
             className="rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
             type="submit"
           >
-            Cari
+            {t("searchButton")}
           </button>
         </form>
 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Daftar santri</h2>
+            <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
               {!isAdmin ? (
                 <Link
@@ -130,11 +132,11 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   href="/students/new"
                 >
                   <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
-                  Tambah
+                  {t("addButton")}
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {students.length} aktif
+                {students.length} {t("activeCountBadge")}
               </span>
             </div>
           </div>
@@ -166,7 +168,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                           : "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                       }
                     >
-                      {student.needsReview ? "Cek" : "Aktif"}
+                      {student.needsReview ? t("badgeNeedsReview") : t("badgeAktif")}
                     </span>
                   </div>
 
@@ -180,10 +182,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          Hafalan terakhir
+                          {t("latestHafalanLabel")}
                         </p>
                         <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {student.latestHafalan?.range ?? "Belum ada catatan"}
+                          {student.latestHafalan?.range ?? t("noRecordYet")}
                         </p>
                         {student.latestHafalan ? (
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -203,11 +205,11 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          Murojaah terakhir
+                          {t("latestMurojaahLabel")}
                         </p>
                         <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {student.latestMurojaah?.range ??
-                            "Belum ada catatan"}
+                            t("noRecordYet")}
                         </p>
                         {student.latestMurojaah ? (
                           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -226,10 +228,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                         size={16}
                         strokeWidth={2.2}
                       />
-                      {student.activeTargetCount} target aktif
+                      {student.activeTargetCount} {t("targetCountLabel")}
                     </span>
                     <span className="font-semibold text-emerald-800 dark:text-emerald-400">
-                      Detail
+                      {t("detailLink")}
                     </span>
                   </div>
                 </Link>
@@ -237,8 +239,8 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
-                  ? "Tidak ada santri yang cocok dengan pencarian ini."
-                  : "Belum ada santri aktif untuk ditampilkan saat ini."}
+                  ? t("emptySearch")
+                  : t("emptyNoStudents")}
               </div>
             )}
           </div>
@@ -246,9 +248,9 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
         {!isAdmin && inactiveStudents.length > 0 ? (
           <section className="mt-6">
-            <h2 className="text-lg font-semibold">Santri Nonaktif</h2>
+            <h2 className="text-lg font-semibold">{t("inactiveHeading")}</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Santri yang sudah dinonaktifkan. Aktifkan kembali jika diperlukan.
+              {t("inactiveDescription")}
             </p>
             <div className="mt-3 space-y-3">
               {inactiveStudents.map((s) => (

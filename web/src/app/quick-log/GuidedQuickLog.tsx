@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   BookOpen,
@@ -30,17 +31,6 @@ type GuidedQuickLogProps = {
   success?: string;
 };
 
-const statusOptions = [
-  { value: "LANCAR", label: "Lancar" },
-  { value: "CUKUP", label: "Cukup" },
-  { value: "PERLU_MUROJAAH", label: "Perlu murojaah" },
-];
-
-const typeOptions = [
-  { value: "HAFALAN", label: "Hafalan" },
-  { value: "MUROJAAH", label: "Murojaah" },
-];
-
 export default function GuidedQuickLog({
   action,
   students,
@@ -49,6 +39,18 @@ export default function GuidedQuickLog({
   error,
   success,
 }: GuidedQuickLogProps) {
+  const t = useTranslations("QuickLog");
+
+  const statusOptions = [
+    { value: "LANCAR", label: t("statusLancar") },
+    { value: "CUKUP", label: t("statusCukup") },
+    { value: "PERLU_MUROJAAH", label: t("statusPerluMurojaah") },
+  ];
+
+  const typeOptions = [
+    { value: "HAFALAN", label: t("typeHafalan") },
+    { value: "MUROJAAH", label: t("typeMurojaah") },
+  ];
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
@@ -126,19 +128,19 @@ export default function GuidedQuickLog({
     <>
      <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
-              href="/"
-            >
-              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Dashboard
-            </Link>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Catat Cepat
-            </h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Pilih santri, isi data hafalan/murojaah.
-            </p>
+             <Link
+               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+               href="/"
+             >
+               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
+               {t("backLink")}
+             </Link>
+             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
+               {t("heading")}
+             </h1>
+             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+               {t("description")}
+             </p>
           </div>
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <PenLine aria-hidden="true" size={22} strokeWidth={2.3} />
@@ -208,7 +210,7 @@ export default function GuidedQuickLog({
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
-                    placeholder="Ketik nama santri..."
+                    placeholder={t("searchStudentPlaceholder")}
                     type="text"
                     value={query}
                   />
@@ -237,7 +239,7 @@ export default function GuidedQuickLog({
                   </div>
                 ) : showDropdown && query.length > 0 && filtered.length === 0 ? (
                   <div className="absolute inset-x-0 top-full z-10 mt-1 rounded-2xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-500 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                    Tidak ada santri dengan nama &quot;{query}&quot;
+                    {t("noStudentFound")} &quot;{query}&quot;
                   </div>
                 ) : null}
               </div>
@@ -251,23 +253,23 @@ export default function GuidedQuickLog({
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">Jenis Catatan</h2>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {typeOptions.map((t) => (
+                  {typeOptions.map((opt) => (
                     <button
                       className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 p-3 text-center text-sm font-bold transition active:scale-[0.97] ${
-                        recordType === t.value
+                        recordType === opt.value
                           ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-900"
                           : "border-slate-200 bg-white text-slate-950 hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
                       }`}
-                      key={t.value}
-                      onClick={() => setRecordType(t.value)}
+                      key={opt.value}
+                      onClick={() => setRecordType(opt.value)}
                       type="button"
                     >
-                      {t.value === "HAFALAN" ? (
+                      {opt.value === "HAFALAN" ? (
                         <BookOpen aria-hidden="true" size={16} strokeWidth={2.2} />
                       ) : (
                         <RotateCcw aria-hidden="true" size={16} strokeWidth={2.2} />
                       )}
-                      {t.label}
+                      {opt.label}
                     </button>
                   ))}
                 </div>
@@ -279,7 +281,7 @@ export default function GuidedQuickLog({
 
                 <label className="mt-4 block">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Surah
+                    {t("surahLabel")}
                   </span>
                   <div className="mt-2">
                     <SurahInput key={surahInputKey} />
@@ -289,7 +291,7 @@ export default function GuidedQuickLog({
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <label className="block">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Ayat awal
+                      {t("fromAyahLabel")}
                     </span>
                     <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                       <Hash
@@ -314,7 +316,7 @@ export default function GuidedQuickLog({
 
                   <label className="block">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Ayat akhir
+                      {t("toAyahLabel")}
                     </span>
                     <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                       <Hash
@@ -345,7 +347,7 @@ export default function GuidedQuickLog({
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Status
+                      {t("statusLabel")}
                     </span>
                     <select
                       className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -363,7 +365,7 @@ export default function GuidedQuickLog({
 
                   <label className="block">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      Nilai
+                      {t("scoreLabel")}
                     </span>
                     <input
                       className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -371,7 +373,7 @@ export default function GuidedQuickLog({
                       min={0}
                       name="score"
                       onChange={(e) => setScore(e.target.value)}
-                      placeholder="Opsional"
+                      placeholder={t("optionalPlaceholder")}
                       type="number"
                       value={score}
                     />
@@ -382,13 +384,13 @@ export default function GuidedQuickLog({
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <label className="block">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Catatan
+                    {t("notesLabel")}
                   </span>
                   <textarea
                     className="mt-2 min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                     name="notes"
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Opsional"
+                    placeholder={t("optionalPlaceholder")}
                     value={notes}
                   />
                 </label>
@@ -403,7 +405,7 @@ export default function GuidedQuickLog({
                   onClick={handleCancel}
                   type="button"
                 >
-                  Batal
+                  {t("cancelButton")}
                 </button>
                 <button
                   className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
@@ -414,13 +416,13 @@ export default function GuidedQuickLog({
                   {isPending ? (
                     <Loader2 aria-hidden="true" className="animate-spin" size={17} />
                   ) : null}
-                  {isPending ? "Menyimpan..." : "Simpan"}
+                  {isPending ? t("savingButton") : t("saveButton")}
                 </button>
               </div>
             </>
           ) : (
             <div className="mt-2 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">
-              Pilih santri terlebih dahulu untuk mulai mencatat.
+              {t("selectStudentPrompt")}
             </div>
           )}
         </form>

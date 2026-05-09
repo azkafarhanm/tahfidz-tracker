@@ -20,6 +20,7 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,10 +50,12 @@ function LatestRecordCard({
   icon: Icon,
   label,
   record,
+  t,
 }: {
   icon: typeof BookOpen;
   label: string;
   record: RecordItem | null;
+  t: (key: string) => string;
 }) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
@@ -63,7 +66,7 @@ function LatestRecordCard({
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
           <p className="mt-1 truncate font-semibold text-slate-950 dark:text-white">
-            {record?.range ?? "Belum ada catatan"}
+            {record?.range ?? t("noRecordYet")}
           </p>
           {record ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -81,7 +84,7 @@ function LatestRecordCard({
   );
 }
 
-function TargetCard({ target, studentId }: { target: TargetItem; studentId: string }) {
+function TargetCard({ target, studentId, t }: { target: TargetItem; studentId: string; t: (key: string) => string }) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
       <div className="flex items-start justify-between gap-3">
@@ -95,12 +98,12 @@ function TargetCard({ target, studentId }: { target: TargetItem; studentId: stri
           <Link
             className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700"
             href={`/students/${studentId}/targets/${target.id}/edit`}
-            title="Edit target"
+            title={t("editTargetTitle")}
           >
             <PencilLine aria-hidden="true" size={13} strokeWidth={2.2} />
           </Link>
           <span className={`rounded-full px-3 py-1 text-xs font-medium ${target.isOverdue ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400" : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"}`}>
-            {target.isOverdue ? "Lewat" : "Aktif"}
+            {target.isOverdue ? t("targetBadgeOverdue") : t("targetBadgeAktif")}
           </span>
         </div>
       </div>
@@ -111,7 +114,7 @@ function TargetCard({ target, studentId }: { target: TargetItem; studentId: stri
             <CalendarDays aria-hidden="true" size={13} strokeWidth={2.2} />
             {target.startDate} - {target.endDate}
           </span>
-          <span className="font-medium">{target.timeProgress}% waktu</span>
+          <span className="font-medium">{target.timeProgress}% {t("targetTimeProgress")}</span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
           <div
@@ -132,7 +135,7 @@ function TargetCard({ target, studentId }: { target: TargetItem; studentId: stri
   );
 }
 
-function ActivityRow({ record, studentId }: { record: RecordItem; studentId: string }) {
+function ActivityRow({ record, studentId, t }: { record: RecordItem; studentId: string; t: (key: string) => string }) {
   const Icon = record.type === "Hafalan" ? BookOpen : RotateCcw;
   const recordType = record.type === "Hafalan" ? "hafalan" : "murojaah";
 
@@ -170,7 +173,7 @@ function ActivityRow({ record, studentId }: { record: RecordItem; studentId: str
             </span>
             {record.score !== null ? (
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                Nilai {record.score}
+                {t("scoreLabel")} {record.score}
               </span>
             ) : null}
           </div>
@@ -209,6 +212,7 @@ export default async function StudentDetailPage({
   }
 
   const progress = await getStudentProgressData(id, isAdmin ? null : teacherId);
+  const t = await getTranslations("StudentDetail");
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -221,7 +225,7 @@ export default async function StudentDetailPage({
               href="/students"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Santri
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 truncate text-2xl font-semibold text-slate-950 dark:text-white">
               {student.fullName}
@@ -237,21 +241,21 @@ export default async function StudentDetailPage({
               href={`/students/${student.id}/edit`}
             >
               <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
-              Edit
+              {t("editButton")}
             </Link>
             <a
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
               href={`/api/reports/export-student?studentId=${student.id}`}
             >
               <Download aria-hidden="true" size={14} strokeWidth={2.2} />
-              Excel
+              {t("excelButton")}
             </a>
             <a
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
               href={`/api/reports/pdf-student?studentId=${student.id}`}
             >
               <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
-              PDF
+              {t("pdfButton")}
             </a>
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-lg font-semibold text-white shadow-lg shadow-emerald-900/20">
               {student.fullName
@@ -272,14 +276,14 @@ export default async function StudentDetailPage({
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">Ringkasan santri</p>
+              <p className="text-sm text-emerald-100">{t("summaryLabel")}</p>
               <p className="mt-3 text-4xl font-semibold">
                 {student.activeTargets.length}
               </p>
-              <p className="mt-1 text-sm text-slate-300">target aktif</p>
+              <p className="mt-1 text-sm text-slate-300">{t("activeTargetsSubtext")}</p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">Perlu cek</p>
+              <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
               <p className="mt-1 text-xl font-semibold">
                 {student.needsReviewCount}
               </p>
@@ -287,11 +291,11 @@ export default async function StudentDetailPage({
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-white/10 p-3">
-              <p className="text-xs text-slate-300">Gender</p>
+              <p className="text-xs text-slate-300">{t("genderLabel")}</p>
               <p className="mt-1 font-semibold">{student.gender}</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3">
-              <p className="text-xs text-slate-300">Bergabung</p>
+              <p className="text-xs text-slate-300">{t("joinDateLabel")}</p>
               <p className="mt-1 font-semibold">{student.joinDate}</p>
             </div>
           </div>
@@ -305,7 +309,7 @@ export default async function StudentDetailPage({
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
               <BookOpen aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
-            Hafalan
+            {t("hafalanButton")}
           </Link>
           <Link
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
@@ -314,33 +318,35 @@ export default async function StudentDetailPage({
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
               <RotateCcw aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
-            Murojaah
+            {t("murojaahButton")}
           </Link>
         </section>
 
         <section className="mt-5 grid gap-3 sm:grid-cols-2">
           <LatestRecordCard
             icon={BookOpen}
-            label="Hafalan terakhir"
+            label={t("latestHafalanLabel")}
             record={student.latestHafalan}
+            t={t}
           />
           <LatestRecordCard
             icon={RotateCcw}
-            label="Murojaah terakhir"
+            label={t("latestMurojaahLabel")}
             record={student.latestMurojaah}
+            t={t}
           />
         </section>
 
         <section className="mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Target aktif</h2>
+            <h2 className="text-lg font-semibold">{t("targetActiveHeading")}</h2>
             <div className="flex items-center gap-2">
               <Link
                 className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950"
                 href={`/students/${student.id}/targets/new`}
               >
                 <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
-                Tambah
+                {t("addTargetButton")}
               </Link>
               <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <Target aria-hidden="true" size={15} strokeWidth={2.2} />
@@ -351,11 +357,11 @@ export default async function StudentDetailPage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {student.activeTargets.length > 0 ? (
               student.activeTargets.map((target) => (
-                <TargetCard key={target.id} target={target} studentId={student.id} />
+                <TargetCard key={target.id} target={target} studentId={student.id} t={t} />
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-                Belum ada target aktif untuk santri ini.
+                {t("emptyTargets")}
               </div>
             )}
           </div>
@@ -370,7 +376,7 @@ export default async function StudentDetailPage({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Catatan</h2>
+              <h2 className="font-semibold">{t("notesHeading")}</h2>
             </div>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{student.notes}</p>
           </section>
@@ -378,7 +384,7 @@ export default async function StudentDetailPage({
 
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Aktivitas terbaru</h2>
+            <h2 className="text-lg font-semibold">{t("recentActivityHeading")}</h2>
             <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
               <CheckCircle2 aria-hidden="true" size={15} strokeWidth={2.2} />
               {student.recentActivity.length}
@@ -392,11 +398,12 @@ export default async function StudentDetailPage({
                   key={`${record.type}-${record.id}`}
                   record={record}
                   studentId={student.id}
+                  t={t}
                 />
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-                Belum ada aktivitas untuk santri ini.
+                {t("emptyActivity")}
               </div>
             )}
           </div>
@@ -405,20 +412,20 @@ export default async function StudentDetailPage({
         {progress && progress.records.length > 6 ? (
           <section className="mt-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Semua Riwayat</h2>
+              <h2 className="text-lg font-semibold">{t("allHistoryHeading")}</h2>
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {progress.records.length} catatan
+                {progress.records.length} {t("allHistoryBadge")}
               </span>
             </div>
             <div className="mt-3 overflow-x-auto">
               <table className="w-full min-w-[550px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left dark:border-slate-700">
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Tanggal</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Tipe</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">Ayat</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">Skor</th>
-                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">Status</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableDate")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableType")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableAyat")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableSkor")}</th>
+                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">{t("tableStatus")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -471,9 +478,9 @@ export default async function StudentDetailPage({
           <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">Nonaktifkan santri</p>
+                <p className="text-sm font-semibold text-slate-950 dark:text-white">{t("deactivateHeading")}</p>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Santri tidak akan muncul di daftar aktif.
+                  {t("deactivateDescription")}
                 </p>
               </div>
               <DeactivateButton studentId={student.id} />

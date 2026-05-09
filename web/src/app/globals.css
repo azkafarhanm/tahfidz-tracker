@@ -27,6 +27,14 @@ body {
   color: var(--foreground);
 }
 
+[dir="rtl"] body {
+  font-family: var(--font-amiri), var(--font-geist-sans), sans-serif;
+}
+
+[dir="rtl"] .font-arabic {
+  font-family: var(--font-amiri), serif;
+}
+
 button,
 a {
   -webkit-tap-highlight-color: transparent;
