@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -13,12 +14,15 @@ const languages = [
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   function handleChange(code: string) {
+    if (code === locale) return;
+
     startTransition(async () => {
       await setLocale(code);
-      window.location.reload();
+      router.refresh();
     });
   }
 
