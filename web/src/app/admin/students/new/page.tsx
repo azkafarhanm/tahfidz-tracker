@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import StudentForm from "../StudentForm";
 import { createStudent } from "../actions";
 import { getAdminStudentFormOptions } from "@/lib/admin";
@@ -7,9 +8,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Tambah Santri - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("addStudent")} - Admin - TahfidzFlow` };
+}
 
 type NewStudentPageProps = {
   searchParams?: Promise<{
@@ -30,22 +32,23 @@ export default async function NewStudentPage({
 }: NewStudentPageProps) {
   await requireAdminScope();
 
-  const [options, params] = await Promise.all([
+  const [options, params, t] = await Promise.all([
     getAdminStudentFormOptions(),
     searchParams,
+    getTranslations("AdminFormPage"),
   ]);
 
   return (
     <StudentForm
       action={createStudent}
       backHref="/admin/students"
-      backLabel="Direktori Santri"
-      description="Tambahkan santri baru dan hubungkan ke guru, halaqah, dan kelas akademik."
+      backLabel={t("backStudentDirectory")}
+      description={t("addStudentDescription")}
       error={params?.error}
       icon="UserPlus"
       options={options}
-      submitLabel="Simpan Santri"
-      title="Tambah Santri"
+      submitLabel={t("saveStudent")}
+      title={t("addStudent")}
       values={{
         fullName: params?.fullName ?? "",
         teacherId: params?.teacherId ?? "",

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { deactivateTeacherStudent } from "./edit/actions";
 
 export default function DeactivateButton({ studentId }: { studentId: string }) {
+  const t = useTranslations("DeactivateStudent");
   const [isPending, startTransition] = useTransition();
   const [confirmed, setConfirmed] = useState(false);
 
@@ -14,7 +16,7 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
         onClick={() => setConfirmed(true)}
         type="button"
       >
-        Nonaktifkan
+        {t("buttonDeactivate")}
       </button>
     );
   }
@@ -31,14 +33,14 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
         }}
         type="button"
       >
-        {isPending ? "Memproses..." : "Ya, nonaktifkan"}
+        {isPending ? t("buttonProcessing") : t("buttonConfirm")}
       </button>
       <button
         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
         onClick={() => setConfirmed(false)}
         type="button"
       >
-        Batal
+        {t("buttonCancel")}
       </button>
     </div>
   );

@@ -10,6 +10,7 @@ import { getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -109,6 +110,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <div className="mt-3">
             <ThemeToggle />
           </div>
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+          <LanguageSwitcher />
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">

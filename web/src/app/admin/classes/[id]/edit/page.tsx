@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PencilLine } from "lucide-react";
 import AcademicClassForm from "../../AcademicClassForm";
 import { updateAcademicClass } from "../../actions";
@@ -11,9 +12,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Ubah Kelas - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("editAcademicClass")} - Admin - TahfidzFlow` };
+}
 
 type EditAcademicClassPageProps = {
   params: Promise<{
@@ -35,11 +37,12 @@ export default async function EditAcademicClassPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [academicClass, options] = await Promise.all([
+  const [academicClass, options, query, t] = await Promise.all([
     getAdminAcademicClassFormData(id),
     getAdminAcademicClassFormOptions(),
+    searchParams,
+    getTranslations("AdminFormPage"),
   ]);
-  const query = await searchParams;
 
   if (!academicClass) {
     notFound();
@@ -52,12 +55,12 @@ export default async function EditAcademicClassPage({
       action={action}
       academicYears={options.academicYears}
       backHref="/admin/classes"
-      backLabel="Kelas Akademik"
-      description={`Perbarui data kelas ${academicClass.grade}${academicClass.section} untuk tahun ajaran ${academicClass.academicYear}.`}
+      backLabel={t("backAcademicClasses")}
+      description={t("editAcademicClassDescription", { grade: academicClass.grade, section: academicClass.section, year: academicClass.academicYear })}
       error={query?.error}
       icon={PencilLine}
-      submitLabel="Simpan Perubahan"
-      title="Ubah Kelas Akademik"
+      submitLabel={t("saveChanges")}
+      title={t("editAcademicClass")}
       values={{
         grade: query?.grade ?? academicClass.grade,
         section: query?.section ?? academicClass.section,

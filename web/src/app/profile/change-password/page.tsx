@@ -1,12 +1,14 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
 
 export default function ChangePasswordPage() {
+  const t = useTranslations("ChangePassword");
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const [isPending, startTransition] = useTransition();
@@ -20,16 +22,16 @@ export default function ChangePasswordPage() {
               href="/profile"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-            Profil
+            {t("backLink")}
           </Link>
           <div className="mt-4 flex items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <KeyRound aria-hidden="true" size={20} strokeWidth={2.2} />
             </span>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">Ubah Password</h1>
+              <h1 className="text-2xl font-semibold text-slate-950 dark:text-white">{t("heading")}</h1>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Perbarui password login akun Anda.
+                {t("description")}
               </p>
             </div>
           </div>
@@ -51,7 +53,7 @@ export default function ChangePasswordPage() {
         >
           <div>
             <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="currentPassword">
-              Password saat ini
+              {t("currentPassword")}
             </label>
             <input
               autoComplete="current-password"
@@ -65,7 +67,7 @@ export default function ChangePasswordPage() {
 
           <div>
             <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="newPassword">
-              Password baru
+              {t("newPassword")}
             </label>
             <input
               autoComplete="new-password"
@@ -77,12 +79,12 @@ export default function ChangePasswordPage() {
               required
               type="password"
             />
-             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Minimal 4 karakter.</p>
+             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("minChars")}</p>
           </div>
 
           <div>
             <label              className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="confirmPassword">
-              Konfirmasi password baru
+              {t("confirmPassword")}
             </label>
             <input
               autoComplete="new-password"
@@ -101,7 +103,7 @@ export default function ChangePasswordPage() {
             disabled={isPending}
             type="submit"
           >
-            {isPending ? "Menyimpan..." : "Simpan Password Baru"}
+            {isPending ? t("saving") : t("submit")}
           </button>
         </form>
       </section>

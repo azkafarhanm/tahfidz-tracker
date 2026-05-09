@@ -3,6 +3,7 @@ import { updateTeacherStudent } from "./actions";
 import { getStudentFormContext } from "@/lib/students";
 import { getTeacherStudentFormOptions } from "@/lib/students";
 import { requireSessionScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export default async function EditStudentPage({
   params,
   searchParams,
 }: EditStudentPageProps) {
+  const t = await getTranslations("StudentFormPage");
   const { id } = await params;
   const { teacherId } = await requireSessionScope();
 
@@ -27,7 +29,7 @@ export default async function EditStudentPage({
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Hanya guru yang dapat mengedit santri.
+          {t("teacherOnlyEdit")}
         </p>
       </div>
     );
@@ -42,7 +44,7 @@ export default async function EditStudentPage({
   if (!context) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
-        <p className="text-sm text-slate-600 dark:text-slate-400">Santri tidak ditemukan.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{t("notFound")}</p>
       </div>
     );
   }

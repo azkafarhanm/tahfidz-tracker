@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import ClassGroupForm from "../../ClassGroupForm";
 import { updateClassGroup } from "../../actions";
 import {
@@ -10,9 +11,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Ubah Halaqah - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("editHalaqah")} - Admin - TahfidzFlow` };
+}
 
 type EditClassGroupPageProps = {
   params: Promise<{
@@ -37,11 +39,12 @@ export default async function EditClassGroupPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [classGroup, options] = await Promise.all([
+  const [classGroup, options, query, t] = await Promise.all([
     getAdminClassGroupFormData(id),
     getAdminClassGroupFormOptions(),
+    searchParams,
+    getTranslations("AdminFormPage"),
   ]);
-  const query = await searchParams;
 
   if (!classGroup) {
     notFound();
@@ -53,14 +56,14 @@ export default async function EditClassGroupPage({
     <ClassGroupForm
       action={action}
       backHref="/admin/halaqah"
-      backLabel="Halaqah"
-      description={`Perbarui data halaqah "${classGroup.name}".`}
+      backLabel={t("backHalaqah")}
+      description={t("editHalaqahDescription", { name: classGroup.name })}
       error={query?.error}
       icon="PencilLine"
-      submitLabel="Simpan Perubahan"
+      submitLabel={t("saveChanges")}
       academicYears={options.academicYears}
       teachers={options.teachers}
-      title="Ubah Halaqah"
+      title={t("editHalaqah")}
       values={{
         name: query?.name ?? classGroup.name,
         description: query?.description ?? classGroup.description,

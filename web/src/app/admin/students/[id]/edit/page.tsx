@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import StudentForm from "../../StudentForm";
 import { updateStudent } from "../../actions";
 import { getAdminStudentFormData } from "@/lib/admin";
@@ -7,9 +8,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Ubah Santri - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("editStudent")} - Admin - TahfidzFlow` };
+}
 
 type EditStudentPageProps = {
   params: Promise<{
@@ -35,9 +37,10 @@ export default async function EditStudentPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [data, query] = await Promise.all([
+  const [data, query, t] = await Promise.all([
     getAdminStudentFormData(id),
     searchParams,
+    getTranslations("AdminFormPage"),
   ]);
 
   if (!data) {
@@ -50,13 +53,13 @@ export default async function EditStudentPage({
     <StudentForm
       action={action}
       backHref="/admin/students"
-      backLabel="Direktori Santri"
-      description={`Perbarui data santri untuk ${data.student.fullName}.`}
+      backLabel={t("backStudentDirectory")}
+      description={t("editStudentDescription", { name: data.student.fullName })}
       error={query?.error}
       icon="PencilLine"
       options={data.options}
-      submitLabel="Simpan Perubahan"
-      title="Ubah Santri"
+      submitLabel={t("saveChanges")}
+      title={t("editStudent")}
       values={{
         fullName: query?.fullName ?? data.student.fullName,
         teacherId: query?.teacherId ?? data.student.teacherId,

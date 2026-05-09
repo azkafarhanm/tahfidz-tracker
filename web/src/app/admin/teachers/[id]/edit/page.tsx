@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PencilLine } from "lucide-react";
 import TeacherForm from "../../TeacherForm";
 import { updateTeacher } from "../../actions";
@@ -9,9 +10,10 @@ import DeleteTeacherButton from "./DeleteTeacherButton";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Ubah Guru - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("editTeacher")} - Admin - TahfidzFlow` };
+}
 
 type EditTeacherPageProps = {
   params: Promise<{
@@ -33,8 +35,11 @@ export default async function EditTeacherPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const teacher = await getAdminTeacherFormData(id);
-  const query = await searchParams;
+  const [teacher, query, t] = await Promise.all([
+    getAdminTeacherFormData(id),
+    searchParams,
+    getTranslations("AdminFormPage"),
+  ]);
 
   if (!teacher) {
     notFound();
@@ -47,14 +52,14 @@ export default async function EditTeacherPage({
       <TeacherForm
         action={action}
         backHref="/admin/teachers"
-        backLabel="Direktori Guru"
-        description={`Perbarui data akun untuk ${teacher.fullName}.`}
+        backLabel={t("backTeacherDirectory")}
+        description={t("editTeacherDescription", { name: teacher.fullName })}
         error={query?.error}
         icon={PencilLine}
-        passwordDescription="Kosongkan password jika tidak ingin mengubah akses login guru ini."
+        passwordDescription={t("editTeacherPasswordDescription")}
         passwordRequired={false}
-        submitLabel="Simpan Perubahan"
-        title="Ubah Guru"
+        submitLabel={t("saveChanges")}
+        title={t("editTeacher")}
         values={{
           fullName: query?.fullName ?? teacher.fullName,
           email: query?.email ?? teacher.email,

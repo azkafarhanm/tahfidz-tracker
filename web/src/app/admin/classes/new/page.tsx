@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { PlusCircle } from "lucide-react";
 import AcademicClassForm from "../AcademicClassForm";
 import { createAcademicClass } from "../actions";
@@ -7,9 +8,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Tambah Kelas - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("addAcademicClass")} - Admin - TahfidzFlow` };
+}
 
 type NewAcademicClassPageProps = {
   searchParams?: Promise<{
@@ -26,20 +28,23 @@ export default async function NewAcademicClassPage({
 }: NewAcademicClassPageProps) {
   await requireAdminScope();
 
-  const params = await searchParams;
-  const options = await getAdminAcademicClassFormOptions();
+  const [params, options, t] = await Promise.all([
+    searchParams,
+    getAdminAcademicClassFormOptions(),
+    getTranslations("AdminFormPage"),
+  ]);
 
   return (
     <AcademicClassForm
       action={createAcademicClass}
       academicYears={options.academicYears}
       backHref="/admin/classes"
-      backLabel="Kelas Akademik"
-      description="Tambahkan kelas akademik baru untuk tahun ajaran tertentu."
+      backLabel={t("backAcademicClasses")}
+      description={t("addAcademicClassDescription")}
       error={params?.error}
       icon={PlusCircle}
-      submitLabel="Simpan Kelas"
-      title="Tambah Kelas Akademik"
+      submitLabel={t("saveClass")}
+      title={t("addAcademicClass")}
       values={{
         grade: params?.grade ?? "",
         section: params?.section ?? "",

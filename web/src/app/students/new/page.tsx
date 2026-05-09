@@ -3,6 +3,7 @@ import { createTeacherStudent } from "../actions";
 import { getTeacherStudentFormOptions } from "@/lib/students";
 import { todayInputValue } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,13 +27,14 @@ type NewStudentPageProps = {
 export default async function NewStudentPage({
   searchParams,
 }: NewStudentPageProps) {
+  const t = await getTranslations("StudentFormPage");
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Hanya guru yang dapat menambah santri.
+          {t("teacherOnly")}
         </p>
       </div>
     );

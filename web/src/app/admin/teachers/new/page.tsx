@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { UserPlus } from "lucide-react";
 import TeacherForm from "../TeacherForm";
 import { createTeacher } from "../actions";
@@ -6,9 +7,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Tambah Guru - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("addTeacher")} - Admin - TahfidzFlow` };
+}
 
 type NewTeacherPageProps = {
   searchParams?: Promise<{
@@ -25,20 +27,23 @@ export default async function NewTeacherPage({
 }: NewTeacherPageProps) {
   await requireAdminScope();
 
-  const params = await searchParams;
+  const [params, t] = await Promise.all([
+    searchParams,
+    getTranslations("AdminFormPage"),
+  ]);
 
   return (
     <TeacherForm
       action={createTeacher}
       backHref="/admin/teachers"
-      backLabel="Direktori Guru"
-      description="Tambahkan akun guru baru beserta akses login awalnya."
+      backLabel={t("backTeacherDirectory")}
+      description={t("addTeacherDescription")}
       error={params?.error}
       icon={UserPlus}
-      passwordDescription="Password awal wajib diisi. Guru dapat langsung menggunakan email dan password ini untuk login."
+      passwordDescription={t("addTeacherPasswordDescription")}
       passwordRequired
-      submitLabel="Simpan Guru"
-      title="Tambah Guru"
+      submitLabel={t("saveTeacher")}
+      title={t("addTeacher")}
       values={{
         fullName: params?.fullName ?? "",
         email: params?.email ?? "",

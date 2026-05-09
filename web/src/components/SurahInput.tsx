@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { surahList } from "@/lib/surahs";
 
 export default function SurahInput({
@@ -10,6 +11,7 @@ export default function SurahInput({
   defaultValue?: string;
   id?: string;
 }) {
+  const t = useTranslations("SurahInput");
   const [query, setQuery] = useState(defaultValue ?? "");
   const [isOpen, setIsOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
@@ -88,7 +90,7 @@ export default function SurahInput({
             setIsOpen(false);
           }
         }}
-        placeholder="Ketik nama surah..."
+        placeholder={t("placeholder")}
         ref={inputRef}
         required
         type="text"
@@ -118,7 +120,7 @@ export default function SurahInput({
                   {surah.number}
                 </span>
                 <span className="font-medium">{surah.name}</span>
-                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">{surah.ayahs} ayat</span>
+                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">{t("ayahCount", { count: surah.ayahs })}</span>
               </button>
             </li>
           ))}

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -40,6 +43,8 @@ export default function AcademicClassForm({
   title,
   values,
 }: AcademicClassFormProps) {
+  const t = useTranslations("AdminClassForm");
+
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
@@ -77,12 +82,12 @@ export default function AcademicClassForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Detail kelas</h2>
+              <h2 className="font-semibold">{t("classDetails")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Tingkat kelas
+                {t("gradeLevel")}
               </span>
               <input
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -90,7 +95,7 @@ export default function AcademicClassForm({
                 max={12}
                 min={1}
                 name="grade"
-                placeholder="Contoh: 7"
+                placeholder={t("gradePlaceholder")}
                 required
                 type="number"
               />
@@ -98,14 +103,14 @@ export default function AcademicClassForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Ruang kelas
+                {t("classSection")}
               </span>
               <input
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.section}
                 maxLength={5}
                 name="section"
-                placeholder="Contoh: A"
+                placeholder={t("sectionPlaceholder")}
                 required
                 type="text"
               />
@@ -113,10 +118,10 @@ export default function AcademicClassForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nama kelas
+                {t("className")}
               </span>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Dibuat otomatis dari tingkat dan ruang kelas (contoh: 7A).
+                {t("classNameDescription")}
               </p>
             </label>
           </section>
@@ -129,12 +134,12 @@ export default function AcademicClassForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Tahun ajaran</h2>
+              <h2 className="font-semibold">{t("academicYear")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Tahun ajaran
+                {t("academicYear")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -159,10 +164,10 @@ export default function AcademicClassForm({
               />
               <div>
                 <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  Kelas aktif
+                  {t("classActive")}
                 </span>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Jika dinonaktifkan, kelas tidak akan muncul di pilihan santri.
+                  {t("classActiveDescription")}
                 </p>
               </div>
             </label>
@@ -174,11 +179,9 @@ export default function AcademicClassForm({
                 <GraduationCap aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <div>
-                <h2 className="font-semibold text-slate-950 dark:text-white">Catatan admin</h2>
+                <h2 className="font-semibold text-slate-950 dark:text-white">{t("adminNotes")}</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Nama kelas dibuat otomatis dari kombinasi tingkat dan ruang
-                  kelas. Pastikan tidak ada duplikat untuk tahun ajaran yang
-                  sama.
+                  {t("adminNotesDescription")}
                 </p>
               </div>
             </div>
@@ -189,7 +192,7 @@ export default function AcademicClassForm({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
-              Batal
+              {t("cancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"

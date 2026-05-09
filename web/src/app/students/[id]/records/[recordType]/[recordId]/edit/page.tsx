@@ -19,6 +19,7 @@ import { updateRecord } from "@/lib/record-actions";
 import DeleteRecordButton from "./DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,8 +35,10 @@ type EditRecordPageProps = {
 
 export async function generateMetadata({ params }: EditRecordPageProps) {
   const { recordType } = await params;
+  const t = await getTranslations("RecordForm");
+  const typeLabel = recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
   return {
-    title: `Edit ${recordType === "hafalan" ? "Hafalan" : "Murojaah"} - TahfidzFlow`,
+    title: `${t("titleEdit", { type: typeLabel })} - TahfidzFlow`,
   };
 }
 
@@ -43,6 +46,7 @@ export default async function EditRecordPage({
   params,
   searchParams,
 }: EditRecordPageProps) {
+  const t = await getTranslations("RecordForm");
   const { id, recordType, recordId } = await params;
   const { teacherId, isAdmin } = await requireSessionScope();
   const query = await searchParams;
@@ -62,7 +66,8 @@ export default async function EditRecordPage({
 
   const action = updateRecord.bind(null, student.id, recordType, recordId);
   const Icon = recordType === "hafalan" ? BookOpen : RotateCcw;
-  const typeLabel = recordType === "hafalan" ? "Hafalan" : "Murojaah";
+  const typeLabel = recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
+  const sectionTitle = recordType === "hafalan" ? t("sectionMaterial") : t("sectionMaterialMurojaah");
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -77,7 +82,7 @@ export default async function EditRecordPage({
               {student.fullName}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Edit {typeLabel}
+              {t("titleEdit", { type: typeLabel })}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {record.surah} {record.fromAyah}-{record.toAyah}
@@ -103,11 +108,11 @@ export default async function EditRecordPage({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Materi {typeLabel}</h2>
+              <h2 className="font-semibold">{sectionTitle}</h2>
             </div>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Surah</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("labelSurah")}</span>
               <div className="mt-2">
                 <SurahInput defaultValue={record.surah} id="surah" />
               </div>
@@ -116,7 +121,7 @@ export default async function EditRecordPage({
             <div className="mt-4 grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Ayat awal
+                  {t("labelFromAyah")}
                 </span>
                 <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                   <Hash
@@ -139,7 +144,7 @@ export default async function EditRecordPage({
 
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Ayat akhir
+                  {t("labelToAyah")}
                 </span>
                 <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                   <Hash
@@ -170,13 +175,13 @@ export default async function EditRecordPage({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Penilaian</h2>
+              <h2 className="font-semibold">{t("sectionAssessment")}</h2>
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Status
+                  {t("labelStatus")}
                 </span>
                 <select
                   className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
@@ -194,7 +199,7 @@ export default async function EditRecordPage({
 
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Nilai
+                  {t("labelScore")}
                 </span>
                 <input
                   className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
@@ -202,7 +207,7 @@ export default async function EditRecordPage({
                   max={100}
                   min={0}
                   name="score"
-                  placeholder="Opsional"
+                  placeholder={t("placeholderOptional")}
                   type="number"
                 />
               </label>
@@ -210,7 +215,7 @@ export default async function EditRecordPage({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Tanggal
+                {t("labelDate")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                 <CalendarDays
@@ -231,7 +236,7 @@ export default async function EditRecordPage({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Waktu
+                {t("labelTime")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                 <Clock
@@ -259,14 +264,14 @@ export default async function EditRecordPage({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Catatan</h2>
+              <h2 className="font-semibold">{t("labelNotes")}</h2>
             </div>
 
             <textarea
               className="mt-4 min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:focus:bg-slate-800"
               defaultValue={record.notes}
               name="notes"
-              placeholder="Opsional"
+              placeholder={t("placeholderOptional")}
             />
           </section>
 
@@ -275,14 +280,14 @@ export default async function EditRecordPage({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
               href={`/students/${student.id}`}
             >
-              Batal
+              {t("buttonCancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
               type="submit"
             >
               <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-              Simpan
+              {t("buttonSave")}
             </button>
           </div>
         </form>
@@ -290,9 +295,9 @@ export default async function EditRecordPage({
         <section className="mt-6 rounded-2xl border border-red-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-950">Hapus catatan</p>
+              <p className="text-sm font-semibold text-slate-950">{t("sectionDelete")}</p>
               <p className="mt-1 text-xs text-slate-500">
-                Catatan {record.surah} {record.fromAyah}-{record.toAyah} akan dihapus permanen.
+                {t("deleteConfirm", { surah: record.surah, from: record.fromAyah, to: record.toAyah })}
               </p>
             </div>
             <DeleteRecordButton

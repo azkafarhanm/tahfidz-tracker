@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import ClassGroupForm from "../ClassGroupForm";
 import { createClassGroup } from "../actions";
 import { getAdminClassGroupFormOptions } from "@/lib/admin";
@@ -6,9 +7,10 @@ import { requireAdminScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Tambah Halaqah - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminFormPage");
+  return { title: `${t("addHalaqah")} - Admin - TahfidzFlow` };
+}
 
 type NewClassGroupPageProps = {
   searchParams?: Promise<{
@@ -28,21 +30,24 @@ export default async function NewClassGroupPage({
 }: NewClassGroupPageProps) {
   await requireAdminScope();
 
-  const params = await searchParams;
-  const options = await getAdminClassGroupFormOptions();
+  const [params, options, t] = await Promise.all([
+    searchParams,
+    getAdminClassGroupFormOptions(),
+    getTranslations("AdminFormPage"),
+  ]);
 
   return (
     <ClassGroupForm
       action={createClassGroup}
       backHref="/admin/halaqah"
-      backLabel="Halaqah"
-      description="Buat halaqah baru untuk guru pembimbing dan tentukan cakupan kelas 7, 8, atau 9."
+      backLabel={t("backHalaqah")}
+      description={t("addHalaqahDescription")}
       error={params?.error}
       icon="PlusCircle"
-      submitLabel="Simpan Halaqah"
+      submitLabel={t("saveHalaqah")}
       academicYears={options.academicYears}
       teachers={options.teachers}
-      title="Tambah Halaqah"
+      title={t("addHalaqah")}
       values={{
         name: params?.name ?? "",
         description: params?.description ?? "",

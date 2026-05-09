@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -44,6 +47,8 @@ export default function TeacherForm({
   title,
   values,
 }: TeacherFormProps) {
+  const t = useTranslations("AdminTeacherForm");
+
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
@@ -81,12 +86,12 @@ export default function TeacherForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Informasi guru</h2>
+              <h2 className="font-semibold">{t("teacherInfo")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nama lengkap
+                {t("fullName")}
               </span>
               <input
                 autoComplete="name"
@@ -94,14 +99,14 @@ export default function TeacherForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
-                placeholder="Contoh: Ustadzah Salma Rahmah"
+                placeholder={t("fullNamePlaceholder")}
                 required
                 type="text"
               />
             </label>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("email")}</span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                 <Mail
                   aria-hidden="true"
@@ -124,7 +129,7 @@ export default function TeacherForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nomor telepon
+                {t("phoneNumber")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                 <Phone
@@ -139,7 +144,7 @@ export default function TeacherForm({
                   defaultValue={values.phoneNumber}
                   maxLength={30}
                   name="phoneNumber"
-                  placeholder="Opsional"
+                  placeholder={t("optional")}
                   type="tel"
                 />
               </div>
@@ -154,12 +159,12 @@ export default function TeacherForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Akses akun</h2>
+              <h2 className="font-semibold">{t("accountAccess")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Password
+                {t("password")}
               </span>
               <input
                 autoComplete={passwordRequired ? "new-password" : "off"}
@@ -167,7 +172,7 @@ export default function TeacherForm({
                 maxLength={72}
                 minLength={4}
                 name="password"
-                placeholder={passwordRequired ? "Contoh: 2026" : "Kosongkan jika tidak diubah"}
+                placeholder={passwordRequired ? t("passwordPlaceholderNew") : t("passwordPlaceholderEdit")}
                 required={passwordRequired}
                 type="password"
               />
@@ -185,10 +190,10 @@ export default function TeacherForm({
               />
               <div>
                 <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  Akun aktif
+                  {t("accountActive")}
                 </span>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Jika dinonaktifkan, guru tidak dapat masuk ke dalam aplikasi.
+                  {t("accountActiveDescription")}
                 </p>
               </div>
             </label>
@@ -200,10 +205,9 @@ export default function TeacherForm({
                 <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <div>
-                <h2 className="font-semibold text-slate-950 dark:text-white">Catatan admin</h2>
+                <h2 className="font-semibold text-slate-950 dark:text-white">{t("adminNotes")}</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Data guru dipakai untuk login, pengelolaan santri, dan
-                  pembatasan akses sesuai role teacher.
+                  {t("adminNotesDescription")}
                 </p>
               </div>
             </div>
@@ -214,7 +218,7 @@ export default function TeacherForm({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
-              Batal
+              {t("cancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"

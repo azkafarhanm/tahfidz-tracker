@@ -1,9 +1,11 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { reactivateTeacherStudent } from "@/app/students/[id]/edit/actions";
 
 export default function ReactivateStudentButton({ studentId }: { studentId: string; studentName: string }) {
+  const t = useTranslations("ReactivateStudent");
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -17,7 +19,7 @@ export default function ReactivateStudentButton({ studentId }: { studentId: stri
       }}
       type="button"
     >
-      {isPending ? "Memproses..." : "Aktifkan"}
+      {isPending ? t("processing") : t("activate")}
     </button>
   );
 }

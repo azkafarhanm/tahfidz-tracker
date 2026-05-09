@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -52,18 +53,6 @@ type ClassGroupFormProps = {
   values: ClassGroupFormValues;
 };
 
-const levelDescriptions: Record<string, string> = {
-  LOW: "Pemula - hafalan masih awal dan membutuhkan banyak bimbingan.",
-  MEDIUM: "Menengah - hafalan sudah berkembang dan perlu penguatan rutin.",
-  HIGH: "Lanjutan - hafalan kuat, fokus pada mutqin dan kelancaran.",
-};
-
-const gradeOptions = [
-  { value: "7", label: "Kelas 7" },
-  { value: "8", label: "Kelas 8" },
-  { value: "9", label: "Kelas 9" },
-];
-
 export default function ClassGroupForm({
   action,
   backHref,
@@ -77,11 +66,24 @@ export default function ClassGroupForm({
   title,
   values,
 }: ClassGroupFormProps) {
+  const t = useTranslations("AdminHalaqahForm");
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(
     values.academicYear,
   );
 
   const Icon = iconMap[iconName] ?? PlusCircle;
+
+  const levelDescriptions: Record<string, string> = {
+    LOW: t("levelLowDescription"),
+    MEDIUM: t("levelMediumDescription"),
+    HIGH: t("levelHighDescription"),
+  };
+
+  const gradeOptions = [
+    { value: "7", label: t("grade7") },
+    { value: "8", label: t("grade8") },
+    { value: "9", label: t("grade9") },
+  ];
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -120,19 +122,19 @@ export default function ClassGroupForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Nama &amp; Guru</h2>
+              <h2 className="font-semibold">{t("nameAndTeacher")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nama halaqah
+                {t("halaqahName")}
               </span>
               <input
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.name}
                 maxLength={120}
                 name="name"
-                placeholder="Contoh: Ustadz Miftah - Kelas 7"
+                placeholder={t("halaqahNamePlaceholder")}
                 required
                 type="text"
               />
@@ -140,7 +142,7 @@ export default function ClassGroupForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Guru yang bertanggung jawab
+                {t("responsibleTeacher")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -148,11 +150,11 @@ export default function ClassGroupForm({
                 name="teacherId"
                 required
               >
-                <option value="">Pilih guru</option>
+                <option value="">{t("selectTeacher")}</option>
                 {teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.label}
-                    {teacher.isActive ? "" : " - Nonaktif"}
+                    {teacher.isActive ? "" : ` - ${t("inactive")}`}
                   </option>
                 ))}
               </select>
@@ -167,12 +169,12 @@ export default function ClassGroupForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Ruang Lingkup Halaqah</h2>
+              <h2 className="font-semibold">{t("halaqahScope")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Tahun ajaran
+                {t("academicYear")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                 <CalendarDays
@@ -198,7 +200,7 @@ export default function ClassGroupForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Kelas halaqah
+                {t("halaqahClass")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -206,7 +208,7 @@ export default function ClassGroupForm({
                 name="grade"
                 required
               >
-                <option value="">Pilih kelas</option>
+                <option value="">{t("selectClass")}</option>
                 {gradeOptions.map((grade) => (
                   <option key={grade.value} value={grade.value}>
                     {grade.label}
@@ -214,8 +216,7 @@ export default function ClassGroupForm({
                 ))}
               </select>
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                Satu guru memiliki satu halaqah untuk masing-masing kelas 7, 8,
-                dan 9 pada tahun ajaran yang sama.
+                {t("halaqahClassDescription")}
               </p>
             </label>
           </section>
@@ -228,7 +229,7 @@ export default function ClassGroupForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Level Halaqah</h2>
+              <h2 className="font-semibold">{t("halaqahLevel")}</h2>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -247,10 +248,10 @@ export default function ClassGroupForm({
                   <div>
                     <span className="text-sm font-semibold text-slate-950 dark:text-white">
                       {level === "LOW"
-                        ? "Low"
+                        ? t("levelLow")
                         : level === "MEDIUM"
-                          ? "Medium"
-                          : "High"}
+                          ? t("levelMedium")
+                          : t("levelHigh")}
                     </span>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                       {levelDescriptions[level]}
@@ -262,14 +263,14 @@ export default function ClassGroupForm({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Deskripsi
+                {t("description")}
               </span>
               <textarea
                 className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.description}
                 maxLength={500}
                 name="description"
-                placeholder="Opsional. Deskripsi singkat tentang halaqah ini."
+                placeholder={t("descriptionPlaceholder")}
                 rows={3}
               />
             </label>
@@ -283,10 +284,10 @@ export default function ClassGroupForm({
               />
               <div>
                 <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  Halaqah aktif
+                  {t("halaqahActive")}
                 </span>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Jika dinonaktifkan, halaqah tidak akan muncul di pilihan santri.
+                  {t("halaqahActiveDescription")}
                 </p>
               </div>
             </label>
@@ -298,10 +299,9 @@ export default function ClassGroupForm({
                 <Layers aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <div>
-                <h2 className="font-semibold text-slate-950 dark:text-white">Catatan admin</h2>
+                <h2 className="font-semibold text-slate-950 dark:text-white">{t("adminNotes")}</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Satu halaqah menaungi santri dari beberapa rombel seperti 7A,
-                  7B, dan 7C selama masih berada pada kelas yang sama.
+                  {t("adminNotesDescription")}
                 </p>
               </div>
             </div>
@@ -312,7 +312,7 @@ export default function ClassGroupForm({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
-              Batal
+              {t("cancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"

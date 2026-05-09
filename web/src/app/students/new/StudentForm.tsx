@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   CalendarDays,
@@ -41,23 +42,6 @@ type TeacherStudentFormProps = {
   };
 };
 
-const genderOptions = [
-  { value: "MALE", label: "Laki-laki" },
-  { value: "FEMALE", label: "Perempuan" },
-];
-
-const gradeOptions = [
-  { value: "7", label: "Kelas 7" },
-  { value: "8", label: "Kelas 8" },
-  { value: "9", label: "Kelas 9" },
-];
-
-const levels = [
-  { key: "LOW", label: "Low", desc: "Pemula" },
-  { key: "MEDIUM", label: "Medium", desc: "Menengah" },
-  { key: "HIGH", label: "High", desc: "Lanjutan" },
-];
-
 export default function TeacherStudentForm({
   action,
   backHref,
@@ -65,9 +49,27 @@ export default function TeacherStudentForm({
   options,
   values,
 }: TeacherStudentFormProps) {
+  const t = useTranslations("StudentForm");
   const [isPending, startTransition] = useTransition();
   const [selectedLevel, setSelectedLevel] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("");
+
+  const genderOptions = [
+    { value: "MALE", label: t("genderMale") },
+    { value: "FEMALE", label: t("genderFemale") },
+  ];
+
+  const gradeOptions = [
+    { value: "7", label: t("grade7") },
+    { value: "8", label: t("grade8") },
+    { value: "9", label: t("grade9") },
+  ];
+
+  const levels = [
+    { key: "LOW", label: "Low", desc: t("levelBeginner") },
+    { key: "MEDIUM", label: "Medium", desc: t("levelIntermediate") },
+    { key: "HIGH", label: "High", desc: t("levelAdvanced") },
+  ];
 
   const cgByLevel = new Map(
     options.classGroups.map((cg) => [cg.level, cg]),
@@ -96,13 +98,13 @@ export default function TeacherStudentForm({
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              Santri
+              {t("backLink")}
             </Link>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
-              Tambah Santri
+              {t("title")}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Tambahkan santri baru ke halaqah Anda.
+              {t("description")}
             </p>
           </div>
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -125,12 +127,12 @@ export default function TeacherStudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Data santri</h2>
+              <h2 className="font-semibold">{t("sectionData")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nama lengkap
+                {t("labelName")}
               </span>
               <input
                 autoComplete="name"
@@ -138,7 +140,7 @@ export default function TeacherStudentForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
-                placeholder="Contoh: Afdal Fauzan Nurrohman"
+                placeholder={t("placeholderName")}
                 required
                 type="text"
               />
@@ -147,14 +149,14 @@ export default function TeacherStudentForm({
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Jenis kelamin
+                  {t("labelGender")}
                 </span>
                 <select
                   className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                   defaultValue={values.gender}
                   name="gender"
                 >
-                  <option value="">Belum dipilih</option>
+                  <option value="">{t("genderNotSelected")}</option>
                   {genderOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -165,7 +167,7 @@ export default function TeacherStudentForm({
 
               <label className="block">
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Tanggal bergabung
+                  {t("labelJoinDate")}
                 </span>
                 <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                   <CalendarDays
@@ -193,7 +195,7 @@ export default function TeacherStudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Kelas</h2>
+              <h2 className="font-semibold">{t("sectionClass")}</h2>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -231,7 +233,7 @@ export default function TeacherStudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Level Halaqah</h2>
+              <h2 className="font-semibold">{t("sectionLevel")}</h2>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
@@ -268,14 +270,14 @@ export default function TeacherStudentForm({
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <label className="block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Kelas akademik
+                {t("labelAcademicClass")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.academicClassId}
                 name="academicClassId"
               >
-                <option value="">Belum dipilih</option>
+                <option value="">{t("genderNotSelected")}</option>
                 {options.academicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}
@@ -288,14 +290,14 @@ export default function TeacherStudentForm({
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <label className="block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Catatan
+                {t("labelNotes")}
               </span>
               <textarea
                 className="mt-2 min-h-24 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.notes}
                 maxLength={1500}
                 name="notes"
-                placeholder="Opsional, catatan tambahan tentang santri."
+                placeholder={t("placeholderNotes")}
                 rows={3}
               />
             </label>
@@ -306,7 +308,7 @@ export default function TeacherStudentForm({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
-              Batal
+              {t("buttonCancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
@@ -314,7 +316,7 @@ export default function TeacherStudentForm({
               type="submit"
             >
               <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-              {isPending ? "Menyimpan..." : "Simpan Santri"}
+              {isPending ? t("buttonSaving") : t("buttonSave")}
             </button>
           </div>
         </form>

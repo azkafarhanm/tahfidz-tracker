@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -75,11 +76,6 @@ type StudentFormProps = {
   values: StudentFormValues;
 };
 
-const genderOptions = [
-  { value: "MALE", label: "Laki-laki" },
-  { value: "FEMALE", label: "Perempuan" },
-];
-
 export default function StudentForm({
   action,
   backHref,
@@ -92,6 +88,7 @@ export default function StudentForm({
   title,
   values,
 }: StudentFormProps) {
+  const t = useTranslations("AdminStudentForm");
   const [selectedTeacherId, setSelectedTeacherId] = useState(values.teacherId);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(
     values.academicYear,
@@ -100,6 +97,11 @@ export default function StudentForm({
     values.academicClassId,
   );
   const [isPending, startTransition] = useTransition();
+
+  const genderOptions = [
+    { value: "MALE", label: t("male") },
+    { value: "FEMALE", label: t("female") },
+  ];
 
   const filteredAcademicClasses = useMemo(
     () =>
@@ -200,12 +202,12 @@ export default function StudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Data santri</h2>
+              <h2 className="font-semibold">{t("studentData")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Nama lengkap
+                {t("fullName")}
               </span>
               <input
                 autoComplete="name"
@@ -213,7 +215,7 @@ export default function StudentForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
-                placeholder="Contoh: Afdal Fauzan Nurrohman"
+                placeholder={t("fullNamePlaceholder")}
                 required
                 type="text"
               />
@@ -222,14 +224,14 @@ export default function StudentForm({
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <label className="block">
                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Jenis kelamin
+                  {t("gender")}
                 </span>
                 <select
                   className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                   defaultValue={values.gender}
                   name="gender"
                 >
-                  <option value="">Belum dipilih</option>
+                  <option value="">{t("genderNotSelected")}</option>
                   {genderOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -240,7 +242,7 @@ export default function StudentForm({
 
               <label className="block">
                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Tanggal bergabung
+                  {t("joinDate")}
                 </span>
                 <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                   <CalendarDays
@@ -269,12 +271,12 @@ export default function StudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Kelas &amp; Halaqah</h2>
+              <h2 className="font-semibold">{t("classAndHalaqah")}</h2>
             </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                 Tahun ajaran
+                 {t("academicYear")}
                </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -292,7 +294,7 @@ export default function StudentForm({
 
             <label className="mt-4 block">
                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                 Kelas akademik
+                 {t("academicClass")}
                </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
                  <GraduationCap
@@ -308,24 +310,23 @@ export default function StudentForm({
                   required
                   value={selectedAcademicClassId}
                 >
-                  <option value="">Pilih kelas akademik</option>
+                  <option value="">{t("selectAcademicClass")}</option>
                   {filteredAcademicClasses.map((academicClass) => (
                     <option key={academicClass.id} value={academicClass.id}>
                       {academicClass.label}
-                      {academicClass.isActive ? "" : " - Nonaktif"}
+                      {academicClass.isActive ? "" : ` - ${t("inactive")}`}
                     </option>
                   ))}
                 </select>
               </div>
                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                 Kelas akademik menunjukkan rombel asal santri seperti 7A, 7B,
-                 atau 7C.
+                 {t("academicClassDescription")}
                </p>
             </label>
 
             <label className="mt-4 block">
                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                 Guru tahfidz
+                 {t("tahfidzTeacher")}
                </span>
               <select
                  className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -334,11 +335,11 @@ export default function StudentForm({
                 required
                 value={selectedTeacherId}
               >
-                <option value="">Pilih guru</option>
+                <option value="">{t("selectTeacher")}</option>
                 {options.teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.label}
-                    {teacher.isActive ? "" : " - Nonaktif"}
+                    {teacher.isActive ? "" : ` - ${t("inactive")}`}
                   </option>
                 ))}
               </select>
@@ -346,9 +347,7 @@ export default function StudentForm({
 
             {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
               <p className="mt-4 text-sm text-amber-600">
-                Guru ini belum memiliki halaqah {selectedAcademicYear} untuk{" "}
-                Kelas {selectedAcademicClass.grade}. Atur terlebih dahulu di menu
-                Halaqah.
+                {t("noHalaqahWarning", { year: selectedAcademicYear, grade: selectedAcademicClass.grade })}
               </p>
             ) : null}
 
@@ -361,10 +360,10 @@ export default function StudentForm({
                     size={16}
                     strokeWidth={2.2}
                   />
-                  Halaqah terhubung
+                  {t("connectedHalaqah")}
                 </div>
                 <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                  {resolvedClassGroup?.name ?? "Akan terisi setelah kelas dan guru dipilih"}
+                  {resolvedClassGroup?.name ?? t("connectedHalaqahEmpty")}
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -375,10 +374,10 @@ export default function StudentForm({
                     size={16}
                     strokeWidth={2.2}
                   />
-                  Level halaqah
+                  {t("halaqahLevel")}
                 </div>
                 <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                  {resolvedClassGroup?.levelLabel ?? "Mengikuti halaqah yang dipilih"}
+                  {resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
                 </p>
               </div>
             </div>
@@ -392,7 +391,7 @@ export default function StudentForm({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Catatan dan status</h2>
+              <h2 className="font-semibold">{t("notesAndStatus")}</h2>
             </div>
 
             <textarea
@@ -400,7 +399,7 @@ export default function StudentForm({
               defaultValue={values.notes}
               maxLength={1500}
               name="notes"
-              placeholder="Opsional, contoh: butuh perhatian tambahan pada jadwal murojaah."
+              placeholder={t("notesPlaceholder")}
             />
 
             <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -412,11 +411,10 @@ export default function StudentForm({
               />
               <div>
                 <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
-                  Santri aktif
+                  {t("studentActive")}
                 </span>
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Jika dinonaktifkan, santri tidak muncul pada alur pencatatan
-                  guru sampai diaktifkan kembali.
+                  {t("studentActiveDescription")}
                 </p>
               </div>
             </label>
@@ -428,10 +426,9 @@ export default function StudentForm({
                 <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <div>
-                <h2 className="font-semibold text-slate-950 dark:text-white">Catatan admin</h2>
+                <h2 className="font-semibold text-slate-950 dark:text-white">{t("adminNotes")}</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Santri tetap memakai kelas akademik asal seperti 7A atau 7B,
-                  lalu ditempatkan ke halaqah guru berdasarkan kelas 7, 8, atau 9.
+                  {t("adminNotesDescription")}
                 </p>
               </div>
             </div>
@@ -442,7 +439,7 @@ export default function StudentForm({
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
-              Batal
+              {t("cancel")}
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
@@ -450,7 +447,7 @@ export default function StudentForm({
               type="submit"
             >
               <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-              {isPending ? "Menyimpan..." : submitLabel}
+              {isPending ? t("saving") : submitLabel}
             </button>
           </div>
         </form>

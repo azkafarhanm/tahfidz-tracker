@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
 
 export default function DeleteRecordButton({
@@ -12,6 +13,7 @@ export default function DeleteRecordButton({
   recordType: "hafalan" | "murojaah";
   recordId: string;
 }) {
+  const t = useTranslations("DeleteRecord");
   const [isPending, startTransition] = useTransition();
   const [confirmed, setConfirmed] = useState(false);
 
@@ -22,7 +24,7 @@ export default function DeleteRecordButton({
         onClick={() => setConfirmed(true)}
         type="button"
       >
-        Hapus
+        {t("delete")}
       </button>
     );
   }
@@ -39,14 +41,14 @@ export default function DeleteRecordButton({
         }}
         type="button"
       >
-        {isPending ? "Menghapus..." : "Ya, hapus"}
+        {isPending ? t("deleting") : t("confirmDelete")}
       </button>
       <button
         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
         onClick={() => setConfirmed(false)}
         type="button"
       >
-        Batal
+        {t("cancel")}
       </button>
     </div>
   );
