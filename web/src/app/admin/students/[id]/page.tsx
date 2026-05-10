@@ -124,7 +124,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
                           : "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                       }
                     >
-                      {tgt.type}
+                      {tgt.type === "Hafalan" ? t("hafalan") : t("murojaah")}
                     </span>
                     <Target className="text-emerald-800 dark:text-emerald-400" size={16} strokeWidth={2.2} />
                   </div>
@@ -164,7 +164,7 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
                               : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                           }
                         >
-                          {r.type}
+                          {r.type === "Hafalan" ? t("hafalan") : t("murojaah")}
                         </span>
                       </td>
                        <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">{r.range}</td>

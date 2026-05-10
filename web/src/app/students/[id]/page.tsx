@@ -148,7 +148,7 @@ function ActivityRow({ record, studentId, t }: { record: RecordItem; studentId: 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-semibold text-slate-950 dark:text-white">{record.type}</p>
+              <p className="font-semibold text-slate-950 dark:text-white">{record.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}</p>
               <p className="mt-1 truncate text-sm text-slate-600 dark:text-slate-400">
                 {record.range}
               </p>
@@ -441,7 +441,7 @@ export default async function StudentDetailPage({
                             ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                             : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800"
                         }>
-                          {r.type}
+                          {r.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}
                         </span>
                       </td>
                       <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">{r.range}</td>

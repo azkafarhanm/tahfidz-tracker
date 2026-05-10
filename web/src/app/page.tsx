@@ -162,7 +162,7 @@ export default async function DashboardPreview() {
                          {record.student}
                        </p>
                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                        {record.type} - {record.range}
+                         {record.type === "Hafalan" ? t("quickActionHafalan") : t("quickActionMurojaah")} - {record.range}
                       </p>
                     </div>
                      <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
