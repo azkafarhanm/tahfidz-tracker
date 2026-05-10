@@ -16,7 +16,7 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminStudents");

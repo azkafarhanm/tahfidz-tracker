@@ -68,8 +68,14 @@ export async function GET() {
     }),
   );
 
-  for (const teacher of teachers) {
-    const data = await getTeacherReportData(teacher.id);
+  const teacherDataList = await Promise.all(
+    teachers.map(async (teacher) => ({
+      teacher,
+      data: await getTeacherReportData(teacher.id),
+    }))
+  );
+
+  for (const { teacher, data } of teacherDataList) {
     const sheetName = teacher.fullName.substring(0, 28);
     const sheet = workbook.addWorksheet(sheetName);
     sheet.columns = [

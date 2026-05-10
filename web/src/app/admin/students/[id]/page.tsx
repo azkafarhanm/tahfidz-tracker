@@ -13,7 +13,7 @@ import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 type AdminStudentDetailPageProps = {
   params: Promise<{ id: string }>;

@@ -24,6 +24,7 @@ export async function getTeacherReportData(teacherId: string) {
         academicClass: { select: { name: true } },
         memorizationRecords: {
           orderBy: { date: "desc" },
+          take: 5,
           select: {
             surah: true,
             fromAyah: true,
@@ -35,6 +36,7 @@ export async function getTeacherReportData(teacherId: string) {
         },
         revisionRecords: {
           orderBy: { date: "desc" },
+          take: 5,
           select: {
             surah: true,
             fromAyah: true,
@@ -144,6 +146,7 @@ export async function getStudentProgressData(
       academicClass: { select: { name: true } },
       memorizationRecords: {
         orderBy: { date: "desc" },
+        take: 50,
         select: {
           id: true,
           surah: true,
@@ -157,6 +160,7 @@ export async function getStudentProgressData(
       },
       revisionRecords: {
         orderBy: { date: "desc" },
+        take: 50,
         select: {
           id: true,
           surah: true,

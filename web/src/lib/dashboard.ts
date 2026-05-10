@@ -49,13 +49,13 @@ export async function getDashboardData(teacherId?: string | null) {
   ] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: teacherFilter,
-      include: { student: true },
+      include: { student: { select: { id: true, fullName: true } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
     prisma.revisionRecord.findMany({
       where: teacherFilter,
-      include: { student: true },
+      include: { student: { select: { id: true, fullName: true } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
@@ -81,12 +81,14 @@ export async function getDashboardData(teacherId?: string | null) {
       where: { ...teacherFilter, status: TargetStatus.COMPLETED },
     }),
     (async () => {
-      const mem = await prisma.memorizationRecord.count({
-        where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
-      });
-      const rev = await prisma.revisionRecord.count({
-        where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
-      });
+      const [mem, rev] = await Promise.all([
+        prisma.memorizationRecord.count({
+          where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+        }),
+        prisma.revisionRecord.count({
+          where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+        }),
+      ]);
       return mem + rev;
     })(),
     prisma.target.findMany({

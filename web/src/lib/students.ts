@@ -101,10 +101,30 @@ const genderLabels: Record<Gender, string> = {
 };
 
 export async function getStudentsData(query = "", teacherId?: string | null) {
+  const normalizedQuery = query.trim();
+
   const students = await prisma.student.findMany({
     where: {
       isActive: true,
       ...(teacherId ? { teacherId } : {}),
+      ...(normalizedQuery
+        ? {
+            OR: [
+              { fullName: { contains: normalizedQuery, mode: "insensitive" } },
+              {
+                academicClass: {
+                  name: { contains: normalizedQuery, mode: "insensitive" },
+                },
+              },
+              {
+                classGroup: {
+                  name: { contains: normalizedQuery, mode: "insensitive" },
+                },
+              },
+              { notes: { contains: normalizedQuery, mode: "insensitive" } },
+            ],
+          }
+        : {}),
     },
     include: {
       classGroup: {
@@ -143,24 +163,7 @@ export async function getStudentsData(query = "", teacherId?: string | null) {
     orderBy: { fullName: "asc" },
   });
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredStudents = normalizedQuery
-    ? students.filter((student) =>
-        [
-          student.fullName,
-          student.academicClass?.name,
-          student.classGroup.name,
-          halaqahLevelLabels[student.classGroup.level],
-          student.notes,
-          student.memorizationRecords[0]?.surah,
-          student.revisionRecords[0]?.surah,
-        ]
-          .filter((value): value is string => Boolean(value))
-          .some((value) => value.toLowerCase().includes(normalizedQuery)),
-      )
-    : students;
-
-  return filteredStudents.map((student) => {
+  return students.map((student) => {
     const latestHafalan = formatLatestRecord(student.memorizationRecords[0]);
     const latestMurojaah = formatLatestRecord(student.revisionRecords[0]);
     const needsReview = Boolean(
@@ -246,6 +249,7 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
       targets: {
         where: { status: TargetStatus.ACTIVE },
         orderBy: { endDate: "asc" },
+        take: 20,
         select: {
           id: true,
           type: true,

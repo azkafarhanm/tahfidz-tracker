@@ -11,7 +11,7 @@ import { getAdminReportData } from "@/lib/reports";
 
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminReports");

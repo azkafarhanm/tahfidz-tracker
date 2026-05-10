@@ -144,6 +144,7 @@ model Student {
   @@index([academicClassId])
   @@index([fullName])
   @@index([isActive])
+  @@index([teacherId, isActive])
 }
 
 model MemorizationRecord {
@@ -167,6 +168,9 @@ model MemorizationRecord {
   @@index([teacherId])
   @@index([date])
   @@index([surah])
+  @@index([studentId, date])
+  @@index([teacherId, date])
+  @@index([teacherId, status])
 }
 
 model RevisionRecord {
@@ -190,6 +194,9 @@ model RevisionRecord {
   @@index([teacherId])
   @@index([date])
   @@index([surah])
+  @@index([studentId, date])
+  @@index([teacherId, date])
+  @@index([teacherId, status])
 }
 
 model Target {
@@ -214,6 +221,7 @@ model Target {
   @@index([teacherId])
   @@index([status])
   @@index([endDate])
+  @@index([studentId, status])
 }
 
 model Account {

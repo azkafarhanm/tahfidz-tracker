@@ -12,7 +12,7 @@ import { getAdminDashboardData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminDashboard");
