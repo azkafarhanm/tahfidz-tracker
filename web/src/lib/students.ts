@@ -5,6 +5,7 @@ import {
   TargetType,
 } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import {
   dateFormatter,
   statusLabels,
@@ -102,6 +103,11 @@ const genderLabels: Record<Gender, string> = {
 
 export async function getStudentsData(query = "", teacherId?: string | null) {
   const normalizedQuery = query.trim();
+  const cacheKey = `students:${teacherId ?? "admin"}:${normalizedQuery}`;
+  return cached(cacheKey, 30_000, () => getStudentsDataInner(normalizedQuery, teacherId));
+}
+
+async function getStudentsDataInner(normalizedQuery: string, teacherId?: string | null) {
 
   const students = await prisma.student.findMany({
     where: {
@@ -185,6 +191,11 @@ export async function getStudentsData(query = "", teacherId?: string | null) {
 }
 
 export async function getInactiveStudentsData(teacherId?: string | null) {
+  const cacheKey = `students-inactive:${teacherId ?? "admin"}`;
+  return cached(cacheKey, 30_000, () => getInactiveStudentsDataInner(teacherId));
+}
+
+async function getInactiveStudentsDataInner(teacherId?: string | null) {
   const students = await prisma.student.findMany({
     where: {
       isActive: false,

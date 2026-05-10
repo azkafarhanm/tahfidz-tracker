@@ -11,6 +11,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 const MIN_PASSWORD_LENGTH = 4;
 const MAX_PASSWORD_LENGTH = 72;
@@ -111,6 +112,10 @@ function redirectAdminTeachersWithMessage(
 function revalidateAdminTeacherPaths() {
   revalidatePath("/admin");
   revalidatePath("/admin/teachers");
+  invalidateCache("admin-dashboard");
+  invalidateCache("report-admin");
+  invalidateCache("students");
+  invalidateCache("dashboard");
 }
 
 export async function createTeacher(formData: FormData) {

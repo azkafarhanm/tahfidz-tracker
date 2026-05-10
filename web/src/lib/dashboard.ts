@@ -1,5 +1,6 @@
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import {
   dateFormatter,
   statusLabels,
@@ -31,6 +32,11 @@ function countAyahs(fromAyah: number, toAyah: number) {
 }
 
 export async function getDashboardData(teacherId?: string | null) {
+  const cacheKey = `dashboard:${teacherId ?? "admin"}`;
+  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId));
+}
+
+async function getDashboardDataInner(teacherId?: string | null) {
   const today = startOfToday();
   const weekStart = startOfWeek();
   const teacherFilter = teacherId ? { teacherId } : {};

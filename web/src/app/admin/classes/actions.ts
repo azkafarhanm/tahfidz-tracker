@@ -8,6 +8,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 type AcademicClassFormInput = {
   grade: string;
@@ -66,6 +67,9 @@ function revalidateAdminClassPaths() {
   revalidatePath("/admin");
   revalidatePath("/admin/classes");
   revalidatePath("/admin/students");
+  invalidateCache("admin-dashboard");
+  invalidateCache("report-admin");
+  invalidateCache("students");
 }
 
 export async function createAcademicClass(formData: FormData) {

@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { signIn } from "next-auth/react";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import MotivationCard from "@/components/MotivationCard";
-import FloatingSurahs from "@/components/FloatingSurahs";
+
+const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
+const FloatingSurahs = dynamic(() => import("@/components/FloatingSurahs"), {
+  ssr: false,
+});
 
 export default function LoginPage() {
   const t = useTranslations("Login");

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { invalidateCache } from "@/lib/cache";
 import {
   readString,
   readOptionalString,
@@ -93,5 +94,9 @@ export async function createMurojaahRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${student!.id}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${student!.id}?success=Murojaah berhasil dicatat.`);
 }

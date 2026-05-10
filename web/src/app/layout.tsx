@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import { Amiri } from "next/font/google";
 import { Suspense } from "react";
-import { Toaster } from "sonner";
+import dynamic from "next/dynamic";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastMessenger from "@/components/ToastMessenger";
-import InstallPrompt from "@/components/InstallPrompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,16 +14,14 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 const amiri = Amiri({
   variable: "--font-amiri",
-  weight: ["400", "700"],
+  weight: "400",
   subsets: ["arabic"],
 });
+
+const InstallPrompt = dynamic(() => import("@/components/InstallPrompt"));
+const Toaster = dynamic(() => import("sonner").then((m) => m.Toaster));
 
 export const metadata: Metadata = {
   title: "TahfidzFlow",
@@ -60,7 +57,7 @@ export default async function RootLayout({
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale} dir={dir} className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${geistSans.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>

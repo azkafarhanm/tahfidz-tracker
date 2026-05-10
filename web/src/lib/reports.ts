@@ -1,5 +1,6 @@
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import {
   dateFormatter,
   statusLabels,
@@ -8,6 +9,10 @@ import {
 } from "@/lib/format";
 
 export async function getTeacherReportData(teacherId: string) {
+  return cached(`report-teacher:${teacherId}`, 30_000, () => getTeacherReportDataInner(teacherId));
+}
+
+async function getTeacherReportDataInner(teacherId: string) {
   const [classGroups, students] = await Promise.all([
     prisma.classGroup.findMany({
       where: { teacherId, isActive: true },
@@ -135,6 +140,14 @@ export async function getStudentProgressData(
   studentId: string,
   teacherId?: string | null,
 ) {
+  const cacheKey = `report-student:${studentId}:${teacherId ?? "admin"}`;
+  return cached(cacheKey, 30_000, () => getStudentProgressDataInner(studentId, teacherId));
+}
+
+async function getStudentProgressDataInner(
+  studentId: string,
+  teacherId?: string | null,
+) {
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
@@ -247,6 +260,10 @@ export async function getStudentProgressData(
 }
 
 export async function getAdminReportData() {
+  return cached("report-admin", 30_000, () => getAdminReportDataInner());
+}
+
+async function getAdminReportDataInner() {
   const [teachers, totalStudents, totalHafalan, totalMurojaah, totalActiveTargets] =
     await Promise.all([
       prisma.teacher.findMany({

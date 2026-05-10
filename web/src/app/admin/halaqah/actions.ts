@@ -9,6 +9,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
 
@@ -89,6 +90,10 @@ function revalidateAdminHalaqahPaths() {
   revalidatePath("/admin");
   revalidatePath("/admin/halaqah");
   revalidatePath("/admin/students");
+  invalidateCache("admin-dashboard");
+  invalidateCache("report-admin");
+  invalidateCache("students");
+  invalidateCache("dashboard");
 }
 
 async function resolveClassGroupRelations(

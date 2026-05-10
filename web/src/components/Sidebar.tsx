@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -18,8 +20,9 @@ import {
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import MotivationCard from "@/components/MotivationCard";
 import LogoutButton from "@/components/LogoutButton";
+
+const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 
 const teacherNavKeys = [
   { key: "navDashboard", href: "/", icon: Home },
@@ -88,7 +91,9 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
 
       <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
         <div className="mb-3">
-          <MotivationCard />
+          <Suspense fallback={<div className="h-32 rounded-2xl border border-slate-100 bg-slate-50 animate-pulse dark:border-slate-800 dark:bg-slate-800" />}>
+            <MotivationCard />
+          </Suspense>
         </div>
         <div className="mb-3">
           <LanguageSwitcher />

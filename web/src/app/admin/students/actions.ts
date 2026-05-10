@@ -11,6 +11,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 const validGenders = new Set<string>(Object.values(Gender));
 
@@ -108,6 +109,10 @@ function revalidateAdminStudentPaths(studentId?: string) {
   revalidatePath("/students");
   revalidatePath("/admin");
   revalidatePath("/admin/students");
+  invalidateCache("admin-dashboard");
+  invalidateCache("report-admin");
+  invalidateCache("students");
+  invalidateCache("dashboard");
 
   if (studentId) {
     revalidatePath(`/students/${studentId}`);

@@ -6,6 +6,7 @@ import { TargetStatus, TargetType } from "@/generated/prisma-next/enums";
 import { createFailFn, readOptionalString, readString } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 type TargetFormInput = {
   type: TargetType;
@@ -103,6 +104,10 @@ export async function createTarget(studentId: string, formData: FormData) {
   });
 
   revalidatePath(`/students/${studentId}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${studentId}?success=Target berhasil ditambahkan.`);
 }
 
@@ -148,6 +153,10 @@ export async function updateTarget(targetId: string, formData: FormData) {
   });
 
   revalidatePath(`/students/${target.studentId}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${target.studentId}?success=Target berhasil diperbarui.`);
 }
 
@@ -173,6 +182,10 @@ export async function cancelTarget(targetId: string) {
     data: { status: TargetStatus.CANCELLED },
   });
 
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   revalidatePath(`/students/${target.studentId}`);
 }
 
@@ -198,5 +211,9 @@ export async function completeTarget(targetId: string) {
     data: { status: TargetStatus.COMPLETED },
   });
 
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   revalidatePath(`/students/${target.studentId}`);
 }

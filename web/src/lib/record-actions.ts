@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { invalidateCache } from "@/lib/cache";
 import {
   readString,
   readOptionalString,
@@ -97,6 +98,10 @@ export async function updateRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${studentId}?success=Catatan berhasil diperbarui.`);
 }
 
@@ -130,5 +135,9 @@ export async function deleteRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${studentId}?success=Catatan berhasil dihapus.`);
 }

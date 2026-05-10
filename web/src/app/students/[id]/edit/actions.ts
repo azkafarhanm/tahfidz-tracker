@@ -10,6 +10,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
+import { invalidateCache } from "@/lib/cache";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
@@ -154,6 +155,10 @@ export async function updateTeacherStudent(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${studentId}?success=Data santri berhasil diperbarui.`);
 }
 
@@ -180,6 +185,9 @@ export async function deactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
   redirect("/students?success=Santri berhasil dinonaktifkan.");
 }
 
@@ -206,5 +214,8 @@ export async function reactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
   redirect("/students?success=Santri berhasil diaktifkan kembali.");
 }

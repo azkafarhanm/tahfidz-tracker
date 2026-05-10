@@ -9,6 +9,9 @@ import {
   halaqahLevelLabels,
 } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { cached, invalidateCache } from "@/lib/cache";
+
+export { invalidateCache };
 
 const genderLabels: Record<Gender, string> = {
   [Gender.MALE]: "Laki-laki",
@@ -111,6 +114,10 @@ function mapStudentSummary(student: {
 }
 
 export async function getAdminDashboardData() {
+  return cached("admin-dashboard", 30_000, () => getAdminDashboardDataInner());
+}
+
+async function getAdminDashboardDataInner() {
   const [
     adminCount,
     teacherCount,

@@ -9,6 +9,7 @@ import {
 } from "@/lib/quick-log";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { invalidateCache } from "@/lib/cache";
 import {
   readString,
   readOptionalString,
@@ -109,5 +110,9 @@ export async function createGuidedRecord(formData: FormData) {
   revalidatePath("/students");
   revalidatePath(`/students/${student!.id}`);
   revalidatePath("/quick-log");
+  invalidateCache("dashboard");
+  invalidateCache("students");
+  invalidateCache("report-teacher");
+  invalidateCache("report-student");
   redirect(`/students/${student!.id}?success=Catatan berhasil disimpan.`);
 }
