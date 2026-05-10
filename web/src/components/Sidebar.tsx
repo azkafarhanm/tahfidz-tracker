@@ -14,10 +14,12 @@ import {
   ClipboardList,
   UserRound,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import MotivationCard from "@/components/MotivationCard";
+import LogoutButton from "@/components/LogoutButton";
 
 const teacherNavKeys = [
   { key: "navDashboard", href: "/", icon: Home },
@@ -34,6 +36,7 @@ const adminNavKeys = [
   { key: "navSantri", href: "/admin/students", icon: UserRound },
   { key: "navLaporan", href: "/admin/reports", icon: BarChart3 },
   { key: "navLaporanGuru", href: "/reports", icon: ClipboardList },
+  { key: "navProfil", href: "/profile", icon: UserCircle },
 ] as const;
 
 export default function Sidebar({ userName, isAdmin }: { userName: string; isAdmin: boolean }) {
@@ -90,11 +93,26 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
         <div className="mb-3">
           <LanguageSwitcher />
         </div>
-        <div className="flex items-center justify-between">
-          <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
-            {userName}
-          </p>
-          <ThemeToggle />
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
+              {userName}
+            </p>
+            <ThemeToggle />
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Link
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+              href="/profile"
+            >
+              <UserCircle aria-hidden="true" size={16} strokeWidth={2.2} />
+              {t("navProfil")}
+            </Link>
+            <LogoutButton
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950"
+              icon={<LogOut className="h-4 w-4" />}
+            />
+          </div>
         </div>
       </div>
     </aside>

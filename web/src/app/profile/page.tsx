@@ -37,6 +37,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const actionsDescription = isAdmin
     ? t("actionsDescriptionAdmin")
     : t("actionsDescriptionTeacher");
+  const backHref = isAdmin ? "/admin" : "/";
+  const studentsHref = isAdmin ? "/admin/students" : "/students";
 
   return (
     <AppShell currentPath="/profile" userName={session.user.name} isAdmin={isAdmin}>
@@ -44,7 +46,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <div>
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
-              href="/"
+              href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
@@ -139,7 +141,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             ) : null}
             <Link
               className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-              href="/students"
+              href={studentsHref}
             >
                {t("viewStudentsButton")}
             </Link>
