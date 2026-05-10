@@ -32,7 +32,8 @@ const teacherNavKeys = [
 ] as const;
 
 const adminNavKeys = [
-  { key: "navDashboard", href: "/admin", icon: ShieldCheck },
+  { key: "navDashboard", href: "/", icon: Home },
+  { key: "roleAdmin", href: "/admin", icon: ShieldCheck },
   { key: "navGuru", href: "/admin/teachers", icon: Users },
   { key: "navKelas", href: "/admin/classes", icon: GraduationCap },
   { key: "navHalaqah", href: "/admin/halaqah", icon: BookOpen },
@@ -50,7 +51,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
   return (
     <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-screen sm:w-64 sm:flex-col sm:overflow-hidden">
       <div className="shrink-0 p-5 border-b border-slate-100 dark:border-slate-800">
-        <Link className="flex items-center gap-3" href={isAdmin ? "/admin" : "/"}>
+        <Link className="flex items-center gap-3" href="/">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             {isAdmin ? (
               <ShieldCheck aria-hidden="true" size={20} strokeWidth={2.2} />
