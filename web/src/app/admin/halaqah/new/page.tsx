@@ -1,8 +1,8 @@
-import { getTranslations } from "next-intl/server";
 import ClassGroupForm from "../ClassGroupForm";
 import { createClassGroup } from "../actions";
 import { getAdminClassGroupFormOptions } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,11 +30,11 @@ export default async function NewClassGroupPage({
 }: NewClassGroupPageProps) {
   await requireAdminScope();
 
-  const [params, options, t] = await Promise.all([
+  const [params, options] = await Promise.all([
     searchParams,
     getAdminClassGroupFormOptions(),
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   return (
     <ClassGroupForm

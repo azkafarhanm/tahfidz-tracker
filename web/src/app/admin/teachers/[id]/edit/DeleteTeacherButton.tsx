@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
 import { deleteTeacher } from "../../actions";
+import { useTranslations } from "next-intl";
 
 export default function DeleteTeacherButton({ teacherId, teacherName }: { teacherId: string; teacherName: string }) {
   const t = useTranslations("DeleteTeacher");

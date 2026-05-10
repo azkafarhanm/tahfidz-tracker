@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { PencilLine } from "lucide-react";
 import TeacherForm from "../../TeacherForm";
 import { updateTeacher } from "../../actions";
 import { getAdminTeacherFormData } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
 import DeleteTeacherButton from "./DeleteTeacherButton";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,11 +35,11 @@ export default async function EditTeacherPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [teacher, query, t] = await Promise.all([
+  const [teacher, query] = await Promise.all([
     getAdminTeacherFormData(id),
     searchParams,
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   if (!teacher) {
     notFound();

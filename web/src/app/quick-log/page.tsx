@@ -22,10 +22,10 @@ export async function generateMetadata() {
 }
 
 export default async function QuickLogPage({ searchParams }: QuickLogPageProps) {
+  const t = await getTranslations("QuickLog");
   const params = await searchParams;
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const students = await getQuickLogStudents(teacherId);
-  const t = await getTranslations("QuickLog");
   const userName = session?.user?.name ?? t("defaultUserName");
 
   return (

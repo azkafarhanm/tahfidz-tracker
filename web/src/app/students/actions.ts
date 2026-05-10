@@ -24,7 +24,7 @@ export async function createTeacherStudent(formData: FormData) {
   const fail = createFailFn("/students/new");
 
   const fullName = readString(formData, "fullName");
-  const classGroupId = readString(formData, "classGroupId");
+  const classGroupId = readOptionalString(formData, "classGroupId");
   const halaqahLevel = readString(formData, "halaqahLevel");
   const gradeRaw = readString(formData, "grade");
   const grade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
@@ -75,7 +75,7 @@ export async function createTeacherStudent(formData: FormData) {
     const level = halaqahLevel as HalaqahLevel;
 
     const existing = await prisma.classGroup.findFirst({
-      where: { teacherId, grade, isActive: true },
+      where: { teacherId, grade, level, isActive: true },
     });
 
     if (existing) {
@@ -98,6 +98,20 @@ export async function createTeacherStudent(formData: FormData) {
       });
 
       resolvedClassGroupId = newClassGroup.id;
+    }
+  } else {
+    const classGroup = await prisma.classGroup.findFirst({
+      where: { id: resolvedClassGroupId, teacherId, isActive: true },
+      select: { id: true, grade: true },
+    });
+
+    if (!classGroup || classGroup.grade !== grade) {
+      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+        fullName,
+        gender,
+        joinDate,
+        notes: notes ?? "",
+      });
     }
   }
 

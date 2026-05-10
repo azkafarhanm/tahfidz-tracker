@@ -27,6 +27,7 @@ export async function updateTeacherStudent(
   const fail = createFailFn(`/students/${studentId}/edit`);
 
   const fullName = readString(formData, "fullName");
+  const classGroupId = readOptionalString(formData, "classGroupId");
   const halaqahLevel = readString(formData, "halaqahLevel");
   const gradeRaw = readString(formData, "grade");
   const grade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
@@ -82,31 +83,60 @@ export async function updateTeacherStudent(
 
   let resolvedClassGroupId: string;
 
-  const existing = await prisma.classGroup.findFirst({
-    where: { teacherId, grade, isActive: true },
-  });
+  if (classGroupId) {
+    const selectedClassGroup = await prisma.classGroup.findFirst({
+      where: { id: classGroupId, teacherId, isActive: true },
+      select: { id: true, grade: true },
+    });
 
-  if (existing) {
-    resolvedClassGroupId = existing.id;
+    if (!selectedClassGroup) {
+      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+        fullName,
+        gender,
+        joinDate,
+        notes: notes ?? "",
+      });
+    }
+
+    const resolvedSelectedClassGroup = selectedClassGroup!;
+
+    if (resolvedSelectedClassGroup.grade !== grade) {
+      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+        fullName,
+        gender,
+        joinDate,
+        notes: notes ?? "",
+      });
+    }
+
+    resolvedClassGroupId = resolvedSelectedClassGroup.id;
   } else {
-    const teacher = await prisma.teacher.findUnique({
-      where: { id: teacherId },
-      select: { fullName: true },
-    });
-
     const level = halaqahLevel as HalaqahLevel;
-    const newClassGroup = await prisma.classGroup.create({
-      data: {
-        teacherId,
-        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
-        level,
-        grade,
-        academicYear: "2025/2026",
-        isActive: true,
-      },
+    const existing = await prisma.classGroup.findFirst({
+      where: { teacherId, grade, level, isActive: true },
     });
 
-    resolvedClassGroupId = newClassGroup.id;
+    if (existing) {
+      resolvedClassGroupId = existing.id;
+    } else {
+      const teacher = await prisma.teacher.findUnique({
+        where: { id: teacherId },
+        select: { fullName: true },
+      });
+
+      const newClassGroup = await prisma.classGroup.create({
+        data: {
+          teacherId,
+          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
+          level,
+          grade,
+          academicYear: "2025/2026",
+          isActive: true,
+        },
+      });
+
+      resolvedClassGroupId = newClassGroup.id;
+    }
   }
 
   await prisma.student.update({

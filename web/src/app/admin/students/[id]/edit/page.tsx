@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import StudentForm from "../../StudentForm";
 import { updateStudent } from "../../actions";
 import { getAdminStudentFormData } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,11 +37,11 @@ export default async function EditStudentPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [data, query, t] = await Promise.all([
+  const [data, query] = await Promise.all([
     getAdminStudentFormData(id),
     searchParams,
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   if (!data) {
     notFound();

@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import ClassGroupForm from "../../ClassGroupForm";
 import { updateClassGroup } from "../../actions";
 import {
@@ -7,6 +6,7 @@ import {
   getAdminClassGroupFormOptions,
 } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,12 +39,12 @@ export default async function EditClassGroupPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [classGroup, options, query, t] = await Promise.all([
+  const [classGroup, options, query] = await Promise.all([
     getAdminClassGroupFormData(id),
     getAdminClassGroupFormOptions(),
     searchParams,
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   if (!classGroup) {
     notFound();

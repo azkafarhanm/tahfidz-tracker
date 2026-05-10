@@ -1,16 +1,18 @@
-import { getTranslations } from "next-intl/server";
 import { PlusCircle } from "lucide-react";
 import AcademicClassForm from "../AcademicClassForm";
 import { createAcademicClass } from "../actions";
 import { getAdminAcademicClassFormOptions } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminFormPage");
-  return { title: `${t("addAcademicClass")} - Admin - TahfidzFlow` };
+  return {
+    title: `${t("addAcademicClass")} - Admin - TahfidzFlow`,
+  };
 }
 
 type NewAcademicClassPageProps = {
@@ -28,11 +30,11 @@ export default async function NewAcademicClassPage({
 }: NewAcademicClassPageProps) {
   await requireAdminScope();
 
-  const [params, options, t] = await Promise.all([
+  const [params, options] = await Promise.all([
     searchParams,
     getAdminAcademicClassFormOptions(),
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   return (
     <AcademicClassForm

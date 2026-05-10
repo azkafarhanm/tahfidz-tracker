@@ -36,7 +36,8 @@ type EditRecordPageProps = {
 export async function generateMetadata({ params }: EditRecordPageProps) {
   const { recordType } = await params;
   const t = await getTranslations("RecordForm");
-  const typeLabel = recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
+  const typeLabel =
+    recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
   return {
     title: `${t("titleEdit", { type: typeLabel })} - TahfidzFlow`,
   };
@@ -66,8 +67,12 @@ export default async function EditRecordPage({
 
   const action = updateRecord.bind(null, student.id, recordType, recordId);
   const Icon = recordType === "hafalan" ? BookOpen : RotateCcw;
-  const typeLabel = recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
-  const sectionTitle = recordType === "hafalan" ? t("sectionMaterial") : t("sectionMaterialMurojaah");
+  const typeLabel =
+    recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
+  const sectionTitle =
+    recordType === "hafalan"
+      ? t("sectionMaterial")
+      : t("sectionMaterialMurojaah");
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -215,7 +220,7 @@ export default async function EditRecordPage({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("labelDate")}
+                  {t("labelDate")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                 <CalendarDays
@@ -236,7 +241,7 @@ export default async function EditRecordPage({
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("labelTime")}
+                  {t("labelTime")}
               </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
                 <Clock

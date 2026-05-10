@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
+import { useTranslations } from "next-intl";
 
 export default function DeleteRecordButton({
   studentId,

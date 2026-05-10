@@ -307,6 +307,7 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
         id: true,
         name: true,
         level: true,
+        grade: true,
       },
     }),
     prisma.academicClass.findMany({
@@ -324,7 +325,9 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
       id: cg.id,
       name: cg.name,
       level: halaqahLevelLabels[cg.level],
-      label: `${cg.name} (${halaqahLevelLabels[cg.level]})`,
+      levelKey: cg.level,
+      grade: cg.grade,
+      label: `${cg.name} (Kelas ${cg.grade} - ${halaqahLevelLabels[cg.level]})`,
     })),
     academicClasses: academicClasses.map((ac) => ({
       id: ac.id,

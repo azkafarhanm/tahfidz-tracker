@@ -1,9 +1,9 @@
-import { getTranslations } from "next-intl/server";
 import StudentForm from "../StudentForm";
 import { createStudent } from "../actions";
 import { getAdminStudentFormOptions } from "@/lib/admin";
 import { todayInputValue } from "@/lib/format";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,11 +32,11 @@ export default async function NewStudentPage({
 }: NewStudentPageProps) {
   await requireAdminScope();
 
-  const [options, params, t] = await Promise.all([
+  const [options, params] = await Promise.all([
     getAdminStudentFormOptions(),
     searchParams,
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   return (
     <StudentForm

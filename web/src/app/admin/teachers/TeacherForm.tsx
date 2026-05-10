@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -12,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type TeacherFormValues = {
   fullName: string;
@@ -172,7 +172,11 @@ export default function TeacherForm({
                 maxLength={72}
                 minLength={4}
                 name="password"
-                placeholder={passwordRequired ? t("passwordPlaceholderNew") : t("passwordPlaceholderEdit")}
+                placeholder={
+                  passwordRequired
+                    ? t("passwordPlaceholderNew")
+                    : t("passwordPlaceholderEdit")
+                }
                 required={passwordRequired}
                 type="password"
               />

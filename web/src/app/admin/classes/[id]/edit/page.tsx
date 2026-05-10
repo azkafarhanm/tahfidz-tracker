@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
 import { PencilLine } from "lucide-react";
 import AcademicClassForm from "../../AcademicClassForm";
 import { updateAcademicClass } from "../../actions";
@@ -8,13 +7,16 @@ import {
   getAdminAcademicClassFormOptions,
 } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminFormPage");
-  return { title: `${t("editAcademicClass")} - Admin - TahfidzFlow` };
+  return {
+    title: `${t("editAcademicClass")} - Admin - TahfidzFlow`,
+  };
 }
 
 type EditAcademicClassPageProps = {
@@ -37,12 +39,12 @@ export default async function EditAcademicClassPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [academicClass, options, query, t] = await Promise.all([
+  const [academicClass, options, query] = await Promise.all([
     getAdminAcademicClassFormData(id),
     getAdminAcademicClassFormOptions(),
     searchParams,
-    getTranslations("AdminFormPage"),
   ]);
+  const t = await getTranslations("AdminFormPage");
 
   if (!academicClass) {
     notFound();
@@ -56,7 +58,11 @@ export default async function EditAcademicClassPage({
       academicYears={options.academicYears}
       backHref="/admin/classes"
       backLabel={t("backAcademicClasses")}
-      description={t("editAcademicClassDescription", { grade: academicClass.grade, section: academicClass.section, year: academicClass.academicYear })}
+      description={t("editAcademicClassDescription", {
+        grade: academicClass.grade,
+        section: academicClass.section,
+        year: academicClass.academicYear,
+      })}
       error={query?.error}
       icon={PencilLine}
       submitLabel={t("saveChanges")}

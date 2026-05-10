@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   CalendarDays,
@@ -11,11 +10,14 @@ import {
   Save,
   UserRound,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type ClassGroupOption = {
   id: string;
   name: string;
   level: string;
+  levelKey: string;
+  grade: number;
   label: string;
 };
 
@@ -73,13 +75,14 @@ export default function EditStudentForm({
     { key: "HIGH", label: "High", desc: t("levelAdvanced") },
   ];
 
-  const cgByLevel = new Map(
-    options.classGroups.map((cg) => [cg.level, cg]),
-  );
-
-  const matchedCg = selectedLevel
-    ? cgByLevel.get(selectedLevel) ?? null
-    : null;
+  const matchedCg =
+    selectedLevel && selectedGrade
+      ? options.classGroups.find(
+          (cg) =>
+            cg.levelKey === selectedLevel &&
+            cg.grade === Number(selectedGrade),
+        ) ?? null
+      : null;
 
   function handleSubmit(formData: FormData) {
     formData.set("classGroupId", matchedCg?.id ?? "");
@@ -240,7 +243,13 @@ isSelected
 
             <div className="mt-4 grid grid-cols-3 gap-2">
               {levels.map((lv) => {
-                const cg = cgByLevel.get(lv.key);
+                const cg = selectedGrade
+                  ? options.classGroups.find(
+                      (classGroup) =>
+                        classGroup.levelKey === lv.key &&
+                        classGroup.grade === Number(selectedGrade),
+                    ) ?? null
+                  : null;
                 const isSelected = selectedLevel === lv.key;
                 return (
                   <button

@@ -1,8 +1,8 @@
-import { getTranslations } from "next-intl/server";
 import { UserPlus } from "lucide-react";
 import TeacherForm from "../TeacherForm";
 import { createTeacher } from "../actions";
 import { requireAdminScope } from "@/lib/session";
+import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,11 +26,8 @@ export default async function NewTeacherPage({
   searchParams,
 }: NewTeacherPageProps) {
   await requireAdminScope();
-
-  const [params, t] = await Promise.all([
-    searchParams,
-    getTranslations("AdminFormPage"),
-  ]);
+  const params = await searchParams;
+  const t = await getTranslations("AdminFormPage");
 
   return (
     <TeacherForm

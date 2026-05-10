@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { surahList } from "@/lib/surahs";
+import { useTranslations } from "next-intl";
 
 export default function SurahInput({
   defaultValue,
@@ -120,7 +120,9 @@ export default function SurahInput({
                   {surah.number}
                 </span>
                 <span className="font-medium">{surah.name}</span>
-                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">{t("ayahCount", { count: surah.ayahs })}</span>
+                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
+                  {t("ayahCount", { count: surah.ayahs })}
+                </span>
               </button>
             </li>
           ))}

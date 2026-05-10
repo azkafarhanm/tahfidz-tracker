@@ -1,6 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,6 +9,7 @@ import {
   CalendarRange,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type AcademicClassFormValues = {
   grade: string;

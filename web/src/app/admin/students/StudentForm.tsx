@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,6 +17,7 @@ import {
   Signal,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const iconMap: Record<string, LucideIcon> = {
   UserPlus,
@@ -335,19 +335,22 @@ export default function StudentForm({
                 required
                 value={selectedTeacherId}
               >
-                <option value="">{t("selectTeacher")}</option>
-                {options.teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.label}
+                  <option value="">{t("selectTeacher")}</option>
+                  {options.teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.label}
                     {teacher.isActive ? "" : ` - ${t("inactive")}`}
-                  </option>
-                ))}
-              </select>
-            </label>
+                    </option>
+                  ))}
+                </select>
+              </label>
 
             {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
               <p className="mt-4 text-sm text-amber-600">
-                {t("noHalaqahWarning", { year: selectedAcademicYear, grade: selectedAcademicClass.grade })}
+                {t("noHalaqahWarning", {
+                  year: selectedAcademicYear,
+                  grade: selectedAcademicClass.grade,
+                })}
               </p>
             ) : null}
 

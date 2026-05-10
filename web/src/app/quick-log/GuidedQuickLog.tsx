@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   BookOpen,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import SurahInput from "@/components/SurahInput";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import { useTranslations } from "next-intl";
 
 type Student = {
   id: string;

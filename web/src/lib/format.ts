@@ -11,6 +11,20 @@ import {
 } from "@/generated/prisma-next/enums";
 import { getJuzLabel } from "@/lib/juz";
 
+const localeMap: Record<string, string> = {
+  id: "id-ID",
+  en: "en-US",
+  ar: "ar-SA",
+};
+
+export function getDateFormatter(locale?: string) {
+  return new Intl.DateTimeFormat(localeMap[locale ?? "id"] ?? "id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
@@ -40,7 +54,7 @@ export const halaqahLevelLabels: Record<HalaqahLevel, string> = {
 
 export function formatRange(surah: string, fromAyah: number, toAyah: number) {
   const juz = getJuzLabel(surah, fromAyah, toAyah);
-  return `${surah} ${fromAyah}-${toAyah}${juz ? ` · ${juz}` : ""}`;
+  return `${surah} ${fromAyah}-${toAyah}${juz ? ` - ${juz}` : ""}`;
 }
 
 export function formatClassSummary(student: {
@@ -51,7 +65,7 @@ export function formatClassSummary(student: {
   const halaqahLabel = `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`;
 
   const classSummary = academicClassName
-    ? `${academicClassName} · ${halaqahLabel}`
+    ? `${academicClassName} - ${halaqahLabel}`
     : halaqahLabel;
 
   return {
