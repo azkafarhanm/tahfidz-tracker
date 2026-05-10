@@ -5,9 +5,9 @@ import {
   Download,
   FileText,
   AlertTriangle,
-  ShieldCheck,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { getTeacherReportData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
 import { requireSessionScope } from "@/lib/session";
@@ -25,6 +25,10 @@ export async function generateMetadata() {
 export default async function ReportsPage() {
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Reports");
+
+  if (isAdmin && !teacherId) {
+    redirect("/admin/reports");
+  }
 
   if (!teacherId) {
     return (
@@ -214,18 +218,6 @@ export default async function ReportsPage() {
             </table>
           </div>
         </section>
-
-        {isAdmin ? (
-          <section className="mt-6">
-            <Link
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href="/admin/reports"
-            >
-              <ShieldCheck aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("adminReportsLink")}
-            </Link>
-          </section>
-        ) : null}
 
       </AppShell>
   );

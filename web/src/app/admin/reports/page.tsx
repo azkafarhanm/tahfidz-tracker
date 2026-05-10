@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  BarChart3,
-  Download,
-  FileText,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, Download, FileText, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getAdminReportData } from "@/lib/reports";
 
@@ -132,16 +126,6 @@ export default async function AdminReportsPage() {
               </tbody>
             </table>
           </div>
-        </section>
-
-        <section className="mt-8">
-          <Link
-            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-            href="/reports"
-          >
-            <BarChart3 aria-hidden="true" size={16} strokeWidth={2.2} />
-            {t("teacherReportsLink")}
-          </Link>
         </section>
     </>
   );

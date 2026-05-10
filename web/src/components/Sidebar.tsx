@@ -13,7 +13,6 @@ import {
   Users,
   ShieldCheck,
   GraduationCap,
-  ClipboardList,
   UserRound,
   BarChart3,
   LogOut,
@@ -39,7 +38,6 @@ const adminNavKeys = [
   { key: "navHalaqah", href: "/admin/halaqah", icon: BookOpen },
   { key: "navSantri", href: "/admin/students", icon: UserRound },
   { key: "navLaporan", href: "/admin/reports", icon: BarChart3 },
-  { key: "navLaporanGuru", href: "/reports", icon: ClipboardList },
   { key: "navProfil", href: "/profile", icon: UserCircle },
 ] as const;
 
