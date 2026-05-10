@@ -188,14 +188,17 @@ function ActivityRow({ record, studentId, t }: { record: RecordItem; studentId: 
 
 export async function generateMetadata({ params }: StudentDetailPageProps) {
   const { id } = await params;
+  const t = await getTranslations("Students");
   const scope = await getSessionScope();
   if (!scope) {
-    return { title: "Santri - TahfidzFlow" };
+    return { title: `${t("heading")} - TahfidzFlow` };
   }
 
   const teacherId = scope.teacherId;
   const student = await getStudentDetailData(id, teacherId);
-  return { title: student ? `${student.fullName} - TahfidzFlow` : "Santri - TahfidzFlow" };
+  return {
+    title: student ? `${student.fullName} - TahfidzFlow` : `${t("heading")} - TahfidzFlow`,
+  };
 }
 
 export default async function StudentDetailPage({

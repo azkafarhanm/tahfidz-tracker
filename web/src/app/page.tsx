@@ -18,9 +18,10 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Dashboard - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("Sidebar");
+  return { title: `${t("navDashboard")} - TahfidzFlow` };
+}
 
 export default async function DashboardPreview() {
   const t = await getTranslations("Dashboard");

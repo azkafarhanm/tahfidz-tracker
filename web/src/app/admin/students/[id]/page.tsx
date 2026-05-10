@@ -21,9 +21,14 @@ type AdminStudentDetailPageProps = {
 
 export async function generateMetadata({ params }: AdminStudentDetailPageProps) {
   const { id } = await params;
+  const t = await getTranslations("AdminStudents");
   await requireAdminScope();
   const data = await getStudentProgressData(id, null);
-  return { title: data ? `${data.fullName} - Admin - TahfidzFlow` : "Santri - TahfidzFlow" };
+  return {
+    title: data
+      ? `${data.fullName} - Admin - TahfidzFlow`
+      : `${t("heading")} - Admin - TahfidzFlow`,
+  };
 }
 
 export default async function AdminStudentDetailPage({ params }: AdminStudentDetailPageProps) {

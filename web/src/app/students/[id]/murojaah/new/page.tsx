@@ -34,9 +34,10 @@ type NewMurojaahPageProps = {
   }>;
 };
 
-export const metadata = {
-  title: "Tambah Murojaah - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("RecordForm");
+  return { title: `${t("titleMurojaah")} - TahfidzFlow` };
+}
 
 export default async function NewMurojaahPage({
   params,

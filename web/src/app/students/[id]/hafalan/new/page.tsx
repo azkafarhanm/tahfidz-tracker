@@ -34,9 +34,10 @@ type NewHafalanPageProps = {
   }>;
 };
 
-export const metadata = {
-  title: "Tambah Hafalan - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("RecordForm");
+  return { title: `${t("titleHafalan")} - TahfidzFlow` };
+}
 
 export default async function NewHafalanPage({
   params,

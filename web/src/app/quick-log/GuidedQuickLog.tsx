@@ -168,7 +168,7 @@ export default function GuidedQuickLog({
                 size={18}
                 strokeWidth={2.2}
               />
-              <h2 className="font-semibold">Pilih Santri</h2>
+              <h2 className="font-semibold">{t("studentSection")}</h2>
             </div>
 
             {selectedStudent ? (
@@ -251,7 +251,7 @@ export default function GuidedQuickLog({
           {selectedStudent ? (
             <>
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-                <h2 className="font-semibold">Jenis Catatan</h2>
+                <h2 className="font-semibold">{t("recordTypeSection")}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {typeOptions.map((opt) => (
                     <button
@@ -277,7 +277,7 @@ export default function GuidedQuickLog({
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-                <h2 className="font-semibold">Materi</h2>
+                <h2 className="font-semibold">{t("materialSection")}</h2>
 
                 <label className="mt-4 block">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -342,7 +342,7 @@ export default function GuidedQuickLog({
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-                <h2 className="font-semibold">Penilaian</h2>
+                <h2 className="font-semibold">{t("assessmentSection")}</h2>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="block">

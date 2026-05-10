@@ -15,9 +15,10 @@ import { getAdminClassGroupsData } from "@/lib/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Halaqah - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminHalaqah");
+  return { title: `${t("heading")} - Admin - TahfidzFlow` };
+}
 
 type AdminHalaqahPageProps = {
   searchParams?: Promise<{

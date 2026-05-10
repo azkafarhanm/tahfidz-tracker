@@ -14,9 +14,10 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminDashboard");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations("AdminDashboard");

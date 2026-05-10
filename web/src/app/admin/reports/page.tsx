@@ -13,9 +13,10 @@ import { getAdminReportData } from "@/lib/reports";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Laporan Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminReports");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
 
 export default async function AdminReportsPage() {
   const t = await getTranslations("AdminReports");

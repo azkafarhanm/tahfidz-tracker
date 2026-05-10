@@ -19,9 +19,10 @@ import { getTranslations } from "next-intl/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Santri - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("Students");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
 
 type StudentsPageProps = {
   searchParams?: Promise<{

@@ -16,9 +16,10 @@ import { requireSessionScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Profil - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("Profile");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
 
 type ProfilePageProps = {
   searchParams?: Promise<{

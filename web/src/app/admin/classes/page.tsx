@@ -15,9 +15,10 @@ import { getAdminAcademicClassesData } from "@/lib/admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Kelas Akademik - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminClasses");
+  return { title: `${t("heading")} - Admin - TahfidzFlow` };
+}
 
 type AdminClassesPageProps = {
   searchParams?: Promise<{

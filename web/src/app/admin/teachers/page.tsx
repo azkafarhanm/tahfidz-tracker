@@ -18,9 +18,10 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Guru - Admin - TahfidzFlow",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("AdminTeachers");
+  return { title: `${t("heading")} - Admin - TahfidzFlow` };
+}
 
 type AdminTeachersPageProps = {
   searchParams?: Promise<{
