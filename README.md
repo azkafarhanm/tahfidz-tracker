@@ -1,224 +1,203 @@
 # TahfidzFlow
 
-TahfidzFlow is a mobile-first web app for managing Quran memorization activity for teachers and admins. It covers daily hafalan and murojaah recording, student management, halaqah management, targets, reports, and exports.
+Mobile-first hafalan & murojaah tracking system for SMP (grades 7-9) Quran memorization programs. Built for teachers and admins to record, track, and export student progress.
 
-The legacy Telegram bot prototype is still kept in `legacy-bot/`. The main active app is the Next.js project in `web/`.
+**Status: Production-ready (99%+)**
 
-## Current Status
+## Features
 
-- Core usable product: about 90% complete
-- Full roadmap: about 80% complete
+### Teacher Workflow
+- Dashboard with today's stats, weekly progress, overdue targets
+- Student list with search, latest hafalan/murojaah, and review status
+- Quick Log guided flow for fast record entry
+- Create/edit/delete hafalan and murojaah records
+- Student detail with full history and score tracking
+- Target management with progress bars and overdue indicators
+- Edit student data, deactivate/reactivate students
+- Teacher reports with Excel and PDF export
 
-What that means in practice:
+### Admin Workflow
+- Admin dashboard with system-wide statistics
+- Teacher CRUD with account management
+- Academic class CRUD (7A, 7B, 8A, etc.)
+- Halaqah (class group) CRUD with teacher assignment
+- Student CRUD with cross-teacher management
+- Admin reports with system-wide Excel and PDF export
+- Deletion guards (prevent deleting teachers with students/halaqah)
 
-- Teacher daily workflow is already usable.
-- Admin CRUD and reporting are mostly in place.
-- Multilingual support exists, but still needs one more consistency pass.
-- Telegram integration and AI parsing are still future work.
-
-## Main Features
-
-### Teacher workflow
-
-- Login with credentials
-- Dashboard
-- Student list and student detail
-- Add hafalan
-- Add murojaah
-- Quick Log flow
-- Edit student data
-- Edit and delete records
-- Target CRUD
-- Overdue target tracking
-- Teacher reports
-
-### Admin workflow
-
-- Admin dashboard
-- Teacher CRUD
-- Academic class CRUD
-- Halaqah CRUD
-- Student CRUD
-- Admin student detail
-- Admin reports
-
-### Platform features
-
-- Role-based auth with NextAuth / Auth.js
-- Teacher-scoped data access
-- Excel export
-- PDF export routes
-- PWA install prompt
-- Surah autocomplete with 114 surahs
-- Locale files for Indonesian, English, and Arabic
-
-## Current School Model
-
-- `AcademicClass` = school class such as `7A`, `7B`, `8A`, `9C`
-- `ClassGroup` = current Prisma model name for halaqah in the UI
-- A teacher currently has one halaqah per grade per academic year
-- Students can come from different sections inside the same grade halaqah
-
-Example:
-
-- Student home class: `7B`
-- Teacher halaqah: `Kelas 7`
-- Academic year: `2025/2026`
+### Platform
+- **PWA** — installable on mobile, offline banner, service worker caching
+- **i18n** — full Indonesian, English, Arabic support with RTL
+- **Dark mode** — system-aware theme toggle
+- **Desktop sidebar** — responsive layout with fixed sidebar on desktop
+- **Security** — IDOR protection, role-based auth, orphan prevention
+- **Performance** — 30s server cache, dynamic imports, font optimization
+- **Export isolation** — PDF/Excel always in Indonesian regardless of UI language
+- **Surah autocomplete** — all 114 surahs with juz auto-calculation
+- **Animated motivation** — 70+ Quran verses with typewriter effect
 
 ## Demo Accounts
 
-- Admin: `admin`
-- Admin email: `admin@tahfidzflow.local`
-- Teacher 1: `teacher.demo@tahfidzflow.local`
-- Teacher 2: `teacher.salwa@tahfidzflow.local`
-- Password: `2026`
+| Role | Login | Password |
+|---|---|---|
+| Admin | `admin` | `2026` |
+| Teacher 1 | `teacher.demo@tahfidzflow.local` | `2026` |
+| Teacher 2 | `teacher.salwa@tahfidzflow.local` | `2026` |
 
 ## Tech Stack
 
-- Next.js 15.5.15
-- React 19
-- TypeScript 5
-- Tailwind CSS 4
-- Prisma 7
-- PostgreSQL
-- `@prisma/adapter-pg`
-- NextAuth 5 beta
-- `next-intl`
-- `exceljs`
-- `pdfkit`
-- `sonner`
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15.5.15 (App Router, Server Components) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4 |
+| Database | PostgreSQL (Neon serverless) |
+| ORM | Prisma 7 with `@prisma/adapter-pg` |
+| Auth | NextAuth 5 (JWT strategy) |
+| i18n | next-intl (3 locales: id, en, ar) |
+| Export | exceljs (Excel), pdfkit (PDF) |
+| PWA | Service Worker, manifest.json |
+| Icons | lucide-react |
+| Toast | sonner |
+| Theme | next-themes |
+| Deployment | Vercel |
 
 ## Project Structure
 
-```text
-tahfidz-tracker/
-  AI_CONTEXT.md
-  README.md
-  legacy-bot/
-  web/
-    prisma/
-    src/
-      app/
-      components/
-      i18n/
-      lib/
 ```
-
-Important note:
-
-- The real web app lives in `web/`.
-- The root `package.json` is only a command wrapper for convenience.
+tahfidz-tracker/
+├── AI_CONTEXT.md          # AI session context
+├── README.md
+├── web/                   # Main Next.js app
+│   ├── prisma/
+│   │   └── schema.prisma  # Database schema
+│   ├── public/
+│   │   ├── sw.js          # Service worker
+│   │   ├── manifest.json  # PWA manifest
+│   │   └── *.png          # PWA icons
+│   ├── messages/
+│   │   ├── id.json        # Indonesian (39 namespaces)
+│   │   ├── en.json        # English
+│   │   └── ar.json        # Arabic
+│   └── src/
+│       ├── app/           # Next.js App Router pages
+│       │   ├── admin/     # Admin routes
+│       │   ├── students/  # Teacher student routes
+│       │   ├── api/       # Export/PDF API routes
+│       │   └── ...
+│       ├── components/    # Shared React components
+│       ├── i18n/          # next-intl config
+│       ├── lib/           # Business logic & data access
+│       └── generated/     # Prisma generated client
+└── legacy-bot/            # Old Telegram bot (deprecated)
+```
 
 ## Local Setup
 
-1. Install dependencies.
-2. Prepare environment variables.
-3. Generate Prisma client.
-4. Seed the database.
-5. Start the dev server.
+### Prerequisites
+- Node.js 18+
+- PostgreSQL database (or Neon account)
 
-### Environment
+### Steps
 
-Copy `.env.example` or `web/.env.example` into a real local env file and fill it:
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp web/.env.example web/.env
+# Edit web/.env with your DATABASE_URL and AUTH_SECRET
+
+# 3. Generate Prisma client
+npm run db:generate
+
+# 4. Seed demo data
+npm run db:seed
+
+# 5. Start dev server
+npm run dev
+```
+
+Open http://localhost:3000/login
+
+### Environment Variables
 
 ```env
-DATABASE_URL="postgresql://..."
-AUTH_SECRET="replace-me"
+DATABASE_URL="postgresql://user:pass@host/db?sslmode=verify-full"
+AUTH_SECRET="your-random-secret"
 NEXTAUTH_URL="http://localhost:3000"
-APP_DEFAULT_LOCALE="id"
 ```
 
-### Run From Repo Root
+## Commands
 
-```bash
-npm install
-npm run db:generate
-npm run db:seed
-npm run dev
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint check |
+| `npm run typecheck` | TypeScript check |
+| `npm run verify` | Full verification (lint + typecheck + build) |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:seed` | Seed demo data |
+| `npm run db:studio` | Open Prisma Studio |
+
+## Deployment (Vercel)
+
+1. Connect repo to Vercel
+2. Set **Root Directory** to `web`
+3. Framework preset: `Next.js`
+4. Add environment variables:
+   - `DATABASE_URL`
+   - `AUTH_SECRET`
+5. Deploy
+
+## Data Model
+
+```
+User ─── Teacher ─── ClassGroup (halaqah)
+                     │
+                     └── Student ─── MemorizationRecord
+                                 ─── RevisionRecord
+                                 ─── Target
+
+AcademicClass (e.g., 7A, 8B, 9C)
 ```
 
-Open:
+- **User** — auth account (ADMIN or TEACHER role)
+- **Teacher** — linked to User, owns halaqah groups
+- **ClassGroup** — halaqah per teacher per grade per year
+- **Student** — belongs to one Teacher and one ClassGroup
+- **MemorizationRecord** — hafalan entry
+- **RevisionRecord** — murojaah entry
+- **Target** — memorization goal with deadline
+- **AcademicClass** — school class (7A, 7B, etc.)
 
-```text
-http://localhost:3000/login
-```
+## Security
 
-## Useful Commands
+- JWT-based auth with server-side session validation
+- IDOR protection on all record operations
+- Role-based access (teacher-scoped vs admin-scoped)
+- Orphan prevention (can't delete teacher with students/halaqah)
+- Student active check before class deactivation
 
-From the repo root:
+## Performance
 
-```bash
-npm run dev
-npm run build
-npm run lint
-npm run typecheck
-npm run verify:fast
-npm run verify
-npm run db:generate
-npm run db:validate
-npm run db:deploy
-npm run db:seed
-```
+- 30s in-memory server cache on all read-heavy queries
+- Cache invalidation on every mutation
+- Dynamic imports for heavy components (FloatingSurahs, MotivationCard, Toaster)
+- Font optimization (2 families, weight 400 only)
+- 8 composite database indexes
+- Service worker caching for static assets
 
-If you need local Prisma migrations during development:
+## Internationalization
 
-```bash
-cd web
-npm run db:migrate -- --name your_change_name
-```
+Three fully-supported locales with 39 namespaces each:
+- 🇮🇩 **Indonesian** (default)
+- 🇬🇧 **English**
+- 🇸🇦 **Arabic** (with RTL support)
 
-## Verification
+All server validation messages, UI labels, and error pages are translated. Exports (PDF/Excel) always output in Indonesian per institutional requirement.
 
-Fast verification:
+## License
 
-```bash
-npm run verify:fast
-```
-
-Full verification:
-
-```bash
-npm run verify
-```
-
-## Deployment Notes
-
-For Vercel:
-
-- Root Directory must be `web`
-- Framework Preset should be `Next.js`
-- Required env vars:
-  - `DATABASE_URL`
-  - `AUTH_SECRET`
-  - `NEXTAUTH_URL`
-
-If the deployment shows `404`, the first thing to check is almost always the Root Directory.
-
-If a PDF route shows `500`, check the Vercel Function Logs for the exact runtime error.
-
-## Current Known Gaps
-
-- Some server-action success and error messages are still hardcoded in Indonesian.
-- Multilingual support is present, but not yet fully polished in every edge case.
-- PDF export should still be verified carefully in Vercel runtime.
-- Telegram integration is not started.
-- AI parser is not started.
-- There is no automated test suite yet.
-
-## Recommended Next Steps
-
-1. Finish multilingual consistency for server-action banners and validation feedback.
-2. Re-check PDF export on Vercel.
-3. Add CI for `lint`, `typecheck`, and `build`.
-4. Continue deployment polish.
-5. Start Telegram integration only after the web app is fully stable.
-
-## Legacy Bot
-
-The Python Telegram prototype still exists in:
-
-```text
-legacy-bot/
-```
-
-It is kept for reference and possible future Telegram integration. The main production direction is the web app in `web/`.
+Private project. All rights reserved.
