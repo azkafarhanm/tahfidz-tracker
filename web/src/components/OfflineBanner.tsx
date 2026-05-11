@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { WifiOff } from "lucide-react";
 
 export default function OfflineBanner() {
-  const t = useTranslations("Offline");
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -25,11 +23,29 @@ export default function OfflineBanner() {
   if (!offline) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[60] bg-amber-600 px-4 py-2 text-center text-sm font-medium text-white shadow-lg">
-      <span className="inline-flex items-center gap-2">
-        <WifiOff aria-hidden="true" size={14} />
-        {t("banner")}
-      </span>
+    <div
+      role="alert"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        backgroundColor: "#d97706",
+        color: "white",
+        textAlign: "center",
+        padding: "8px 16px",
+        fontSize: "14px",
+        fontWeight: 500,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+      }}
+    >
+      <WifiOff size={14} />
+      Anda sedang offline. Beberapa fitur tidak tersedia.
     </div>
   );
 }
