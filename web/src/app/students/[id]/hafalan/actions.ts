@@ -6,6 +6,7 @@ import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { invalidateCache } from "@/lib/cache";
+import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
   readOptionalString,
@@ -49,33 +50,9 @@ export async function createHafalanRecord(
   const score = readInt(formData, "score");
   const notes = readOptionalString(formData, "notes");
 
-  if (!surah || surah.length > 80) {
-    fail("Nama surah wajib diisi dan maksimal 80 karakter.");
-  }
-
-  if (fromAyah === null || toAyah === null || fromAyah < 1 || toAyah < 1) {
-    fail("Nomor ayat harus berupa angka positif.");
-  }
-
-  if (toAyah! < fromAyah!) {
-    fail("Ayat akhir tidak boleh lebih kecil dari ayat awal.");
-  }
-
-  if (toAyah! > 286) {
-    fail("Nomor ayat terlalu besar. Periksa kembali rentangnya.");
-  }
-
-  if (!date) {
-    fail("Tanggal dan waktu catatan tidak valid.");
-  }
-
-  if (!validStatuses.has(statusValue)) {
-    fail("Status hafalan tidak valid.");
-  }
-
-  if (score !== null && (score < 0 || score > 100)) {
-    fail("Nilai harus berada di antara 0 sampai 100.");
-  }
+  await validateRecordFields({
+    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail,
+  });
 
   await prisma.memorizationRecord.create({
     data: {

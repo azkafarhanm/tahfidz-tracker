@@ -685,5 +685,15 @@
   "SurahInput": {
     "placeholder": "Search surah name or number",
     "ayahCount": "{count} verses"
+  },
+  "Validation": {
+    "surahRequired": "Surah name is required (max 80 characters).",
+    "ayahPositive": "Verse numbers must be positive integers.",
+    "ayahRange": "End verse cannot be less than start verse.",
+    "ayahTooLarge": "Verse number is too large. Please check the range.",
+    "dateInvalid": "Invalid date and time.",
+    "statusInvalid": "Invalid record status.",
+    "scoreRange": "Score must be between 0 and 100.",
+    "notesTooLong": "Notes must be 1500 characters or less."
   }
 }

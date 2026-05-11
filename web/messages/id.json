@@ -685,5 +685,15 @@
   "SurahInput": {
     "placeholder": "Cari nama surah atau nomor surah",
     "ayahCount": "{count} ayat"
+  },
+  "Validation": {
+    "surahRequired": "Nama surah wajib diisi dan maksimal 80 karakter.",
+    "ayahPositive": "Nomor ayat harus berupa angka positif.",
+    "ayahRange": "Ayat akhir tidak boleh lebih kecil dari ayat awal.",
+    "ayahTooLarge": "Nomor ayat terlalu besar. Periksa kembali rentangnya.",
+    "dateInvalid": "Tanggal dan waktu catatan tidak valid.",
+    "statusInvalid": "Status catatan tidak valid.",
+    "scoreRange": "Nilai harus berada di antara 0 sampai 100.",
+    "notesTooLong": "Catatan maksimal 1500 karakter."
   }
 }

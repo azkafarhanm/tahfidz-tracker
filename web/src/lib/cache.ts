@@ -5,6 +5,17 @@ type CacheEntry<T> = {
 
 const store = new Map<string, CacheEntry<unknown>>();
 
+function sweep() {
+  const now = Date.now();
+  for (const [key, entry] of store) {
+    if (entry.expiresAt <= now) {
+      store.delete(key);
+    }
+  }
+}
+
+setInterval(sweep, 60_000).unref();
+
 export function cached<T>(key: string, ttlMs: number, factory: () => Promise<T>): Promise<T> {
   const entry = store.get(key);
   if (entry && entry.expiresAt > Date.now()) {
