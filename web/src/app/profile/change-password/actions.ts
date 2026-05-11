@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 
@@ -11,6 +12,7 @@ const MAX_PASSWORD_LENGTH = 72;
 
 export async function changePassword(formData: FormData) {
   const { session } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   const currentPassword = formData.get("currentPassword");
   const newPassword = formData.get("newPassword");
@@ -21,7 +23,7 @@ export async function changePassword(formData: FormData) {
     typeof newPassword !== "string" ||
     typeof confirmPassword !== "string"
   ) {
-    redirect("/profile/change-password?error=Semua field wajib diisi.");
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("allFieldsRequired"))}`);
   }
 
   const user = await prisma.user.findUnique({
@@ -30,20 +32,20 @@ export async function changePassword(formData: FormData) {
   });
 
   if (!user?.passwordHash) {
-    redirect("/profile/change-password?error=Akun tidak ditemukan.");
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("accountNotFound"))}`);
   }
 
   const isCurrentValid = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!isCurrentValid) {
-    redirect("/profile/change-password?error=Password saat ini salah.");
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("currentPasswordWrong"))}`);
   }
 
   if (newPassword.length < MIN_PASSWORD_LENGTH || newPassword.length > MAX_PASSWORD_LENGTH) {
-    redirect(`/profile/change-password?error=Password baru harus ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} karakter.`);
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("passwordLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH }))}`);
   }
 
   if (newPassword !== confirmPassword) {
-    redirect("/profile/change-password?error=Konfirmasi password tidak cocok.");
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("passwordMismatch"))}`);
   }
 
   const hashed = await bcrypt.hash(newPassword, 10);
@@ -53,5 +55,5 @@ export async function changePassword(formData: FormData) {
   });
 
   revalidatePath("/profile");
-  redirect("/profile?success=Password berhasil diubah.");
+  redirect(`/profile?success=${encodeURIComponent(t("passwordChanged"))}`);
 }

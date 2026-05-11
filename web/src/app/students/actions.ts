@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
@@ -18,9 +19,10 @@ const validLevels = new Set<string>(Object.values(HalaqahLevel));
 
 export async function createTeacherStudent(formData: FormData) {
   const { teacherId } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   if (!teacherId) {
-    redirect("/students?error=Hanya+guru+yang+dapat+menambah+santri.");
+    redirect(`/students?error=${encodeURIComponent(t("teacherOnly"))}`);
   }
 
   const fail = createFailFn("/students/new");
@@ -36,7 +38,7 @@ export async function createTeacherStudent(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
 
   if (!fullName || fullName.length > 120) {
-    fail("Nama santri wajib diisi dan maksimal 120 karakter.", {
+    fail(t("studentNameRequired"), {
       fullName,
       gender,
       joinDate,
@@ -45,7 +47,7 @@ export async function createTeacherStudent(formData: FormData) {
   }
 
   if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
-    fail("Level halaqah wajib dipilih.", {
+    fail(t("halaqahLevelRequired"), {
       fullName,
       gender,
       joinDate,
@@ -54,7 +56,7 @@ export async function createTeacherStudent(formData: FormData) {
   }
 
   if (!grade || grade < 7 || grade > 9) {
-    fail("Kelas wajib dipilih.", {
+    fail(t("gradeRequired"), {
       fullName,
       gender,
       joinDate,
@@ -63,7 +65,7 @@ export async function createTeacherStudent(formData: FormData) {
   }
 
   if (gender && !validGenders.has(gender)) {
-    fail("Jenis kelamin tidak valid.", {
+    fail(t("genderInvalid"), {
       fullName,
       gender,
       joinDate,
@@ -108,7 +110,7 @@ export async function createTeacherStudent(formData: FormData) {
     });
 
     if (!classGroup || classGroup.grade !== grade) {
-      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+      fail(t("halaqahMismatch"), {
         fullName,
         gender,
         joinDate,
@@ -135,5 +137,5 @@ export async function createTeacherStudent(formData: FormData) {
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
-  redirect(`/students?success=Santri ${fullName} berhasil ditambahkan.`);
+  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}`);
 }

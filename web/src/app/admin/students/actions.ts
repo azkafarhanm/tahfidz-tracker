@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Gender } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
@@ -57,42 +58,43 @@ function getStudentFormExtras(input: StudentFormInput) {
   };
 }
 
-function validateStudentInput(
+async function validateStudentInput(
   input: StudentFormInput,
   fail: (message: string, extra?: Record<string, string>) => never,
 ) {
+  const t = await getTranslations("Validation");
   const extras = getStudentFormExtras(input);
 
   if (!input.fullName || input.fullName.length > 120) {
-    fail("Nama santri wajib diisi dan maksimal 120 karakter.", extras);
+    fail(t("adminStudentNameRequired"), extras);
   }
 
   if (!input.teacherId) {
-    fail("Guru wajib dipilih.", extras);
+    fail(t("adminTeacherRequired"), extras);
   }
 
   if (!input.academicClassId) {
-    fail("Kelas akademik wajib dipilih.", extras);
+    fail(t("adminAcademicClassRequired"), extras);
   }
 
   if (
     input.academicYear &&
     !/^\d{4}\/\d{4}$/.test(input.academicYear)
   ) {
-    fail("Tahun ajaran tidak valid.", extras);
+    fail(t("adminAcademicYearInvalid"), extras);
   }
 
   if (!input.joinDate) {
-    fail("Tanggal bergabung tidak valid.", extras);
+    fail(t("adminJoinDateInvalid"), extras);
   }
 
   if (input.notes && input.notes.length > 1500) {
-    fail("Catatan maksimal 1500 karakter.", extras);
+    fail(t("notesTooLong"), extras);
   }
 
   const rawGender = extras.gender;
   if (rawGender && !validGenders.has(rawGender)) {
-    fail("Jenis kelamin tidak valid.", extras);
+    fail(t("adminGenderInvalid"), extras);
   }
 }
 
@@ -123,6 +125,7 @@ async function resolveStudentRelations(
   input: StudentFormInput,
   fail: (message: string, extra?: Record<string, string>) => never,
 ) {
+  const t = await getTranslations("Validation");
   const [teacher, academicClass] = await Promise.all([
     prisma.teacher.findUnique({
       where: { id: input.teacherId },
@@ -137,15 +140,15 @@ async function resolveStudentRelations(
   const extras = getStudentFormExtras(input);
 
   if (!teacher) {
-    fail("Guru yang dipilih tidak ditemukan.", extras);
+    fail(t("adminTeacherNotFound"), extras);
   }
 
   if (!academicClass) {
-    fail("Kelas akademik yang dipilih tidak ditemukan.", extras);
+    fail(t("adminAcademicClassNotFound"), extras);
   }
 
   if (input.academicYear && academicClass!.academicYear !== input.academicYear) {
-    fail("Kelas akademik harus sesuai dengan tahun ajaran yang dipilih.", extras);
+    fail(t("adminAcademicClassYearMismatch"), extras);
   }
 
   const classGroup = await prisma.classGroup.findFirst({
@@ -159,7 +162,7 @@ async function resolveStudentRelations(
 
   if (!classGroup) {
     fail(
-      `Guru ini belum memiliki halaqah ${academicClass!.academicYear} untuk Kelas ${academicClass!.grade}.`,
+      t("adminTeacherNoHalaqah", { year: academicClass!.academicYear, grade: academicClass!.grade }),
       extras,
     );
   }
@@ -177,7 +180,7 @@ export async function createStudent(formData: FormData) {
   const input = readStudentFormInput(formData);
   const fail = createFailFn("/admin/students/new");
 
-  validateStudentInput(input, fail);
+  await validateStudentInput(input, fail);
   const relations = await resolveStudentRelations(input, fail);
 
   const student = await prisma.student.create({
@@ -193,8 +196,9 @@ export async function createStudent(formData: FormData) {
     },
   });
 
+  const t = await getTranslations("Validation");
   revalidateAdminStudentPaths(student.id);
-  redirectAdminStudentsWithMessage("success", "Data santri baru berhasil ditambahkan.");
+  redirectAdminStudentsWithMessage("success", t("adminStudentCreated"));
 }
 
 export async function updateStudent(studentId: string, formData: FormData) {
@@ -203,7 +207,9 @@ export async function updateStudent(studentId: string, formData: FormData) {
   const input = readStudentFormInput(formData);
   const fail = createFailFn(`/admin/students/${studentId}/edit`);
 
-  validateStudentInput(input, fail);
+  await validateStudentInput(input, fail);
+
+  const t = await getTranslations("Validation");
 
   const existingStudent = await prisma.student.findUnique({
     where: { id: studentId },
@@ -211,7 +217,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
   });
 
   if (!existingStudent) {
-    redirectAdminStudentsWithMessage("error", "Santri yang ingin diubah tidak ditemukan.");
+    redirectAdminStudentsWithMessage("error", t("studentNotFound"));
   }
 
   const relations = await resolveStudentRelations(input, fail);
@@ -231,7 +237,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
   });
 
   revalidateAdminStudentPaths(existingStudent.id);
-  redirectAdminStudentsWithMessage("success", "Data santri berhasil diperbarui.");
+  redirectAdminStudentsWithMessage("success", t("adminStudentUpdated"));
 }
 
 export async function toggleStudentActive(
@@ -239,6 +245,7 @@ export async function toggleStudentActive(
   nextActiveState: boolean,
 ) {
   await requireAdminScope();
+  const t = await getTranslations("Validation");
 
   const student = await prisma.student.findUnique({
     where: { id: studentId },
@@ -249,7 +256,7 @@ export async function toggleStudentActive(
   });
 
   if (!student) {
-    redirectAdminStudentsWithMessage("error", "Santri yang ingin diubah tidak ditemukan.");
+    redirectAdminStudentsWithMessage("error", t("studentNotFound"));
   }
 
   await prisma.student.update({
@@ -263,7 +270,7 @@ export async function toggleStudentActive(
   redirectAdminStudentsWithMessage(
     "success",
     nextActiveState
-      ? `Santri ${student.fullName} berhasil diaktifkan.`
-      : `Santri ${student.fullName} berhasil dinonaktifkan.`,
+      ? t("adminStudentActivated", { name: student.fullName })
+      : t("adminStudentDeactivated", { name: student.fullName }),
   );
 }

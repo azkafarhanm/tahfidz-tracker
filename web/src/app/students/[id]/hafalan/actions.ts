@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -24,6 +25,7 @@ export async function createHafalanRecord(
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const t = await getTranslations("Validation");
   const fail = createFailFn(`/students/${studentId}/hafalan/new`);
 
   const student = await prisma.student.findFirst({
@@ -32,11 +34,11 @@ export async function createHafalanRecord(
   });
 
   if (!student) {
-    fail("Santri tidak ditemukan atau sudah tidak aktif.");
+    fail(t("studentInactive"));
   }
 
   if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
-    fail("Anda tidak berhak mencatat untuk santri ini.");
+    fail(t("noPermissionStudent"));
   }
 
   const surah = readString(formData, "surah");
@@ -75,5 +77,5 @@ export async function createHafalanRecord(
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${student!.id}?success=Hafalan berhasil dicatat.`);
+  redirect(`/students/${student!.id}?success=${encodeURIComponent(t("hafalanCreated"))}`);
 }

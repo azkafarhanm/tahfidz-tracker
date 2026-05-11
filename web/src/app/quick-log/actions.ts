@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import {
   QuickLogRecordType,
@@ -27,6 +28,7 @@ export async function createGuidedRecord(formData: FormData) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const t = await getTranslations("Validation");
   const studentId = readString(formData, "studentId");
   const typeValue = readString(formData, "type");
   const surah = readString(formData, "surah");
@@ -41,7 +43,7 @@ export async function createGuidedRecord(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
 
   if (!studentId) {
-    fail("Pilih santri terlebih dahulu.");
+    fail(t("selectStudent"));
   }
 
   const student = await prisma.student.findFirst({
@@ -50,15 +52,15 @@ export async function createGuidedRecord(formData: FormData) {
   });
 
   if (!student) {
-    fail("Santri tidak ditemukan atau sudah tidak aktif.");
+    fail(t("studentInactive"));
   }
 
   if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
-    fail("Anda tidak berhak mencatat untuk santri ini.");
+    fail(t("noPermissionStudent"));
   }
 
   if (!validTypes.has(typeValue)) {
-    fail("Jenis catatan tidak valid.");
+    fail(t("recordTypeInvalid"));
   }
 
   await validateRecordFields({
@@ -91,5 +93,5 @@ export async function createGuidedRecord(formData: FormData) {
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${student!.id}?success=Catatan berhasil disimpan.`);
+  redirect(`/students/${student!.id}?success=${encodeURIComponent(t("recordSaved"))}`);
 }

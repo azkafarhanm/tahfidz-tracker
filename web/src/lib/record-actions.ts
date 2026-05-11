@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -26,6 +27,7 @@ export async function updateRecord(
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const t = await getTranslations("Validation");
   const fail = createFailFn(`/students/${studentId}/records/${recordType}/${recordId}/edit`);
 
   const student = await prisma.student.findFirst({
@@ -34,11 +36,11 @@ export async function updateRecord(
   });
 
   if (!student) {
-    fail("Santri tidak ditemukan.");
+    fail(t("studentNotFound"));
   }
 
   if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
-    fail("Anda tidak berhak mengedit catatan ini.");
+    fail(t("noPermissionEdit"));
   }
 
   const surah = readString(formData, "surah");
@@ -71,14 +73,14 @@ export async function updateRecord(
       where: { id: recordId, studentId: student!.id },
       select: { id: true },
     });
-    if (!existing) fail("Catatan tidak ditemukan untuk santri ini.");
+    if (!existing) fail(t("recordNotFound"));
     await prisma.revisionRecord.update({ where: { id: recordId }, data });
   } else {
     const existing = await prisma.memorizationRecord.findFirst({
       where: { id: recordId, studentId: student!.id },
       select: { id: true },
     });
-    if (!existing) fail("Catatan tidak ditemukan untuk santri ini.");
+    if (!existing) fail(t("recordNotFound"));
     await prisma.memorizationRecord.update({ where: { id: recordId }, data });
   }
 
@@ -89,7 +91,7 @@ export async function updateRecord(
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${studentId}?success=Catatan berhasil diperbarui.`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordUpdated"))}`);
 }
 
 export async function deleteRecord(
@@ -100,17 +102,19 @@ export async function deleteRecord(
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const t = await getTranslations("Validation");
+
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
     select: { teacherId: true },
   });
 
   if (!student) {
-    redirect(`/students/${studentId}?error=Santri tidak ditemukan.`);
+    redirect(`/students/${studentId}?error=${encodeURIComponent(t("studentNotFound"))}`);
   }
 
   if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
-    redirect(`/students/${studentId}?error=Anda tidak berhak menghapus catatan ini.`);
+    redirect(`/students/${studentId}?error=${encodeURIComponent(t("noPermissionDelete"))}`);
   }
 
   if (recordType === "murojaah") {
@@ -119,7 +123,7 @@ export async function deleteRecord(
       select: { id: true },
     });
     if (!existing) {
-      redirect(`/students/${studentId}?error=Catatan tidak ditemukan untuk santri ini.`);
+      redirect(`/students/${studentId}?error=${encodeURIComponent(t("recordNotFound"))}`);
     }
     await prisma.revisionRecord.delete({ where: { id: recordId } });
   } else {
@@ -128,7 +132,7 @@ export async function deleteRecord(
       select: { id: true },
     });
     if (!existing) {
-      redirect(`/students/${studentId}?error=Catatan tidak ditemukan untuk santri ini.`);
+      redirect(`/students/${studentId}?error=${encodeURIComponent(t("recordNotFound"))}`);
     }
     await prisma.memorizationRecord.delete({ where: { id: recordId } });
   }
@@ -140,5 +144,5 @@ export async function deleteRecord(
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${studentId}?success=Catatan berhasil dihapus.`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordDeleted"))}`);
 }

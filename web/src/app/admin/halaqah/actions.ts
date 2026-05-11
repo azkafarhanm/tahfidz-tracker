@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { HalaqahLevel } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
@@ -47,34 +48,35 @@ function getClassGroupFormExtras(input: ClassGroupFormInput) {
   };
 }
 
-function validateClassGroupInput(
+async function validateClassGroupInput(
   input: ClassGroupFormInput,
   fail: (message: string, extra?: Record<string, string>) => never,
 ) {
+  const t = await getTranslations("Validation");
   const extras = getClassGroupFormExtras(input);
 
   if (!input.name || input.name.length > 120) {
-    fail("Nama halaqah wajib diisi dan maksimal 120 karakter.", extras);
+    fail(t("halaqahNameRequired"), extras);
   }
 
   if (input.description && input.description.length > 500) {
-    fail("Deskripsi maksimal 500 karakter.", extras);
+    fail(t("halaqahDescTooLong"), extras);
   }
 
   if (!validLevels.has(input.level)) {
-    fail("Level halaqah tidak valid.", extras);
+    fail(t("halaqahLevelInvalid"), extras);
   }
 
   if (!input.teacherId) {
-    fail("Guru pembimbing wajib dipilih.", extras);
+    fail(t("halaqahTeacherRequired"), extras);
   }
 
   if (!/^\d{4}\/\d{4}$/.test(input.academicYear)) {
-    fail("Tahun ajaran tidak valid.", extras);
+    fail(t("halaqahAcademicYearInvalid"), extras);
   }
 
   if (!["7", "8", "9"].includes(input.grade)) {
-    fail("Kelas halaqah wajib dipilih.", extras);
+    fail(t("halaqahGradeRequired"), extras);
   }
 }
 
@@ -101,6 +103,7 @@ async function resolveClassGroupRelations(
   fail: (message: string, extra?: Record<string, string>) => never,
   currentClassGroupId?: string,
 ) {
+  const t = await getTranslations("Validation");
   const grade = Number.parseInt(input.grade, 10);
 
   const [teacher, conflictingClassGroup] = await Promise.all([
@@ -121,7 +124,7 @@ async function resolveClassGroupRelations(
   const extras = getClassGroupFormExtras(input);
 
   if (!teacher) {
-    fail("Guru pembimbing tidak ditemukan.", extras);
+    fail(t("halaqahTeacherNotFound"), extras);
   }
 
   if (
@@ -129,7 +132,7 @@ async function resolveClassGroupRelations(
     conflictingClassGroup.id !== currentClassGroupId
   ) {
     fail(
-      `Guru ini sudah memiliki halaqah ${input.academicYear} untuk Kelas ${grade}: "${conflictingClassGroup.name}".`,
+      t("halaqahDuplicate", { year: input.academicYear, grade, name: conflictingClassGroup.name }),
       extras,
     );
   }
@@ -147,7 +150,7 @@ export async function createClassGroup(formData: FormData) {
   const input = readClassGroupFormInput(formData);
   const fail = createFailFn("/admin/halaqah/new");
 
-  validateClassGroupInput(input, fail);
+  await validateClassGroupInput(input, fail);
   const relations = await resolveClassGroupRelations(input, fail);
 
   await prisma.classGroup.create({
@@ -162,8 +165,9 @@ export async function createClassGroup(formData: FormData) {
     },
   });
 
+  const t = await getTranslations("Validation");
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", "Halaqah baru berhasil ditambahkan.");
+  redirectAdminHalaqahWithMessage("success", t("halaqahCreated"));
 }
 
 export async function updateClassGroup(
@@ -175,7 +179,9 @@ export async function updateClassGroup(
   const input = readClassGroupFormInput(formData);
   const fail = createFailFn(`/admin/halaqah/${classGroupId}/edit`);
 
-  validateClassGroupInput(input, fail);
+  await validateClassGroupInput(input, fail);
+
+  const t = await getTranslations("Validation");
 
   const classGroup = await prisma.classGroup.findUnique({
     where: { id: classGroupId },
@@ -183,7 +189,7 @@ export async function updateClassGroup(
   });
 
   if (!classGroup) {
-    redirectAdminHalaqahWithMessage("error", "Halaqah yang ingin diubah tidak ditemukan.");
+    redirectAdminHalaqahWithMessage("error", t("halaqahNotFound"));
   }
 
   const relations = await resolveClassGroupRelations(input, fail, classGroup.id);
@@ -209,7 +215,7 @@ export async function updateClassGroup(
 
   if (mismatchedStudent) {
     fail(
-      `Santri ${mismatchedStudent.fullName} sudah terhubung ke halaqah ini tetapi kelas akademiknya tidak cocok dengan Kelas ${relations.grade} ${relations.academicYear}.`,
+      t("halaqahStudentMismatch", { name: mismatchedStudent.fullName, grade: relations.grade, year: relations.academicYear }),
       getClassGroupFormExtras(input),
     );
   }
@@ -236,7 +242,7 @@ export async function updateClassGroup(
   ]);
 
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", "Data halaqah berhasil diperbarui.");
+  redirectAdminHalaqahWithMessage("success", t("halaqahUpdated"));
 }
 
 export async function toggleClassGroupActive(
@@ -244,6 +250,7 @@ export async function toggleClassGroupActive(
   nextActiveState: boolean,
 ) {
   await requireAdminScope();
+  const t = await getTranslations("Validation");
 
   const classGroup = await prisma.classGroup.findUnique({
     where: { id: classGroupId },
@@ -251,7 +258,7 @@ export async function toggleClassGroupActive(
   });
 
   if (!classGroup) {
-    redirectAdminHalaqahWithMessage("error", "Halaqah yang ingin diubah tidak ditemukan.");
+    redirectAdminHalaqahWithMessage("error", t("halaqahNotFound"));
   }
 
   if (!nextActiveState) {
@@ -262,7 +269,7 @@ export async function toggleClassGroupActive(
     if (activeStudentCount > 0) {
       redirectAdminHalaqahWithMessage(
         "error",
-        `Halaqah "${classGroup.name}" masih memiliki ${activeStudentCount} santri aktif. Nonaktifkan santri terlebih dahulu.`,
+        t("halaqahHasStudents", { name: classGroup.name, count: activeStudentCount }),
       );
     }
   }
@@ -276,7 +283,7 @@ export async function toggleClassGroupActive(
   redirectAdminHalaqahWithMessage(
     "success",
     nextActiveState
-      ? `Halaqah "${classGroup.name}" berhasil diaktifkan.`
-      : `Halaqah "${classGroup.name}" berhasil dinonaktifkan.`,
+      ? t("halaqahActivated", { name: classGroup.name })
+      : t("halaqahDeactivated", { name: classGroup.name }),
   );
 }

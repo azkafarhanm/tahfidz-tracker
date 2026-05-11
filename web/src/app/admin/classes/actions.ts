@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import {
   createFailFn,
   readString,
@@ -35,23 +36,24 @@ function getAcademicClassFormExtras(input: AcademicClassFormInput) {
   };
 }
 
-function validateAcademicClassInput(
+async function validateAcademicClassInput(
   input: AcademicClassFormInput,
   fail: (message: string, extra?: Record<string, string>) => never,
 ) {
+  const t = await getTranslations("Validation");
   const extras = getAcademicClassFormExtras(input);
   const grade = Number.parseInt(input.grade, 10);
 
   if (!Number.isFinite(grade) || grade < 1 || grade > 12) {
-    fail("Tingkat kelas harus berupa angka antara 1 dan 12.", extras);
+    fail(t("classGradeRange"), extras);
   }
 
   if (!input.section || input.section.length > 5) {
-    fail("Ruang kelas wajib diisi dan maksimal 5 karakter.", extras);
+    fail(t("classSectionRequired"), extras);
   }
 
   if (!input.academicYear || !/^\d{4}\/\d{4}$/.test(input.academicYear)) {
-    fail("Tahun ajaran harus dalam format YYYY/YYYY.", extras);
+    fail(t("classAcademicYearFormat"), extras);
   }
 }
 
@@ -77,8 +79,9 @@ export async function createAcademicClass(formData: FormData) {
 
   const input = readAcademicClassFormInput(formData);
   const fail = createFailFn("/admin/classes/new");
+  const t = await getTranslations("Validation");
 
-  validateAcademicClassInput(input, fail);
+  await validateAcademicClassInput(input, fail);
 
   const grade = Number.parseInt(input.grade, 10);
   const name = `${grade}${input.section}`;
@@ -95,7 +98,7 @@ export async function createAcademicClass(formData: FormData) {
 
   if (existing) {
     fail(
-      `Kelas ${name} untuk tahun ajaran ${input.academicYear} sudah ada.`,
+      t("classDuplicate", { name, year: input.academicYear }),
       getAcademicClassFormExtras(input),
     );
   }
@@ -111,7 +114,7 @@ export async function createAcademicClass(formData: FormData) {
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", "Kelas akademik baru berhasil ditambahkan.");
+  redirectAdminClassesWithMessage("success", t("classCreated"));
 }
 
 export async function updateAcademicClass(
@@ -123,7 +126,9 @@ export async function updateAcademicClass(
   const input = readAcademicClassFormInput(formData);
   const fail = createFailFn(`/admin/classes/${academicClassId}/edit`);
 
-  validateAcademicClassInput(input, fail);
+  await validateAcademicClassInput(input, fail);
+
+  const t = await getTranslations("Validation");
 
   const academicClass = await prisma.academicClass.findUnique({
     where: { id: academicClassId },
@@ -131,7 +136,7 @@ export async function updateAcademicClass(
   });
 
   if (!academicClass) {
-    redirectAdminClassesWithMessage("error", "Kelas yang ingin diubah tidak ditemukan.");
+    redirectAdminClassesWithMessage("error", t("classNotFound"));
   }
 
   const grade = Number.parseInt(input.grade, 10);
@@ -149,7 +154,7 @@ export async function updateAcademicClass(
 
   if (existing && existing.id !== academicClass.id) {
     fail(
-      `Kelas ${name} untuk tahun ajaran ${input.academicYear} sudah ada.`,
+      t("classDuplicate", { name, year: input.academicYear }),
       getAcademicClassFormExtras(input),
     );
   }
@@ -166,7 +171,7 @@ export async function updateAcademicClass(
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", "Data kelas akademik berhasil diperbarui.");
+  redirectAdminClassesWithMessage("success", t("classUpdated"));
 }
 
 export async function toggleAcademicClassActive(
@@ -174,6 +179,7 @@ export async function toggleAcademicClassActive(
   nextActiveState: boolean,
 ) {
   await requireAdminScope();
+  const t = await getTranslations("Validation");
 
   const academicClass = await prisma.academicClass.findUnique({
     where: { id: academicClassId },
@@ -181,7 +187,7 @@ export async function toggleAcademicClassActive(
   });
 
   if (!academicClass) {
-    redirectAdminClassesWithMessage("error", "Kelas yang ingin diubah tidak ditemukan.");
+    redirectAdminClassesWithMessage("error", t("classNotFound"));
   }
 
   if (!nextActiveState) {
@@ -192,7 +198,7 @@ export async function toggleAcademicClassActive(
     if (activeStudentCount > 0) {
       redirectAdminClassesWithMessage(
         "error",
-        `Kelas ${academicClass.name} masih memiliki ${activeStudentCount} santri aktif. Nonaktifkan santri terlebih dahulu.`,
+        t("classHasStudents", { name: academicClass.name, count: activeStudentCount }),
       );
     }
   }
@@ -206,7 +212,7 @@ export async function toggleAcademicClassActive(
   redirectAdminClassesWithMessage(
     "success",
     nextActiveState
-      ? `Kelas ${academicClass.name} (${academicClass.academicYear}) berhasil diaktifkan.`
-      : `Kelas ${academicClass.name} (${academicClass.academicYear}) berhasil dinonaktifkan.`,
+      ? t("classActivated", { name: academicClass.name, year: academicClass.academicYear })
+      : t("classDeactivated", { name: academicClass.name, year: academicClass.academicYear }),
   );
 }

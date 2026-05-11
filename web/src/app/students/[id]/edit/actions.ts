@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
@@ -20,10 +21,11 @@ export async function updateTeacherStudent(
   studentId: string,
   formData: FormData,
 ) {
+  const t = await getTranslations("Validation");
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
-    redirect("/students?error=Hanya+guru+yang+dapat+mengedit+santri.");
+    redirect(`/students?error=${encodeURIComponent(t("teacherOnlyEdit"))}`);
   }
 
   const fail = createFailFn(`/students/${studentId}/edit`);
@@ -39,7 +41,7 @@ export async function updateTeacherStudent(
   const notes = readOptionalString(formData, "notes");
 
   if (!fullName || fullName.length > 120) {
-    fail("Nama santri wajib diisi dan maksimal 120 karakter.", {
+    fail(t("studentNameRequired"), {
       fullName,
       gender,
       joinDate,
@@ -48,7 +50,7 @@ export async function updateTeacherStudent(
   }
 
   if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
-    fail("Level halaqah wajib dipilih.", {
+    fail(t("halaqahLevelRequired"), {
       fullName,
       gender,
       joinDate,
@@ -57,7 +59,7 @@ export async function updateTeacherStudent(
   }
 
   if (!grade || grade < 7 || grade > 9) {
-    fail("Kelas wajib dipilih.", {
+    fail(t("gradeRequired"), {
       fullName,
       gender,
       joinDate,
@@ -66,7 +68,7 @@ export async function updateTeacherStudent(
   }
 
   if (gender && !validGenders.has(gender)) {
-    fail("Jenis kelamin tidak valid.", {
+    fail(t("genderInvalid"), {
       fullName,
       gender,
       joinDate,
@@ -80,7 +82,7 @@ export async function updateTeacherStudent(
   });
 
   if (!student) {
-    redirect("/students?error=Santri+tidak+ditemukan.");
+    redirect(`/students?error=${encodeURIComponent(t("studentNotFound"))}`);
   }
 
   let resolvedClassGroupId: string;
@@ -92,7 +94,7 @@ export async function updateTeacherStudent(
     });
 
     if (!selectedClassGroup) {
-      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+      fail(t("halaqahMismatch"), {
         fullName,
         gender,
         joinDate,
@@ -103,7 +105,7 @@ export async function updateTeacherStudent(
     const resolvedSelectedClassGroup = selectedClassGroup!;
 
     if (resolvedSelectedClassGroup.grade !== grade) {
-      fail("Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.", {
+      fail(t("halaqahMismatch"), {
         fullName,
         gender,
         joinDate,
@@ -160,14 +162,15 @@ export async function updateTeacherStudent(
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${studentId}?success=Data santri berhasil diperbarui.`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}`);
 }
 
 export async function deactivateTeacherStudent(studentId: string) {
+  const t = await getTranslations("Validation");
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
-    redirect("/students?error=Hanya+guru+yang+dapat+menonaktifkan+santri.");
+    redirect(`/students?error=${encodeURIComponent(t("teacherOnlyDeactivate"))}`);
   }
 
   const student = await prisma.student.findFirst({
@@ -176,7 +179,7 @@ export async function deactivateTeacherStudent(studentId: string) {
   });
 
   if (!student) {
-    redirect("/students?error=Santri+tidak+ditemukan.");
+    redirect(`/students?error=${encodeURIComponent(t("studentNotFound"))}`);
   }
 
   await prisma.student.update({
@@ -189,14 +192,15 @@ export async function deactivateTeacherStudent(studentId: string) {
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
-  redirect("/students?success=Santri berhasil dinonaktifkan.");
+  redirect(`/students?success=${encodeURIComponent(t("studentDeactivated"))}`);
 }
 
 export async function reactivateTeacherStudent(studentId: string) {
+  const t = await getTranslations("Validation");
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
-    redirect("/students?error=Hanya+guru+yang+dapat+mengaktifkan+santri.");
+    redirect(`/students?error=${encodeURIComponent(t("teacherOnlyReactivate"))}`);
   }
 
   const student = await prisma.student.findFirst({
@@ -205,7 +209,7 @@ export async function reactivateTeacherStudent(studentId: string) {
   });
 
   if (!student) {
-    redirect("/students?error=Santri+tidak+ditemukan.");
+    redirect(`/students?error=${encodeURIComponent(t("studentNotFound"))}`);
   }
 
   await prisma.student.update({
@@ -218,5 +222,5 @@ export async function reactivateTeacherStudent(studentId: string) {
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
-  redirect("/students?success=Santri berhasil diaktifkan kembali.");
+  redirect(`/students?success=${encodeURIComponent(t("studentReactivated"))}`);
 }

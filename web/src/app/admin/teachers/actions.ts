@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { UserRole } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
@@ -64,29 +65,30 @@ async function ensureUniqueTeacherEmail(email: string, userId?: string) {
   return true;
 }
 
-function validateTeacherInput(
+async function validateTeacherInput(
   input: TeacherFormInput,
   fail: (message: string, extra?: Record<string, string>) => never,
   options: {
     passwordRequired: boolean;
   },
 ) {
+  const t = await getTranslations("Validation");
   const extras = getTeacherFormExtras(input);
 
   if (!input.fullName || input.fullName.length > 120) {
-    fail("Nama guru wajib diisi dan maksimal 120 karakter.", extras);
+    fail(t("teacherNameRequired"), extras);
   }
 
   if (!input.email || input.email.length > 120 || !isValidEmail(input.email)) {
-    fail("Email guru wajib valid dan maksimal 120 karakter.", extras);
+    fail(t("teacherEmailRequired"), extras);
   }
 
   if (input.phoneNumber && input.phoneNumber.length > 30) {
-    fail("Nomor telepon maksimal 30 karakter.", extras);
+    fail(t("teacherPhoneTooLong"), extras);
   }
 
   if (options.passwordRequired && !input.password) {
-    fail("Password awal wajib diisi untuk akun guru baru.", extras);
+    fail(t("teacherPasswordRequired"), extras);
   }
 
   if (
@@ -95,7 +97,7 @@ function validateTeacherInput(
       input.password.length > MAX_PASSWORD_LENGTH)
   ) {
     fail(
-      `Password harus ${MIN_PASSWORD_LENGTH}-${MAX_PASSWORD_LENGTH} karakter.`,
+      t("passwordLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH }),
       extras,
     );
   }
@@ -124,12 +126,13 @@ export async function createTeacher(formData: FormData) {
   const input = readTeacherFormInput(formData);
   const fail = createFailFn("/admin/teachers/new");
 
-  validateTeacherInput(input, fail, { passwordRequired: true });
+  await validateTeacherInput(input, fail, { passwordRequired: true });
 
   const isUniqueEmail = await ensureUniqueTeacherEmail(input.email);
+  const t = await getTranslations("Validation");
 
   if (!isUniqueEmail) {
-    fail("Email ini sudah digunakan oleh akun lain.", getTeacherFormExtras(input));
+    fail(t("emailDuplicate"), getTeacherFormExtras(input));
   }
 
   const passwordHash = await bcrypt.hash(input.password, 10);
@@ -157,7 +160,7 @@ export async function createTeacher(formData: FormData) {
   });
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", "Akun guru baru berhasil ditambahkan.");
+  redirectAdminTeachersWithMessage("success", t("teacherCreated"));
 }
 
 export async function updateTeacher(teacherId: string, formData: FormData) {
@@ -166,7 +169,9 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   const input = readTeacherFormInput(formData);
   const fail = createFailFn(`/admin/teachers/${teacherId}/edit`);
 
-  validateTeacherInput(input, fail, { passwordRequired: false });
+  await validateTeacherInput(input, fail, { passwordRequired: false });
+
+  const t = await getTranslations("Validation");
 
   const teacher = await prisma.teacher.findUnique({
     where: { id: teacherId },
@@ -177,13 +182,13 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   });
 
   if (!teacher) {
-    redirectAdminTeachersWithMessage("error", "Guru yang ingin diubah tidak ditemukan.");
+    redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
   }
 
   const isUniqueEmail = await ensureUniqueTeacherEmail(input.email, teacher.userId);
 
   if (!isUniqueEmail) {
-    fail("Email ini sudah digunakan oleh akun lain.", getTeacherFormExtras(input));
+    fail(t("emailDuplicate"), getTeacherFormExtras(input));
   }
 
   const passwordHash = input.password
@@ -212,7 +217,7 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   });
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", "Data guru berhasil diperbarui.");
+  redirectAdminTeachersWithMessage("success", t("teacherUpdated"));
 }
 
 export async function toggleTeacherActive(
@@ -220,6 +225,7 @@ export async function toggleTeacherActive(
   nextActiveState: boolean,
 ) {
   await requireAdminScope();
+  const t = await getTranslations("Validation");
 
   const teacher = await prisma.teacher.findUnique({
     where: { id: teacherId },
@@ -231,7 +237,7 @@ export async function toggleTeacherActive(
   });
 
   if (!teacher) {
-    redirectAdminTeachersWithMessage("error", "Guru yang ingin diubah tidak ditemukan.");
+    redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
   }
 
   await prisma.$transaction([
@@ -249,13 +255,14 @@ export async function toggleTeacherActive(
   redirectAdminTeachersWithMessage(
     "success",
     nextActiveState
-      ? `Akun ${teacher.fullName} berhasil diaktifkan.`
-      : `Akun ${teacher.fullName} berhasil dinonaktifkan.`,
+      ? t("teacherActivated", { name: teacher.fullName })
+      : t("teacherDeactivated", { name: teacher.fullName }),
   );
 }
 
 export async function deleteTeacher(teacherId: string) {
   await requireAdminScope();
+  const t = await getTranslations("Validation");
 
   const teacher = await prisma.teacher.findUnique({
     where: { id: teacherId },
@@ -263,7 +270,7 @@ export async function deleteTeacher(teacherId: string) {
   });
 
   if (!teacher) {
-    redirectAdminTeachersWithMessage("error", "Guru tidak ditemukan.");
+    redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
   }
 
   const studentCount = await prisma.student.count({
@@ -271,7 +278,7 @@ export async function deleteTeacher(teacherId: string) {
   });
 
   if (studentCount > 0) {
-    redirectAdminTeachersWithMessage("error", `Tidak bisa menghapus ${teacher.fullName} — masih ada ${studentCount} santri terdaftar. Nonaktifkan akun sebagai gantinya.`);
+    redirectAdminTeachersWithMessage("error", t("teacherHasStudents", { name: teacher.fullName, count: studentCount }));
   }
 
   const classGroupCount = await prisma.classGroup.count({
@@ -279,7 +286,7 @@ export async function deleteTeacher(teacherId: string) {
   });
 
   if (classGroupCount > 0) {
-    redirectAdminTeachersWithMessage("error", `Tidak bisa menghapus ${teacher.fullName} — masih ada ${classGroupCount} halaqah terdaftar. Nonaktifkan akun sebagai gantinya.`);
+    redirectAdminTeachersWithMessage("error", t("teacherHasClassGroups", { name: teacher.fullName, count: classGroupCount }));
   }
 
   await prisma.$transaction([
@@ -288,5 +295,5 @@ export async function deleteTeacher(teacherId: string) {
   ]);
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", `Akun ${teacher.fullName} berhasil dihapus.`);
+  redirectAdminTeachersWithMessage("success", t("teacherDeleted", { name: teacher.fullName }));
 }

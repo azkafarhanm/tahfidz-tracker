@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { TargetStatus, TargetType } from "@/generated/prisma-next/enums";
 import { createFailFn, readOptionalString, readString } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +19,8 @@ type TargetFormInput = {
   notes: string | null;
 };
 
-function parseTargetForm(formData: FormData): { data: TargetFormInput; error: string | null } {
+async function parseTargetForm(formData: FormData): Promise<{ data: TargetFormInput; error: string | null }> {
+  const t = await getTranslations("Validation");
   const rawType = formData.get("type");
   const surah = readString(formData, "surah");
   const rawFromAyah = formData.get("fromAyah");
@@ -28,32 +30,32 @@ function parseTargetForm(formData: FormData): { data: TargetFormInput; error: st
   const notes = readOptionalString(formData, "notes");
 
   if (!rawType || (rawType !== "HAFALAN" && rawType !== "MUROJAAH")) {
-    return { data: null as unknown as TargetFormInput, error: "Jenis target wajib dipilih." };
+    return { data: null as unknown as TargetFormInput, error: t("targetTypeRequired") };
   }
   if (!surah || surah.length > 80) {
-    return { data: null as unknown as TargetFormInput, error: "Nama surah wajib diisi dan maksimal 80 karakter." };
+    return { data: null as unknown as TargetFormInput, error: t("surahRequired") };
   }
   const fromAyah = Number(rawFromAyah);
   const toAyah = Number(rawToAyah);
   if (!fromAyah || fromAyah < 1 || fromAyah > 286) {
-    return { data: null as unknown as TargetFormInput, error: "Ayat awal harus antara 1-286." };
+    return { data: null as unknown as TargetFormInput, error: t("targetFromAyahRange") };
   }
   if (!toAyah || toAyah < 1 || toAyah > 286) {
-    return { data: null as unknown as TargetFormInput, error: "Ayat akhir harus antara 1-286." };
+    return { data: null as unknown as TargetFormInput, error: t("targetToAyahRange") };
   }
   if (fromAyah > toAyah) {
-    return { data: null as unknown as TargetFormInput, error: "Ayat awal tidak boleh lebih besar dari ayat akhir." };
+    return { data: null as unknown as TargetFormInput, error: t("targetFromGtTo") };
   }
   if (!rawStartDate) {
-    return { data: null as unknown as TargetFormInput, error: "Tanggal mulai wajib diisi." };
+    return { data: null as unknown as TargetFormInput, error: t("targetStartDateRequired") };
   }
   if (!rawEndDate) {
-    return { data: null as unknown as TargetFormInput, error: "Tanggal target selesai wajib diisi." };
+    return { data: null as unknown as TargetFormInput, error: t("targetEndDateRequired") };
   }
   const startDate = new Date(rawStartDate as string);
   const endDate = new Date(rawEndDate as string);
   if (endDate <= startDate) {
-    return { data: null as unknown as TargetFormInput, error: "Tanggal target selesai harus setelah tanggal mulai." };
+    return { data: null as unknown as TargetFormInput, error: t("targetEndBeforeStart") };
   }
 
   return {
@@ -83,7 +85,7 @@ export async function createTarget(studentId: string, formData: FormData) {
   }
 
   const fail = createFailFn(`/students/${studentId}/targets/new`);
-  const { data, error } = parseTargetForm(formData);
+  const { data, error } = await parseTargetForm(formData);
 
   if (error) {
     fail(error);
@@ -103,12 +105,13 @@ export async function createTarget(studentId: string, formData: FormData) {
     },
   });
 
+  const t = await getTranslations("Validation");
   revalidatePath(`/students/${studentId}`);
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${studentId}?success=Target berhasil ditambahkan.`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("targetCreated"))}`);
 }
 
 export async function updateTarget(targetId: string, formData: FormData) {
@@ -133,7 +136,7 @@ export async function updateTarget(targetId: string, formData: FormData) {
   }
 
   const fail = createFailFn(`/students/${target.studentId}/targets/${targetId}/edit`);
-  const { data, error } = parseTargetForm(formData);
+  const { data, error } = await parseTargetForm(formData);
 
   if (error) {
     fail(error);
@@ -152,12 +155,13 @@ export async function updateTarget(targetId: string, formData: FormData) {
     },
   });
 
+  const t = await getTranslations("Validation");
   revalidatePath(`/students/${target.studentId}`);
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
-  redirect(`/students/${target.studentId}?success=Target berhasil diperbarui.`);
+  redirect(`/students/${target.studentId}?success=${encodeURIComponent(t("targetUpdated"))}`);
 }
 
 export async function cancelTarget(targetId: string) {
