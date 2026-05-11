@@ -788,5 +788,8 @@
     "targetEndBeforeStart": "Target end date must be after start date.",
     "targetCreated": "Target has been created.",
     "targetUpdated": "Target has been updated."
+  },
+  "Offline": {
+    "banner": "You are offline. Some features are unavailable."
   }
 }

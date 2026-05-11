@@ -8,6 +8,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import ThemeProvider from "@/components/ThemeProvider";
 import ToastMessenger from "@/components/ToastMessenger";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import OfflineBanner from "@/components/OfflineBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default async function RootLayout({
               <ToastMessenger />
             </Suspense>
             <Toaster position="top-center" richColors closeButton />
+            <OfflineBanner />
             <InstallPrompt />
             <ServiceWorkerRegistrar />
           </NextIntlClientProvider>

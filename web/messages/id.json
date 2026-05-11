@@ -788,5 +788,8 @@
     "targetEndBeforeStart": "Tanggal target selesai harus setelah tanggal mulai.",
     "targetCreated": "Target berhasil ditambahkan.",
     "targetUpdated": "Target berhasil diperbarui."
+  },
+  "Offline": {
+    "banner": "Anda sedang offline. Beberapa fitur tidak tersedia."
   }
 }
