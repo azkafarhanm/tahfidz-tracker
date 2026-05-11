@@ -90,8 +90,18 @@ export async function updateRecord(
   };
 
   if (recordType === "murojaah") {
+    const existing = await prisma.revisionRecord.findFirst({
+      where: { id: recordId, studentId: student!.id },
+      select: { id: true },
+    });
+    if (!existing) fail("Catatan tidak ditemukan untuk santri ini.");
     await prisma.revisionRecord.update({ where: { id: recordId }, data });
   } else {
+    const existing = await prisma.memorizationRecord.findFirst({
+      where: { id: recordId, studentId: student!.id },
+      select: { id: true },
+    });
+    if (!existing) fail("Catatan tidak ditemukan untuk santri ini.");
     await prisma.memorizationRecord.update({ where: { id: recordId }, data });
   }
 
@@ -127,8 +137,22 @@ export async function deleteRecord(
   }
 
   if (recordType === "murojaah") {
+    const existing = await prisma.revisionRecord.findFirst({
+      where: { id: recordId, studentId },
+      select: { id: true },
+    });
+    if (!existing) {
+      redirect(`/students/${studentId}?error=Catatan tidak ditemukan untuk santri ini.`);
+    }
     await prisma.revisionRecord.delete({ where: { id: recordId } });
   } else {
+    const existing = await prisma.memorizationRecord.findFirst({
+      where: { id: recordId, studentId },
+      select: { id: true },
+    });
+    if (!existing) {
+      redirect(`/students/${studentId}?error=Catatan tidak ditemukan untuk santri ini.`);
+    }
     await prisma.memorizationRecord.delete({ where: { id: recordId } });
   }
 

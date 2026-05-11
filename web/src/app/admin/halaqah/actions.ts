@@ -254,6 +254,19 @@ export async function toggleClassGroupActive(
     redirectAdminHalaqahWithMessage("error", "Halaqah yang ingin diubah tidak ditemukan.");
   }
 
+  if (!nextActiveState) {
+    const activeStudentCount = await prisma.student.count({
+      where: { classGroupId: classGroup.id, isActive: true },
+    });
+
+    if (activeStudentCount > 0) {
+      redirectAdminHalaqahWithMessage(
+        "error",
+        `Halaqah "${classGroup.name}" masih memiliki ${activeStudentCount} santri aktif. Nonaktifkan santri terlebih dahulu.`,
+      );
+    }
+  }
+
   await prisma.classGroup.update({
     where: { id: classGroup.id },
     data: { isActive: nextActiveState },

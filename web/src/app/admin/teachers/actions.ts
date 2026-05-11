@@ -274,6 +274,14 @@ export async function deleteTeacher(teacherId: string) {
     redirectAdminTeachersWithMessage("error", `Tidak bisa menghapus ${teacher.fullName} — masih ada ${studentCount} santri terdaftar. Nonaktifkan akun sebagai gantinya.`);
   }
 
+  const classGroupCount = await prisma.classGroup.count({
+    where: { teacherId: teacher.id },
+  });
+
+  if (classGroupCount > 0) {
+    redirectAdminTeachersWithMessage("error", `Tidak bisa menghapus ${teacher.fullName} — masih ada ${classGroupCount} halaqah terdaftar. Nonaktifkan akun sebagai gantinya.`);
+  }
+
   await prisma.$transaction([
     prisma.teacher.delete({ where: { id: teacher.id } }),
     prisma.user.delete({ where: { id: teacher.userId } }),

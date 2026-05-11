@@ -11,6 +11,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
+import { getCurrentAcademicYear } from "@/lib/academic-year";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
@@ -131,7 +132,7 @@ export async function updateTeacherStudent(
           name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
           level,
           grade,
-          academicYear: "2025/2026",
+          academicYear: getCurrentAcademicYear(),
           isActive: true,
         },
       });

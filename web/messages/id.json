@@ -401,6 +401,7 @@
   "Error": {
     "heading": "Terjadi kesalahan",
     "fallbackMessage": "Silakan coba lagi nanti.",
+    "tryAgain": "Coba Lagi",
     "backToHome": "Kembali ke Home"
   },
   "NotFound": {

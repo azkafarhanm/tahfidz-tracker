@@ -401,6 +401,7 @@
   "Error": {
     "heading": "An error occurred",
     "fallbackMessage": "Please try again later.",
+    "tryAgain": "Try Again",
     "backToHome": "Back to Home"
   },
   "NotFound": {

@@ -10,6 +10,7 @@ import {
 } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { cached, invalidateCache } from "@/lib/cache";
+import { getCurrentAcademicYear } from "@/lib/academic-year";
 
 export { invalidateCache };
 
@@ -795,7 +796,7 @@ export async function getAdminStudentFormData(studentId: string) {
       academicYear:
         student.academicClass?.academicYear ??
         options.academicYears[0] ??
-        "2025/2026",
+        getCurrentAcademicYear(),
       gender: student.gender ?? "",
       joinDate: student.joinDate.toISOString().slice(0, 10),
       isActive: student.isActive,

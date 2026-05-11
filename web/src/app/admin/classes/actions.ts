@@ -184,6 +184,19 @@ export async function toggleAcademicClassActive(
     redirectAdminClassesWithMessage("error", "Kelas yang ingin diubah tidak ditemukan.");
   }
 
+  if (!nextActiveState) {
+    const activeStudentCount = await prisma.student.count({
+      where: { academicClassId: academicClass.id, isActive: true },
+    });
+
+    if (activeStudentCount > 0) {
+      redirectAdminClassesWithMessage(
+        "error",
+        `Kelas ${academicClass.name} masih memiliki ${activeStudentCount} santri aktif. Nonaktifkan santri terlebih dahulu.`,
+      );
+    }
+  }
+
   await prisma.academicClass.update({
     where: { id: academicClass.id },
     data: { isActive: nextActiveState },
