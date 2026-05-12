@@ -152,7 +152,7 @@ export default async function FormativePage({
         </a>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t("studentCountLabel")}
@@ -167,14 +167,6 @@ export default async function FormativePage({
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {overview.totalAssessments}
-          </p>
-        </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("classAverageLabel")}
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
-            {overview.averageScore ?? "-"}
           </p>
         </article>
       </section>
@@ -198,7 +190,7 @@ export default async function FormativePage({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] text-sm">
+            <table className="w-full min-w-[1080px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
                   <th className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">
@@ -214,7 +206,7 @@ export default async function FormativePage({
                     {t("colMurojaah")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colLatestScore")}
+                    {t("colDailyScores")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
                     {t("colStudentAverage")}
@@ -256,9 +248,20 @@ export default async function FormativePage({
                       {student.murojaahCount}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">
-                        {student.latestScore ?? "-"}
-                      </span>
+                      {student.dailyScores.length > 0 ? (
+                        <div className="flex max-w-[18rem] flex-wrap gap-2">
+                          {student.dailyScores.map((entry) => (
+                            <span
+                              key={entry.id}
+                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              {entry.date}: {entry.score}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 dark:text-slate-500">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-4">
                       <span className="font-semibold text-emerald-800 dark:text-emerald-400">

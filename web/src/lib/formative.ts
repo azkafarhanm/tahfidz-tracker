@@ -33,6 +33,11 @@ export type FormativeOverviewStudent = {
   totalAssessments: number;
   hafalanCount: number;
   murojaahCount: number;
+  dailyScores: Array<{
+    id: string;
+    date: string;
+    score: number;
+  }>;
   latestScore: number | null;
   averageScore: number | null;
   latestDate: string;
@@ -131,6 +136,10 @@ async function getTeacherFormativeOverviewInner(
         (left, right) => right.date.getTime() - left.date.getTime(),
       );
       const latest = studentRows[0];
+      const scoredRows = studentRows
+        .filter((row): row is FormativeRow & { score: number } => row.score !== null)
+        .slice()
+        .sort((left, right) => left.date.getTime() - right.date.getTime());
       const scores = studentRows
         .map((row) => row.score)
         .filter((score): score is number => score !== null);
@@ -144,6 +153,11 @@ async function getTeacherFormativeOverviewInner(
         totalAssessments: studentRows.length,
         hafalanCount: studentRows.filter((row) => row.type === "Hafalan").length,
         murojaahCount: studentRows.filter((row) => row.type === "Murojaah").length,
+        dailyScores: scoredRows.map((row) => ({
+          id: row.id,
+          date: dateFormatter.format(row.date),
+          score: row.score,
+        })),
         latestScore: latest?.score ?? null,
         averageScore:
           scores.length > 0
