@@ -171,7 +171,7 @@ export default async function FormativePage({
         </article>
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("averageLabel")}
+            {t("classAverageLabel")}
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {overview.averageScore ?? "-"}
@@ -198,7 +198,7 @@ export default async function FormativePage({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-sm">
+            <table className="w-full min-w-[920px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
                   <th className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">
@@ -214,7 +214,10 @@ export default async function FormativePage({
                     {t("colMurojaah")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colAverage")}
+                    {t("colLatestScore")}
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
+                    {t("colStudentAverage")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
                     {t("colLatest")}
@@ -251,6 +254,11 @@ export default async function FormativePage({
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                       {student.murojaahCount}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        {student.latestScore ?? "-"}
+                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <span className="font-semibold text-emerald-800 dark:text-emerald-400">

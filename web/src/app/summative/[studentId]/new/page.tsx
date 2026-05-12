@@ -3,8 +3,7 @@ import { ArrowLeft, FilePlus2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { createSummativeAssessmentAction } from "@/app/summative/actions";
@@ -67,9 +66,10 @@ export default async function SummativeNewPage({
     redirect("/summative");
   }
 
-  const semester = query?.semester && isSemesterValue(query.semester)
-    ? query.semester
-    : Semester.GANJIL;
+  const semester =
+    query?.semester && isSemesterValue(query.semester)
+      ? query.semester
+      : getSemesterForDate(new Date());
   const academicYear = getCurrentAcademicYear();
 
   return (
@@ -87,7 +87,7 @@ export default async function SummativeNewPage({
             {t("addAssessmentHeading")}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {student.fullName} · {student.academicClass?.name ?? "-"} · {student.classGroup.name}
+            {student.fullName} - {student.academicClass?.name ?? "-"} - {student.classGroup.name}
           </p>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">

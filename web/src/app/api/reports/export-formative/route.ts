@@ -85,18 +85,23 @@ export async function GET(request: Request) {
     { header: "Hafalan", key: "hafalanCount", width: 12 },
     { header: "Murojaah", key: "murojaahCount", width: 12 },
     { header: "Total", key: "totalCount", width: 10 },
-    { header: "Rata-rata", key: "averageScore", width: 14 },
+    { header: "Nilai Terakhir", key: "latestScore", width: 14 },
+    { header: "Tanggal Terakhir", key: "latestDate", width: 18 },
+    { header: "Rata-rata Santri", key: "averageScore", width: 16 },
   ];
   summarySheet.getRow(1).fill = headerFill;
   summarySheet.getRow(1).font = headerFont;
 
   exportData.students.forEach((student, index) => {
-    const rows = groupedRows.get(student.id) ?? [];
+    const rows = (groupedRows.get(student.id) ?? []).sort(
+      (left, right) => right.date.getTime() - left.date.getTime(),
+    );
     const scores = rows
       .map((row) => row.score)
       .filter((score): score is number => score !== null);
     const hafalanCount = rows.filter((row) => row.type === "Hafalan").length;
     const murojaahCount = rows.filter((row) => row.type === "Murojaah").length;
+    const latest = rows[0];
     const averageScore =
       scores.length > 0
         ? Math.round(
@@ -112,6 +117,8 @@ export async function GET(request: Request) {
       hafalanCount,
       murojaahCount,
       totalCount: rows.length,
+      latestScore: latest?.score ?? "-",
+      latestDate: latest ? latest.date.toLocaleDateString("id-ID") : "-",
       averageScore,
     });
   });

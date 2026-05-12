@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { requireSessionScope } from "@/lib/session";
 import {
   getTeacherSummativeOverview,
@@ -40,16 +40,21 @@ export default async function SummativePage({
     redirect("/admin");
   }
 
-  const semesterValue = params?.semester ?? Semester.GANJIL;
+  const defaultSemester = getSemesterForDate(new Date());
+  const semesterValue = params?.semester ?? defaultSemester;
   const classLevelValue = params?.classLevel ?? "7";
 
+  if (!params?.semester || !params?.classLevel) {
+    redirect(`/summative?semester=${semesterValue}&classLevel=${classLevelValue}`);
+  }
+
   if (!isSemesterValue(semesterValue)) {
-    redirect("/summative");
+    redirect(`/summative?semester=${defaultSemester}&classLevel=7`);
   }
 
   const classLevel = Number.parseInt(classLevelValue, 10);
   if (![7, 8, 9].includes(classLevel)) {
-    redirect("/summative");
+    redirect(`/summative?semester=${semesterValue}&classLevel=7`);
   }
 
   const academicYear = getCurrentAcademicYear();
@@ -180,7 +185,7 @@ export default async function SummativePage({
         </article>
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("averageLabel")}
+            {t("classAverageLabel")}
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {overview.averageScore ?? "-"}

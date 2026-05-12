@@ -1,8 +1,7 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import {
   getTeacherSummativeExportData,
   isSemesterValue,
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const semesterValue = searchParams.get("semester") ?? Semester.GANJIL;
+  const semesterValue = searchParams.get("semester") ?? getSemesterForDate(new Date());
   const classLevelValue = searchParams.get("classLevel") ?? "7";
 
   if (!isSemesterValue(semesterValue)) {
@@ -68,7 +67,7 @@ export async function GET(request: Request) {
     { key: "Semester", value: semesterLabel(semester) },
     { key: "Jumlah santri", value: exportData.students.length },
     { key: "Jumlah penilaian", value: exportData.rows.length },
-    { key: "Target rekomendasi", value: exportData.recommendedTargetCount },
+    { key: "Surah acuan kelas", value: exportData.recommendedTargetCount },
   ].forEach((row) => infoSheet.addRow(row));
 
   const summarySheet = workbook.addWorksheet("Ringkasan");
@@ -78,18 +77,23 @@ export async function GET(request: Request) {
     { header: "Kelas Akademik", key: "academicClassName", width: 18 },
     { header: "Halaqah", key: "halaqahName", width: 26 },
     { header: "Total Penilaian", key: "totalAssessments", width: 18 },
-    { header: "Rata-rata", key: "averageScore", width: 14 },
+    { header: "Surah Terakhir", key: "latestSurah", width: 22 },
+    { header: "Nilai Terakhir", key: "latestScore", width: 14 },
+    { header: "Rata-rata Santri", key: "averageScore", width: 16 },
   ];
   summarySheet.getRow(1).fill = headerFill;
   summarySheet.getRow(1).font = headerFont;
 
   exportData.students.forEach((student, index) => {
+    const latestRow = exportData.rows.find((row) => row.studentId === student.id);
     summarySheet.addRow({
       no: index + 1,
       studentName: student.fullName,
       academicClassName: student.academicClassName,
       halaqahName: student.halaqahName,
       totalAssessments: student.totalAssessments,
+      latestSurah: latestRow ? `${latestRow.surahNumber}. ${latestRow.surahName}` : "-",
+      latestScore: latestRow?.score ?? "-",
       averageScore: student.averageScore ?? "-",
     });
   });

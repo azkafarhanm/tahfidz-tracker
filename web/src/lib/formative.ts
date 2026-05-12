@@ -33,6 +33,7 @@ export type FormativeOverviewStudent = {
   totalAssessments: number;
   hafalanCount: number;
   murojaahCount: number;
+  latestScore: number | null;
   averageScore: number | null;
   latestDate: string;
   latestRange: string;
@@ -143,6 +144,7 @@ async function getTeacherFormativeOverviewInner(
         totalAssessments: studentRows.length,
         hafalanCount: studentRows.filter((row) => row.type === "Hafalan").length,
         murojaahCount: studentRows.filter((row) => row.type === "Murojaah").length,
+        latestScore: latest?.score ?? null,
         averageScore:
           scores.length > 0
             ? Math.round(

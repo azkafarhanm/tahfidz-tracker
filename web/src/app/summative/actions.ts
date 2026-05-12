@@ -1,7 +1,6 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma-next/client";
-import { Semester } from "@/generated/prisma-next/enums";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { requireSessionScope } from "@/lib/session";
@@ -14,7 +13,7 @@ import {
   saveSummativeAssessment,
   updateSummativeAssessment,
 } from "@/lib/summative";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 
 export async function createSummativeAssessmentAction(formData: FormData) {
@@ -97,7 +96,7 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   const studentId = String(formData.get("studentId") ?? "").trim();
-  const semester = String(formData.get("semester") ?? Semester.GANJIL);
+  const semester = String(formData.get("semester") ?? getSemesterForDate(new Date()));
 
   if (!assessmentId || !studentId) {
     redirect("/summative");

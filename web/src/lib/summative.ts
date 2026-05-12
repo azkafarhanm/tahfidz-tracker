@@ -714,7 +714,7 @@ function roundAverage(scores: number[]) {
 }
 
 export function formatSummativeAssessmentLabel(surah: string, score: number) {
-  return `${surah} · ${score}`;
+  return `${surah} - ${score}`;
 }
 
 export function formatSummativeRangePreview(surah: string, number: number) {

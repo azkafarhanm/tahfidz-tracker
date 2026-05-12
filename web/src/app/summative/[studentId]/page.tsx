@@ -10,7 +10,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { requireSessionScope } from "@/lib/session";
 import {
   getStudentSummativeDetail,
@@ -51,9 +51,13 @@ export default async function SummativeDetailPage({
     redirect("/admin");
   }
 
-  const semesterValue = query?.semester ?? Semester.GANJIL;
+  const defaultSemester = getSemesterForDate(new Date());
+  const semesterValue = query?.semester ?? defaultSemester;
+  if (!query?.semester) {
+    redirect(`/summative/${studentId}?semester=${semesterValue}`);
+  }
   if (!isSemesterValue(semesterValue)) {
-    redirect(`/summative/${studentId}`);
+    redirect(`/summative/${studentId}?semester=${defaultSemester}`);
   }
 
   const academicYear = getCurrentAcademicYear();
@@ -84,7 +88,7 @@ export default async function SummativeDetailPage({
             {detail.fullName}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {detail.academicClassName} · {detail.halaqahName} ({detail.halaqahLevel})
+            {detail.academicClassName} - {detail.halaqahName} ({detail.halaqahLevel})
           </p>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -154,7 +158,7 @@ export default async function SummativeDetailPage({
         </article>
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("averageLabel")}
+            {t("studentAverageLabel")}
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {detail.averageScore ?? "-"}
@@ -166,6 +170,9 @@ export default async function SummativeDetailPage({
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {detail.recommendedTargetCount}
+          </p>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            {t("recommendationSubtext")}
           </p>
         </article>
       </section>
