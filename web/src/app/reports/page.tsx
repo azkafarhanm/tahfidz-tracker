@@ -2,9 +2,11 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BarChart3,
+  BookText,
   Download,
   FileText,
   AlertTriangle,
+  ClipboardList,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
@@ -128,6 +130,55 @@ export default async function ReportsPage() {
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statActiveTargets")}</p>
             <p className="mt-2 text-2xl font-semibold">{data.activeTargetCount}</p>
           </article>
+        </section>
+
+        <section className="mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">{t("gradingLinksHeading")}</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {t("gradingLinksDescription")}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Link
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+              href="/formative"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <BookText aria-hidden="true" size={18} strokeWidth={2.2} />
+                </span>
+                <div>
+                  <p className="font-semibold text-slate-950 dark:text-white">
+                    {t("formativeButton")}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {t("formativeDescription")}
+                  </p>
+                </div>
+              </div>
+            </Link>
+            <Link
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+              href="/summative"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <ClipboardList aria-hidden="true" size={18} strokeWidth={2.2} />
+                </span>
+                <div>
+                  <p className="font-semibold text-slate-950 dark:text-white">
+                    {t("summativeButton")}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    {t("summativeDescription")}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          </div>
         </section>
 
         {data.classGroups.length > 0 ? (

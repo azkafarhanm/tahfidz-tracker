@@ -1,40 +1,36 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Download, FilePlus2 } from "lucide-react";
+import { ArrowLeft, BookText, Download } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getTeacherFormativeOverview } from "@/lib/formative";
 import { requireSessionScope } from "@/lib/session";
-import {
-  getTeacherSummativeOverview,
-  isSemesterValue,
-  parseSemester,
-} from "@/lib/summative";
+import { isSemesterValue, parseSemester } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  const t = await getTranslations("Summative");
-  return { title: `${t("heading")} - TahfidzFlow` };
-}
-
-type SummativePageProps = {
+type FormativePageProps = {
   searchParams?: Promise<{
     semester?: string;
     classLevel?: string;
-    saved?: string;
   }>;
 };
 
-export default async function SummativePage({
+export async function generateMetadata() {
+  const t = await getTranslations("Formative");
+  return { title: `${t("heading")} - TahfidzFlow` };
+}
+
+export default async function FormativePage({
   searchParams,
-}: SummativePageProps) {
+}: FormativePageProps) {
   const params = await searchParams;
   const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const t = await getTranslations("Summative");
+  const t = await getTranslations("Formative");
 
   if (!teacherId) {
     redirect("/admin");
@@ -44,19 +40,18 @@ export default async function SummativePage({
   const classLevelValue = params?.classLevel ?? "7";
 
   if (!isSemesterValue(semesterValue)) {
-    redirect("/summative");
+    redirect("/formative");
   }
 
   const classLevel = Number.parseInt(classLevelValue, 10);
   if (![7, 8, 9].includes(classLevel)) {
-    redirect("/summative");
+    redirect("/formative");
   }
 
   const academicYear = getCurrentAcademicYear();
-  const semester = parseSemester(semesterValue);
-  const overview = await getTeacherSummativeOverview(
+  const overview = await getTeacherFormativeOverview(
     teacherId,
-    semester,
+    parseSemester(semesterValue),
     academicYear,
     classLevel,
     locale,
@@ -74,7 +69,7 @@ export default async function SummativePage({
   ];
 
   return (
-    <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
+    <AppShell currentPath="/formative" userName={session.user.name} isAdmin={isAdmin}>
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
@@ -92,15 +87,9 @@ export default async function SummativePage({
           </p>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
-          <ClipboardList aria-hidden="true" size={22} strokeWidth={2.3} />
+          <BookText aria-hidden="true" size={22} strokeWidth={2.3} />
         </div>
       </header>
-
-      {params?.saved ? (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
-          {t("savedSuccess")}
-        </div>
-      ) : null}
 
       <section className="mt-6 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
@@ -111,7 +100,7 @@ export default async function SummativePage({
             {classOptions.map((option) => (
               <Link
                 key={option.value}
-                href={`/summative?semester=${semesterValue}&classLevel=${option.value}`}
+                href={`/formative?semester=${semesterValue}&classLevel=${option.value}`}
                 className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
                   classLevelValue === option.value
                     ? "bg-emerald-900 text-white"
@@ -132,7 +121,7 @@ export default async function SummativePage({
             {semesterOptions.map((option) => (
               <Link
                 key={option.value}
-                href={`/summative?semester=${option.value}&classLevel=${classLevelValue}`}
+                href={`/formative?semester=${option.value}&classLevel=${classLevelValue}`}
                 className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
                   semesterValue === option.value
                     ? "bg-emerald-900 text-white"
@@ -145,16 +134,13 @@ export default async function SummativePage({
           </div>
         </div>
 
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-          {t("targetCount", { count: overview.recommendedTargetCount })}
-        </span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {academicYear}
         </span>
 
         <a
           className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-          href={`/api/reports/export-summative?semester=${semesterValue}&classLevel=${classLevelValue}`}
+          href={`/api/reports/export-formative?semester=${semesterValue}&classLevel=${classLevelValue}`}
         >
           <Download aria-hidden="true" size={16} strokeWidth={2.2} />
           {t("exportExcel")}
@@ -207,7 +193,7 @@ export default async function SummativePage({
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm">
+            <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
                   <th className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">
@@ -217,13 +203,16 @@ export default async function SummativePage({
                     {t("colHalaqah")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colAssessments")}
+                    {t("colHafalan")}
+                  </th>
+                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
+                    {t("colMurojaah")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
                     {t("colAverage")}
                   </th>
                   <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colLastAssessment")}
+                    {t("colLatest")}
                   </th>
                   <th className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
                     {t("colAction")}
@@ -253,7 +242,10 @@ export default async function SummativePage({
                       </p>
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      {student.totalAssessments}
+                      {student.hafalanCount}
+                    </td>
+                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
+                      {student.murojaahCount}
                     </td>
                     <td className="px-4 py-4">
                       <span className="font-semibold text-emerald-800 dark:text-emerald-400">
@@ -261,27 +253,18 @@ export default async function SummativePage({
                       </span>
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      <p>{student.latestAssessment}</p>
+                      <p>{student.latestRange}</p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {student.latestDate}
                       </p>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link
-                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-                          href={`/summative/${student.id}?semester=${semesterValue}`}
-                        >
-                          {t("detailButton")}
-                        </Link>
-                        <Link
-                          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                          href={`/summative/${student.id}/new?semester=${semesterValue}`}
-                        >
-                          <FilePlus2 aria-hidden="true" size={16} strokeWidth={2.2} />
-                          {t("addButton")}
-                        </Link>
-                      </div>
+                      <Link
+                        className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+                        href={`/formative/${student.id}?semester=${semesterValue}`}
+                      >
+                        {t("detailButton")}
+                      </Link>
                     </td>
                   </tr>
                 ))}

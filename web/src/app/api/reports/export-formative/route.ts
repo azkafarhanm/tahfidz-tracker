@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
-  getTeacherSummativeExportData,
-  isSemesterValue,
-  parseSemester,
-  semesterLabel,
-} from "@/lib/summative";
+  formatRange,
+  statusLabels,
+} from "@/lib/format";
+import { isSemesterValue, parseSemester, semesterLabel } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,12 +34,19 @@ export async function GET(request: Request) {
 
   const semester = parseSemester(semesterValue);
   const academicYear = getCurrentAcademicYear();
-  const exportData = await getTeacherSummativeExportData(
+  const exportData = await getTeacherFormativeExportData(
     session.user.teacherId,
     semester,
     academicYear,
     classLevel,
   );
+
+  const groupedRows = new Map<string, typeof exportData.rows>();
+  for (const row of exportData.rows) {
+    const list = groupedRows.get(row.studentId) ?? [];
+    list.push(row);
+    groupedRows.set(row.studentId, list);
+  }
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "TahfidzFlow";
@@ -67,8 +74,7 @@ export async function GET(request: Request) {
     { key: "Kelas", value: classLevel },
     { key: "Semester", value: semesterLabel(semester) },
     { key: "Jumlah santri", value: exportData.students.length },
-    { key: "Jumlah penilaian", value: exportData.rows.length },
-    { key: "Target rekomendasi", value: exportData.recommendedTargetCount },
+    { key: "Jumlah catatan", value: exportData.rows.length },
   ].forEach((row) => infoSheet.addRow(row));
 
   const summarySheet = workbook.addWorksheet("Ringkasan");
@@ -76,54 +82,71 @@ export async function GET(request: Request) {
     { header: "No", key: "no", width: 6 },
     { header: "Nama Santri", key: "studentName", width: 28 },
     { header: "Kelas Akademik", key: "academicClassName", width: 18 },
-    { header: "Halaqah", key: "halaqahName", width: 26 },
-    { header: "Total Penilaian", key: "totalAssessments", width: 18 },
+    { header: "Halaqah", key: "halaqahName", width: 24 },
+    { header: "Hafalan", key: "hafalanCount", width: 12 },
+    { header: "Murojaah", key: "murojaahCount", width: 12 },
+    { header: "Total", key: "totalCount", width: 10 },
     { header: "Rata-rata", key: "averageScore", width: 14 },
   ];
   summarySheet.getRow(1).fill = headerFill;
   summarySheet.getRow(1).font = headerFont;
 
   exportData.students.forEach((student, index) => {
+    const rows = groupedRows.get(student.id) ?? [];
+    const scores = rows
+      .map((row) => row.score)
+      .filter((score): score is number => score !== null);
+    const hafalanCount = rows.filter((row) => row.type === "Hafalan").length;
+    const murojaahCount = rows.filter((row) => row.type === "Murojaah").length;
+    const averageScore =
+      scores.length > 0
+        ? Math.round(
+            (scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10,
+          ) / 10
+        : "-";
+
     summarySheet.addRow({
       no: index + 1,
       studentName: student.fullName,
-      academicClassName: student.academicClassName,
-      halaqahName: student.halaqahName,
-      totalAssessments: student.totalAssessments,
-      averageScore: student.averageScore ?? "-",
+      academicClassName: student.academicClass?.name ?? "-",
+      halaqahName: student.classGroup.name,
+      hafalanCount,
+      murojaahCount,
+      totalCount: rows.length,
+      averageScore,
     });
   });
 
-  const detailSheet = workbook.addWorksheet("Detail Sumatif");
+  const detailSheet = workbook.addWorksheet("Detail Formatif");
   detailSheet.columns = [
     { header: "No", key: "no", width: 6 },
     { header: "Nama Santri", key: "studentName", width: 28 },
     { header: "Kelas Akademik", key: "academicClassName", width: 18 },
-    { header: "Halaqah", key: "halaqahName", width: 26 },
-    { header: "Semester", key: "semester", width: 12 },
-    { header: "No Surah", key: "surahNumber", width: 10 },
-    { header: "Nama Surah", key: "surahName", width: 22 },
-    { header: "Arab", key: "surahArabicName", width: 20 },
+    { header: "Halaqah", key: "halaqahName", width: 24 },
+    { header: "Jenis", key: "type", width: 12 },
+    { header: "Materi", key: "range", width: 28 },
     { header: "Nilai", key: "score", width: 10 },
+    { header: "Status", key: "status", width: 18 },
+    { header: "Tanggal", key: "date", width: 16 },
     { header: "Catatan", key: "notes", width: 30 },
-    { header: "Tanggal", key: "createdAt", width: 16 },
   ];
   detailSheet.getRow(1).fill = headerFill;
   detailSheet.getRow(1).font = headerFont;
 
   exportData.rows.forEach((row, index) => {
+    const student = exportData.students.find((item) => item.id === row.studentId);
+
     detailSheet.addRow({
       no: index + 1,
       studentName: row.studentName,
-      academicClassName: row.academicClassName,
-      halaqahName: row.halaqahName,
-      semester: semesterLabel(row.semester),
-      surahNumber: row.surahNumber,
-      surahName: row.surahName,
-      surahArabicName: row.surahArabicName,
-      score: row.score,
+      academicClassName: student?.academicClass?.name ?? "-",
+      halaqahName: student?.classGroup.name ?? "-",
+      type: row.type,
+      range: formatRange(row.surah, row.fromAyah, row.toAyah),
+      score: row.score ?? "",
+      status: statusLabels[row.status],
+      date: row.date.toLocaleDateString("id-ID"),
       notes: row.notes ?? "",
-      createdAt: row.createdAt.toLocaleDateString("id-ID"),
     });
   });
 
@@ -135,7 +158,7 @@ export async function GET(request: Request) {
     headers: {
       "Content-Type":
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="nilai-sumatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx"`,
+      "Content-Disposition": `attachment; filename="rekap-formatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx"`,
     },
   });
 }

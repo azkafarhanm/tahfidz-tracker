@@ -2,7 +2,7 @@
 
 Mobile-first hafalan & murojaah tracking system for SMP (grades 7-9) Quran memorization programs. Built for teachers and admins to record, track, and export student progress.
 
-**Status: Production-ready (99%+)**
+**Status: Production-ready core (about 92% overall)**
 
 ## Features
 
@@ -11,10 +11,13 @@ Mobile-first hafalan & murojaah tracking system for SMP (grades 7-9) Quran memor
 - Student list with search, latest hafalan/murojaah, and review status
 - Quick Log guided flow for fast record entry
 - Create/edit/delete hafalan and murojaah records
+- Formative recap generated automatically from daily records
+- Flexible summative assessment per student and per surah
 - Student detail with full history and score tracking
 - Target management with progress bars and overdue indicators
 - Edit student data, deactivate/reactivate students
 - Teacher reports with Excel and PDF export
+- Dedicated formative and summative Excel exports
 
 ### Admin Workflow
 - Admin dashboard with system-wide statistics
@@ -83,6 +86,8 @@ tahfidz-tracker/
 │       ├── app/           # Next.js App Router pages
 │       │   ├── admin/     # Admin routes
 │       │   ├── students/  # Teacher student routes
+│       │   ├── formative/ # Formative recap routes
+│       │   ├── summative/ # Flexible summative routes
 │       │   ├── api/       # Export/PDF API routes
 │       │   └── ...
 │       ├── components/    # Shared React components
@@ -159,6 +164,7 @@ User ─── Teacher ─── ClassGroup (halaqah)
                      └── Student ─── MemorizationRecord
                                  ─── RevisionRecord
                                  ─── Target
+                                 ─── SummativeScore ─── Surah
 
 AcademicClass (e.g., 7A, 8B, 9C)
 ```
@@ -167,10 +173,12 @@ AcademicClass (e.g., 7A, 8B, 9C)
 - **Teacher** — linked to User, owns halaqah groups
 - **ClassGroup** — halaqah per teacher per grade per year
 - **Student** — belongs to one Teacher and one ClassGroup
-- **MemorizationRecord** — hafalan entry
-- **RevisionRecord** — murojaah entry
+- **MemorizationRecord** — daily hafalan entry, also formative source
+- **RevisionRecord** — daily murojaah entry, also formative source
 - **Target** — memorization goal with deadline
 - **AcademicClass** — school class (7A, 7B, etc.)
+- **SummativeScore** — flexible per-surah summative assessment per semester
+- **Surah / TargetSurah** — surah master + target recommendations, not rigid grading columns
 
 ## Security
 

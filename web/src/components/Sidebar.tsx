@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   BookOpen,
+  BookText,
   Home,
   PlusCircle,
   UserCircle,
@@ -28,6 +29,7 @@ const teacherNavKeys = [
   { key: "navDashboard", href: "/", icon: Home },
   { key: "navSantri", href: "/students", icon: Users },
   { key: "navCatatCepat", href: "/quick-log", icon: PlusCircle },
+  { key: "navFormatif", href: "/formative", icon: BookText },
   { key: "navSumatif", href: "/summative", icon: ClipboardList },
   { key: "navProfil", href: "/profile", icon: UserCircle },
 ] as const;

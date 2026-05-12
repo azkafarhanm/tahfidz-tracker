@@ -1,10 +1,12 @@
 import {
   BarChart3,
   BookOpen,
+  BookText,
   Clock,
   PenLine,
   RotateCcw,
   ShieldCheck,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -34,6 +36,8 @@ export default async function DashboardPreview() {
     { label: t("quickActionHafalan"), href: "/students", icon: BookOpen },
     { label: t("quickActionMurojaah"), href: "/students", icon: RotateCcw },
     { label: t("quickActionQuickLog"), href: "/quick-log", icon: PenLine },
+    { label: t("quickActionFormative"), href: "/formative", icon: BookText },
+    { label: t("quickActionSummative"), href: "/summative", icon: ClipboardList },
     ...(isAdmin
       ? [{ label: t("quickActionAdmin"), href: "/admin", icon: ShieldCheck }]
       : []),

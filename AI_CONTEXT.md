@@ -6,9 +6,9 @@ This file is the current handoff context for the TahfidzFlow codebase.
 
 ## Snapshot
 
-- **Status: Production-ready (99%+)**
-- All core features implemented and deployed
-- All server action messages fully translated (ID/EN/AR)
+- **Status: Production-ready core (~92% overall)**
+- Core teacher/admin workflows implemented and build-green
+- Grading architecture refactored to formative recap + flexible summative records
 - Security hardened (IDOR, orphan prevention, error boundaries)
 - Performance optimized (server cache, dynamic imports, font optimization)
 - PWA with service worker, offline banner, and install prompt
@@ -18,11 +18,11 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | Area | Status |
 |---|---|
 | Foundation (auth, DB, layout) | 100% |
-| Teacher workflow (records, targets, reports) | 100% |
-| Summative assessment (per-surah scoring, grid, export) | 100% |
+| Teacher workflow (records, targets, reports) | 95% |
+| Grading architecture (formative + summative) | 95% |
 | Admin management (CRUD, guards) | 100% |
-| Reports & export (Excel, PDF) | 100% |
-| Multilingual (ID/EN/AR, RTL) | 100% |
+| Reports & export (Excel, PDF) | 92% |
+| Multilingual (ID/EN/AR, RTL) | 95% |
 | Dark mode + desktop layout | 100% |
 | Performance optimization | 100% |
 | Security hardening | 100% |
@@ -41,8 +41,9 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Target CRUD with progress bars
 - Edit/deactivate/reactivate students
 - Teacher reports with Excel and PDF export
-- Summative per-surah scoring with spreadsheet grid UI
-- Summative Excel export per class/semester
+- Formative recap page generated automatically from daily hafalan + murojaah
+- Flexible summative flow: student list -> detail -> add/edit per-surah assessment
+- Formative and summative Excel exports
 
 ### Admin side
 - Admin dashboard with system-wide stats
@@ -128,10 +129,13 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/components/AppShell.tsx` | Teacher layout wrapper |
 | `web/src/components/AdminShell.tsx` | Admin layout wrapper |
 | `web/src/components/OfflineBanner.tsx` | Offline detection banner |
-| `web/src/app/summative/page.tsx` | Summative grid server page |
-| `web/src/app/summative/SummativeGrid.tsx` | Spreadsheet grid client component |
-| `web/src/app/summative/actions.ts` | Batch save summative scores |
+| `web/src/app/formative/page.tsx` | Formative recap overview page |
+| `web/src/app/formative/[studentId]/page.tsx` | Formative detail page per student |
+| `web/src/app/summative/page.tsx` | Summative overview page |
+| `web/src/app/summative/[studentId]/page.tsx` | Summative detail page per student |
+| `web/src/app/summative/actions.ts` | Create/update/delete summative assessments |
 | `web/src/app/api/reports/export-summative/route.ts` | Summative Excel export |
+| `web/src/app/api/reports/export-formative/route.ts` | Formative Excel export |
 | `web/src/components/ServiceWorkerRegistrar.tsx` | SW registration (production only) |
 | `web/src/lib/cache.ts` | In-memory TTL cache with GC |
 | `web/src/lib/validate-record.ts` | Shared record validation with i18n |
@@ -140,7 +144,8 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/lib/dashboard.ts` | Dashboard queries (cached) |
 | `web/src/lib/students.ts` | Student queries (cached) |
 | `web/src/lib/reports.ts` | Report queries (cached) |
-| `web/src/lib/summative.ts` | Summative score CRUD, grid, summary (cached) |
+| `web/src/lib/formative.ts` | Formative recap queries from daily records |
+| `web/src/lib/summative.ts` | Summative record CRUD, overview, export helpers |
 | `web/src/lib/admin.ts` | Admin queries (cached) |
 | `web/src/lib/format.ts` | Date formatting, status labels |
 | `web/src/i18n/request.ts` | next-intl config, cookie-based locale |
@@ -150,7 +155,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/middleware.ts` | NextAuth middleware |
 | `web/messages/{id,en,ar}.json` | 40+ namespaces × 3 locales |
 | `web/prisma/schema.prisma` | DB schema with 8 composite indexes + Surah, SummativeScore, TargetSurah |
-| `web/prisma/seed-summative.ts` | Seeds 114 surahs + class target mappings |
+| `web/prisma/seed-summative.ts` | Seeds 114 surahs + target recommendations |
 | `web/public/sw.js` | Service worker |
 | `web/public/manifest.json` | PWA manifest |
 
@@ -179,12 +184,12 @@ NEXTAUTH_URL="http://localhost:3000"
 
 ## Remaining Known Items
 
-- No automated test suite
-- No CI pipeline (manual verify before push)
+- No automated test suite yet
+- No CI pipeline yet (manual verify before push)
 - PWA maskable icon needs proper safe-area padding (cosmetic)
 - Some `aria-label` attributes missing on icon-only buttons (accessibility)
 - Pagination not implemented (fine for current scale, needed when data grows)
 
 ## Practical Summary
 
-TahfidzFlow is a production-ready tahfidz tracking system. All core features, security, i18n, performance, and PWA are complete. The app is deployed on Vercel and ready for real users.
+TahfidzFlow is a production-ready tahfidz tracking system with a stable teacher/admin core. The app is deployed on Vercel, and the main remaining work is polish, deeper automated verification, and long-term maintainability improvements rather than missing core workflows.

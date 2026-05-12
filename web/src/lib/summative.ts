@@ -1,7 +1,13 @@
+import { Prisma } from "@/generated/prisma-next/client";
 import { Semester } from "@/generated/prisma-next/enums";
-import { prisma } from "@/lib/prisma";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import {
+  formatRange,
+  getDateFormatter,
+  halaqahLevelLabels,
+} from "@/lib/format";
+import { prisma } from "@/lib/prisma";
 
 export type ClassTargetSurah = {
   surahId: string;
@@ -21,23 +27,67 @@ export type SummativeScoreRow = {
   surahArabicName: string;
   score: number;
   notes: string | null;
-  semester: string;
+  semester: Semester;
   academicYear: string;
+  createdAt: Date;
 };
 
-export type SemesterSummary = {
-  studentId: string;
+export type SummativeOverviewStudent = {
+  id: string;
   fullName: string;
-  totalSurahs: number;
-  scoredSurahs: number;
-  averageScore: number;
-  highestScore: number;
-  lowestScore: number;
-  completionRate: number;
+  halaqahName: string;
+  halaqahLevel: string;
+  academicClassName: string;
+  totalAssessments: number;
+  averageScore: number | null;
+  latestAssessment: string;
+  latestDate: string;
+  recommendedTargetCount: number;
 };
 
-export function semesterLabel(s: string): string {
-  return s === "GANJIL" ? "Ganjil" : "Genap";
+export type SummativeAssessmentDetail = {
+  id: string;
+  surahId: string;
+  surahName: string;
+  surahNumber: number;
+  surahArabicName: string;
+  score: number;
+  notes: string | null;
+  semester: Semester;
+  semesterLabel: string;
+  recordedAt: string;
+};
+
+export type StudentSummativeDetail = {
+  id: string;
+  fullName: string;
+  halaqahName: string;
+  halaqahLevel: string;
+  classLevel: number;
+  academicClassName: string;
+  totalAssessments: number;
+  averageScore: number | null;
+  recommendedTargetCount: number;
+  assessments: SummativeAssessmentDetail[];
+};
+
+export type SummativeExportRow = {
+  studentId: string;
+  studentName: string;
+  academicClassName: string;
+  halaqahName: string;
+  classLevel: number;
+  semester: Semester;
+  surahNumber: number;
+  surahName: string;
+  surahArabicName: string;
+  score: number;
+  notes: string | null;
+  createdAt: Date;
+};
+
+export function semesterLabel(value: Semester | string): string {
+  return value === Semester.GANJIL ? "Ganjil" : "Genap";
 }
 
 export function isSemesterValue(value: string): value is Semester {
@@ -45,7 +95,10 @@ export function isSemesterValue(value: string): value is Semester {
 }
 
 export function parseSemester(value: string): Semester {
-  if (isSemesterValue(value)) return value;
+  if (isSemesterValue(value)) {
+    return value;
+  }
+
   throw new Error(`Invalid semester: ${value}`);
 }
 
@@ -56,6 +109,7 @@ export async function getClassTargets(
 ): Promise<ClassTargetSurah[]> {
   const year = academicYear ?? getCurrentAcademicYear();
   const cacheKey = `summative-targets:${classLevel}:${semester}:${year}`;
+
   return cached(cacheKey, 30_000, () =>
     getClassTargetsInner(classLevel, semester, year),
   );
@@ -67,7 +121,11 @@ async function getClassTargetsInner(
   academicYear: string,
 ): Promise<ClassTargetSurah[]> {
   const targets = await prisma.targetSurah.findMany({
-    where: { classLevel, semester, academicYear },
+    where: {
+      classLevel,
+      semester,
+      academicYear,
+    },
     include: {
       surah: {
         select: {
@@ -80,140 +138,441 @@ async function getClassTargetsInner(
         },
       },
     },
-    orderBy: { surah: { number: "asc" } },
-  });
-
-  return targets.map((t) => ({
-    surahId: t.surah.id,
-    number: t.surah.number,
-    name: t.surah.name,
-    arabicName: t.surah.arabicName,
-    totalAyahs: t.surah.totalAyahs,
-    juz: t.surah.juz,
-    isRequired: t.isRequired,
-  }));
-}
-
-export async function getSummativeScores(
-  studentIds: string[],
-  semester: Semester,
-  academicYear?: string,
-): Promise<Map<string, SummativeScoreRow[]>> {
-  if (studentIds.length === 0) return new Map();
-
-  const year = academicYear ?? getCurrentAcademicYear();
-  const scores = await prisma.summativeScore.findMany({
-    where: {
-      studentId: { in: studentIds },
-      semester,
-      academicYear: year,
-    },
-    include: {
+    orderBy: {
       surah: {
-        select: {
-          number: true,
-          name: true,
-          arabicName: true,
-        },
+        number: "asc",
       },
     },
   });
 
-  const map = new Map<string, SummativeScoreRow[]>();
-  for (const s of scores) {
-    const list = map.get(s.studentId) ?? [];
-    list.push({
-      id: s.id,
-      surahId: s.surahId,
-      surahNumber: s.surah.number,
-      surahName: s.surah.name,
-      surahArabicName: s.surah.arabicName,
-      score: s.score,
-      notes: s.notes,
-      semester: s.semester,
-      academicYear: s.academicYear,
-    });
-    map.set(s.studentId, list);
-  }
-  return map;
+  return targets.map((target) => ({
+    surahId: target.surah.id,
+    number: target.surah.number,
+    name: target.surah.name,
+    arabicName: target.surah.arabicName,
+    totalAyahs: target.surah.totalAyahs,
+    juz: target.surah.juz,
+    isRequired: target.isRequired,
+  }));
 }
 
-export async function getSummativeGrid(
-  classLevel: number,
-  semester: Semester,
+export async function getTeacherSummativeOverview(
   teacherId: string,
-  academicYear?: string,
-): Promise<{
-  targets: ClassTargetSurah[];
-  students: {
-    studentId: string;
-    fullName: string;
-    scores: { surahId: string; score: number | null }[];
-  }[];
-}> {
-  const year = academicYear ?? getCurrentAcademicYear();
-  const cacheKey = `summative-grid:${classLevel}:${semester}:${teacherId}:${year}`;
-  return cached(cacheKey, 15_000, () =>
-    getSummativeGridInner(classLevel, semester, teacherId, year),
+  semester: Semester,
+  academicYear: string,
+  classLevel?: number,
+  locale = "id",
+) {
+  const cacheKey = `summative-overview:${teacherId}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
+
+  return cached(cacheKey, 30_000, () =>
+    getTeacherSummativeOverviewInner(
+      teacherId,
+      semester,
+      academicYear,
+      classLevel,
+      locale,
+    ),
   );
 }
 
-async function getSummativeGridInner(
-  classLevel: number,
-  semester: Semester,
+async function getTeacherSummativeOverviewInner(
   teacherId: string,
+  semester: Semester,
   academicYear: string,
+  classLevel: number | undefined,
+  locale: string,
 ) {
-  const [targets, students] = await Promise.all([
-    getClassTargetsInner(classLevel, semester, academicYear),
+  const dateFormatter = getDateFormatter(locale);
+  const [students, recommendedTargetCount] = await Promise.all([
     prisma.student.findMany({
       where: {
         teacherId,
         isActive: true,
-        classGroup: { grade: classLevel },
+        ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
       },
-      select: { id: true, fullName: true },
-      orderBy: { fullName: "asc" },
+      select: {
+        id: true,
+        fullName: true,
+        classGroup: {
+          select: {
+            name: true,
+            level: true,
+          },
+        },
+        academicClass: {
+          select: {
+            name: true,
+          },
+        },
+        summativeScores: {
+          where: {
+            semester,
+            academicYear,
+          },
+          include: {
+            surah: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+      orderBy: {
+        fullName: "asc",
+      },
     }),
+    classLevel
+      ? prisma.targetSurah.count({
+          where: {
+            classLevel,
+            semester,
+            academicYear,
+          },
+        })
+      : Promise.resolve(0),
   ]);
 
-  const studentIds = students.map((s) => s.id);
-  const scoresMap = await getSummativeScores(studentIds, semester, academicYear);
-
-  const surahIdSet = new Set(targets.map((t) => t.surahId));
+  const allScores = students.flatMap((student) =>
+    student.summativeScores.map((score) => score.score),
+  );
 
   return {
-    targets,
-    students: students.map((s) => {
-      const studentScores = scoresMap.get(s.id) ?? [];
-      const scoreBySurah = new Map(
-        studentScores.map((sc) => [sc.surahId, sc.score]),
-      );
+    students: students.map((student) => {
+      const validScores = student.summativeScores.map((score) => score.score);
+      const latest = student.summativeScores[0];
+
       return {
-        studentId: s.id,
-        fullName: s.fullName,
-        scores: targets.map((t) => ({
-          surahId: t.surahId,
-          score: surahIdSet.has(t.surahId) ? (scoreBySurah.get(t.surahId) ?? null) : null,
-        })),
-      };
+        id: student.id,
+        fullName: student.fullName,
+        halaqahName: student.classGroup.name,
+        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+        academicClassName: student.academicClass?.name ?? "-",
+        totalAssessments: student.summativeScores.length,
+        averageScore:
+          validScores.length > 0
+            ? roundAverage(validScores)
+            : null,
+        latestAssessment: latest ? latest.surah.name : "-",
+        latestDate: latest ? dateFormatter.format(latest.createdAt) : "-",
+        recommendedTargetCount,
+      } satisfies SummativeOverviewStudent;
     }),
+    totalAssessments: allScores.length,
+    averageScore: allScores.length > 0 ? roundAverage(allScores) : null,
+    recommendedTargetCount,
   };
 }
 
-export async function saveSummativeScore(input: {
+export async function getStudentSummativeDetail(
+  studentId: string,
+  teacherId: string,
+  semester: Semester,
+  academicYear: string,
+  locale = "id",
+) {
+  const cacheKey = `summative-detail:${studentId}:${teacherId}:${semester}:${academicYear}:${locale}`;
+
+  return cached(cacheKey, 30_000, () =>
+    getStudentSummativeDetailInner(
+      studentId,
+      teacherId,
+      semester,
+      academicYear,
+      locale,
+    ),
+  );
+}
+
+async function getStudentSummativeDetailInner(
+  studentId: string,
+  teacherId: string,
+  semester: Semester,
+  academicYear: string,
+  locale: string,
+): Promise<StudentSummativeDetail | null> {
+  const dateFormatter = getDateFormatter(locale);
+
+  const student = await prisma.student.findFirst({
+    where: {
+      id: studentId,
+      teacherId,
+      isActive: true,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      classGroup: {
+        select: {
+          name: true,
+          level: true,
+          grade: true,
+        },
+      },
+      academicClass: {
+        select: {
+          name: true,
+        },
+      },
+      summativeScores: {
+        where: {
+          semester,
+          academicYear,
+        },
+        include: {
+          surah: {
+            select: {
+              id: true,
+              name: true,
+              number: true,
+              arabicName: true,
+            },
+          },
+        },
+        orderBy: [
+          {
+            createdAt: "desc",
+          },
+          {
+            surah: {
+              number: "asc",
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  if (!student) {
+    return null;
+  }
+
+  const recommendedTargetCount = await prisma.targetSurah.count({
+    where: {
+      classLevel: student.classGroup.grade,
+      semester,
+      academicYear,
+    },
+  });
+
+  const scores = student.summativeScores.map((assessment) => assessment.score);
+
+  return {
+    id: student.id,
+    fullName: student.fullName,
+    halaqahName: student.classGroup.name,
+    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+    classLevel: student.classGroup.grade,
+    academicClassName: student.academicClass?.name ?? "-",
+    totalAssessments: student.summativeScores.length,
+    averageScore: scores.length > 0 ? roundAverage(scores) : null,
+    recommendedTargetCount,
+    assessments: student.summativeScores.map((assessment) => ({
+      id: assessment.id,
+      surahId: assessment.surah.id,
+      surahName: assessment.surah.name,
+      surahNumber: assessment.surah.number,
+      surahArabicName: assessment.surah.arabicName,
+      score: assessment.score,
+      notes: assessment.notes,
+      semester: assessment.semester,
+      semesterLabel: semesterLabel(assessment.semester),
+      recordedAt: dateFormatter.format(assessment.createdAt),
+    })),
+  };
+}
+
+export async function getStudentSummativeAssessmentForEdit(
+  studentId: string,
+  assessmentId: string,
+  teacherId: string,
+) {
+  return prisma.summativeScore.findFirst({
+    where: {
+      id: assessmentId,
+      studentId,
+      student: {
+        teacherId,
+      },
+    },
+    include: {
+      student: {
+        select: {
+          id: true,
+          fullName: true,
+          classGroup: {
+            select: {
+              grade: true,
+            },
+          },
+        },
+      },
+      surah: {
+        select: {
+          name: true,
+          number: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getTeacherSummativeExportData(
+  teacherId: string,
+  semester: Semester,
+  academicYear: string,
+  classLevel?: number,
+) {
+  const students = await prisma.student.findMany({
+    where: {
+      teacherId,
+      isActive: true,
+      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+    },
+    select: {
+      id: true,
+      fullName: true,
+      classGroup: {
+        select: {
+          grade: true,
+          name: true,
+          level: true,
+        },
+      },
+      academicClass: {
+        select: {
+          name: true,
+        },
+      },
+      summativeScores: {
+        where: {
+          semester,
+          academicYear,
+        },
+        include: {
+          surah: {
+            select: {
+              number: true,
+              name: true,
+              arabicName: true,
+            },
+          },
+        },
+        orderBy: [
+          {
+            createdAt: "desc",
+          },
+          {
+            surah: {
+              number: "asc",
+            },
+          },
+        ],
+      },
+    },
+    orderBy: {
+      fullName: "asc",
+    },
+  });
+
+  const recommendedTargetCount = classLevel
+    ? await prisma.targetSurah.count({
+        where: {
+          classLevel,
+          semester,
+          academicYear,
+        },
+      })
+    : 0;
+
+  const rows: SummativeExportRow[] = students.flatMap((student) =>
+    student.summativeScores.map((assessment) => ({
+      studentId: student.id,
+      studentName: student.fullName,
+      academicClassName: student.academicClass?.name ?? "-",
+      halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+      classLevel: student.classGroup.grade,
+      semester: assessment.semester,
+      surahNumber: assessment.surah.number,
+      surahName: assessment.surah.name,
+      surahArabicName: assessment.surah.arabicName,
+      score: assessment.score,
+      notes: assessment.notes,
+      createdAt: assessment.createdAt,
+    })),
+  );
+
+  return {
+    students: students.map((student) => {
+      const studentScores = student.summativeScores.map((assessment) => assessment.score);
+      return {
+        id: student.id,
+        fullName: student.fullName,
+        academicClassName: student.academicClass?.name ?? "-",
+        halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        classLevel: student.classGroup.grade,
+        totalAssessments: student.summativeScores.length,
+        averageScore: studentScores.length > 0 ? roundAverage(studentScores) : null,
+      };
+    }),
+    rows,
+    recommendedTargetCount,
+  };
+}
+
+export async function resolveSurahByInput(query: string) {
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const surahNumber = Number.parseInt(trimmed, 10);
+  const search: Prisma.SurahWhereInput[] = [
+    {
+      name: {
+        equals: trimmed,
+        mode: "insensitive",
+      },
+    },
+  ];
+
+  if (Number.isFinite(surahNumber)) {
+    search.unshift({
+      number: surahNumber,
+    });
+  }
+
+  return prisma.surah.findFirst({
+    where: {
+      OR: search,
+    },
+    select: {
+      id: true,
+      name: true,
+      number: true,
+      arabicName: true,
+    },
+  });
+}
+
+export async function saveSummativeAssessment(input: {
   studentId: string;
   surahId: string;
   semester: Semester;
   academicYear: string;
   score: number;
   notes?: string | null;
-}): Promise<void> {
+}) {
   if (input.score < 0 || input.score > 100) {
     throw new Error("Score must be between 0 and 100");
   }
 
-  await prisma.summativeScore.upsert({
+  const record = await prisma.summativeScore.upsert({
     where: {
       studentId_surahId_semester_academicYear: {
         studentId: input.studentId,
@@ -236,119 +595,52 @@ export async function saveSummativeScore(input: {
     },
   });
 
-  invalidateSummativeCache(input.studentId);
+  invalidateSummativeCache(record.studentId);
+  return record;
 }
 
-export async function batchSaveSummativeScores(
-  inputs: {
+export async function updateSummativeAssessment(
+  assessmentId: string,
+  input: {
     studentId: string;
     surahId: string;
+    semester: Semester;
+    academicYear: string;
     score: number;
     notes?: string | null;
-  }[],
-  semester: Semester,
-  academicYear: string,
-): Promise<void> {
-  for (const input of inputs) {
-    if (input.score < 0 || input.score > 100) {
-      throw new Error(`Invalid score ${input.score} for student ${input.studentId}`);
-    }
+  },
+) {
+  if (input.score < 0 || input.score > 100) {
+    throw new Error("Score must be between 0 and 100");
   }
 
-  await prisma.$transaction(
-    inputs.map((input) =>
-      prisma.summativeScore.upsert({
-        where: {
-          studentId_surahId_semester_academicYear: {
-            studentId: input.studentId,
-            surahId: input.surahId,
-            semester,
-            academicYear,
-          },
-        },
-        update: {
-          score: input.score,
-          notes: input.notes ?? null,
-        },
-        create: {
-          studentId: input.studentId,
-          surahId: input.surahId,
-          semester,
-          academicYear,
-          score: input.score,
-          notes: input.notes ?? null,
-        },
-      }),
-    ),
-  );
-
-  const studentIds = Array.from(new Set(inputs.map((i) => i.studentId)));
-  for (const studentId of studentIds) {
-    invalidateSummativeCache(studentId);
-  }
-}
-
-export function calculateSemesterSummary(
-  studentId: string,
-  fullName: string,
-  scores: SummativeScoreRow[],
-  totalTargets: number,
-): SemesterSummary {
-  const validScores = scores.map((s) => s.score);
-  const scoredCount = validScores.length;
-
-  if (scoredCount === 0) {
-    return {
-      studentId,
-      fullName,
-      totalSurahs: totalTargets,
-      scoredSurahs: 0,
-      averageScore: 0,
-      highestScore: 0,
-      lowestScore: 0,
-      completionRate: 0,
-    };
-  }
-
-  const sum = validScores.reduce((a, b) => a + b, 0);
-  return {
-    studentId,
-    fullName,
-    totalSurahs: totalTargets,
-    scoredSurahs: scoredCount,
-    averageScore: Math.round((sum / scoredCount) * 10) / 10,
-    highestScore: Math.max(...validScores),
-    lowestScore: Math.min(...validScores),
-    completionRate: Math.round((scoredCount / totalTargets) * 100),
-  };
-}
-
-export async function getClassSummaries(
-  classLevel: number,
-  semester: Semester,
-  teacherId: string,
-  academicYear?: string,
-): Promise<SemesterSummary[]> {
-  const { targets, students } = await getSummativeGrid(
-    classLevel,
-    semester,
-    teacherId,
-    academicYear,
-  );
-
-  const year = academicYear ?? getCurrentAcademicYear();
-  const studentIds = students.map((s) => s.studentId);
-  const scoresMap = await getSummativeScores(studentIds, semester, year);
-
-  return students.map((s) => {
-    const studentScores = scoresMap.get(s.studentId) ?? [];
-    return calculateSemesterSummary(
-      s.studentId,
-      s.fullName,
-      studentScores,
-      targets.length,
-    );
+  const record = await prisma.summativeScore.update({
+    where: {
+      id: assessmentId,
+    },
+    data: {
+      studentId: input.studentId,
+      surahId: input.surahId,
+      semester: input.semester,
+      academicYear: input.academicYear,
+      score: input.score,
+      notes: input.notes ?? null,
+    },
   });
+
+  invalidateSummativeCache(record.studentId);
+  return record;
+}
+
+export async function deleteSummativeAssessment(assessmentId: string) {
+  const record = await prisma.summativeScore.delete({
+    where: {
+      id: assessmentId,
+    },
+  });
+
+  invalidateSummativeCache(record.studentId);
+  return record;
 }
 
 export async function getStudentSummativeHistory(
@@ -357,6 +649,7 @@ export async function getStudentSummativeHistory(
 ): Promise<SummativeScoreRow[]> {
   const year = academicYear ?? getCurrentAcademicYear();
   const cacheKey = `summative-history:${studentId}:${year}`;
+
   return cached(cacheKey, 30_000, () =>
     getStudentSummativeHistoryInner(studentId, year),
   );
@@ -367,33 +660,63 @@ async function getStudentSummativeHistoryInner(
   academicYear: string,
 ): Promise<SummativeScoreRow[]> {
   const scores = await prisma.summativeScore.findMany({
-    where: { studentId, academicYear },
+    where: {
+      studentId,
+      academicYear,
+    },
     include: {
       surah: {
-        select: { number: true, name: true, arabicName: true },
+        select: {
+          number: true,
+          name: true,
+          arabicName: true,
+        },
       },
     },
-    orderBy: [{ semester: "asc" }, { surah: { number: "asc" } }],
+    orderBy: [
+      {
+        semester: "asc",
+      },
+      {
+        surah: {
+          number: "asc",
+        },
+      },
+    ],
   });
 
-  return scores.map((s) => ({
-    id: s.id,
-    surahId: s.surahId,
-    surahNumber: s.surah.number,
-    surahName: s.surah.name,
-    surahArabicName: s.surah.arabicName,
-    score: s.score,
-    notes: s.notes,
-    semester: s.semester,
-    academicYear: s.academicYear,
+  return scores.map((score) => ({
+    id: score.id,
+    surahId: score.surahId,
+    surahNumber: score.surah.number,
+    surahName: score.surah.name,
+    surahArabicName: score.surah.arabicName,
+    score: score.score,
+    notes: score.notes,
+    semester: score.semester,
+    academicYear: score.academicYear,
+    createdAt: score.createdAt,
   }));
 }
 
 export function invalidateSummativeCache(studentId?: string) {
   if (studentId) {
     invalidateCache(`summative-history:${studentId}`);
-    invalidateCache(`summative-student-report:${studentId}`);
   }
-  invalidateCache("summative-grid:");
-  invalidateCache("summative-targets:");
+
+  invalidateCache("summative-");
+}
+
+function roundAverage(scores: number[]) {
+  return Math.round(
+    (scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10,
+  ) / 10;
+}
+
+export function formatSummativeAssessmentLabel(surah: string, score: number) {
+  return `${surah} · ${score}`;
+}
+
+export function formatSummativeRangePreview(surah: string, number: number) {
+  return formatRange(surah, number, number);
 }
