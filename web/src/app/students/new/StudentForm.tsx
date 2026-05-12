@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import {
   ArrowLeft,
   CalendarDays,
@@ -37,6 +38,8 @@ type TeacherStudentFormProps = {
   values: {
     fullName: string;
     classGroupId: string;
+    halaqahLevel: string;
+    grade: string;
     academicClassId: string;
     gender: string;
     joinDate: string;
@@ -52,9 +55,8 @@ export default function TeacherStudentForm({
   values,
 }: TeacherStudentFormProps) {
   const t = useTranslations("StudentForm");
-  const [isPending, startTransition] = useTransition();
-  const [selectedLevel, setSelectedLevel] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState(values.halaqahLevel);
+  const [selectedGrade, setSelectedGrade] = useState(values.grade);
 
   const genderOptions = [
     { value: "MALE", label: t("genderMale") },
@@ -81,15 +83,6 @@ export default function TeacherStudentForm({
             cg.grade === Number(selectedGrade),
         ) ?? null
       : null;
-
-  function handleSubmit(formData: FormData) {
-    formData.set("classGroupId", matchedCg?.id ?? "");
-    formData.set("halaqahLevel", selectedLevel);
-    formData.set("grade", selectedGrade);
-    startTransition(async () => {
-      await action(formData);
-    });
-  }
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -121,7 +114,19 @@ export default function TeacherStudentForm({
           </div>
         ) : null}
 
-        <form action={handleSubmit} className="mt-6 space-y-4">
+        <form action={action} className="mt-6 space-y-4">
+          <input
+            name="classGroupId"
+            type="hidden"
+            value={
+              selectedLevel && selectedGrade
+                ? matchedCg?.id ?? ""
+                : values.classGroupId
+            }
+          />
+          <input name="halaqahLevel" type="hidden" value={selectedLevel} />
+          <input name="grade" type="hidden" value={selectedGrade} />
+
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <UserRound
@@ -319,17 +324,37 @@ export default function TeacherStudentForm({
             >
               {t("buttonCancel")}
             </Link>
-            <button
-              className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-              disabled={isPending || !selectedLevel || !selectedGrade}
-              type="submit"
-            >
-              <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-              {isPending ? t("buttonSaving") : t("buttonSave")}
-            </button>
+            <SubmitButton
+              canSubmit={Boolean(selectedLevel && selectedGrade)}
+              idleLabel={t("buttonSave")}
+              pendingLabel={t("buttonSaving")}
+            />
           </div>
         </form>
       </section>
     </main>
+  );
+}
+
+function SubmitButton({
+  canSubmit,
+  idleLabel,
+  pendingLabel,
+}: {
+  canSubmit: boolean;
+  idleLabel: string;
+  pendingLabel: string;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
+      disabled={!canSubmit || pending}
+      type="submit"
+    >
+      <Save aria-hidden="true" size={17} strokeWidth={2.2} />
+      {pending ? pendingLabel : idleLabel}
+    </button>
   );
 }

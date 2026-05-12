@@ -87,8 +87,11 @@ export async function updateRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
+  revalidatePath("/formative");
+  revalidatePath(`/formative/${studentId}`);
   invalidateCache("dashboard");
   invalidateCache("students");
+  invalidateCache("formative-");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordUpdated"))}`);
@@ -140,8 +143,11 @@ export async function deleteRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
+  revalidatePath("/formative");
+  revalidatePath(`/formative/${studentId}`);
   invalidateCache("dashboard");
   invalidateCache("students");
+  invalidateCache("formative-");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordDeleted"))}`);

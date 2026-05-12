@@ -73,8 +73,11 @@ export async function createHafalanRecord(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${student!.id}`);
+  revalidatePath("/formative");
+  revalidatePath(`/formative/${student!.id}`);
   invalidateCache("dashboard");
   invalidateCache("students");
+  invalidateCache("formative-");
   invalidateCache("report-teacher");
   invalidateCache("report-student");
   redirect(`/students/${student!.id}?success=${encodeURIComponent(t("hafalanCreated"))}`);

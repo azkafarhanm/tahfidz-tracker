@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useFormStatus } from "react-dom";
 import {
   ArrowLeft,
   BookOpen,
@@ -51,7 +52,6 @@ export default function GuidedQuickLog({
     { value: "HAFALAN", label: t("typeHafalan") },
     { value: "MUROJAAH", label: t("typeMurojaah") },
   ];
-  const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -100,14 +100,6 @@ export default function GuidedQuickLog({
   function handleClearStudent() {
     setSelectedStudent(null);
     setQuery("");
-  }
-
-  function handleSubmit() {
-    if (!formRef.current || !canSubmit) return;
-    const formData = new FormData(formRef.current);
-    startTransition(async () => {
-      await action(formData);
-    });
   }
 
   function handleCancel() {
@@ -159,7 +151,7 @@ export default function GuidedQuickLog({
           </div>
         ) : null}
 
-        <form ref={formRef} className="mt-6 space-y-4">
+        <form action={action} ref={formRef} className="mt-6 space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Search
@@ -407,17 +399,11 @@ export default function GuidedQuickLog({
                 >
                   {t("cancelButton")}
                 </button>
-                <button
-                  className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-                  disabled={isPending || !canSubmit}
-                  onClick={handleSubmit}
-                  type="button"
-                >
-                  {isPending ? (
-                    <Loader2 aria-hidden="true" className="animate-spin" size={17} />
-                  ) : null}
-                  {isPending ? t("savingButton") : t("saveButton")}
-                </button>
+                <QuickLogSubmitButton
+                  canSubmit={Boolean(canSubmit)}
+                  idleLabel={t("saveButton")}
+                  pendingLabel={t("savingButton")}
+                />
               </div>
             </>
           ) : (
@@ -428,4 +414,29 @@ export default function GuidedQuickLog({
         </form>
     </>
    );
+}
+
+function QuickLogSubmitButton({
+  canSubmit,
+  idleLabel,
+  pendingLabel,
+}: {
+  canSubmit: boolean;
+  idleLabel: string;
+  pendingLabel: string;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
+      disabled={!canSubmit || pending}
+      type="submit"
+    >
+      {pending ? (
+        <Loader2 aria-hidden="true" className="animate-spin" size={17} />
+      ) : null}
+      {pending ? pendingLabel : idleLabel}
+    </button>
+  );
 }

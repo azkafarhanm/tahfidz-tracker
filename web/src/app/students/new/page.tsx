@@ -18,6 +18,8 @@ type NewStudentPageProps = {
     error?: string;
     fullName?: string;
     classGroupId?: string;
+    halaqahLevel?: string;
+    grade?: string;
     academicClassId?: string;
     gender?: string;
     joinDate?: string;
@@ -55,6 +57,8 @@ export default async function NewStudentPage({
       values={{
         fullName: params?.fullName ?? "",
         classGroupId: params?.classGroupId ?? "",
+        halaqahLevel: params?.halaqahLevel ?? "",
+        grade: params?.grade ?? "",
         academicClassId: params?.academicClassId ?? "",
         gender: params?.gender ?? "",
         joinDate: params?.joinDate ?? todayInputValue(),

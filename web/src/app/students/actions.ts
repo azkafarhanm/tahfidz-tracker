@@ -29,57 +29,72 @@ export async function createTeacherStudent(formData: FormData) {
 
   const fullName = readString(formData, "fullName");
   const classGroupId = readOptionalString(formData, "classGroupId");
-  const halaqahLevel = readString(formData, "halaqahLevel");
+  const halaqahLevel = readOptionalString(formData, "halaqahLevel");
   const gradeRaw = readString(formData, "grade");
-  const grade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
+  const submittedGrade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
   const academicClassId = readOptionalString(formData, "academicClassId");
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
   const notes = readOptionalString(formData, "notes");
+  const failValues = {
+    fullName,
+    classGroupId: classGroupId ?? "",
+    halaqahLevel: halaqahLevel ?? "",
+    grade: gradeRaw,
+    academicClassId: academicClassId ?? "",
+    gender,
+    joinDate,
+    notes: notes ?? "",
+  };
 
   if (!fullName || fullName.length > 120) {
-    fail(t("studentNameRequired"), {
-      fullName,
-      gender,
-      joinDate,
-      notes: notes ?? "",
-    });
-  }
-
-  if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
-    fail(t("halaqahLevelRequired"), {
-      fullName,
-      gender,
-      joinDate,
-      notes: notes ?? "",
-    });
-  }
-
-  if (!grade || grade < 7 || grade > 9) {
-    fail(t("gradeRequired"), {
-      fullName,
-      gender,
-      joinDate,
-      notes: notes ?? "",
-    });
+    fail(t("studentNameRequired"), failValues);
   }
 
   if (gender && !validGenders.has(gender)) {
-    fail(t("genderInvalid"), {
-      fullName,
-      gender,
-      joinDate,
-      notes: notes ?? "",
-    });
+    fail(t("genderInvalid"), failValues);
   }
 
   let resolvedClassGroupId = classGroupId;
+  let resolvedLevel = halaqahLevel;
+  let resolvedGrade = submittedGrade;
+
+  if (resolvedClassGroupId) {
+    const classGroup = await prisma.classGroup.findFirst({
+      where: { id: resolvedClassGroupId, teacherId, isActive: true },
+      select: { id: true, grade: true, level: true },
+    });
+
+    if (!classGroup) {
+      fail(t("halaqahMismatch"), failValues);
+    }
+
+    const activeClassGroup = classGroup!;
+
+    resolvedLevel ??= activeClassGroup.level;
+    resolvedGrade ||= activeClassGroup.grade;
+
+    if (
+      (halaqahLevel && halaqahLevel !== activeClassGroup.level) ||
+      (submittedGrade && submittedGrade !== activeClassGroup.grade)
+    ) {
+      fail(t("halaqahMismatch"), failValues);
+    }
+  }
+
+  if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
+    fail(t("halaqahLevelRequired"), failValues);
+  }
+
+  if (!resolvedGrade || resolvedGrade < 7 || resolvedGrade > 9) {
+    fail(t("gradeRequired"), failValues);
+  }
 
   if (!resolvedClassGroupId) {
-    const level = halaqahLevel as HalaqahLevel;
+    const level = resolvedLevel as HalaqahLevel;
 
     const existing = await prisma.classGroup.findFirst({
-      where: { teacherId, grade, level, isActive: true },
+      where: { teacherId, grade: resolvedGrade, level, isActive: true },
     });
 
     if (existing) {
@@ -93,29 +108,15 @@ export async function createTeacherStudent(formData: FormData) {
       const newClassGroup = await prisma.classGroup.create({
         data: {
           teacherId,
-          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
+          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
           level,
-          grade,
+          grade: resolvedGrade,
           academicYear: getCurrentAcademicYear(),
           isActive: true,
         },
       });
 
       resolvedClassGroupId = newClassGroup.id;
-    }
-  } else {
-    const classGroup = await prisma.classGroup.findFirst({
-      where: { id: resolvedClassGroupId, teacherId, isActive: true },
-      select: { id: true, grade: true },
-    });
-
-    if (!classGroup || classGroup.grade !== grade) {
-      fail(t("halaqahMismatch"), {
-        fullName,
-        gender,
-        joinDate,
-        notes: notes ?? "",
-      });
     }
   }
 
@@ -137,5 +138,6 @@ export async function createTeacherStudent(formData: FormData) {
   invalidateCache("dashboard");
   invalidateCache("students");
   invalidateCache("report-teacher");
+  invalidateCache("formative-");
   redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}`);
 }
