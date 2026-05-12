@@ -1,10 +1,18 @@
 import Link from "next/link";
 import { ArrowLeft, ClipboardList, Download, FilePlus2 } from "lucide-react";
+import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import {
+  getPreferredTeacherClassLevel,
+  parseClassLevelValue,
+  parseStoredGradingView,
+  SUMMATIVE_VIEW_COOKIE,
+} from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
 import {
   getTeacherSummativeOverview,
@@ -40,22 +48,19 @@ export default async function SummativePage({
     redirect("/admin");
   }
 
-  const defaultSemester = getSemesterForDate(new Date());
-  const semesterValue = params?.semester ?? defaultSemester;
-  const classLevelValue = params?.classLevel ?? "7";
-
-  if (!params?.semester || !params?.classLevel) {
-    redirect(`/summative?semester=${semesterValue}&classLevel=${classLevelValue}`);
-  }
-
-  if (!isSemesterValue(semesterValue)) {
-    redirect(`/summative?semester=${defaultSemester}&classLevel=7`);
-  }
-
-  const classLevel = Number.parseInt(classLevelValue, 10);
-  if (![7, 8, 9].includes(classLevel)) {
-    redirect(`/summative?semester=${semesterValue}&classLevel=7`);
-  }
+  const cookieStore = await cookies();
+  const savedView = parseStoredGradingView(
+    cookieStore.get(SUMMATIVE_VIEW_COOKIE)?.value,
+  );
+  const preferredClassLevel =
+    savedView.classLevel ?? (await getPreferredTeacherClassLevel(teacherId));
+  const defaultSemester = savedView.semester ?? getSemesterForDate(new Date());
+  const semesterValue =
+    params?.semester && isSemesterValue(params.semester)
+      ? params.semester
+      : defaultSemester;
+  const classLevel = parseClassLevelValue(params?.classLevel) ?? preferredClassLevel;
+  const classLevelValue = String(classLevel);
 
   const academicYear = getCurrentAcademicYear();
   const semester = parseSemester(semesterValue);
@@ -80,6 +85,10 @@ export default async function SummativePage({
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
+      <FilterPreferenceSync
+        cookieName={SUMMATIVE_VIEW_COOKIE}
+        value={`semester=${semesterValue}&classLevel=${classLevelValue}`}
+      />
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
@@ -150,9 +159,6 @@ export default async function SummativePage({
           </div>
         </div>
 
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-          {t("targetCount", { count: overview.recommendedTargetCount })}
-        </span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {academicYear}
         </span>
@@ -166,7 +172,7 @@ export default async function SummativePage({
         </a>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t("studentCountLabel")}
@@ -181,14 +187,6 @@ export default async function SummativePage({
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {overview.totalAssessments}
-          </p>
-        </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("classAverageLabel")}
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
-            {overview.averageScore ?? "-"}
           </p>
         </article>
       </section>

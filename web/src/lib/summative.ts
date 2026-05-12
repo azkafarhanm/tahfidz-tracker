@@ -42,7 +42,6 @@ export type SummativeOverviewStudent = {
   averageScore: number | null;
   latestAssessment: string;
   latestDate: string;
-  recommendedTargetCount: number;
 };
 
 export type SummativeAssessmentDetail = {
@@ -67,7 +66,6 @@ export type StudentSummativeDetail = {
   academicClassName: string;
   totalAssessments: number;
   averageScore: number | null;
-  recommendedTargetCount: number;
   assessments: SummativeAssessmentDetail[];
 };
 
@@ -184,62 +182,47 @@ async function getTeacherSummativeOverviewInner(
   locale: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const [students, recommendedTargetCount] = await Promise.all([
-    prisma.student.findMany({
-      where: {
-        teacherId,
-        isActive: true,
-        ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+  const students = await prisma.student.findMany({
+    where: {
+      teacherId,
+      isActive: true,
+      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+    },
+    select: {
+      id: true,
+      fullName: true,
+      classGroup: {
+        select: {
+          name: true,
+          level: true,
+        },
       },
-      select: {
-        id: true,
-        fullName: true,
-        classGroup: {
-          select: {
-            name: true,
-            level: true,
-          },
+      academicClass: {
+        select: {
+          name: true,
         },
-        academicClass: {
-          select: {
-            name: true,
-          },
+      },
+      summativeScores: {
+        where: {
+          semester,
+          academicYear,
         },
-        summativeScores: {
-          where: {
-            semester,
-            academicYear,
-          },
-          include: {
-            surah: {
-              select: {
-                name: true,
-              },
+        include: {
+          surah: {
+            select: {
+              name: true,
             },
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       },
-      orderBy: {
-        fullName: "asc",
-      },
-    }),
-    classLevel
-      ? prisma.targetSurah.count({
-          where: {
-            classLevel,
-            semester,
-            academicYear,
-          },
-        })
-      : Promise.resolve(0),
-  ]);
-
-  const allScores = students.flatMap((student) =>
-    student.summativeScores.map((score) => score.score),
-  );
+    },
+    orderBy: {
+      fullName: "asc",
+    },
+  });
 
   return {
     students: students.map((student) => {
@@ -259,12 +242,12 @@ async function getTeacherSummativeOverviewInner(
             : null,
         latestAssessment: latest ? latest.surah.name : "-",
         latestDate: latest ? dateFormatter.format(latest.createdAt) : "-",
-        recommendedTargetCount,
       } satisfies SummativeOverviewStudent;
     }),
-    totalAssessments: allScores.length,
-    averageScore: allScores.length > 0 ? roundAverage(allScores) : null,
-    recommendedTargetCount,
+    totalAssessments: students.reduce(
+      (sum, student) => sum + student.summativeScores.length,
+      0,
+    ),
   };
 }
 
@@ -351,14 +334,6 @@ async function getStudentSummativeDetailInner(
     return null;
   }
 
-  const recommendedTargetCount = await prisma.targetSurah.count({
-    where: {
-      classLevel: student.classGroup.grade,
-      semester,
-      academicYear,
-    },
-  });
-
   const scores = student.summativeScores.map((assessment) => assessment.score);
 
   return {
@@ -370,7 +345,6 @@ async function getStudentSummativeDetailInner(
     academicClassName: student.academicClass?.name ?? "-",
     totalAssessments: student.summativeScores.length,
     averageScore: scores.length > 0 ? roundAverage(scores) : null,
-    recommendedTargetCount,
     assessments: student.summativeScores.map((assessment) => ({
       id: assessment.id,
       surahId: assessment.surah.id,
@@ -479,16 +453,6 @@ export async function getTeacherSummativeExportData(
     },
   });
 
-  const recommendedTargetCount = classLevel
-    ? await prisma.targetSurah.count({
-        where: {
-          classLevel,
-          semester,
-          academicYear,
-        },
-      })
-    : 0;
-
   const rows: SummativeExportRow[] = students.flatMap((student) =>
     student.summativeScores.map((assessment) => ({
       studentId: student.id,
@@ -520,7 +484,6 @@ export async function getTeacherSummativeExportData(
       };
     }),
     rows,
-    recommendedTargetCount,
   };
 }
 

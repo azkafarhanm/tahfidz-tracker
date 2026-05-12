@@ -67,7 +67,6 @@ export async function GET(request: Request) {
     { key: "Semester", value: semesterLabel(semester) },
     { key: "Jumlah santri", value: exportData.students.length },
     { key: "Jumlah penilaian", value: exportData.rows.length },
-    { key: "Surah acuan kelas", value: exportData.recommendedTargetCount },
   ].forEach((row) => infoSheet.addRow(row));
 
   const summarySheet = workbook.addWorksheet("Ringkasan");

@@ -6,11 +6,17 @@ import {
   FilePlus2,
   PencilLine,
 } from "lucide-react";
+import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import {
+  parseStoredGradingView,
+  SUMMATIVE_VIEW_COOKIE,
+} from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
 import {
   getStudentSummativeDetail,
@@ -51,14 +57,15 @@ export default async function SummativeDetailPage({
     redirect("/admin");
   }
 
-  const defaultSemester = getSemesterForDate(new Date());
-  const semesterValue = query?.semester ?? defaultSemester;
-  if (!query?.semester) {
-    redirect(`/summative/${studentId}?semester=${semesterValue}`);
-  }
-  if (!isSemesterValue(semesterValue)) {
-    redirect(`/summative/${studentId}?semester=${defaultSemester}`);
-  }
+  const cookieStore = await cookies();
+  const savedView = parseStoredGradingView(
+    cookieStore.get(SUMMATIVE_VIEW_COOKIE)?.value,
+  );
+  const defaultSemester = savedView.semester ?? getSemesterForDate(new Date());
+  const semesterValue =
+    query?.semester && isSemesterValue(query.semester)
+      ? query.semester
+      : defaultSemester;
 
   const academicYear = getCurrentAcademicYear();
   const detail = await getStudentSummativeDetail(
@@ -75,6 +82,10 @@ export default async function SummativeDetailPage({
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
+      <FilterPreferenceSync
+        cookieName={SUMMATIVE_VIEW_COOKIE}
+        value={`semester=${semesterValue}&classLevel=${detail.classLevel}`}
+      />
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
@@ -124,9 +135,6 @@ export default async function SummativeDetailPage({
           ))}
         </div>
 
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-          {t("targetCount", { count: detail.recommendedTargetCount })}
-        </span>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {academicYear}
         </span>
@@ -147,7 +155,7 @@ export default async function SummativeDetailPage({
         </Link>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-3">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t("assessmentCountLabel")}
@@ -162,17 +170,6 @@ export default async function SummativeDetailPage({
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
             {detail.averageScore ?? "-"}
-          </p>
-        </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("recommendationLabel")}
-          </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
-            {detail.recommendedTargetCount}
-          </p>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            {t("recommendationSubtext")}
           </p>
         </article>
       </section>

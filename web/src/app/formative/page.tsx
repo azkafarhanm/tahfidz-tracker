@@ -1,11 +1,19 @@
 import Link from "next/link";
 import { ArrowLeft, BookText, Download } from "lucide-react";
+import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getTeacherFormativeOverview } from "@/lib/formative";
+import {
+  FORMATIVE_VIEW_COOKIE,
+  getPreferredTeacherClassLevel,
+  parseClassLevelValue,
+  parseStoredGradingView,
+} from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
 
@@ -36,22 +44,19 @@ export default async function FormativePage({
     redirect("/admin");
   }
 
-  const defaultSemester = getSemesterForDate(new Date());
-  const semesterValue = params?.semester ?? defaultSemester;
-  const classLevelValue = params?.classLevel ?? "7";
-
-  if (!params?.semester || !params?.classLevel) {
-    redirect(`/formative?semester=${semesterValue}&classLevel=${classLevelValue}`);
-  }
-
-  if (!isSemesterValue(semesterValue)) {
-    redirect(`/formative?semester=${defaultSemester}&classLevel=7`);
-  }
-
-  const classLevel = Number.parseInt(classLevelValue, 10);
-  if (![7, 8, 9].includes(classLevel)) {
-    redirect(`/formative?semester=${semesterValue}&classLevel=7`);
-  }
+  const cookieStore = await cookies();
+  const savedView = parseStoredGradingView(
+    cookieStore.get(FORMATIVE_VIEW_COOKIE)?.value,
+  );
+  const preferredClassLevel =
+    savedView.classLevel ?? (await getPreferredTeacherClassLevel(teacherId));
+  const defaultSemester = savedView.semester ?? getSemesterForDate(new Date());
+  const semesterValue =
+    params?.semester && isSemesterValue(params.semester)
+      ? params.semester
+      : defaultSemester;
+  const classLevel = parseClassLevelValue(params?.classLevel) ?? preferredClassLevel;
+  const classLevelValue = String(classLevel);
 
   const academicYear = getCurrentAcademicYear();
   const overview = await getTeacherFormativeOverview(
@@ -75,6 +80,10 @@ export default async function FormativePage({
 
   return (
     <AppShell currentPath="/formative" userName={session.user.name} isAdmin={isAdmin}>
+      <FilterPreferenceSync
+        cookieName={FORMATIVE_VIEW_COOKIE}
+        value={`semester=${semesterValue}&classLevel=${classLevelValue}`}
+      />
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link

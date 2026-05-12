@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { ArrowLeft, BookText } from "lucide-react";
+import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getStudentFormativeDetail } from "@/lib/formative";
+import {
+  FORMATIVE_VIEW_COOKIE,
+  parseStoredGradingView,
+} from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
 
@@ -40,16 +46,15 @@ export default async function FormativeDetailPage({
     redirect("/admin");
   }
 
-  const defaultSemester = getSemesterForDate(new Date());
-  const semesterValue = query?.semester ?? defaultSemester;
-
-  if (!query?.semester) {
-    redirect(`/formative/${studentId}?semester=${semesterValue}`);
-  }
-
-  if (!isSemesterValue(semesterValue)) {
-    redirect(`/formative/${studentId}?semester=${defaultSemester}`);
-  }
+  const cookieStore = await cookies();
+  const savedView = parseStoredGradingView(
+    cookieStore.get(FORMATIVE_VIEW_COOKIE)?.value,
+  );
+  const defaultSemester = savedView.semester ?? getSemesterForDate(new Date());
+  const semesterValue =
+    query?.semester && isSemesterValue(query.semester)
+      ? query.semester
+      : defaultSemester;
 
   const academicYear = getCurrentAcademicYear();
   const detail = await getStudentFormativeDetail(
@@ -66,6 +71,10 @@ export default async function FormativeDetailPage({
 
   return (
     <AppShell currentPath="/formative" userName={session.user.name} isAdmin={isAdmin}>
+      <FilterPreferenceSync
+        cookieName={FORMATIVE_VIEW_COOKIE}
+        value={`semester=${semesterValue}&classLevel=${detail.classLevel}`}
+      />
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
