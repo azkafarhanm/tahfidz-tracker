@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getStudentFormativeDetail } from "@/lib/formative";
 import { requireSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
@@ -40,9 +40,15 @@ export default async function FormativeDetailPage({
     redirect("/admin");
   }
 
-  const semesterValue = query?.semester ?? Semester.GANJIL;
+  const defaultSemester = getSemesterForDate(new Date());
+  const semesterValue = query?.semester ?? defaultSemester;
+
+  if (!query?.semester) {
+    redirect(`/formative/${studentId}?semester=${semesterValue}`);
+  }
+
   if (!isSemesterValue(semesterValue)) {
-    redirect(`/formative/${studentId}`);
+    redirect(`/formative/${studentId}?semester=${defaultSemester}`);
   }
 
   const academicYear = getCurrentAcademicYear();

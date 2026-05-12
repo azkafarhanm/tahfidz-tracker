@@ -1,8 +1,7 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   formatRange,
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const semesterValue = searchParams.get("semester") ?? Semester.GANJIL;
+  const semesterValue = searchParams.get("semester") ?? getSemesterForDate(new Date());
   const classLevelValue = searchParams.get("classLevel") ?? "7";
 
   if (!isSemesterValue(semesterValue)) {
