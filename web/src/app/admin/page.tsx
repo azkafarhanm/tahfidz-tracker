@@ -4,10 +4,9 @@ import {
   ClipboardList,
   GraduationCap,
   ShieldCheck,
-  Target,
   Users,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getAdminDashboardData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
 
@@ -21,7 +20,8 @@ export async function generateMetadata() {
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations("AdminDashboard");
-  const dashboard = await getAdminDashboardData();
+  const locale = await getLocale();
+  const dashboard = await getAdminDashboardData(locale);
 
   const managementAreas = [
     {
@@ -264,13 +264,6 @@ export default async function AdminDashboardPage() {
             >
               <ClipboardList aria-hidden="true" size={16} strokeWidth={2.2} />
               {t("reportsAdminButton")}
-            </Link>
-            <Link
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href="/reports"
-            >
-              <Target aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("reportsGuruButton")}
             </Link>
           </div>
         </section>

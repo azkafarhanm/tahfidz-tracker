@@ -14,7 +14,7 @@ import AppShell from "@/components/AppShell";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { requireSessionScope } from "@/lib/session";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const revalidate = 30;
@@ -35,8 +35,9 @@ type StudentsPageProps = {
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
+  const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const students = await getStudentsData(query, teacherId);
+  const students = await getStudentsData(query, teacherId, locale);
   const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
   const t = await getTranslations("Students");
 

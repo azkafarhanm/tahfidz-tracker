@@ -15,6 +15,7 @@ import {
   GraduationCap,
   UserRound,
   BarChart3,
+  ClipboardList,
   LogOut,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -27,6 +28,7 @@ const teacherNavKeys = [
   { key: "navDashboard", href: "/", icon: Home },
   { key: "navSantri", href: "/students", icon: Users },
   { key: "navCatatCepat", href: "/quick-log", icon: PlusCircle },
+  { key: "navSumatif", href: "/summative", icon: ClipboardList },
   { key: "navProfil", href: "/profile", icon: UserCircle },
 ] as const;
 

@@ -11,12 +11,16 @@
     "navKelas": "Kelas",
     "navHalaqah": "Halaqah",
     "navLaporan": "Laporan",
-    "navLaporanGuru": "Laporan Guru"
+    "navLaporanGuru": "Laporan Guru",
+    "navSumatif": "Nilai Sumatif"
   },
   "BottomNav": {
     "navHome": "Home",
+    "navGuru": "Guru",
+    "navLaporan": "Laporan",
     "navSantri": "Santri",
     "navCatat": "Catat",
+    "navSumatif": "Sumatif",
     "navProfil": "Profil"
   },
   "LogoutButton": {
@@ -502,7 +506,7 @@
     "labelStart": "Mulai",
     "labelDeadline": "Target selesai",
     "labelNotes": "Catatan",
-    "placeholderNotes": "Opsional — catatan tambahan tentang target ini",
+    "placeholderNotes": "Opsional - catatan tambahan tentang target ini",
     "buttonCancel": "Batal",
     "buttonSave": "Simpan Target",
     "buttonSaveEdit": "Simpan Perubahan"
@@ -737,8 +741,8 @@
     "teacherUpdated": "Data guru berhasil diperbarui.",
     "teacherActivated": "Akun {name} berhasil diaktifkan.",
     "teacherDeactivated": "Akun {name} berhasil dinonaktifkan.",
-    "teacherHasStudents": "Tidak bisa menghapus {name} — masih ada {count} santri terdaftar. Nonaktifkan akun sebagai gantinya.",
-    "teacherHasClassGroups": "Tidak bisa menghapus {name} — masih ada {count} halaqah terdaftar. Nonaktifkan akun sebagai gantinya.",
+    "teacherHasStudents": "Tidak bisa menghapus {name} - masih ada {count} santri terdaftar. Nonaktifkan akun sebagai gantinya.",
+    "teacherHasClassGroups": "Tidak bisa menghapus {name} - masih ada {count} halaqah terdaftar. Nonaktifkan akun sebagai gantinya.",
     "teacherDeleted": "Akun {name} berhasil dihapus.",
     "adminStudentNameRequired": "Nama santri wajib diisi dan maksimal 120 karakter.",
     "adminTeacherRequired": "Guru wajib dipilih.",
@@ -787,9 +791,34 @@
     "targetEndDateRequired": "Tanggal target selesai wajib diisi.",
     "targetEndBeforeStart": "Tanggal target selesai harus setelah tanggal mulai.",
     "targetCreated": "Target berhasil ditambahkan.",
-    "targetUpdated": "Target berhasil diperbarui."
+    "targetUpdated": "Target berhasil diperbarui.",
+    "unauthorized": "Anda tidak memiliki akses untuk data ini."
   },
   "Offline": {
     "banner": "Anda sedang offline. Beberapa fitur tidak tersedia."
+  },
+  "Summative": {
+    "heading": "Nilai Sumatif",
+    "description": "Kelola nilai sumatif per surah untuk setiap santri.",
+    "backLink": "Kembali",
+    "classLabel": "Kelas",
+    "semesterLabel": "Semester",
+    "grade7": "Kelas 7",
+    "grade8": "Kelas 8",
+    "grade9": "Kelas 9",
+    "ganjil": "Ganjil",
+    "genap": "Genap",
+    "targetCount": "{count} surah target",
+    "colStudent": "Santri",
+    "colAverage": "Rata-rata",
+    "studentCount": "{count} santri",
+    "surahCount": "{count} surah",
+    "saveButton": "Simpan Nilai",
+    "saving": "Menyimpan...",
+    "savedSuccess": "Nilai sumatif berhasil disimpan.",
+    "noTargets": "Belum ada target surah",
+    "noTargetsDescription": "Target surah untuk kelas dan semester ini belum dikonfigurasi.",
+    "noStudents": "Belum ada santri di kelas ini.",
+    "exportExcel": "Unduh Excel"
   }
 }

@@ -6,7 +6,7 @@ import {
   FileText,
   AlertTriangle,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getTeacherReportData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
@@ -25,6 +25,7 @@ export async function generateMetadata() {
 export default async function ReportsPage() {
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Reports");
+  const locale = await getLocale();
 
   if (isAdmin && !teacherId) {
     redirect("/admin/reports");
@@ -55,7 +56,7 @@ export default async function ReportsPage() {
     );
   }
 
-  const data = await getTeacherReportData(teacherId);
+  const data = await getTeacherReportData(teacherId, locale);
 
   return (
     <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>

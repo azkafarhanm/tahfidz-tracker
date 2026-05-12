@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { toggleStudentActive } from "./actions";
 import { getAdminStudentsData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
@@ -35,10 +35,11 @@ export default async function AdminStudentsPage({
   searchParams,
 }: AdminStudentsPageProps) {
   const t = await getTranslations("AdminStudents");
+  const locale = await getLocale();
 
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
-  const { counts, students } = await getAdminStudentsData(query);
+  const { counts, students } = await getAdminStudentsData(query, locale);
 
   return (
     <>

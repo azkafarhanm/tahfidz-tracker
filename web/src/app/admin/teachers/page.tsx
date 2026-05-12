@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { toggleTeacherActive } from "./actions";
 import { getAdminTeachersData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
@@ -35,9 +35,10 @@ export default async function AdminTeachersPage({
   searchParams,
 }: AdminTeachersPageProps) {
   const t = await getTranslations("AdminTeachers");
+  const locale = await getLocale();
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
-  const { counts, teachers } = await getAdminTeachersData(query);
+  const { counts, teachers } = await getAdminTeachersData(query, locale);
 
   return (
     <>

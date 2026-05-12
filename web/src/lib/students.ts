@@ -7,7 +7,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 import {
-  dateFormatter,
+  getDateFormatter,
   statusLabels,
   halaqahLevelLabels,
   formatRange,
@@ -24,6 +24,7 @@ function formatLatestRecord(
         status: RecordStatus;
       }
     | undefined,
+  dateFormatter: Intl.DateTimeFormat,
 ) {
   if (!record) {
     return null;
@@ -49,6 +50,7 @@ function formatRecord(
     notes: string | null;
   },
   type: "Hafalan" | "Murojaah",
+  dateFormatter: Intl.DateTimeFormat,
 ) {
   return {
     id: record.id,
@@ -72,7 +74,7 @@ function formatTarget(target: {
   startDate: Date;
   endDate: Date;
   notes: string | null;
-}) {
+}, dateFormatter: Intl.DateTimeFormat) {
   const now = new Date();
   const totalDays = target.endDate.getTime() - target.startDate.getTime();
   const elapsed = now.getTime() - target.startDate.getTime();
@@ -101,14 +103,14 @@ const genderLabels: Record<Gender, string> = {
   [Gender.FEMALE]: "Perempuan",
 };
 
-export async function getStudentsData(query = "", teacherId?: string | null) {
+export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
   const normalizedQuery = query.trim();
-  const cacheKey = `students:${teacherId ?? "admin"}:${normalizedQuery}`;
-  return cached(cacheKey, 30_000, () => getStudentsDataInner(normalizedQuery, teacherId));
+  const cacheKey = `students:${teacherId ?? "admin"}:${normalizedQuery}:${locale}`;
+  return cached(cacheKey, 30_000, () => getStudentsDataInner(normalizedQuery, teacherId, locale));
 }
 
-async function getStudentsDataInner(normalizedQuery: string, teacherId?: string | null) {
-
+async function getStudentsDataInner(normalizedQuery: string, teacherId?: string | null, locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const students = await prisma.student.findMany({
     where: {
       isActive: true,
@@ -170,8 +172,8 @@ async function getStudentsDataInner(normalizedQuery: string, teacherId?: string 
   });
 
   return students.map((student) => {
-    const latestHafalan = formatLatestRecord(student.memorizationRecords[0]);
-    const latestMurojaah = formatLatestRecord(student.revisionRecords[0]);
+    const latestHafalan = formatLatestRecord(student.memorizationRecords[0], dateFormatter);
+    const latestMurojaah = formatLatestRecord(student.revisionRecords[0], dateFormatter);
     const needsReview = Boolean(
       latestHafalan?.needsReview || latestMurojaah?.needsReview,
     );
@@ -215,7 +217,8 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
   }));
 }
 
-export async function getStudentDetailData(studentId: string, teacherId?: string | null) {
+export async function getStudentDetailData(studentId: string, teacherId?: string | null, locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
@@ -280,10 +283,10 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
   }
 
   const hafalanRecords = student.memorizationRecords.map((record) =>
-    formatRecord(record, "Hafalan"),
+    formatRecord(record, "Hafalan", dateFormatter),
   );
   const murojaahRecords = student.revisionRecords.map((record) =>
-    formatRecord(record, "Murojaah"),
+    formatRecord(record, "Murojaah", dateFormatter),
   );
   const recentActivity = [...hafalanRecords, ...murojaahRecords]
     .sort((a, b) => b.timestamp - a.timestamp)
@@ -300,7 +303,7 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
     gender: student.gender ? genderLabels[student.gender] : "Belum diisi",
     joinDate: dateFormatter.format(student.joinDate),
     notes: student.notes,
-    activeTargets: student.targets.map(formatTarget),
+    activeTargets: student.targets.map((target) => formatTarget(target, dateFormatter)),
     latestHafalan: hafalanRecords[0] ?? null,
     latestMurojaah: murojaahRecords[0] ?? null,
     hafalanRecords,
@@ -352,7 +355,8 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
   };
 }
 
-export async function getStudentFormContext(studentId: string, teacherId?: string | null) {
+export async function getStudentFormContext(studentId: string, teacherId?: string | null, locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,

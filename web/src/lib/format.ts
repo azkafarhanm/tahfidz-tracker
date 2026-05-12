@@ -17,11 +17,23 @@ const localeMap: Record<string, string> = {
   ar: "ar-SA",
 };
 
+export function getLocaleTag(locale?: string) {
+  return localeMap[locale ?? "id"] ?? "id-ID";
+}
+
 export function getDateFormatter(locale?: string) {
-  return new Intl.DateTimeFormat(localeMap[locale ?? "id"] ?? "id-ID", {
+  return new Intl.DateTimeFormat(getLocaleTag(locale), {
     day: "2-digit",
     month: "short",
     year: "numeric",
+  });
+}
+
+export function getTimeFormatter(locale?: string) {
+  return new Intl.DateTimeFormat(getLocaleTag(locale), {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 

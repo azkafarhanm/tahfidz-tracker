@@ -4,7 +4,7 @@ import {
   UserRole,
 } from "@/generated/prisma-next/enums";
 import {
-  dateFormatter,
+  getDateFormatter,
   formatClassSummary,
   halaqahLevelLabels,
 } from "@/lib/format";
@@ -52,7 +52,7 @@ function mapTeacherSummary(teacher: {
     students: number;
     classes: number;
   };
-}) {
+}, dateFormatter: Intl.DateTimeFormat) {
   const isActive = teacher.isActive && teacher.user.isActive;
 
   return {
@@ -91,7 +91,7 @@ function mapStudentSummary(student: {
     memorizationRecords: number;
     revisionRecords: number;
   };
-}) {
+}, dateFormatter: Intl.DateTimeFormat) {
   const classInfo = formatClassSummary(student);
 
   return {
@@ -114,11 +114,12 @@ function mapStudentSummary(student: {
   };
 }
 
-export async function getAdminDashboardData() {
-  return cached("admin-dashboard", 30_000, () => getAdminDashboardDataInner());
+export async function getAdminDashboardData(locale = "id") {
+  return cached(`admin-dashboard:${locale}`, 30_000, () => getAdminDashboardDataInner(locale));
 }
 
-async function getAdminDashboardDataInner() {
+async function getAdminDashboardDataInner(locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const [
     adminCount,
     teacherCount,
@@ -194,12 +195,13 @@ async function getAdminDashboardDataInner() {
       revisionRecordCount,
     },
     recentTeachers: recentTeachers.map((teacher) => ({
-      ...mapTeacherSummary(teacher),
+      ...mapTeacherSummary(teacher, dateFormatter),
     })),
   };
 }
 
-export async function getAdminTeachersData(query = "") {
+export async function getAdminTeachersData(query = "", locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
   const where = normalizedQuery
     ? {
@@ -257,7 +259,7 @@ export async function getAdminTeachersData(query = "") {
       inactiveTeacherCount: teacherCount - activeTeacherCount,
       filteredTeacherCount: teachers.length,
     },
-    teachers: teachers.map(mapTeacherSummary),
+    teachers: teachers.map((teacher) => mapTeacherSummary(teacher, dateFormatter)),
     query: normalizedQuery,
   };
 }
@@ -292,7 +294,8 @@ export async function getAdminTeacherFormData(teacherId: string) {
   };
 }
 
-export async function getAdminStudentsData(query = "") {
+export async function getAdminStudentsData(query = "", locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
   const where = normalizedQuery
     ? {
@@ -379,7 +382,7 @@ export async function getAdminStudentsData(query = "") {
       inactiveStudentCount: studentCount - activeStudentCount,
       filteredStudentCount: students.length,
     },
-    students: students.map(mapStudentSummary),
+    students: students.map((student) => mapStudentSummary(student, dateFormatter)),
     query: normalizedQuery,
   };
 }

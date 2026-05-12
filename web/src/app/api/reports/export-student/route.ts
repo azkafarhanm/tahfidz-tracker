@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { auth } from "@/auth";
 import { getStudentProgressData } from "@/lib/reports";
+import { getStudentSummativeHistory } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -103,6 +104,33 @@ export async function GET(request: Request) {
     };
     targetSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     data.activeTargets.forEach((t) => targetSheet.addRow(t));
+  }
+
+  const summativeScores = await getStudentSummativeHistory(studentId);
+  if (summativeScores.length > 0) {
+    const summativeSheet = workbook.addWorksheet("Nilai Sumatif");
+    summativeSheet.columns = [
+      { header: "Semester", key: "semester", width: 12 },
+      { header: "No. Surah", key: "surahNumber", width: 10 },
+      { header: "Surah", key: "surahName", width: 22 },
+      { header: "Nilai", key: "score", width: 10 },
+      { header: "Catatan", key: "notes", width: 30 },
+    ];
+    summativeSheet.getRow(1).fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF064E3B" },
+    };
+    summativeSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    summativeScores.forEach((s) =>
+      summativeSheet.addRow({
+        semester: s.semester === "GANJIL" ? "Ganjil" : "Genap",
+        surahNumber: s.surahNumber,
+        surahName: s.surahName,
+        score: s.score,
+        notes: s.notes ?? "",
+      }),
+    );
   }
 
   const buffer = await workbook.xlsx.writeBuffer();

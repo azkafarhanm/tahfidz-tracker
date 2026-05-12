@@ -1,6 +1,6 @@
 # AI Context: TahfidzFlow
 
-Updated: 2026-05-11
+Updated: 2026-05-12
 
 This file is the current handoff context for the TahfidzFlow codebase.
 
@@ -19,6 +19,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 |---|---|
 | Foundation (auth, DB, layout) | 100% |
 | Teacher workflow (records, targets, reports) | 100% |
+| Summative assessment (per-surah scoring, grid, export) | 100% |
 | Admin management (CRUD, guards) | 100% |
 | Reports & export (Excel, PDF) | 100% |
 | Multilingual (ID/EN/AR, RTL) | 100% |
@@ -40,6 +41,8 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Target CRUD with progress bars
 - Edit/deactivate/reactivate students
 - Teacher reports with Excel and PDF export
+- Summative per-surah scoring with spreadsheet grid UI
+- Summative Excel export per class/semester
 
 ### Admin side
 - Admin dashboard with system-wide stats
@@ -53,7 +56,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - NextAuth 5 JWT auth with role-based access
 - Teacher-scoped data isolation
 - PWA install + service worker + offline banner
-- Full i18n: 39 namespaces across ID/EN/AR with RTL
+- Full i18n: 40 namespaces across ID/EN/AR with RTL
 - Dark mode (next-themes, system-aware)
 - Desktop sidebar + mobile bottom nav
 - Surah autocomplete (114 surahs) with juz auto-calculation
@@ -88,7 +91,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Prisma 7 with `@prisma/adapter-pg` adapter pattern
 - PostgreSQL (Neon serverless)
 - NextAuth 5 beta (JWT strategy)
-- next-intl (39 namespaces × 3 locales)
+- next-intl (40 namespaces × 3 locales)
 - exceljs, pdfkit (exports)
 - sonner (toasts), lucide-react (icons)
 - next-themes (dark mode)
@@ -125,6 +128,10 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/components/AppShell.tsx` | Teacher layout wrapper |
 | `web/src/components/AdminShell.tsx` | Admin layout wrapper |
 | `web/src/components/OfflineBanner.tsx` | Offline detection banner |
+| `web/src/app/summative/page.tsx` | Summative grid server page |
+| `web/src/app/summative/SummativeGrid.tsx` | Spreadsheet grid client component |
+| `web/src/app/summative/actions.ts` | Batch save summative scores |
+| `web/src/app/api/reports/export-summative/route.ts` | Summative Excel export |
 | `web/src/components/ServiceWorkerRegistrar.tsx` | SW registration (production only) |
 | `web/src/lib/cache.ts` | In-memory TTL cache with GC |
 | `web/src/lib/validate-record.ts` | Shared record validation with i18n |
@@ -133,6 +140,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/lib/dashboard.ts` | Dashboard queries (cached) |
 | `web/src/lib/students.ts` | Student queries (cached) |
 | `web/src/lib/reports.ts` | Report queries (cached) |
+| `web/src/lib/summative.ts` | Summative score CRUD, grid, summary (cached) |
 | `web/src/lib/admin.ts` | Admin queries (cached) |
 | `web/src/lib/format.ts` | Date formatting, status labels |
 | `web/src/i18n/request.ts` | next-intl config, cookie-based locale |
@@ -140,8 +148,9 @@ This file is the current handoff context for the TahfidzFlow codebase.
 | `web/src/auth.ts` | NextAuth config, PrismaAdapter |
 | `web/src/auth.config.ts` | Auth callbacks, middleware auth check |
 | `web/src/middleware.ts` | NextAuth middleware |
-| `web/messages/{id,en,ar}.json` | 39+ namespaces × 3 locales |
-| `web/prisma/schema.prisma` | DB schema with 8 composite indexes |
+| `web/messages/{id,en,ar}.json` | 40+ namespaces × 3 locales |
+| `web/prisma/schema.prisma` | DB schema with 8 composite indexes + Surah, SummativeScore, TargetSurah |
+| `web/prisma/seed-summative.ts` | Seeds 114 surahs + class target mappings |
 | `web/public/sw.js` | Service worker |
 | `web/public/manifest.json` | PWA manifest |
 
@@ -156,6 +165,7 @@ npm run typecheck    # TypeScript check
 npm run verify       # Full verification (generate + validate + lint + typecheck + build)
 npm run db:generate  # Generate Prisma client
 npm run db:seed      # Seed demo data
+npm run db:seed-summative  # Seed surahs + targets (tsx prisma/seed-summative.ts)
 npm run db:studio    # Prisma Studio
 ```
 

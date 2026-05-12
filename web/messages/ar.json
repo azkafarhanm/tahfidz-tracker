@@ -11,12 +11,16 @@
     "navKelas": "الفصول",
     "navHalaqah": "الحلقة",
     "navLaporan": "التقارير",
-    "navLaporanGuru": "تقارير المعلّمين"
+    "navLaporanGuru": "تقارير المعلّمين",
+    "navSumatif": "درجات تقييمية"
   },
   "BottomNav": {
     "navHome": "الرئيسية",
+    "navGuru": "المعلمون",
+    "navLaporan": "التقارير",
     "navSantri": "الطلاب",
     "navCatat": "تسجيل",
+    "navSumatif": "تقييمية",
     "navProfil": "الملف الشخصي"
   },
   "LogoutButton": {
@@ -502,7 +506,7 @@
     "labelStart": "البداية",
     "labelDeadline": "موعد الانتهاء",
     "labelNotes": "ملاحظات",
-    "placeholderNotes": "اختياري — ملاحظات إضافية عن هذا الهدف",
+    "placeholderNotes": "اختياري - ملاحظات إضافية عن هذا الهدف",
     "buttonCancel": "إلغاء",
     "buttonSave": "حفظ الهدف",
     "buttonSaveEdit": "حفظ التغييرات"
@@ -737,8 +741,8 @@
     "teacherUpdated": "تم تحديث بيانات المعلم.",
     "teacherActivated": "تم تفعيل حساب {name}.",
     "teacherDeactivated": "تم إلغاء تفعيل حساب {name}.",
-    "teacherHasStudents": "لا يمكن حذف {name} — لا يزال لديه {count} طالب مسجل. قم بإلغاء تفعيل الحساب بدلاً من ذلك.",
-    "teacherHasClassGroups": "لا يمكن حذف {name} — لا يزال لديه {count} حلقة مسجلة. قم بإلغاء تفعيل الحساب بدلاً من ذلك.",
+    "teacherHasStudents": "لا يمكن حذف {name} - لا يزال لديه {count} طالب مسجل. قم بإلغاء تفعيل الحساب بدلاً من ذلك.",
+    "teacherHasClassGroups": "لا يمكن حذف {name} - لا يزال لديه {count} حلقة مسجلة. قم بإلغاء تفعيل الحساب بدلاً من ذلك.",
     "teacherDeleted": "تم حذف حساب {name}.",
     "adminStudentNameRequired": "اسم الطالب مطلوب (120 حرفًا كحد أقصى).",
     "adminTeacherRequired": "المعلم مطلوب.",
@@ -787,9 +791,34 @@
     "targetEndDateRequired": "تاريخ الانتهاء المستهدف مطلوب.",
     "targetEndBeforeStart": "يجب أن يكون تاريخ الانتهاء المستهدف بعد تاريخ البداية.",
     "targetCreated": "تم إنشاء الهدف.",
-    "targetUpdated": "تم تحديث الهدف."
+    "targetUpdated": "تم تحديث الهدف.",
+    "unauthorized": "ليس لديك صلاحية الوصول إلى هذه البيانات."
   },
   "Offline": {
     "banner": "أنت غير متصل بالإنترنت. بعض الميزات غير متاحة."
+  },
+  "Summative": {
+    "heading": "الدرجات التقييمية",
+    "description": "إدارة الدرجات التقييمية لكل سورة لكل طالب.",
+    "backLink": "رجوع",
+    "classLabel": "الصف",
+    "semesterLabel": "الفصل",
+    "grade7": "الصف 7",
+    "grade8": "الصف 8",
+    "grade9": "الصف 9",
+    "ganjil": "الفصل الأول",
+    "genap": "الفصل الثاني",
+    "targetCount": "{count} سور مستهدفة",
+    "colStudent": "الطالب",
+    "colAverage": "المعدل",
+    "studentCount": "{count} طلاب",
+    "surahCount": "{count} سور",
+    "saveButton": "حفظ الدرجات",
+    "saving": "جاري الحفظ...",
+    "savedSuccess": "تم حفظ الدرجات التقييمية بنجاح.",
+    "noTargets": "لا توجد سور مستهدفة",
+    "noTargetsDescription": "لم يتم تكوين السور المستهدفة لهذا الصف والفصل بعد.",
+    "noStudents": "لا يوجد طلاب في هذا الصف.",
+    "exportExcel": "تحميل إكسل"
   }
 }

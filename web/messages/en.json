@@ -11,12 +11,16 @@
     "navKelas": "Classes",
     "navHalaqah": "Halaqah",
     "navLaporan": "Reports",
-    "navLaporanGuru": "Teacher Reports"
+    "navLaporanGuru": "Teacher Reports",
+    "navSumatif": "Summative Scores"
   },
   "BottomNav": {
     "navHome": "Home",
+    "navGuru": "Teachers",
+    "navLaporan": "Reports",
     "navSantri": "Santri",
     "navCatat": "Log",
+    "navSumatif": "Summative",
     "navProfil": "Profile"
   },
   "LogoutButton": {
@@ -502,7 +506,7 @@
     "labelStart": "Start",
     "labelDeadline": "Target Deadline",
     "labelNotes": "Notes",
-    "placeholderNotes": "Optional — additional notes about this target",
+    "placeholderNotes": "Optional - additional notes about this target",
     "buttonCancel": "Cancel",
     "buttonSave": "Save Target",
     "buttonSaveEdit": "Save Changes"
@@ -737,8 +741,8 @@
     "teacherUpdated": "Teacher data has been updated.",
     "teacherActivated": "Account {name} has been activated.",
     "teacherDeactivated": "Account {name} has been deactivated.",
-    "teacherHasStudents": "Cannot delete {name} — still has {count} registered students. Deactivate the account instead.",
-    "teacherHasClassGroups": "Cannot delete {name} — still has {count} registered halaqah. Deactivate the account instead.",
+    "teacherHasStudents": "Cannot delete {name} - still has {count} registered students. Deactivate the account instead.",
+    "teacherHasClassGroups": "Cannot delete {name} - still has {count} registered halaqah. Deactivate the account instead.",
     "teacherDeleted": "Account {name} has been deleted.",
     "adminStudentNameRequired": "Student name is required (max 120 characters).",
     "adminTeacherRequired": "Teacher is required.",
@@ -787,9 +791,34 @@
     "targetEndDateRequired": "Target end date is required.",
     "targetEndBeforeStart": "Target end date must be after start date.",
     "targetCreated": "Target has been created.",
-    "targetUpdated": "Target has been updated."
+    "targetUpdated": "Target has been updated.",
+    "unauthorized": "You do not have access to this data."
   },
   "Offline": {
     "banner": "You are offline. Some features are unavailable."
+  },
+  "Summative": {
+    "heading": "Summative Scores",
+    "description": "Manage summative scores per surah for each student.",
+    "backLink": "Back",
+    "classLabel": "Class",
+    "semesterLabel": "Semester",
+    "grade7": "Grade 7",
+    "grade8": "Grade 8",
+    "grade9": "Grade 9",
+    "ganjil": "Odd",
+    "genap": "Even",
+    "targetCount": "{count} target surahs",
+    "colStudent": "Student",
+    "colAverage": "Avg",
+    "studentCount": "{count} students",
+    "surahCount": "{count} surahs",
+    "saveButton": "Save Scores",
+    "saving": "Saving...",
+    "savedSuccess": "Summative scores saved successfully.",
+    "noTargets": "No surah targets configured",
+    "noTargetsDescription": "Surah targets for this class and semester have not been configured yet.",
+    "noStudents": "No students in this class.",
+    "exportExcel": "Download Excel"
   }
 }

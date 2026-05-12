@@ -2,17 +2,18 @@ import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 import {
-  dateFormatter,
+  getDateFormatter,
   statusLabels,
   halaqahLevelLabels,
   formatRange,
 } from "@/lib/format";
 
-export async function getTeacherReportData(teacherId: string) {
-  return cached(`report-teacher:${teacherId}`, 30_000, () => getTeacherReportDataInner(teacherId));
+export async function getTeacherReportData(teacherId: string, locale = "id") {
+  return cached(`report-teacher:${teacherId}:${locale}`, 30_000, () => getTeacherReportDataInner(teacherId, locale));
 }
 
-async function getTeacherReportDataInner(teacherId: string) {
+async function getTeacherReportDataInner(teacherId: string, locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const [classGroups, students] = await Promise.all([
     prisma.classGroup.findMany({
       where: { teacherId, isActive: true },
@@ -139,15 +140,18 @@ async function getTeacherReportDataInner(teacherId: string) {
 export async function getStudentProgressData(
   studentId: string,
   teacherId?: string | null,
+  locale = "id",
 ) {
-  const cacheKey = `report-student:${studentId}:${teacherId ?? "admin"}`;
-  return cached(cacheKey, 30_000, () => getStudentProgressDataInner(studentId, teacherId));
+  const cacheKey = `report-student:${studentId}:${teacherId ?? "admin"}:${locale}`;
+  return cached(cacheKey, 30_000, () => getStudentProgressDataInner(studentId, teacherId, locale));
 }
 
 async function getStudentProgressDataInner(
   studentId: string,
   teacherId?: string | null,
+  locale = "id",
 ) {
+  const dateFormatter = getDateFormatter(locale);
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
@@ -259,11 +263,12 @@ async function getStudentProgressDataInner(
   };
 }
 
-export async function getAdminReportData() {
-  return cached("report-admin", 30_000, () => getAdminReportDataInner());
+export async function getAdminReportData(locale = "id") {
+  return cached(`report-admin:${locale}`, 30_000, () => getAdminReportDataInner(locale));
 }
 
-async function getAdminReportDataInner() {
+async function getAdminReportDataInner(locale = "id") {
+  const dateFormatter = getDateFormatter(locale);
   const [teachers, totalStudents, totalHafalan, totalMurojaah, totalActiveTargets] =
     await Promise.all([
       prisma.teacher.findMany({
@@ -297,6 +302,7 @@ async function getAdminReportDataInner() {
       email: t.user.email,
       studentCount: t._count.students,
       classGroupCount: t._count.classes,
+      joinedAt: dateFormatter.format(t.createdAt),
     })),
   };
 }

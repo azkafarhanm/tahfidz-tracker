@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getStudentProgressData } from "@/lib/reports";
+import { getStudentSummativeHistory } from "@/lib/summative";
 import { generatePdf } from "@/lib/pdf";
 
 export const runtime = "nodejs";
@@ -25,6 +26,8 @@ export async function GET(request: Request) {
     if (!data) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+
+    const summativeScores = await getStudentSummativeHistory(studentId);
 
     const pdfBuffer = await generatePdf(`${data.fullName} - TahfidzFlow`, [
       { type: "title", text: data.fullName },
@@ -70,6 +73,20 @@ export async function GET(request: Request) {
             },
           ]
         : [{ type: "text" as const, text: "Belum ada catatan." }]),
+      ...(summativeScores.length > 0
+        ? [
+            { type: "subtitle" as const, text: "Nilai Sumatif" },
+            {
+              type: "table" as const,
+              headers: ["Semester", "Surah", "Nilai"],
+              rows: summativeScores.map((s) => [
+                s.semester === "GANJIL" ? "Ganjil" : "Genap",
+                `${s.surahNumber}. ${s.surahName}`,
+                String(s.score),
+              ]),
+            },
+          ]
+        : []),
     ]);
 
     const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();

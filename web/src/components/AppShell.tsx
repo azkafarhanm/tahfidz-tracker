@@ -28,7 +28,7 @@ export default function AppShell({
       >
         <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
           {children}
-          {showNav ? <BottomNav currentPath={currentPath} /> : null}
+          {showNav ? <BottomNav currentPath={currentPath} isAdmin={isAdmin} /> : null}
         </div>
       </main>
     </>

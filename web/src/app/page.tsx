@@ -7,13 +7,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getDashboardData } from "@/lib/dashboard";
 import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import { getLocaleTag } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const revalidate = 30;
@@ -25,8 +26,9 @@ export async function generateMetadata() {
 
 export default async function DashboardPreview() {
   const t = await getTranslations("Dashboard");
+  const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const dashboard = await getDashboardData(teacherId);
+  const dashboard = await getDashboardData(teacherId, locale);
   const userName = session?.user?.name ?? t("defaultUserName");
   const quickActions = [
     { label: t("quickActionHafalan"), href: "/students", icon: BookOpen },
@@ -35,7 +37,7 @@ export default async function DashboardPreview() {
     ...(isAdmin
       ? [{ label: t("quickActionAdmin"), href: "/admin", icon: ShieldCheck }]
       : []),
-    { label: t("quickActionLaporan"), href: "/reports", icon: BarChart3 },
+    { label: t("quickActionLaporan"), href: isAdmin ? "/admin/reports" : "/reports", icon: BarChart3 },
   ];
 
   return (
@@ -49,12 +51,12 @@ export default async function DashboardPreview() {
               {userName}
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              {new Date().toLocaleDateString("id-ID", {
+              {new Intl.DateTimeFormat(getLocaleTag(locale), {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
                 year: "numeric",
-              })}
+              }).format(new Date())}
             </p>
           </div>
           <div className="flex items-center gap-3">

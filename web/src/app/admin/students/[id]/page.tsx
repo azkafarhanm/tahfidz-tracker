@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
+  AlertTriangle,
   ArrowLeft,
   Download,
   FileText,
   PencilLine,
   Target,
-  AlertTriangle,
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
@@ -19,11 +19,17 @@ type AdminStudentDetailPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export async function generateMetadata({ params }: AdminStudentDetailPageProps) {
+export async function generateMetadata({
+  params,
+}: AdminStudentDetailPageProps) {
   const { id } = await params;
   const t = await getTranslations("AdminStudents");
+  const locale = await getLocale();
+
   await requireAdminScope();
-  const data = await getStudentProgressData(id, null);
+
+  const data = await getStudentProgressData(id, null, locale);
+
   return {
     title: data
       ? `${data.fullName} - Admin - TahfidzFlow`
@@ -31,11 +37,16 @@ export async function generateMetadata({ params }: AdminStudentDetailPageProps) 
   };
 }
 
-export default async function AdminStudentDetailPage({ params }: AdminStudentDetailPageProps) {
+export default async function AdminStudentDetailPage({
+  params,
+}: AdminStudentDetailPageProps) {
   const { id } = await params;
+  const locale = await getLocale();
+
   await requireAdminScope();
+
   const [data, t] = await Promise.all([
-    getStudentProgressData(id, null),
+    getStudentProgressData(id, null, locale),
     getTranslations("AdminStudentDetail"),
   ]);
 
@@ -55,11 +66,15 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
             </Link>
-            <h1 className="mt-3 truncate text-2xl font-semibold">{data.fullName}</h1>
+            <h1 className="mt-3 truncate text-2xl font-semibold">
+              {data.fullName}
+            </h1>
             <p className="mt-1 text-sm text-slate-600">
-              {data.halaqahName} ({data.halaqahLevel}) &middot; {data.academicClassName}
+              {data.halaqahName} ({data.halaqahLevel}) &middot;{" "}
+              {data.academicClassName}
             </p>
           </div>
+
           <div className="flex items-center gap-2">
             <Link
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
@@ -89,19 +104,26 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("avgScore")}</p>
-              <p className="mt-3 text-4xl font-semibold">{data.avgScore || "-"}</p>
+              <p className="mt-3 text-4xl font-semibold">
+                {data.avgScore || "-"}
+              </p>
               <p className="mt-1 text-sm text-slate-300">
                 {t("totalRecordsCount", { count: data.records.length })}
               </p>
             </div>
+
             <div className="flex gap-2">
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
                 <p className="text-xs text-slate-300">{t("hafalan")}</p>
-                <p className="mt-1 text-xl font-semibold">{data.hafalanCount}</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {data.hafalanCount}
+                </p>
               </div>
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
                 <p className="text-xs text-slate-300">{t("murojaah")}</p>
-                <p className="mt-1 text-xl font-semibold">{data.murojaahCount}</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {data.murojaahCount}
+                </p>
               </div>
             </div>
           </div>
@@ -111,26 +133,34 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
           <section className="mt-6">
             <h2 className="text-lg font-semibold">{t("activeTargets")}</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {data.activeTargets.map((tgt, i) => (
+              {data.activeTargets.map((target, index) => (
                 <article
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
-                  key={i}
+                  key={index}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
                       className={
-                        tgt.type === "Hafalan"
+                        target.type === "Hafalan"
                           ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                           : "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                       }
                     >
-                      {tgt.type === "Hafalan" ? t("hafalan") : t("murojaah")}
+                      {target.type === "Hafalan"
+                        ? t("hafalan")
+                        : t("murojaah")}
                     </span>
-                    <Target className="text-emerald-800 dark:text-emerald-400" size={16} strokeWidth={2.2} />
+                    <Target
+                      className="text-emerald-800 dark:text-emerald-400"
+                      size={16}
+                      strokeWidth={2.2}
+                    />
                   </div>
-                  <p className="mt-2 font-semibold text-slate-950 dark:text-white">{tgt.range}</p>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    {tgt.startDate} — {tgt.endDate}
+                  <p className="mt-2 font-semibold text-slate-950 dark:text-white">
+                    {target.range}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                    {target.startDate} - {target.endDate}
                   </p>
                 </article>
               ))}
@@ -145,53 +175,72 @@ export default async function AdminStudentDetailPage({ params }: AdminStudentDet
               <table className="w-full min-w-[550px] text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left dark:border-slate-700">
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableDate")}</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableType")}</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableAyat")}</th>
-                    <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableSkor")}</th>
-                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">{t("tableStatus")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">
+                      {t("tableDate")}
+                    </th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">
+                      {t("tableType")}
+                    </th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">
+                      {t("tableAyat")}
+                    </th>
+                    <th className="pb-3 pr-4 text-center font-semibold text-slate-700 dark:text-slate-300">
+                      {t("tableSkor")}
+                    </th>
+                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">
+                      {t("tableStatus")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.records.map((r) => (
-                    <tr className="border-b border-slate-100 dark:border-slate-800" key={r.id}>
-                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{r.date}</td>
+                  {data.records.map((record) => (
+                    <tr
+                      className="border-b border-slate-100 dark:border-slate-800"
+                      key={record.id}
+                    >
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
+                        {record.date}
+                      </td>
                       <td className="py-3 pr-4">
                         <span
                           className={
-                            r.type === "Hafalan"
+                            record.type === "Hafalan"
                               ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
                               : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
                           }
                         >
-                          {r.type === "Hafalan" ? t("hafalan") : t("murojaah")}
+                          {record.type === "Hafalan"
+                            ? t("hafalan")
+                            : t("murojaah")}
                         </span>
                       </td>
-                       <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">{r.range}</td>
+                      <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
+                        {record.range}
+                      </td>
                       <td className="py-3 pr-4 text-center">
                         <span
                           className={
-                            r.score !== null && r.score >= 85
+                            record.score !== null && record.score >= 85
                               ? "font-semibold text-emerald-700"
-                              : r.score !== null && r.score >= 70
+                              : record.score !== null && record.score >= 70
                                 ? "font-semibold text-amber-700"
-                                : r.score !== null
+                                : record.score !== null
                                   ? "font-semibold text-red-700"
                                   : "text-slate-400"
                           }
                         >
-                          {r.score ?? "-"}
+                          {record.score ?? "-"}
                         </span>
                       </td>
                       <td className="py-3">
-                        {r.needsReview ? (
+                        {record.needsReview ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
                             <AlertTriangle aria-hidden="true" size={10} />
-                            {r.status}
+                            {record.status}
                           </span>
                         ) : (
-                           <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                            {r.status}
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                            {record.status}
                           </span>
                         )}
                       </td>

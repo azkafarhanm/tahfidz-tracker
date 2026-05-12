@@ -41,6 +41,11 @@ enum TargetStatus {
   CANCELLED
 }
 
+enum Semester {
+  GANJIL
+  GENAP
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -138,6 +143,7 @@ model Student {
   memorizationRecords MemorizationRecord[]
   revisionRecords     RevisionRecord[]
   targets             Target[]
+  summativeScores     SummativeScore[]
 
   @@index([teacherId])
   @@index([classGroupId])
@@ -256,4 +262,60 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Surah {
+  id         String @id @default(cuid())
+  number     Int    @unique
+  name       String
+  arabicName String
+  totalAyahs Int
+  juz        Int
+  orderIndex Int    @unique
+
+  summativeScores SummativeScore[]
+  targetSurahs    TargetSurah[]
+
+  @@index([juz])
+  @@index([name])
+}
+
+model SummativeScore {
+  id           String   @id @default(cuid())
+  studentId    String
+  surahId      String
+  semester     Semester
+  academicYear String
+  score        Int
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  surah   Surah   @relation(fields: [surahId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, surahId, semester, academicYear])
+  @@index([studentId])
+  @@index([surahId])
+  @@index([semester])
+  @@index([academicYear])
+  @@index([studentId, semester, academicYear])
+}
+
+model TargetSurah {
+  id          String   @id @default(cuid())
+  classLevel  Int
+  semester    Semester
+  surahId     String
+  isRequired  Boolean  @default(true)
+  academicYear String  @default("2025/2026")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  surah Surah @relation(fields: [surahId], references: [id], onDelete: Cascade)
+
+  @@unique([classLevel, semester, surahId, academicYear])
+  @@index([classLevel])
+  @@index([semester])
+  @@index([classLevel, semester, academicYear])
 }

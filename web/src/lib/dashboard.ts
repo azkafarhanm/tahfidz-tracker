@@ -2,16 +2,11 @@ import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 import {
-  dateFormatter,
+  getDateFormatter,
+  getTimeFormatter,
   statusLabels,
   formatRange,
 } from "@/lib/format";
-
-const timeFormatter = new Intl.DateTimeFormat("id-ID", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
 
 function startOfToday() {
   const date = new Date();
@@ -31,15 +26,17 @@ function countAyahs(fromAyah: number, toAyah: number) {
   return Math.max(toAyah - fromAyah + 1, 0);
 }
 
-export async function getDashboardData(teacherId?: string | null) {
-  const cacheKey = `dashboard:${teacherId ?? "admin"}`;
-  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId));
+export async function getDashboardData(teacherId?: string | null, locale = "id") {
+  const cacheKey = `dashboard:${teacherId ?? "admin"}:${locale}`;
+  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId, locale));
 }
 
-async function getDashboardDataInner(teacherId?: string | null) {
+async function getDashboardDataInner(teacherId?: string | null, locale = "id") {
   const today = startOfToday();
   const weekStart = startOfWeek();
   const teacherFilter = teacherId ? { teacherId } : {};
+  const dateFormatter = getDateFormatter(locale);
+  const timeFormatter = getTimeFormatter(locale);
 
   const [
     memorizationRecords,

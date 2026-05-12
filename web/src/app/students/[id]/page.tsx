@@ -20,7 +20,7 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -207,14 +207,15 @@ export default async function StudentDetailPage({
 }: StudentDetailPageProps) {
   const { id } = await params;
   const pageParams = await searchParams;
+  const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const student = await getStudentDetailData(id, teacherId);
+  const student = await getStudentDetailData(id, teacherId, locale);
 
   if (!student) {
     notFound();
   }
 
-  const progress = await getStudentProgressData(id, isAdmin ? null : teacherId);
+  const progress = await getStudentProgressData(id, isAdmin ? null : teacherId, locale);
   const t = await getTranslations("StudentDetail");
 
   return (
