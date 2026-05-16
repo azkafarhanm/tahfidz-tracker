@@ -118,18 +118,17 @@ async function getStudentsDataInner(normalizedQuery: string, teacherId?: string 
       ...(normalizedQuery
         ? {
             OR: [
-              { fullName: { contains: normalizedQuery, mode: "insensitive" } },
+              { fullName: { startsWith: normalizedQuery, mode: "insensitive" } },
               {
                 academicClass: {
-                  name: { contains: normalizedQuery, mode: "insensitive" },
+                  name: { startsWith: normalizedQuery, mode: "insensitive" },
                 },
               },
               {
                 classGroup: {
-                  name: { contains: normalizedQuery, mode: "insensitive" },
+                  name: { startsWith: normalizedQuery, mode: "insensitive" },
                 },
               },
-              { notes: { contains: normalizedQuery, mode: "insensitive" } },
             ],
           }
         : {}),

@@ -208,20 +208,20 @@ export async function getAdminTeachersData(query = "", locale = "id") {
         OR: [
           {
             fullName: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             phoneNumber: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             user: {
               email: {
-                contains: normalizedQuery,
+                startsWith: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -302,20 +302,14 @@ export async function getAdminStudentsData(query = "", locale = "id") {
         OR: [
           {
             fullName: {
-              contains: normalizedQuery,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            notes: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             teacher: {
               fullName: {
-                contains: normalizedQuery,
+                startsWith: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -323,7 +317,7 @@ export async function getAdminStudentsData(query = "", locale = "id") {
           {
             classGroup: {
               name: {
-                contains: normalizedQuery,
+                startsWith: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -331,7 +325,7 @@ export async function getAdminStudentsData(query = "", locale = "id") {
           {
             academicClass: {
               name: {
-                contains: normalizedQuery,
+                startsWith: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -490,13 +484,13 @@ export async function getAdminAcademicClassesData(query = "") {
         OR: [
           {
             name: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             academicYear: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
@@ -588,27 +582,21 @@ export async function getAdminClassGroupsData(query = "") {
         OR: [
           {
             name: {
-              contains: normalizedQuery,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            description: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             teacher: {
               fullName: {
-                contains: normalizedQuery,
+                startsWith: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
           },
           {
             academicYear: {
-              contains: normalizedQuery,
+              startsWith: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
@@ -621,13 +609,13 @@ export async function getAdminClassGroupsData(query = "") {
             : []),
           {
             name: {
-              contains: `Kelas ${normalizedQuery}`,
+              startsWith: `Kelas ${normalizedQuery}`,
               mode: "insensitive" as const,
             },
           },
           {
             description: {
-              contains: `Kelas ${normalizedQuery}`,
+              startsWith: `Kelas ${normalizedQuery}`,
               mode: "insensitive" as const,
             },
           },

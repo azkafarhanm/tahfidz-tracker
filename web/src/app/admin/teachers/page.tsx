@@ -6,7 +6,6 @@ import {
   Mail,
   Phone,
   PlusCircle,
-  Search,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -14,6 +13,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { toggleTeacherActive } from "./actions";
 import { getAdminTeachersData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import LiveSearchForm from "@/components/LiveSearchForm";
 
 export const runtime = "nodejs";
 export const revalidate = 30;
@@ -128,31 +128,14 @@ export default async function AdminTeachersPage({
           </article>
         </section>
 
-        <form
+        <LiveSearchForm
           action="/admin/teachers"
-          autoComplete="off"
+          buttonLabel={t("searchButton")}
           className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:focus-within:ring-emerald-400/20"
-        >
-          <Search aria-hidden="true" size={18} strokeWidth={2.2} />
-          <input
-            autoCapitalize="none"
-            autoComplete="off"
-            autoCorrect="off"
-            className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
-            defaultValue={query}
-            enterKeyHint="search"
-            name="q"
-            placeholder={t("searchPlaceholder")}
-            spellCheck={false}
-            type="search"
-          />
-          <button
-            className="rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
-            type="submit"
-          >
-            {t("searchButton")}
-          </button>
-        </form>
+          defaultValue={query}
+          inputClassName="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
+          placeholder={t("searchPlaceholder")}
+        />
 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
