@@ -27,7 +27,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const summativeScores = await getStudentSummativeHistory(studentId);
+    const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
 
     const pdfBuffer = await generatePdf(`${data.fullName} - TahfidzFlow`, [
       { type: "title", text: data.fullName },

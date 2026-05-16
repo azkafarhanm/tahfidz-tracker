@@ -17,8 +17,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const teacherId = session.user.teacherId;

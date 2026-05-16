@@ -106,7 +106,7 @@ export async function GET(request: Request) {
     data.activeTargets.forEach((t) => targetSheet.addRow(t));
   }
 
-  const summativeScores = await getStudentSummativeHistory(studentId);
+  const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
   if (summativeScores.length > 0) {
     const summativeSheet = workbook.addWorksheet("Nilai Sumatif");
     summativeSheet.columns = [

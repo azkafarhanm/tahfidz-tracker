@@ -609,7 +609,16 @@ export async function deleteSummativeAssessment(assessmentId: string) {
 export async function getStudentSummativeHistory(
   studentId: string,
   academicYear?: string,
+  teacherId?: string | null,
 ): Promise<SummativeScoreRow[]> {
+  if (teacherId) {
+    const student = await prisma.student.findFirst({
+      where: { id: studentId, teacherId },
+      select: { id: true },
+    });
+    if (!student) return [];
+  }
+
   const year = academicYear ?? getCurrentAcademicYear();
   const cacheKey = `summative-history:${studentId}:${year}`;
 
@@ -665,21 +674,14 @@ async function getStudentSummativeHistoryInner(
 export function invalidateSummativeCache(studentId?: string) {
   if (studentId) {
     invalidateCache(`summative-history:${studentId}`);
+    invalidateCache(`report-student:${studentId}`);
   }
-
   invalidateCache("summative-");
+  invalidateCache("report-teacher:");
 }
 
 function roundAverage(scores: number[]) {
   return Math.round(
     (scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10,
   ) / 10;
-}
-
-export function formatSummativeAssessmentLabel(surah: string, score: number) {
-  return `${surah} - ${score}`;
-}
-
-export function formatSummativeRangePreview(surah: string, number: number) {
-  return formatRange(surah, number, number);
 }
