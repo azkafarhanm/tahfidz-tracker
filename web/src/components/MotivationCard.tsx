@@ -19,9 +19,7 @@ const FADE_MS = 1200;
 
 export default function MotivationCard() {
   const verses = getAllMotivations();
-  const [verseIdx, setVerseIdx] = useState(() =>
-    Math.floor(Math.random() * verses.length)
-  );
+  const [verseIdx, setVerseIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("typing-arabic");
   const [charCount, setCharCount] = useState(0);
   const [opacity, setOpacity] = useState(1);
