@@ -2,11 +2,7 @@ import { Prisma } from "@/generated/prisma-next/client";
 import { Semester } from "@/generated/prisma-next/enums";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
-import {
-  formatRange,
-  getDateFormatter,
-  halaqahLevelLabels,
-} from "@/lib/format";
+import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export type ClassTargetSurah = {

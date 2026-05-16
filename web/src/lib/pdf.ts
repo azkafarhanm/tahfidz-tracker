@@ -56,16 +56,34 @@ export async function generatePdf(
           break;
 
         case "cards": {
-          const cardWidth = 110;
-          const cardHeight = 45;
           const gap = 10;
           const startX = doc.x;
+          const maxX = doc.page.width - doc.page.margins.right;
+          const availableWidth = maxX - startX;
+          const columns = section.items.length <= 4 ? section.items.length : 3;
+          const cardWidth =
+            (availableWidth - gap * Math.max(columns - 1, 0)) / columns;
+          const minCardHeight = 52;
+          const labelTop = 6;
+          const valueTop = 22;
           let x = startX;
-          const y = doc.y;
+          let y = doc.y;
+          let currentColumn = 0;
+          let currentRowHeight = minCardHeight;
 
           for (const item of section.items) {
-            if (x + cardWidth > doc.page.width - doc.page.margins.right) {
+            const value = String(item.value);
+            const valueHeight = doc.heightOfString(value, {
+              width: cardWidth - 16,
+              align: "left",
+            });
+            const cardHeight = Math.max(minCardHeight, valueTop + valueHeight + 8);
+
+            if (currentColumn === columns) {
               x = startX;
+              y += currentRowHeight + gap;
+              currentColumn = 0;
+              currentRowHeight = minCardHeight;
             }
 
             doc
@@ -74,18 +92,20 @@ export async function generatePdf(
             doc
               .fontSize(7)
               .fillColor(muted)
-              .text(item.label, x + 8, y + 6, { width: cardWidth - 16 });
+              .text(item.label, x + 8, y + labelTop, { width: cardWidth - 16 });
             doc
               .fontSize(16)
               .fillColor(dark)
-              .text(String(item.value), x + 8, y + 20, {
+              .text(value, x + 8, y + valueTop, {
                 width: cardWidth - 16,
               });
 
+            currentRowHeight = Math.max(currentRowHeight, cardHeight);
             x += cardWidth + gap;
+            currentColumn += 1;
           }
 
-          doc.y = y + cardHeight + 10;
+          doc.y = y + currentRowHeight + 10;
           doc.x = startX;
           break;
         }

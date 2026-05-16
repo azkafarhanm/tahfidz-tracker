@@ -125,14 +125,20 @@ export default async function AdminClassesPage({
 
         <form
           action="/admin/classes"
+          autoComplete="off"
           className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none"
         >
           <Search aria-hidden="true" size={18} strokeWidth={2.2} />
           <input
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect="off"
              className="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             defaultValue={query}
+            enterKeyHint="search"
             name="q"
             placeholder={t("searchPlaceholder")}
+            spellCheck={false}
             type="search"
           />
           <button
