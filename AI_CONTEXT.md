@@ -1,195 +1,172 @@
 # AI Context: TahfidzFlow
 
-Updated: 2026-05-12
+Updated: 2026-05-16
 
 This file is the current handoff context for the TahfidzFlow codebase.
 
-## Snapshot
+## Current Status
 
-- **Status: Production-ready core (~92% overall)**
-- Core teacher/admin workflows implemented and build-green
-- Grading architecture refactored to formative recap + flexible summative records
-- Security hardened (IDOR, orphan prevention, error boundaries)
-- Performance optimized (server cache, dynamic imports, font optimization)
-- PWA with service worker, offline banner, and install prompt
+- Production-ready core
+- Teacher and admin flows are implemented and build-green
+- Formative and summative grading architecture has been refactored
+- GitHub Actions CI now verifies schema, lint, typecheck, and build
+- Remaining work is mostly test coverage, long-term scaling, and final polish
 
-## Completion by Area
+## Completion Snapshot
 
 | Area | Status |
 |---|---|
-| Foundation (auth, DB, layout) | 100% |
-| Teacher workflow (records, targets, reports) | 95% |
-| Grading architecture (formative + summative) | 95% |
-| Admin management (CRUD, guards) | 100% |
-| Reports & export (Excel, PDF) | 92% |
-| Multilingual (ID/EN/AR, RTL) | 95% |
-| Dark mode + desktop layout | 100% |
-| Performance optimization | 100% |
+| Foundation | 100% |
+| Teacher workflow | 96% |
+| Admin workflow | 100% |
+| Grading architecture | 95% |
+| Reports and export | 93% |
+| Multilingual UI | 95% |
+| Layout and theming | 100% |
 | Security hardening | 100% |
-| PWA (service worker, offline) | 95% |
-| Telegram integration | 0% (not planned) |
-| AI parser | 0% (not planned) |
+| Performance baseline | 95% |
+| CI verification | 100% |
+| Automated tests | 0% |
 
 ## What the App Does
 
 ### Teacher side
-- Dashboard with stats, progress, overdue targets, motivation card
-- Student list with search, review status indicators
-- Quick Log guided flow for fast entry
-- Create/edit/delete hafalan and murojaah records
-- Student detail with history, scores, targets
-- Target CRUD with progress bars
-- Edit/deactivate/reactivate students
-- Teacher reports with Excel and PDF export
-- Formative recap page generated automatically from daily hafalan + murojaah
-- Flexible summative flow: student list -> detail -> add/edit per-surah assessment
-- Formative and summative Excel exports
+- Dashboard with stats, progress, motivation card, and recent activity
+- Student list and detail pages
+- Quick Log for fast entry
+- Create/edit/delete hafalan and murojaah
+- Target CRUD
+- Formative recap generated from daily records
+- Flexible summative assessments per student and per surah
+- Teacher Excel and PDF exports
 
 ### Admin side
-- Admin dashboard with system-wide stats
+- Admin dashboard
 - Teacher CRUD with deletion guards
-- Academic class CRUD with deactivation guards
-- Halaqah CRUD with teacher assignment and duplication check
-- Student CRUD with cross-teacher management
-- Admin reports with system-wide exports
+- Academic class CRUD
+- Halaqah CRUD
+- Student CRUD
+- Admin-level reports and exports
 
 ### Platform
-- NextAuth 5 JWT auth with role-based access
-- Teacher-scoped data isolation
-- PWA install + service worker + offline banner
-- Full i18n: 40 namespaces across ID/EN/AR with RTL
-- Dark mode (next-themes, system-aware)
-- Desktop sidebar + mobile bottom nav
-- Surah autocomplete (114 surahs) with juz auto-calculation
-- 70+ animated Quran motivation verses
-- Initials avatars with color hash
+- PWA with install prompt and offline banner
+- i18n with Indonesian, English, and Arabic
+- RTL support
+- Dark mode
+- Responsive desktop sidebar and mobile bottom nav
 
-## Business Rules
+## Important Business Rules
 
-- `AcademicClass` = school class (7A, 7B, 8A, 9C)
-- `ClassGroup` = halaqah per teacher per grade per year
-- Unique constraint: `@@unique([teacherId, academicYear, grade])`
-- Students from different sections can share a halaqah
-- `Student` belongs to one `Teacher`, one `ClassGroup`, optional `AcademicClass`
-- Halaqah levels: LOW, MEDIUM, HIGH (English labels in UI)
-- Record statuses: LANCAR, CUKUP, PERLU_MUROJAAH
-- Grades restricted to 7-9 (SMP only)
-- Exports (PDF/Excel) always output in Indonesian via `export-lang.ts`
+- `AcademicClass` is the school class such as `7A`, `8B`, `9C`
+- `ClassGroup` is the halaqah owned by a teacher for a grade and year
+- Students from multiple academic sections can share one halaqah
+- Formative is derived from daily hafalan and murojaah records
+- Summative is flexible per student and per surah
+- Target recommendations are not hard grading limits
+- Exports remain Indonesian by institutional requirement
 
 ## Demo Accounts
 
 | Role | Login | Password |
 |---|---|---|
-| Admin | `admin` (alias for admin@tahfidzflow.local) | `2026` |
+| Admin | `admin` | `2026` |
 | Teacher 1 | `teacher.demo@tahfidzflow.local` | `2026` |
 | Teacher 2 | `teacher.salwa@tahfidzflow.local` | `2026` |
 
 ## Tech Stack
 
-- Next.js 15.5.15 (App Router, Server Components, Server Actions)
-- React 19, TypeScript 5
-- Tailwind CSS 4 (CSS-based config)
-- Prisma 7 with `@prisma/adapter-pg` adapter pattern
-- PostgreSQL (Neon serverless)
-- NextAuth 5 beta (JWT strategy)
-- next-intl (40 namespaces × 3 locales)
-- exceljs, pdfkit (exports)
-- sonner (toasts), lucide-react (icons)
-- next-themes (dark mode)
-- Vercel deployment
+- Next.js 15.5.15
+- React 19
+- TypeScript 5
+- Tailwind CSS 4
+- Prisma 7 with `@prisma/adapter-pg`
+- PostgreSQL / Neon
+- NextAuth 5 beta
+- next-intl
+- exceljs
+- pdfkit
+- next-themes
 
 ## Critical Technical Notes
 
-- Project root: `D:\tahfidz-tracker`, app in `web/` subdirectory
+- Repo root: `D:\tahfidz-tracker`
+- App root: `web/`
 - Vercel Root Directory must be `web`
-- Prisma 7: adapter-based, output at `src/generated/prisma-next`
-- Enum imports: `from "@/generated/prisma-next/enums"` (never `/client`)
-- Legacy webpack only (Turbopack disabled)
-- `prisma.config.ts` for datasource URL (not schema.prisma)
-- PDFKit generates `Buffer` → wrap with `new Uint8Array()` for `NextResponse`
-- `template.tsx` returns `{children}` directly (no animation wrapper — broke `position: fixed`)
-- `AppShell` uses React fragments so Sidebar is direct child of `<body>`
-- `next build` runs ESLint strictly — unused vars/imports fail the build
-- Server cache (`lib/cache.ts`): 30s TTL, 60s GC sweep, prefix-based invalidation
-- Service worker (`public/sw.js`): cache-first for static, network-first for pages
-- `validate-record.ts`: shared validation with i18n via `getTranslations("Validation")`
+- Prisma enums are imported from `@/generated/prisma-next/enums`
+- Prisma client is generated under `web/src/generated/prisma-next`
+- `next build` is strict and will fail on lint/type issues
+- In-memory cache lives in `web/src/lib/cache.ts`
+- CI lives in `.github/workflows/verify.yml`
 
-## Key File Map
+## Key Files
 
 | Path | Purpose |
 |---|---|
-| `web/src/app/layout.tsx` | Root layout, fonts, providers, PWA |
-| `web/src/app/page.tsx` | Dashboard (teacher or admin) |
-| `web/src/app/admin/layout.tsx` | Admin layout with `AdminShell` |
-| `web/src/app/login/page.tsx` | Login with FloatingSurahs animation |
-| `web/src/app/global-error.tsx` | Standalone error boundary (no providers) |
-| `web/src/app/admin/error.tsx` | Admin segment error boundary |
-| `web/src/app/students/error.tsx` | Students segment error boundary |
-| `web/src/components/Sidebar.tsx` | Desktop sidebar with translated nav |
-| `web/src/components/AppShell.tsx` | Teacher layout wrapper |
-| `web/src/components/AdminShell.tsx` | Admin layout wrapper |
-| `web/src/components/OfflineBanner.tsx` | Offline detection banner |
-| `web/src/app/formative/page.tsx` | Formative recap overview page |
-| `web/src/app/formative/[studentId]/page.tsx` | Formative detail page per student |
-| `web/src/app/summative/page.tsx` | Summative overview page |
-| `web/src/app/summative/[studentId]/page.tsx` | Summative detail page per student |
-| `web/src/app/summative/actions.ts` | Create/update/delete summative assessments |
-| `web/src/app/api/reports/export-summative/route.ts` | Summative Excel export |
-| `web/src/app/api/reports/export-formative/route.ts` | Formative Excel export |
-| `web/src/components/ServiceWorkerRegistrar.tsx` | SW registration (production only) |
-| `web/src/lib/cache.ts` | In-memory TTL cache with GC |
-| `web/src/lib/validate-record.ts` | Shared record validation with i18n |
-| `web/src/lib/academic-year.ts` | Dynamic academic year calculation |
-| `web/src/lib/export-lang.ts` | Indonesian-only dictionary for exports |
-| `web/src/lib/dashboard.ts` | Dashboard queries (cached) |
-| `web/src/lib/students.ts` | Student queries (cached) |
-| `web/src/lib/reports.ts` | Report queries (cached) |
-| `web/src/lib/formative.ts` | Formative recap queries from daily records |
-| `web/src/lib/summative.ts` | Summative record CRUD, overview, export helpers |
-| `web/src/lib/admin.ts` | Admin queries (cached) |
-| `web/src/lib/format.ts` | Date formatting, status labels |
-| `web/src/i18n/request.ts` | next-intl config, cookie-based locale |
-| `web/src/i18n/actions.ts` | `setLocale()` server action |
-| `web/src/auth.ts` | NextAuth config, PrismaAdapter |
-| `web/src/auth.config.ts` | Auth callbacks, middleware auth check |
-| `web/src/middleware.ts` | NextAuth middleware |
-| `web/messages/{id,en,ar}.json` | 40+ namespaces × 3 locales |
-| `web/prisma/schema.prisma` | DB schema with 8 composite indexes + Surah, SummativeScore, TargetSurah |
-| `web/prisma/seed-summative.ts` | Seeds 114 surahs + target recommendations |
-| `web/public/sw.js` | Service worker |
-| `web/public/manifest.json` | PWA manifest |
+| `web/src/app/page.tsx` | Teacher/admin dashboard entry |
+| `web/src/app/formative/page.tsx` | Formative recap overview |
+| `web/src/app/formative/[studentId]/page.tsx` | Formative detail |
+| `web/src/app/summative/page.tsx` | Summative overview |
+| `web/src/app/summative/[studentId]/page.tsx` | Summative detail |
+| `web/src/app/summative/actions.ts` | Summative save/update/delete |
+| `web/src/lib/formative.ts` | Formative recap query layer |
+| `web/src/lib/summative.ts` | Summative query/save/export helpers |
+| `web/src/lib/admin.ts` | Admin query layer |
+| `web/src/lib/dashboard.ts` | Dashboard query layer |
+| `web/src/auth.ts` | NextAuth setup |
+| `web/src/middleware.ts` | Auth middleware |
+| `web/prisma/schema.prisma` | Database schema |
+| `web/prisma/seed.ts` | Base demo seed |
+| `web/prisma/seed-summative.ts` | Surah and target seed |
+| `README.md` | Public repo guide |
 
 ## Commands
 
 From repo root:
+
 ```bash
-npm run dev          # Dev server
-npm run build        # Production build
-npm run lint         # ESLint
-npm run typecheck    # TypeScript check
-npm run verify       # Full verification (generate + validate + lint + typecheck + build)
-npm run db:generate  # Generate Prisma client
-npm run db:seed      # Seed demo data
-npm run db:seed-summative  # Seed surahs + targets (tsx prisma/seed-summative.ts)
-npm run db:studio    # Prisma Studio
+npm run dev
+npm run build
+npm run lint
+npm run typecheck
+npm run verify:fast
+npm run verify
+npm run db:generate
+npm run db:validate
+npm run db:seed
+npm run db:deploy
 ```
 
-## Environment Variables
+## CI
 
-```env
-DATABASE_URL="postgresql://user:pass@host/db?sslmode=verify-full"
-AUTH_SECRET="your-random-secret"
-NEXTAUTH_URL="http://localhost:3000"
-```
+GitHub Actions runs on:
+- push to `main`
+- pull requests
 
-## Remaining Known Items
+Current CI coverage:
+- Prisma generate
+- Prisma validate
+- ESLint
+- TypeScript
+- Production build
+
+Current CI does not yet include:
+- unit tests
+- integration tests
+- browser/e2e tests
+
+## Remaining Known Gaps
 
 - No automated test suite yet
-- No CI pipeline yet (manual verify before push)
-- PWA maskable icon needs proper safe-area padding (cosmetic)
-- Some `aria-label` attributes missing on icon-only buttons (accessibility)
-- Pagination not implemented (fine for current scale, needed when data grows)
+- No e2e coverage yet
+- In-memory cache is per-instance only
+- Export routes are synchronous and may need scaling later
+- Some accessibility and UX polish remains
 
 ## Practical Summary
 
-TahfidzFlow is a production-ready tahfidz tracking system with a stable teacher/admin core. The app is deployed on Vercel, and the main remaining work is polish, deeper automated verification, and long-term maintainability improvements rather than missing core workflows.
+TahfidzFlow is already suitable for real daily school use. The next best engineering steps are:
+
+1. Add automated tests
+2. Add browser/e2e workflow coverage
+3. Improve export scalability
+4. Keep docs and CI aligned with each refactor
