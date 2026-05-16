@@ -47,6 +47,7 @@ export default function BottomNav({
           activePath === href || (href !== "/" && activePath.startsWith(href));
         return (
           <Link
+            aria-current={active ? "page" : undefined}
             className={
               active
                 ? "flex flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-2 py-3 text-white dark:bg-emerald-950 dark:text-emerald-400"

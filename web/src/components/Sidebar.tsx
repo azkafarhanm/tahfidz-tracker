@@ -75,6 +75,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
           const active = pathname === href || (href !== "/" && href !== "/admin" && pathname.startsWith(href));
           return (
             <Link
+              aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                 active
                   ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"

@@ -64,6 +64,8 @@
     "placeholderUsername": "Username",
     "labelPassword": "Password",
     "placeholderPassword": "Password",
+    "showPassword": "Tampilkan password",
+    "hidePassword": "Sembunyikan password",
     "buttonLogin": "Masuk",
     "buttonLoggingIn": "Masuk...",
     "copyright": "TahfidzFlow"
@@ -150,6 +152,7 @@
     "scoreLabel": "Nilai",
     "optionalPlaceholder": "Opsional",
     "notesLabel": "Catatan",
+    "clearSelectedStudent": "Hapus santri yang dipilih",
     "cancelButton": "Batal",
     "saveButton": "Simpan",
     "savingButton": "Menyimpan...",

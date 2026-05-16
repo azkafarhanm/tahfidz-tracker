@@ -32,6 +32,8 @@ export default function LanguageSwitcher() {
       <div className="flex gap-1">
         {languages.map(({ code, label, flag }) => (
           <button
+            aria-label={label}
+            aria-pressed={locale === code}
             className={`rounded-lg px-2 py-1 text-xs font-medium transition ${
               locale === code
                 ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"

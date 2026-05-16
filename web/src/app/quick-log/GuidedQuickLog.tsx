@@ -64,6 +64,7 @@ export default function GuidedQuickLog({
   const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
   const [surahInputKey, setSurahInputKey] = useState(0);
+  const studentListboxId = "quick-log-student-listbox";
 
   const formRef = useRef<HTMLFormElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -177,6 +178,7 @@ export default function GuidedQuickLog({
                    </div>
                  </div>
                 <button
+                  aria-label={t("clearSelectedStudent")}
                   className="grid h-8 w-8 shrink-0 place-items-center rounded-xl text-slate-400 transition hover:bg-emerald-100 hover:text-slate-700 dark:hover:bg-emerald-900 dark:hover:text-slate-300"
                   onClick={handleClearStudent}
                   type="button"
@@ -195,6 +197,10 @@ export default function GuidedQuickLog({
                   />
                   <input
                     autoComplete="off"
+                    aria-label={t("searchStudentPlaceholder")}
+                    aria-autocomplete="list"
+                    aria-controls={studentListboxId}
+                    aria-expanded={showDropdown}
                     className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
                     name="studentSearch"
                     onChange={(e) => {
@@ -203,18 +209,25 @@ export default function GuidedQuickLog({
                     }}
                     onFocus={() => setShowDropdown(true)}
                     placeholder={t("searchStudentPlaceholder")}
+                    role="combobox"
                     type="text"
                     value={query}
                   />
                 </div>
 
                 {showDropdown && filtered.length > 0 ? (
-                  <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                  <div
+                    className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                    id={studentListboxId}
+                    role="listbox"
+                  >
                     {filtered.map((s) => (
                        <button
+                         aria-selected={false}
                          className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-emerald-50 dark:hover:bg-slate-800"
                          key={s.id}
                          onClick={() => handleSelectStudent(s)}
+                         role="option"
                          type="button"
                        >
                          <InitialsAvatar name={s.fullName} size="sm" />
@@ -247,6 +260,7 @@ export default function GuidedQuickLog({
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {typeOptions.map((opt) => (
                     <button
+                      aria-pressed={recordType === opt.value}
                       className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 p-3 text-center text-sm font-bold transition active:scale-[0.97] ${
                         recordType === opt.value
                           ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm ring-2 ring-emerald-200 dark:border-emerald-400 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-900"

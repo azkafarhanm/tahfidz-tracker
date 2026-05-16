@@ -49,6 +49,7 @@ export default function GlobalError({
             </p>
             <button
               onClick={reset}
+              type="button"
               style={{
                 marginTop: 32,
                 padding: "12px 24px",

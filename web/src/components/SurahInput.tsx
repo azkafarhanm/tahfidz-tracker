@@ -19,7 +19,7 @@ export default function SurahInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
-
+  const listboxId = `${id ?? "surah"}-listbox`;
   const filtered = query.trim()
     ? surahList.filter(
         (s) =>
@@ -27,6 +27,10 @@ export default function SurahInput({
           String(s.number).includes(query.trim()),
       )
     : surahList;
+  const activeOptionId =
+    isOpen && filtered[highlightIndex]
+      ? `${listboxId}-option-${filtered[highlightIndex].number}`
+      : undefined;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -62,6 +66,11 @@ export default function SurahInput({
   return (
     <div className="relative" ref={containerRef}>
       <input
+        aria-activedescendant={activeOptionId}
+        aria-autocomplete="list"
+        aria-controls={listboxId}
+        aria-expanded={isOpen}
+        autoCapitalize="none"
         autoComplete="off"
         className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400"
         id={id}
@@ -93,12 +102,15 @@ export default function SurahInput({
         placeholder={t("placeholder")}
         ref={inputRef}
         required
+        role="combobox"
+        spellCheck={false}
         type="text"
         value={query}
       />
       {isOpen && filtered.length > 0 ? (
         <ul
           className="absolute z-50 mt-1 max-h-52 w-full overflow-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+          id={listboxId}
           ref={listRef}
           role="listbox"
         >
@@ -111,6 +123,7 @@ export default function SurahInput({
                     ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
                     : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                 }`}
+                id={`${listboxId}-option-${surah.number}`}
                 onClick={() => selectSurah(surah.name)}
                 onMouseEnter={() => setHighlightIndex(i)}
                 role="option"

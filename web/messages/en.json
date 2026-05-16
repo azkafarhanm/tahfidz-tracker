@@ -64,6 +64,8 @@
     "placeholderUsername": "Username",
     "labelPassword": "Password",
     "placeholderPassword": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "buttonLogin": "Sign In",
     "buttonLoggingIn": "Signing in...",
     "copyright": "TahfidzFlow"
@@ -150,6 +152,7 @@
     "scoreLabel": "Score",
     "optionalPlaceholder": "Optional",
     "notesLabel": "Notes",
+    "clearSelectedStudent": "Clear selected student",
     "cancelButton": "Cancel",
     "saveButton": "Save",
     "savingButton": "Saving...",

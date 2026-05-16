@@ -39,6 +39,8 @@ export default function ThemeToggle() {
         const active = theme === t.value;
         return (
           <button
+            aria-label={t.label}
+            aria-pressed={active}
             key={t.value}
             onClick={() => setTheme(t.value)}
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
@@ -46,6 +48,7 @@ export default function ThemeToggle() {
                 ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-700 dark:text-emerald-400"
                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
             }`}
+            type="button"
             title={t.label}
           >
             <t.icon size={18} />

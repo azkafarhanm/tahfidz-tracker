@@ -211,6 +211,7 @@ export default function TeacherStudentForm({
                 const isSelected = selectedGrade === g.value;
                 return (
                   <button
+                    aria-pressed={isSelected}
                     className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
@@ -256,6 +257,7 @@ export default function TeacherStudentForm({
                 const isSelected = selectedLevel === lv.key;
                 return (
                   <button
+                    aria-pressed={isSelected}
                     className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
                       isSelected
                         ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"

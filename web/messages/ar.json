@@ -64,6 +64,8 @@
     "placeholderUsername": "اسم المستخدم",
     "labelPassword": "كلمة المرور",
     "placeholderPassword": "كلمة المرور",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور",
     "buttonLogin": "دخول",
     "buttonLoggingIn": "جارٍ الدخول...",
     "copyright": "TahfidzFlow"
@@ -150,6 +152,7 @@
     "scoreLabel": "الدرجة",
     "optionalPlaceholder": "اختياري",
     "notesLabel": "ملاحظات",
+    "clearSelectedStudent": "إزالة الطالب المحدد",
     "cancelButton": "إلغاء",
     "saveButton": "حفظ",
     "savingButton": "جارٍ الحفظ...",

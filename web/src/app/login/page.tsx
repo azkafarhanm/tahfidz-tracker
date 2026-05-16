@@ -107,6 +107,8 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
                 <button
+                  aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                  aria-pressed={showPassword}
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
