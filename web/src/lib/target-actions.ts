@@ -4,10 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TargetStatus, TargetType } from "@/generated/prisma-next/enums";
-import { createFailFn, readOptionalString, readString } from "@/lib/form-helpers";
+import {
+  createFailFn,
+  parseDateInput,
+  readOptionalString,
+  readString,
+} from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { invalidateCache } from "@/lib/cache";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 
 type TargetFormInput = {
   type: TargetType;
@@ -19,46 +24,55 @@ type TargetFormInput = {
   notes: string | null;
 };
 
-async function parseTargetForm(formData: FormData): Promise<{ data: TargetFormInput; error: string | null }> {
+type ParseTargetResult =
+  | { ok: true; data: TargetFormInput }
+  | { ok: false; error: string };
+
+function readTargetAyah(formData: FormData, key: string) {
+  const value = readString(formData, key);
+  if (!/^\d+$/.test(value)) return null;
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
+async function parseTargetForm(formData: FormData): Promise<ParseTargetResult> {
   const t = await getTranslations("Validation");
   const rawType = formData.get("type");
   const surah = readString(formData, "surah");
-  const rawFromAyah = formData.get("fromAyah");
-  const rawToAyah = formData.get("toAyah");
-  const rawStartDate = formData.get("startDate");
-  const rawEndDate = formData.get("endDate");
+  const startDate = parseDateInput(readString(formData, "startDate"));
+  const endDate = parseDateInput(readString(formData, "endDate"));
   const notes = readOptionalString(formData, "notes");
 
   if (!rawType || (rawType !== "HAFALAN" && rawType !== "MUROJAAH")) {
-    return { data: null as unknown as TargetFormInput, error: t("targetTypeRequired") };
+    return { ok: false, error: t("targetTypeRequired") };
   }
   if (!surah || surah.length > 80) {
-    return { data: null as unknown as TargetFormInput, error: t("surahRequired") };
+    return { ok: false, error: t("surahRequired") };
   }
-  const fromAyah = Number(rawFromAyah);
-  const toAyah = Number(rawToAyah);
-  if (!fromAyah || fromAyah < 1 || fromAyah > 286) {
-    return { data: null as unknown as TargetFormInput, error: t("targetFromAyahRange") };
+  const fromAyah = readTargetAyah(formData, "fromAyah");
+  const toAyah = readTargetAyah(formData, "toAyah");
+  if (fromAyah === null || fromAyah < 1 || fromAyah > 286) {
+    return { ok: false, error: t("targetFromAyahRange") };
   }
-  if (!toAyah || toAyah < 1 || toAyah > 286) {
-    return { data: null as unknown as TargetFormInput, error: t("targetToAyahRange") };
+  if (toAyah === null || toAyah < 1 || toAyah > 286) {
+    return { ok: false, error: t("targetToAyahRange") };
   }
   if (fromAyah > toAyah) {
-    return { data: null as unknown as TargetFormInput, error: t("targetFromGtTo") };
+    return { ok: false, error: t("targetFromGtTo") };
   }
-  if (!rawStartDate) {
-    return { data: null as unknown as TargetFormInput, error: t("targetStartDateRequired") };
+  if (!startDate) {
+    return { ok: false, error: t("targetStartDateRequired") };
   }
-  if (!rawEndDate) {
-    return { data: null as unknown as TargetFormInput, error: t("targetEndDateRequired") };
+  if (!endDate) {
+    return { ok: false, error: t("targetEndDateRequired") };
   }
-  const startDate = new Date(rawStartDate as string);
-  const endDate = new Date(rawEndDate as string);
   if (endDate <= startDate) {
-    return { data: null as unknown as TargetFormInput, error: t("targetEndBeforeStart") };
+    return { ok: false, error: t("targetEndBeforeStart") };
   }
 
   return {
+    ok: true,
     data: {
       type: rawType as TargetType,
       surah: surah.trim(),
@@ -68,7 +82,6 @@ async function parseTargetForm(formData: FormData): Promise<{ data: TargetFormIn
       endDate,
       notes: notes?.trim() || null,
     },
-    error: null,
   };
 }
 
@@ -85,11 +98,13 @@ export async function createTarget(studentId: string, formData: FormData) {
   }
 
   const fail = createFailFn(`/students/${studentId}/targets/new`);
-  const { data, error } = await parseTargetForm(formData);
+  const result = await parseTargetForm(formData);
 
-  if (error) {
-    fail(error);
+  if (!result.ok) {
+    return fail(result.error);
   }
+
+  const { data } = result;
 
   await prisma.target.create({
     data: {
@@ -107,10 +122,7 @@ export async function createTarget(studentId: string, formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidatePath(`/students/${studentId}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("targetCreated"))}`);
 }
 
@@ -136,11 +148,13 @@ export async function updateTarget(targetId: string, formData: FormData) {
   }
 
   const fail = createFailFn(`/students/${target.studentId}/targets/${targetId}/edit`);
-  const { data, error } = await parseTargetForm(formData);
+  const result = await parseTargetForm(formData);
 
-  if (error) {
-    fail(error);
+  if (!result.ok) {
+    return fail(result.error);
   }
+
+  const { data } = result;
 
   await prisma.target.update({
     where: { id: targetId },
@@ -157,10 +171,7 @@ export async function updateTarget(targetId: string, formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidatePath(`/students/${target.studentId}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(target.studentId);
   redirect(`/students/${target.studentId}?success=${encodeURIComponent(t("targetUpdated"))}`);
 }
 
@@ -186,10 +197,7 @@ export async function cancelTarget(targetId: string) {
     data: { status: TargetStatus.CANCELLED },
   });
 
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
 }
 
@@ -215,9 +223,6 @@ export async function completeTarget(targetId: string) {
     data: { status: TargetStatus.COMPLETED },
   });
 
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
 }

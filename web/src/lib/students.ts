@@ -104,7 +104,7 @@ const genderLabels: Record<Gender, string> = {
 };
 
 export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
-  const normalizedQuery = query.trim();
+  const normalizedQuery = query.trim().toLowerCase();
   const cacheKey = `students:${teacherId ?? "admin"}:${normalizedQuery}:${locale}`;
   return cached(cacheKey, 30_000, () => getStudentsDataInner(normalizedQuery, teacherId, locale));
 }

@@ -12,6 +12,13 @@ import { isSemesterValue, parseSemester, semesterLabel } from "@/lib/summative";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
@@ -46,6 +53,9 @@ export async function GET(request: Request) {
     list.push(row);
     groupedRows.set(row.studentId, list);
   }
+  const studentsById = new Map(
+    exportData.students.map((student) => [student.id, student]),
+  );
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "TahfidzFlow";
@@ -123,7 +133,7 @@ export async function GET(request: Request) {
           ? scoredRows
               .map(
                 (row) =>
-                  `${row.date.toLocaleDateString("id-ID")}: ${row.score}`,
+                  `${jakartaDateFormatter.format(row.date)}: ${row.score}`,
               )
               .join(" | ")
           : "-",
@@ -148,7 +158,7 @@ export async function GET(request: Request) {
   detailSheet.getRow(1).font = headerFont;
 
   exportData.rows.forEach((row, index) => {
-    const student = exportData.students.find((item) => item.id === row.studentId);
+    const student = studentsById.get(row.studentId);
 
     detailSheet.addRow({
       no: index + 1,
@@ -159,7 +169,7 @@ export async function GET(request: Request) {
       range: formatRange(row.surah, row.fromAyah, row.toAyah),
       score: row.score ?? "",
       status: statusLabels[row.status],
-      date: row.date.toLocaleDateString("id-ID"),
+      date: jakartaDateFormatter.format(row.date),
       notes: row.notes ?? "",
     });
   });

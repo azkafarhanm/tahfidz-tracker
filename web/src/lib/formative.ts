@@ -438,18 +438,6 @@ async function getTeacherFormativeRows(
   }));
 
   return [...hafalanRows, ...murojaahRows]
-    .filter((row) => {
-      return row.date >= start && row.date <= end;
-    })
-    .map((row) => ({
-      ...row,
-      studentName: row.studentName,
-      date: row.date,
-      notes: row.notes,
-      status: row.status,
-      score: row.score,
-      semester,
-      academicYear,
-    }))
+    .map((row) => ({ ...row, semester, academicYear }))
     .sort((left, right) => right.date.getTime() - left.date.getTime());
 }

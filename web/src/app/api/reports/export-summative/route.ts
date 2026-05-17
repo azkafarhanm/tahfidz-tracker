@@ -12,9 +12,16 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
 export async function GET(request: Request) {
   const session = await auth();
-    if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
+  if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -82,9 +89,15 @@ export async function GET(request: Request) {
   ];
   summarySheet.getRow(1).fill = headerFill;
   summarySheet.getRow(1).font = headerFont;
+  const latestRowByStudent = new Map<string, (typeof exportData.rows)[number]>();
+  for (const row of exportData.rows) {
+    if (!latestRowByStudent.has(row.studentId)) {
+      latestRowByStudent.set(row.studentId, row);
+    }
+  }
 
   exportData.students.forEach((student, index) => {
-    const latestRow = exportData.rows.find((row) => row.studentId === student.id);
+    const latestRow = latestRowByStudent.get(student.id);
     summarySheet.addRow({
       no: index + 1,
       studentName: student.fullName,
@@ -126,7 +139,7 @@ export async function GET(request: Request) {
       surahArabicName: row.surahArabicName,
       score: row.score,
       notes: row.notes ?? "",
-      createdAt: row.createdAt.toLocaleDateString("id-ID"),
+      createdAt: jakartaDateFormatter.format(row.createdAt),
     });
   });
 

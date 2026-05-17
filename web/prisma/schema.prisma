@@ -121,6 +121,7 @@ model ClassGroup {
   @@index([grade])
   @@index([level])
   @@index([isActive])
+  @@index([teacherId, isActive, grade, level])
   @@unique([teacherId, academicYear, grade])
 }
 
@@ -151,6 +152,7 @@ model Student {
   @@index([fullName])
   @@index([isActive])
   @@index([teacherId, isActive])
+  @@index([teacherId, isActive, fullName])
 }
 
 model MemorizationRecord {
@@ -177,6 +179,8 @@ model MemorizationRecord {
   @@index([studentId, date])
   @@index([teacherId, date])
   @@index([teacherId, status])
+  @@index([teacherId, studentId, date])
+  @@index([studentId, status, date])
 }
 
 model RevisionRecord {
@@ -203,6 +207,8 @@ model RevisionRecord {
   @@index([studentId, date])
   @@index([teacherId, date])
   @@index([teacherId, status])
+  @@index([teacherId, studentId, date])
+  @@index([studentId, status, date])
 }
 
 model Target {
@@ -228,6 +234,7 @@ model Target {
   @@index([status])
   @@index([endDate])
   @@index([studentId, status])
+  @@index([teacherId, status, endDate])
 }
 
 model Account {

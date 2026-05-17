@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { invalidateCache } from "@/lib/cache";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -36,11 +36,11 @@ export async function updateRecord(
   });
 
   if (!student) {
-    fail(t("studentNotFound"));
+    return fail(t("studentNotFound"));
   }
 
-  if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
-    fail(t("noPermissionEdit"));
+  if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
+    return fail(t("noPermissionEdit"));
   }
 
   const surah = readString(formData, "surah");
@@ -70,17 +70,17 @@ export async function updateRecord(
 
   if (recordType === "murojaah") {
     const existing = await prisma.revisionRecord.findFirst({
-      where: { id: recordId, studentId: student!.id },
+      where: { id: recordId, studentId: student.id },
       select: { id: true },
     });
-    if (!existing) fail(t("recordNotFound"));
+    if (!existing) return fail(t("recordNotFound"));
     await prisma.revisionRecord.update({ where: { id: recordId }, data });
   } else {
     const existing = await prisma.memorizationRecord.findFirst({
-      where: { id: recordId, studentId: student!.id },
+      where: { id: recordId, studentId: student.id },
       select: { id: true },
     });
-    if (!existing) fail(t("recordNotFound"));
+    if (!existing) return fail(t("recordNotFound"));
     await prisma.memorizationRecord.update({ where: { id: recordId }, data });
   }
 
@@ -89,11 +89,7 @@ export async function updateRecord(
   revalidatePath(`/students/${studentId}`);
   revalidatePath("/formative");
   revalidatePath(`/formative/${studentId}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("formative-");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordUpdated"))}`);
 }
 
@@ -145,10 +141,6 @@ export async function deleteRecord(
   revalidatePath(`/students/${studentId}`);
   revalidatePath("/formative");
   revalidatePath(`/formative/${studentId}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("formative-");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordDeleted"))}`);
 }

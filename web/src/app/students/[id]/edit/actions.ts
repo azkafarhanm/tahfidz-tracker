@@ -6,12 +6,13 @@ import { getTranslations } from "next-intl/server";
 import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
+  parseDateInput,
   readOptionalString,
   readString,
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { invalidateCache } from "@/lib/cache";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
 
 const validGenders = new Set<string>(Object.values(Gender));
@@ -38,10 +39,11 @@ export async function updateTeacherStudent(
   const academicClassId = readOptionalString(formData, "academicClassId");
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
+  const parsedJoinDate = joinDate ? parseDateInput(joinDate) : null;
   const notes = readOptionalString(formData, "notes");
 
   if (!fullName || fullName.length > 120) {
-    fail(t("studentNameRequired"), {
+    return fail(t("studentNameRequired"), {
       fullName,
       gender,
       joinDate,
@@ -50,7 +52,7 @@ export async function updateTeacherStudent(
   }
 
   if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
-    fail(t("halaqahLevelRequired"), {
+    return fail(t("halaqahLevelRequired"), {
       fullName,
       gender,
       joinDate,
@@ -59,7 +61,7 @@ export async function updateTeacherStudent(
   }
 
   if (!grade || grade < 7 || grade > 9) {
-    fail(t("gradeRequired"), {
+    return fail(t("gradeRequired"), {
       fullName,
       gender,
       joinDate,
@@ -68,7 +70,16 @@ export async function updateTeacherStudent(
   }
 
   if (gender && !validGenders.has(gender)) {
-    fail(t("genderInvalid"), {
+    return fail(t("genderInvalid"), {
+      fullName,
+      gender,
+      joinDate,
+      notes: notes ?? "",
+    });
+  }
+
+  if (joinDate && !parsedJoinDate) {
+    return fail(t("dateInvalid"), {
       fullName,
       gender,
       joinDate,
@@ -94,7 +105,7 @@ export async function updateTeacherStudent(
     });
 
     if (!selectedClassGroup) {
-      fail(t("halaqahMismatch"), {
+      return fail(t("halaqahMismatch"), {
         fullName,
         gender,
         joinDate,
@@ -102,10 +113,8 @@ export async function updateTeacherStudent(
       });
     }
 
-    const resolvedSelectedClassGroup = selectedClassGroup!;
-
-    if (resolvedSelectedClassGroup.grade !== grade) {
-      fail(t("halaqahMismatch"), {
+    if (selectedClassGroup.grade !== grade) {
+      return fail(t("halaqahMismatch"), {
         fullName,
         gender,
         joinDate,
@@ -113,7 +122,7 @@ export async function updateTeacherStudent(
       });
     }
 
-    resolvedClassGroupId = resolvedSelectedClassGroup.id;
+    resolvedClassGroupId = selectedClassGroup.id;
   } else {
     const level = halaqahLevel as HalaqahLevel;
     const existing = await prisma.classGroup.findFirst({
@@ -148,7 +157,7 @@ export async function updateTeacherStudent(
     data: {
       fullName,
       gender: (gender as Gender) || null,
-      joinDate: joinDate ? new Date(joinDate) : undefined,
+      joinDate: parsedJoinDate ?? undefined,
       notes,
       academicClassId: academicClassId || null,
       classGroupId: resolvedClassGroupId,
@@ -158,10 +167,7 @@ export async function updateTeacherStudent(
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}`);
 }
 
@@ -189,9 +195,7 @@ export async function deactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students?success=${encodeURIComponent(t("studentDeactivated"))}`);
 }
 
@@ -219,8 +223,6 @@ export async function reactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("report-teacher");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/students?success=${encodeURIComponent(t("studentReactivated"))}`);
 }

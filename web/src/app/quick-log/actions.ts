@@ -10,7 +10,7 @@ import {
 } from "@/lib/quick-log";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { invalidateCache } from "@/lib/cache";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -43,24 +43,24 @@ export async function createGuidedRecord(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
 
   if (!studentId) {
-    fail(t("selectStudent"));
+    return fail(t("selectStudent"));
   }
 
   const student = await prisma.student.findFirst({
-    where: { id: studentId!, isActive: true },
+    where: { id: studentId, isActive: true },
     select: { id: true, teacherId: true },
   });
 
   if (!student) {
-    fail(t("studentInactive"));
+    return fail(t("studentInactive"));
   }
 
-  if (session.user.role !== "ADMIN" && student!.teacherId !== session.user.teacherId) {
-    fail(t("noPermissionStudent"));
+  if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
+    return fail(t("noPermissionStudent"));
   }
 
   if (!validTypes.has(typeValue)) {
-    fail(t("recordTypeInvalid"));
+    return fail(t("recordTypeInvalid"));
   }
 
   await validateRecordFields({
@@ -68,8 +68,8 @@ export async function createGuidedRecord(formData: FormData) {
   });
 
   const data = {
-    studentId: student!.id,
-    teacherId: student!.teacherId,
+    studentId: student.id,
+    teacherId: student.teacherId,
     surah,
     fromAyah: fromAyah!,
     toAyah: toAyah!,
@@ -87,14 +87,10 @@ export async function createGuidedRecord(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/students");
-  revalidatePath(`/students/${student!.id}`);
+  revalidatePath(`/students/${student.id}`);
   revalidatePath("/quick-log");
   revalidatePath("/formative");
-  revalidatePath(`/formative/${student!.id}`);
-  invalidateCache("dashboard");
-  invalidateCache("students");
-  invalidateCache("formative-");
-  invalidateCache("report-teacher");
-  invalidateCache("report-student");
-  redirect(`/students/${student!.id}?success=${encodeURIComponent(t("recordSaved"))}`);
+  revalidatePath(`/formative/${student.id}`);
+  invalidateStudentRelatedCaches(student.id);
+  redirect(`/students/${student.id}?success=${encodeURIComponent(t("recordSaved"))}`);
 }

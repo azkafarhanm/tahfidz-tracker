@@ -28,9 +28,15 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
       include: {
         classGroup: { select: { name: true, level: true } },
         academicClass: { select: { name: true } },
+        _count: {
+          select: {
+            memorizationRecords: true,
+            revisionRecords: true,
+          },
+        },
         memorizationRecords: {
           orderBy: { date: "desc" },
-          take: 5,
+          take: 1,
           select: {
             surah: true,
             fromAyah: true,
@@ -42,7 +48,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
         },
         revisionRecords: {
           orderBy: { date: "desc" },
-          take: 5,
+          take: 1,
           select: {
             surah: true,
             fromAyah: true,
@@ -66,12 +72,83 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
     }),
   ]);
 
-  const allHafalan = students.flatMap((s) => s.memorizationRecords);
-  const allMurojaah = students.flatMap((s) => s.revisionRecords);
-  const allScores = [...allHafalan, ...allMurojaah]
-    .map((r) => r.score)
-    .filter((s): s is number => s !== null);
-  const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length) : 0;
+  const studentIds = students.map((student) => student.id);
+  const [
+    memorizationScoreStats,
+    revisionScoreStats,
+    memorizationStudentStats,
+    revisionStudentStats,
+  ] = studentIds.length > 0
+    ? await Promise.all([
+        prisma.memorizationRecord.aggregate({
+          where: {
+            studentId: { in: studentIds },
+            score: { not: null },
+          },
+          _avg: { score: true },
+          _count: { score: true },
+        }),
+        prisma.revisionRecord.aggregate({
+          where: {
+            studentId: { in: studentIds },
+            score: { not: null },
+          },
+          _avg: { score: true },
+          _count: { score: true },
+        }),
+        prisma.memorizationRecord.groupBy({
+          by: ["studentId"],
+          where: {
+            studentId: { in: studentIds },
+            score: { not: null },
+          },
+          _avg: { score: true },
+          _count: { score: true },
+        }),
+        prisma.revisionRecord.groupBy({
+          by: ["studentId"],
+          where: {
+            studentId: { in: studentIds },
+            score: { not: null },
+          },
+          _avg: { score: true },
+          _count: { score: true },
+        }),
+      ])
+    : [
+        { _avg: { score: null }, _count: { score: 0 } },
+        { _avg: { score: null }, _count: { score: 0 } },
+        [],
+        [],
+      ] as const;
+
+  const totalHafalan = students.reduce(
+    (sum, student) => sum + student._count.memorizationRecords,
+    0,
+  );
+  const totalMurojaah = students.reduce(
+    (sum, student) => sum + student._count.revisionRecords,
+    0,
+  );
+  const avgScore = weightedAverage([
+    memorizationScoreStats,
+    revisionScoreStats,
+  ]);
+  const studentScoreStats = new Map<string, { scoreTotal: number; count: number }>();
+
+  for (const row of [...memorizationStudentStats, ...revisionStudentStats]) {
+    const average = row._avg.score;
+    const count = row._count.score;
+    if (average === null || count === 0) continue;
+
+    const current = studentScoreStats.get(row.studentId) ?? {
+      scoreTotal: 0,
+      count: 0,
+    };
+    current.scoreTotal += average * count;
+    current.count += count;
+    studentScoreStats.set(row.studentId, current);
+  }
 
   const needsReview = students.filter((s) => {
     const lastH = s.memorizationRecords[0];
@@ -90,18 +167,21 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
       studentCount: cg._count.students,
     })),
     studentCount: students.length,
-    totalHafalan: allHafalan.length,
-    totalMurojaah: allMurojaah.length,
+    totalHafalan,
+    totalMurojaah,
     avgScore,
     needsReviewCount: needsReview.length,
     activeTargetCount: students.reduce((sum, s) => sum + s.targets.length, 0),
     students: students.map((s) => {
       const lastH = s.memorizationRecords[0];
       const lastM = s.revisionRecords[0];
-      const scores = [...s.memorizationRecords, ...s.revisionRecords]
-        .map((r) => r.score)
-        .filter((v): v is number => v !== null);
-      const studentAvg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+      const latest = [lastH, lastM]
+        .filter((record): record is NonNullable<typeof lastH> => Boolean(record))
+        .sort((a, b) => b.date.getTime() - a.date.getTime())[0];
+      const scoreStats = studentScoreStats.get(s.id);
+      const studentAvg = scoreStats
+        ? Math.round(scoreStats.scoreTotal / scoreStats.count)
+        : 0;
 
       return {
         id: s.id,
@@ -109,21 +189,17 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
         halaqahName: s.classGroup.name,
         halaqahLevel: halaqahLevelLabels[s.classGroup.level],
         academicClassName: s.academicClass?.name ?? "-",
-        hafalanCount: s.memorizationRecords.length,
-        murojaahCount: s.revisionRecords.length,
+        hafalanCount: s._count.memorizationRecords,
+        murojaahCount: s._count.revisionRecords,
         avgScore: studentAvg,
-        lastActivity: lastH ?? lastM
-          ? dateFormatter.format((lastH ?? lastM)!.date)
+        lastActivity: latest
+          ? dateFormatter.format(latest.date)
           : "Belum ada",
-        lastRange: lastH
-          ? formatRange(lastH.surah, lastH.fromAyah, lastH.toAyah)
-          : lastM
-            ? formatRange(lastM.surah, lastM.fromAyah, lastM.toAyah)
+        lastRange: latest
+          ? formatRange(latest.surah, latest.fromAyah, latest.toAyah)
             : "-",
-        lastStatus: lastH
-          ? statusLabels[lastH.status]
-          : lastM
-            ? statusLabels[lastM.status]
+        lastStatus: latest
+          ? statusLabels[latest.status]
             : "-",
         needsReview:
           lastH?.status === RecordStatus.PERLU_MUROJAAH ||
@@ -135,6 +211,25 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
       };
     }),
   };
+}
+
+function weightedAverage(
+  stats: Array<{ _avg: { score: number | null }; _count: { score: number } }>,
+) {
+  const totals = stats.reduce(
+    (acc, stat) => {
+      const average = stat._avg.score;
+      const count = stat._count.score;
+      if (average === null || count === 0) return acc;
+
+      acc.scoreTotal += average * count;
+      acc.count += count;
+      return acc;
+    },
+    { scoreTotal: 0, count: 0 },
+  );
+
+  return totals.count > 0 ? Math.round(totals.scoreTotal / totals.count) : 0;
 }
 
 export async function getStudentProgressData(

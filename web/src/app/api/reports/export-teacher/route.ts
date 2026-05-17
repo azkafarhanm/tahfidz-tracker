@@ -15,9 +15,16 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
 export async function GET() {
   const session = await auth();
-    if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
+  if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -164,7 +171,7 @@ export async function GET() {
         range: formatRange(row.surah, row.fromAyah, row.toAyah),
         score: row.score ?? "",
         status: statusLabels[row.status],
-        date: row.date.toLocaleDateString("id-ID"),
+        date: jakartaDateFormatter.format(row.date),
         notes: row.notes ?? "",
       });
     });
@@ -223,7 +230,7 @@ export async function GET() {
         arabic: row.surahArabicName,
         score: row.score,
         notes: row.notes ?? "",
-        createdAt: row.createdAt.toLocaleDateString("id-ID"),
+        createdAt: jakartaDateFormatter.format(row.createdAt),
       });
     });
   }

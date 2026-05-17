@@ -1,7 +1,5 @@
-const CACHE_NAME = "tahfidzflow-v1";
+const CACHE_NAME = "tahfidzflow-v2";
 const STATIC_ASSETS = [
-  "/",
-  "/login",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
@@ -33,11 +31,25 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (request.method !== "GET") return;
+  if (url.origin !== self.location.origin) return;
 
   if (
     url.pathname.startsWith("/api/auth") ||
     url.pathname.startsWith("/api/reports")
   ) {
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(
+        () =>
+          new Response("Offline", {
+            status: 503,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          })
+      )
+    );
     return;
   }
 
@@ -62,24 +74,4 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
-      .catch(() =>
-        caches.match(request).then((cached) => {
-          if (cached) return cached;
-          if (request.headers.get("accept")?.includes("text/html")) {
-            return caches.match("/");
-          }
-          return new Response("Offline", { status: 503 });
-        })
-      )
-  );
 });

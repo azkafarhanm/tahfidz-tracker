@@ -15,34 +15,34 @@ export async function validateRecordFields(input: {
   const t = await getTranslations("Validation");
 
   if (!surah || surah.length > 80) {
-    fail(t("surahRequired"));
+    return fail(t("surahRequired"));
   }
 
   if (fromAyah === null || toAyah === null || fromAyah < 1 || toAyah < 1) {
-    fail(t("ayahPositive"));
+    return fail(t("ayahPositive"));
   }
 
-  if (toAyah! < fromAyah!) {
-    fail(t("ayahRange"));
+  if (toAyah < fromAyah) {
+    return fail(t("ayahRange"));
   }
 
-  if (toAyah! > 286) {
-    fail(t("ayahTooLarge"));
+  if (toAyah > 286) {
+    return fail(t("ayahTooLarge"));
   }
 
   if (!date) {
-    fail(t("dateInvalid"));
+    return fail(t("dateInvalid"));
   }
 
   if (!validStatuses.has(statusValue)) {
-    fail(t("statusInvalid"));
+    return fail(t("statusInvalid"));
   }
 
   if (score !== null && (score < 0 || score > 100)) {
-    fail(t("scoreRange"));
+    return fail(t("scoreRange"));
   }
 
   if (notes && notes.length > 1500) {
-    fail(t("notesTooLong"));
+    return fail(t("notesTooLong"));
   }
 }
