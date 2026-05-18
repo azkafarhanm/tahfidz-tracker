@@ -1,4 +1,3 @@
-import { UserPlus } from "lucide-react";
 import TeacherForm from "../TeacherForm";
 import { createTeacher } from "../actions";
 import { requireAdminScope } from "@/lib/session";
@@ -36,7 +35,7 @@ export default async function NewTeacherPage({
       backLabel={t("backTeacherDirectory")}
       description={t("addTeacherDescription")}
       error={params?.error}
-      icon={UserPlus}
+      icon="UserPlus"
       passwordDescription={t("addTeacherPasswordDescription")}
       passwordRequired
       submitLabel={t("saveTeacher")}

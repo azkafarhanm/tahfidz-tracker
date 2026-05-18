@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { PencilLine } from "lucide-react";
 import AcademicClassForm from "../../AcademicClassForm";
 import { updateAcademicClass } from "../../actions";
 import {
@@ -64,7 +63,7 @@ export default async function EditAcademicClassPage({
         year: academicClass.academicYear,
       })}
       error={query?.error}
-      icon={PencilLine}
+      icon="PencilLine"
       submitLabel={t("saveChanges")}
       title={t("editAcademicClass")}
       values={{

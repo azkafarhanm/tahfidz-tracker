@@ -5,13 +5,22 @@ import {
   ArrowLeft,
   KeyRound,
   Mail,
+  PencilLine,
   Phone,
   Save,
   ShieldCheck,
   UserRound,
+  UserPlus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+const iconMap = {
+  UserPlus,
+  PencilLine,
+} satisfies Record<string, LucideIcon>;
+
+type TeacherFormIcon = keyof typeof iconMap;
 
 export type TeacherFormValues = {
   fullName: string;
@@ -26,7 +35,7 @@ type TeacherFormProps = {
   backLabel: string;
   description: string;
   error?: string;
-  icon: LucideIcon;
+  icon: TeacherFormIcon;
   passwordDescription: string;
   passwordRequired: boolean;
   submitLabel: string;
@@ -40,7 +49,7 @@ export default function TeacherForm({
   backLabel,
   description,
   error,
-  icon: Icon,
+  icon: iconName,
   passwordDescription,
   passwordRequired,
   submitLabel,
@@ -48,6 +57,7 @@ export default function TeacherForm({
   values,
 }: TeacherFormProps) {
   const t = useTranslations("AdminTeacherForm");
+  const Icon = iconMap[iconName];
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">

@@ -7,9 +7,18 @@ import {
   Save,
   Hash,
   CalendarRange,
+  PencilLine,
+  PlusCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+const iconMap = {
+  PlusCircle,
+  PencilLine,
+} satisfies Record<string, LucideIcon>;
+
+type AcademicClassFormIcon = keyof typeof iconMap;
 
 export type AcademicClassFormValues = {
   grade: string;
@@ -25,7 +34,7 @@ type AcademicClassFormProps = {
   backLabel: string;
   description: string;
   error?: string;
-  icon: LucideIcon;
+  icon: AcademicClassFormIcon;
   submitLabel: string;
   title: string;
   values: AcademicClassFormValues;
@@ -38,12 +47,13 @@ export default function AcademicClassForm({
   backLabel,
   description,
   error,
-  icon: Icon,
+  icon: iconName,
   submitLabel,
   title,
   values,
 }: AcademicClassFormProps) {
   const t = useTranslations("AdminClassForm");
+  const Icon = iconMap[iconName];
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">

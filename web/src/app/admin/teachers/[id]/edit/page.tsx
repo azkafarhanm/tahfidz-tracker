@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { PencilLine } from "lucide-react";
 import TeacherForm from "../../TeacherForm";
 import { updateTeacher } from "../../actions";
 import { getAdminTeacherFormData } from "@/lib/admin";
@@ -55,7 +54,7 @@ export default async function EditTeacherPage({
         backLabel={t("backTeacherDirectory")}
         description={t("editTeacherDescription", { name: teacher.fullName })}
         error={query?.error}
-        icon={PencilLine}
+        icon="PencilLine"
         passwordDescription={t("editTeacherPasswordDescription")}
         passwordRequired={false}
         submitLabel={t("saveChanges")}

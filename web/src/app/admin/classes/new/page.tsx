@@ -1,4 +1,3 @@
-import { PlusCircle } from "lucide-react";
 import AcademicClassForm from "../AcademicClassForm";
 import { createAcademicClass } from "../actions";
 import { getAdminAcademicClassFormOptions } from "@/lib/admin";
@@ -44,7 +43,7 @@ export default async function NewAcademicClassPage({
       backLabel={t("backAcademicClasses")}
       description={t("addAcademicClassDescription")}
       error={params?.error}
-      icon={PlusCircle}
+      icon="PlusCircle"
       submitLabel={t("saveClass")}
       title={t("addAcademicClass")}
       values={{
