@@ -624,7 +624,8 @@
   "AdminHalaqahForm": {
     "nameAndTeacher": "Name and Teacher",
     "halaqahName": "Halaqah Name",
-    "halaqahNamePlaceholder": "e.g. Morning 7A Halaqah",
+    "halaqahNamePlaceholder": "e.g. Ustadz Ibrahim Lc - Grade 7",
+    "halaqahNameDescription": "Use the pattern: Teacher name - Grade N, so card titles stay easy to scan.",
     "responsibleTeacher": "Responsible Teacher",
     "selectTeacher": "Select teacher",
     "inactive": "Inactive",

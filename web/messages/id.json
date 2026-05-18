@@ -624,7 +624,8 @@
   "AdminHalaqahForm": {
     "nameAndTeacher": "Nama dan Guru",
     "halaqahName": "Nama halaqah",
-    "halaqahNamePlaceholder": "Contoh: Halaqah 7A Pagi",
+    "halaqahNamePlaceholder": "Contoh: Ustadz Ibrahim Lc - Kelas 7",
+    "halaqahNameDescription": "Gunakan format: Nama guru - Kelas N agar judul kartu mudah dipindai.",
     "responsibleTeacher": "Guru pembimbing",
     "selectTeacher": "Pilih guru",
     "inactive": "Nonaktif",

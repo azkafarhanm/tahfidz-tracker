@@ -624,7 +624,8 @@
   "AdminHalaqahForm": {
     "nameAndTeacher": "الاسم والمعلّم",
     "halaqahName": "اسم الحلقة",
-    "halaqahNamePlaceholder": "مثال: حلقة 7أ الصباحية",
+    "halaqahNamePlaceholder": "مثال: الأستاذ إبراهيم - الصف 7",
+    "halaqahNameDescription": "استخدم النمط: اسم المعلّم - الصف N لتبقى عناوين البطاقات سهلة القراءة.",
     "responsibleTeacher": "المعلّم المسؤول",
     "selectTeacher": "اختر معلّمًا",
     "inactive": "غير نشط",

@@ -16,10 +16,12 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const iconMap: Record<string, LucideIcon> = {
+const iconMap = {
   PlusCircle,
   PencilLine,
-};
+} satisfies Record<string, LucideIcon>;
+
+type ClassGroupFormIcon = keyof typeof iconMap;
 
 type TeacherOption = {
   id: string;
@@ -45,7 +47,7 @@ type ClassGroupFormProps = {
   backLabel: string;
   description: string;
   error?: string;
-  icon: string;
+  icon: ClassGroupFormIcon;
   submitLabel: string;
   teachers: TeacherOption[];
   academicYears: string[];
@@ -71,7 +73,7 @@ export default function ClassGroupForm({
     values.academicYear,
   );
 
-  const Icon = iconMap[iconName] ?? PlusCircle;
+  const Icon = iconMap[iconName];
 
   const levelDescriptions: Record<string, string> = {
     LOW: t("levelLowDescription"),
@@ -130,6 +132,7 @@ export default function ClassGroupForm({
                 {t("halaqahName")}
               </span>
               <input
+                aria-describedby="halaqah-name-help"
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
                 defaultValue={values.name}
                 maxLength={120}
@@ -138,6 +141,12 @@ export default function ClassGroupForm({
                 required
                 type="text"
               />
+              <p
+                className="mt-2 text-xs text-slate-500 dark:text-slate-400"
+                id="halaqah-name-help"
+              >
+                {t("halaqahNameDescription")}
+              </p>
             </label>
 
             <label className="mt-4 block">
