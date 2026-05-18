@@ -36,14 +36,10 @@ export default async function SummativeNewPage({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Summative");
 
-  if (!teacherId) {
-    redirect("/admin");
-  }
-
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
     },
     select: {

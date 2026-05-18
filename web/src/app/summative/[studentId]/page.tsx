@@ -53,10 +53,6 @@ export default async function SummativeDetailPage({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Summative");
 
-  if (!teacherId) {
-    redirect("/admin");
-  }
-
   const cookieStore = await cookies();
   const savedView = parseStoredGradingView(
     cookieStore.get(SUMMATIVE_VIEW_COOKIE)?.value,

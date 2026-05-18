@@ -21,7 +21,13 @@ const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
 
 export async function GET(request: Request) {
   const session = await auth();
-  if (!session?.user || session.user.role === "ADMIN" || !session.user.teacherId) {
+  if (!session?.user) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const teacherId =
+    session.user.role === "ADMIN" ? null : session.user.teacherId ?? null;
+  if (session.user.role !== "ADMIN" && !teacherId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -41,7 +47,7 @@ export async function GET(request: Request) {
   const semester = parseSemester(semesterValue);
   const academicYear = getCurrentAcademicYear();
   const exportData = await getTeacherSummativeExportData(
-    session.user.teacherId,
+    teacherId,
     semester,
     academicYear,
     classLevel,

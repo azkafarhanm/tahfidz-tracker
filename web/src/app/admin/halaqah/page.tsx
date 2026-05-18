@@ -9,6 +9,7 @@ import {
 import { getTranslations } from "next-intl/server";
 import { toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
+import DeleteClassGroupButton from "./DeleteClassGroupButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
 
 
@@ -253,6 +254,12 @@ export default async function AdminHalaqahPage({
                         {classGroup.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
+                    {classGroup.studentCount === 0 ? (
+                      <DeleteClassGroupButton
+                        classGroupId={classGroup.id}
+                        classGroupName={classGroup.name}
+                      />
+                    ) : null}
                   </div>
                 </article>
               ))

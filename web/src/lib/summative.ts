@@ -151,13 +151,13 @@ async function getClassTargetsInner(
 }
 
 export async function getTeacherSummativeOverview(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel?: number,
   locale = "id",
 ) {
-  const cacheKey = `summative-overview:${teacherId}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
+  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
 
   return cached(cacheKey, 30_000, () =>
     getTeacherSummativeOverviewInner(
@@ -171,7 +171,7 @@ export async function getTeacherSummativeOverview(
 }
 
 async function getTeacherSummativeOverviewInner(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel: number | undefined,
@@ -180,7 +180,7 @@ async function getTeacherSummativeOverviewInner(
   const dateFormatter = getDateFormatter(locale);
   const students = await prisma.student.findMany({
     where: {
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
       ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
     },
@@ -249,12 +249,12 @@ async function getTeacherSummativeOverviewInner(
 
 export async function getStudentSummativeDetail(
   studentId: string,
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   locale = "id",
 ) {
-  const cacheKey = `summative-detail:${studentId}:${teacherId}:${semester}:${academicYear}:${locale}`;
+  const cacheKey = `summative-detail:${studentId}:${teacherId ?? "admin"}:${semester}:${academicYear}:${locale}`;
 
   return cached(cacheKey, 30_000, () =>
     getStudentSummativeDetailInner(
@@ -269,7 +269,7 @@ export async function getStudentSummativeDetail(
 
 async function getStudentSummativeDetailInner(
   studentId: string,
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   locale: string,
@@ -279,7 +279,7 @@ async function getStudentSummativeDetailInner(
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
     },
     select: {
@@ -359,15 +359,13 @@ async function getStudentSummativeDetailInner(
 export async function getStudentSummativeAssessmentForEdit(
   studentId: string,
   assessmentId: string,
-  teacherId: string,
+  teacherId: string | null,
 ) {
   return prisma.summativeScore.findFirst({
     where: {
       id: assessmentId,
       studentId,
-      student: {
-        teacherId,
-      },
+      ...(teacherId ? { student: { teacherId } } : {}),
     },
     include: {
       student: {
@@ -392,14 +390,14 @@ export async function getStudentSummativeAssessmentForEdit(
 }
 
 export async function getTeacherSummativeExportData(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel?: number,
 ) {
   const students = await prisma.student.findMany({
     where: {
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
       ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
     },

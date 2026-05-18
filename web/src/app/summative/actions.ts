@@ -18,15 +18,12 @@ import { prisma } from "@/lib/prisma";
 
 export async function createSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
-  if (!teacherId) {
-    redirect("/login");
-  }
 
   const payload = await parseSummativePayload(formData);
   const student = await prisma.student.findFirst({
     where: {
       id: payload.studentId,
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
     },
     select: {
@@ -54,9 +51,6 @@ export async function createSummativeAssessmentAction(formData: FormData) {
 
 export async function updateSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
-  if (!teacherId) {
-    redirect("/login");
-  }
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   if (!assessmentId) {
@@ -90,9 +84,6 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
 
 export async function deleteSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
-  if (!teacherId) {
-    redirect("/login");
-  }
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   const studentId = String(formData.get("studentId") ?? "").trim();

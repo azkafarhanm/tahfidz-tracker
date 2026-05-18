@@ -2,7 +2,6 @@ import Link from "next/link";
 import { ArrowLeft, BookText, Download } from "lucide-react";
 import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
-import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import { Semester } from "@/generated/prisma-next/enums";
@@ -40,16 +39,13 @@ export default async function FormativePage({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Formative");
 
-  if (!teacherId) {
-    redirect("/admin");
-  }
-
   const cookieStore = await cookies();
   const savedView = parseStoredGradingView(
     cookieStore.get(FORMATIVE_VIEW_COOKIE)?.value,
   );
   const preferredClassLevel =
-    savedView.classLevel ?? (await getPreferredTeacherClassLevel(teacherId));
+    savedView.classLevel ??
+    (teacherId ? await getPreferredTeacherClassLevel(teacherId) : 7);
   const defaultSemester = savedView.semester ?? getSemesterForDate(new Date());
   const semesterValue =
     params?.semester && isSemesterValue(params.semester)

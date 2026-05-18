@@ -41,6 +41,8 @@ const adminNavKeys = [
   { key: "navKelas", href: "/admin/classes", icon: GraduationCap },
   { key: "navHalaqah", href: "/admin/halaqah", icon: BookOpen },
   { key: "navSantri", href: "/admin/students", icon: UserRound },
+  { key: "navFormatif", href: "/formative", icon: BookText },
+  { key: "navSumatif", href: "/summative", icon: ClipboardList },
   { key: "navLaporan", href: "/admin/reports", icon: BarChart3 },
   { key: "navProfil", href: "/profile", icon: UserCircle },
 ] as const;

@@ -41,10 +41,6 @@ export default async function SummativeEditPage({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Summative");
 
-  if (!teacherId) {
-    redirect("/admin");
-  }
-
   const assessment = await getStudentSummativeAssessmentForEdit(
     studentId,
     assessmentId,

@@ -287,3 +287,41 @@ export async function toggleClassGroupActive(
       : t("halaqahDeactivated", { name: classGroup.name }),
   );
 }
+
+export async function deleteClassGroup(classGroupId: string) {
+  await requireAdminScope();
+  const t = await getTranslations("Validation");
+
+  const classGroup = await prisma.classGroup.findUnique({
+    where: { id: classGroupId },
+    select: { id: true, name: true },
+  });
+
+  if (!classGroup) {
+    redirectAdminHalaqahWithMessage("error", t("halaqahNotFound"));
+  }
+
+  const studentCount = await prisma.student.count({
+    where: { classGroupId: classGroup.id },
+  });
+
+  if (studentCount > 0) {
+    redirectAdminHalaqahWithMessage(
+      "error",
+      t("halaqahHasAnyStudents", {
+        name: classGroup.name,
+        count: studentCount,
+      }),
+    );
+  }
+
+  await prisma.classGroup.delete({
+    where: { id: classGroup.id },
+  });
+
+  revalidateAdminHalaqahPaths();
+  redirectAdminHalaqahWithMessage(
+    "success",
+    t("halaqahDeleted", { name: classGroup.name }),
+  );
+}

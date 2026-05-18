@@ -47,13 +47,13 @@ export type FormativeOverviewStudent = {
 };
 
 export async function getTeacherFormativeOverview(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel?: number,
   locale = "id",
 ) {
-  const cacheKey = `formative-overview:${teacherId}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
+  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
   return cached(cacheKey, 30_000, () =>
     getTeacherFormativeOverviewInner(
       teacherId,
@@ -66,7 +66,7 @@ export async function getTeacherFormativeOverview(
 }
 
 async function getTeacherFormativeOverviewInner(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel: number | undefined,
@@ -77,7 +77,7 @@ async function getTeacherFormativeOverviewInner(
 
   const students = await prisma.student.findMany({
     where: {
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
       ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
     },
@@ -187,12 +187,12 @@ async function getTeacherFormativeOverviewInner(
 
 export async function getStudentFormativeDetail(
   studentId: string,
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   locale = "id",
 ) {
-  const cacheKey = `formative-detail:${studentId}:${teacherId}:${semester}:${academicYear}:${locale}`;
+  const cacheKey = `formative-detail:${studentId}:${teacherId ?? "admin"}:${semester}:${academicYear}:${locale}`;
   return cached(cacheKey, 30_000, () =>
     getStudentFormativeDetailInner(
       studentId,
@@ -206,7 +206,7 @@ export async function getStudentFormativeDetail(
 
 async function getStudentFormativeDetailInner(
   studentId: string,
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   locale: string,
@@ -218,7 +218,7 @@ async function getStudentFormativeDetailInner(
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
     },
     select: {
@@ -291,7 +291,7 @@ async function getStudentFormativeDetailInner(
 }
 
 export async function getTeacherFormativeExportData(
-  teacherId: string,
+  teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel?: number,
@@ -300,7 +300,7 @@ export async function getTeacherFormativeExportData(
 
   const students = await prisma.student.findMany({
     where: {
-      teacherId,
+      ...(teacherId ? { teacherId } : {}),
       isActive: true,
       ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
     },
@@ -341,7 +341,7 @@ export async function getTeacherFormativeExportData(
 }
 
 async function getTeacherFormativeRows(
-  teacherId: string,
+  teacherId: string | null,
   studentIds: string[],
   semester: Semester,
   academicYear: string,
@@ -351,7 +351,7 @@ async function getTeacherFormativeRows(
   const [hafalan, murojaah] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: {
-        teacherId,
+        ...(teacherId ? { teacherId } : {}),
         studentId: { in: studentIds },
         date: {
           gte: start,
@@ -380,7 +380,7 @@ async function getTeacherFormativeRows(
     }),
     prisma.revisionRecord.findMany({
       where: {
-        teacherId,
+        ...(teacherId ? { teacherId } : {}),
         studentId: { in: studentIds },
         date: {
           gte: start,

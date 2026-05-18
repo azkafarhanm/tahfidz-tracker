@@ -42,10 +42,6 @@ export default async function FormativeDetailPage({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const t = await getTranslations("Formative");
 
-  if (!teacherId) {
-    redirect("/admin");
-  }
-
   const cookieStore = await cookies();
   const savedView = parseStoredGradingView(
     cookieStore.get(FORMATIVE_VIEW_COOKIE)?.value,
