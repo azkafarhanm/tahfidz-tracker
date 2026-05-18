@@ -34,6 +34,6 @@ export function parseRecordDateTime(dateValue: string, timeValue: string) {
 export function parseDateInput(dateValue: string) {
   if (!dateValue) return null;
 
-  const parsed = new Date(`${dateValue}T00:00:00`);
+  const parsed = new Date(`${dateValue}T00:00:00Z`);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }

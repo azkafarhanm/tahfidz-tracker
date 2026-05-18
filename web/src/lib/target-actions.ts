@@ -86,14 +86,15 @@ async function parseTargetForm(formData: FormData): Promise<ParseTargetResult> {
 }
 
 export async function createTarget(studentId: string, formData: FormData) {
-  const { teacherId } = await requireSessionScope();
+  const { teacherId, isAdmin } = await requireSessionScope();
 
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     select: { id: true, teacherId: true },
   });
 
-  if (!student || student.teacherId !== teacherId) {
+  // Admin can manage any student; teacher can only manage their own students
+  if (!student || (!isAdmin && student.teacherId !== teacherId)) {
     redirect("/students");
   }
 
@@ -106,10 +107,11 @@ export async function createTarget(studentId: string, formData: FormData) {
 
   const { data } = result;
 
+  // Always store the student's actual teacher on the target record
   await prisma.target.create({
     data: {
       studentId,
-      teacherId,
+      teacherId: student.teacherId,
       type: data.type,
       surah: data.surah,
       fromAyah: data.fromAyah,
@@ -127,23 +129,24 @@ export async function createTarget(studentId: string, formData: FormData) {
 }
 
 export async function updateTarget(targetId: string, formData: FormData) {
-  const { teacherId } = await requireSessionScope();
+  const { teacherId, isAdmin } = await requireSessionScope();
 
   const target = await prisma.target.findUnique({
     where: { id: targetId },
-    select: { id: true, studentId: true, status: true },
+    select: {
+      id: true,
+      studentId: true,
+      status: true,
+      student: { select: { teacherId: true } },
+    },
   });
 
   if (!target || target.status !== TargetStatus.ACTIVE) {
     redirect("/students");
   }
 
-  const student = await prisma.student.findUnique({
-    where: { id: target.studentId },
-    select: { teacherId: true },
-  });
-
-  if (!student || student.teacherId !== teacherId) {
+  // Admin can manage any student; teacher can only manage their own students
+  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) {
     redirect("/students");
   }
 
@@ -176,21 +179,22 @@ export async function updateTarget(targetId: string, formData: FormData) {
 }
 
 export async function cancelTarget(targetId: string) {
-  const { teacherId } = await requireSessionScope();
+  const { teacherId, isAdmin } = await requireSessionScope();
 
   const target = await prisma.target.findUnique({
     where: { id: targetId },
-    select: { id: true, studentId: true, status: true },
+    select: {
+      id: true,
+      studentId: true,
+      status: true,
+      student: { select: { teacherId: true } },
+    },
   });
 
   if (!target || target.status !== TargetStatus.ACTIVE) return;
 
-  const student = await prisma.student.findUnique({
-    where: { id: target.studentId },
-    select: { teacherId: true },
-  });
-
-  if (!student || student.teacherId !== teacherId) return;
+  // Admin can manage any student; teacher can only manage their own students
+  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) return;
 
   await prisma.target.update({
     where: { id: targetId },
@@ -202,21 +206,22 @@ export async function cancelTarget(targetId: string) {
 }
 
 export async function completeTarget(targetId: string) {
-  const { teacherId } = await requireSessionScope();
+  const { teacherId, isAdmin } = await requireSessionScope();
 
   const target = await prisma.target.findUnique({
     where: { id: targetId },
-    select: { id: true, studentId: true, status: true },
+    select: {
+      id: true,
+      studentId: true,
+      status: true,
+      student: { select: { teacherId: true } },
+    },
   });
 
   if (!target || target.status !== TargetStatus.ACTIVE) return;
 
-  const student = await prisma.student.findUnique({
-    where: { id: target.studentId },
-    select: { teacherId: true },
-  });
-
-  if (!student || student.teacherId !== teacherId) return;
+  // Admin can manage any student; teacher can only manage their own students
+  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) return;
 
   await prisma.target.update({
     where: { id: targetId },

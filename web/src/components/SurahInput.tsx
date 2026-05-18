@@ -88,7 +88,7 @@ export default function SurahInput({
           if (!isOpen) return;
           if (e.key === "ArrowDown") {
             e.preventDefault();
-            setHighlightIndex((i) => Math.min(i + 1, filtered.length - 1));
+            setHighlightIndex((i) => Math.min(i + 1, Math.min(filtered.length, 20) - 1));
           } else if (e.key === "ArrowUp") {
             e.preventDefault();
             setHighlightIndex((i) => Math.max(i - 1, 0));

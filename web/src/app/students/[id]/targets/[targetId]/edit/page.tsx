@@ -24,7 +24,7 @@ type EditTargetPageProps = {
 
 export default async function EditTargetPage({ params, searchParams }: EditTargetPageProps) {
   const t = await getTranslations("TargetForm");
-  const { teacherId } = await requireSessionScope();
+  const { teacherId, isAdmin } = await requireSessionScope();
   const { id: studentId, targetId } = await params;
   const query = await searchParams;
 
@@ -53,16 +53,17 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
     select: { teacherId: true, fullName: true },
   });
 
-  if (!student || student.teacherId !== teacherId) {
+  // Admin can edit any student's target; teacher restricted to own students
+  if (!student || (!isAdmin && student.teacherId !== teacherId)) {
     notFound();
   }
 
   const action = updateTarget.bind(null, targetId);
 
   const toDateString = (d: Date) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
+    const yyyy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(d.getUTCDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   };
 
