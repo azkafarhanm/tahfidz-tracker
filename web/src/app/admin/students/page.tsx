@@ -164,11 +164,29 @@ export default async function AdminStudentsPage({
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {students.length > 0 ? (
-              students.map((student) => (
-                <article
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
-                  key={student.id}
-                >
+              students.map((student) => {
+                const deleteDisabledReason =
+                  student.totalRecordCount > 0 &&
+                  student.deleteBlockingOtherDataCount > 0
+                    ? t("deleteBlockedByRecordsAndOther", {
+                        recordCount: student.totalRecordCount,
+                        otherCount: student.deleteBlockingOtherDataCount,
+                      })
+                    : student.totalRecordCount > 0
+                      ? t("deleteBlockedByRecords", {
+                          count: student.totalRecordCount,
+                        })
+                      : student.deleteBlockingOtherDataCount > 0
+                        ? t("deleteBlockedByOtherData", {
+                            count: student.deleteBlockingOtherDataCount,
+                          })
+                        : undefined;
+
+                return (
+                  <article
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
+                    key={student.id}
+                  >
                   <div className="flex items-start justify-between gap-3">
                      <div className="min-w-0">
                        <div className="flex items-center gap-3">
@@ -288,18 +306,13 @@ export default async function AdminStudentsPage({
                       })}
                       deletingLabel={t("deletingButton")}
                       disabled={student.deleteBlockingDataCount > 0}
-                      disabledReason={
-                        student.deleteBlockingDataCount > 0
-                          ? t("deleteBlockedByLearningData", {
-                              count: student.deleteBlockingDataCount,
-                            })
-                          : undefined
-                      }
+                      disabledReason={deleteDisabledReason}
                       label={t("deleteButton")}
                     />
                   </div>
-                </article>
-              ))
+                  </article>
+                );
+              })
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
                 {query
