@@ -96,10 +96,8 @@ function mapStudentSummary(student: {
   const classInfo = formatClassSummary(student);
   const totalRecordCount =
     student._count.memorizationRecords + student._count.revisionRecords;
-  const deleteBlockingOtherDataCount =
-    student._count.summativeScores + student._count.targets;
   const deleteBlockingDataCount =
-    totalRecordCount + deleteBlockingOtherDataCount;
+    totalRecordCount + student._count.targets + student._count.summativeScores;
 
   return {
     id: student.id,
@@ -116,9 +114,10 @@ function mapStudentSummary(student: {
     halaqahLevel: halaqahLevelLabels[student.classGroup.level],
     classSummary: classInfo.classSummary,
     activeTargetCount,
+    storedTargetCount: student._count.targets,
     totalRecordCount,
+    summativeScoreCount: student._count.summativeScores,
     deleteBlockingDataCount,
-    deleteBlockingOtherDataCount,
   };
 }
 

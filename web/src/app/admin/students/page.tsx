@@ -165,22 +165,29 @@ export default async function AdminStudentsPage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {students.length > 0 ? (
               students.map((student) => {
-                const deleteDisabledReason =
-                  student.totalRecordCount > 0 &&
-                  student.deleteBlockingOtherDataCount > 0
-                    ? t("deleteBlockedByRecordsAndOther", {
-                        recordCount: student.totalRecordCount,
-                        otherCount: student.deleteBlockingOtherDataCount,
+                const deleteBlockers = [
+                  student.totalRecordCount > 0
+                    ? t("deleteBlockedRecordItem", {
+                        count: student.totalRecordCount,
                       })
-                    : student.totalRecordCount > 0
-                      ? t("deleteBlockedByRecords", {
-                          count: student.totalRecordCount,
-                        })
-                      : student.deleteBlockingOtherDataCount > 0
-                        ? t("deleteBlockedByOtherData", {
-                            count: student.deleteBlockingOtherDataCount,
-                          })
-                        : undefined;
+                    : null,
+                  student.storedTargetCount > 0
+                    ? t("deleteBlockedTargetItem", {
+                        count: student.storedTargetCount,
+                      })
+                    : null,
+                  student.summativeScoreCount > 0
+                    ? t("deleteBlockedSummativeItem", {
+                        count: student.summativeScoreCount,
+                      })
+                    : null,
+                ].filter(Boolean);
+                const deleteDisabledReason =
+                  deleteBlockers.length > 0
+                    ? t("deleteBlockedReason", {
+                        items: deleteBlockers.join(", "),
+                      })
+                    : undefined;
 
                 return (
                   <article
@@ -263,6 +270,28 @@ export default async function AdminStudentsPage({
                           strokeWidth={2.2}
                         />
                         {student.totalRecordCount}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {t("storedTargetLabel")}
+                      </p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
+                        <Users aria-hidden="true" size={16} strokeWidth={2.2} />
+                        {student.storedTargetCount}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        {t("summativeScoreLabel")}
+                      </p>
+                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
+                        <BookOpen
+                          aria-hidden="true"
+                          size={16}
+                          strokeWidth={2.2}
+                        />
+                        {student.summativeScoreCount}
                       </p>
                     </div>
                   </div>
