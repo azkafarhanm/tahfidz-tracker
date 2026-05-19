@@ -90,9 +90,14 @@ function mapStudentSummary(student: {
     targets: number;
     memorizationRecords: number;
     revisionRecords: number;
+    summativeScores: number;
   };
-}, dateFormatter: Intl.DateTimeFormat) {
+}, activeTargetCount: number, dateFormatter: Intl.DateTimeFormat) {
   const classInfo = formatClassSummary(student);
+  const totalRecordCount =
+    student._count.memorizationRecords + student._count.revisionRecords;
+  const deleteBlockingDataCount =
+    totalRecordCount + student._count.summativeScores + student._count.targets;
 
   return {
     id: student.id,
@@ -108,9 +113,9 @@ function mapStudentSummary(student: {
     halaqahName: student.classGroup.name,
     halaqahLevel: halaqahLevelLabels[student.classGroup.level],
     classSummary: classInfo.classSummary,
-    activeTargetCount: student._count.targets,
-    totalRecordCount:
-      student._count.memorizationRecords + student._count.revisionRecords,
+    activeTargetCount,
+    totalRecordCount,
+    deleteBlockingDataCount,
   };
 }
 
@@ -356,15 +361,33 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       },
       _count: {
         select: {
-          targets: {
-            where: { status: TargetStatus.ACTIVE },
-          },
+          targets: true,
           memorizationRecords: true,
           revisionRecords: true,
+          summativeScores: true,
         },
       },
     },
   });
+
+  const activeTargetsByStudentId =
+    students.length > 0
+      ? new Map(
+          (
+            await prisma.target.groupBy({
+              by: ["studentId"],
+              where: {
+                studentId: { in: students.map((student) => student.id) },
+                status: TargetStatus.ACTIVE,
+              },
+              _count: { _all: true },
+            })
+          ).map((targetCount) => [
+            targetCount.studentId,
+            targetCount._count._all,
+          ]),
+        )
+      : new Map<string, number>();
 
   const studentCount = students.length;
   const activeStudentCount = students.filter((s) => s.isActive).length;
@@ -376,7 +399,13 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       inactiveStudentCount: studentCount - activeStudentCount,
       filteredStudentCount: students.length,
     },
-    students: students.map((student) => mapStudentSummary(student, dateFormatter)),
+    students: students.map((student) =>
+      mapStudentSummary(
+        student,
+        activeTargetsByStudentId.get(student.id) ?? 0,
+        dateFormatter,
+      ),
+    ),
     query: normalizedQuery,
   };
 }

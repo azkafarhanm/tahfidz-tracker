@@ -7,8 +7,9 @@ import {
   Users,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { toggleAcademicClassActive } from "./actions";
+import { deleteAcademicClass, toggleAcademicClassActive } from "./actions";
 import { getAdminAcademicClassesData } from "@/lib/admin";
+import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
 
 
@@ -238,6 +239,24 @@ export default async function AdminClassesPage({
                         {academicClass.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
+                    <AdminDeleteButton
+                      action={deleteAcademicClass.bind(null, academicClass.id)}
+                      cancelLabel={t("cancelDeleteButton")}
+                      confirmLabel={t("confirmDeleteButton")}
+                      confirmMessage={t("confirmDeleteMessage", {
+                        name: academicClass.name,
+                      })}
+                      deletingLabel={t("deletingButton")}
+                      disabled={academicClass.studentCount > 0}
+                      disabledReason={
+                        academicClass.studentCount > 0
+                          ? t("deleteBlockedByStudents", {
+                              count: academicClass.studentCount,
+                            })
+                          : undefined
+                      }
+                      label={t("deleteButton")}
+                    />
                   </div>
                 </article>
               ))

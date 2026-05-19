@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -96,6 +97,13 @@ function revalidateAdminHalaqahPaths() {
   invalidateCache("report-admin");
   invalidateCache("students");
   invalidateCache("dashboard");
+}
+
+function isDeleteRaceError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    ["P2003", "P2025", "P2034"].includes(error.code)
+  );
 }
 
 async function resolveClassGroupRelations(
@@ -292,36 +300,59 @@ export async function deleteClassGroup(classGroupId: string) {
   await requireAdminScope();
   const t = await getTranslations("Validation");
 
-  const classGroup = await prisma.classGroup.findUnique({
-    where: { id: classGroupId },
-    select: { id: true, name: true },
-  });
+  let result;
+  try {
+    result = await prisma.$transaction(
+      async (tx) => {
+        const classGroup = await tx.classGroup.findUnique({
+          where: { id: classGroupId },
+          select: { id: true, name: true },
+        });
 
-  if (!classGroup) {
+        if (!classGroup) {
+          return { status: "notFound" as const };
+        }
+
+        const studentCount = await tx.student.count({
+          where: { classGroupId: classGroup.id },
+        });
+
+        if (studentCount > 0) {
+          return { status: "blocked" as const, classGroup, studentCount };
+        }
+
+        await tx.classGroup.delete({
+          where: { id: classGroup.id },
+        });
+
+        return { status: "deleted" as const, classGroup };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (isDeleteRaceError(error)) {
+      redirectAdminHalaqahWithMessage("error", t("deleteRaceDetected"));
+    }
+    throw error;
+  }
+
+  if (result.status === "notFound") {
     redirectAdminHalaqahWithMessage("error", t("halaqahNotFound"));
   }
 
-  const studentCount = await prisma.student.count({
-    where: { classGroupId: classGroup.id },
-  });
-
-  if (studentCount > 0) {
+  if (result.status === "blocked") {
     redirectAdminHalaqahWithMessage(
       "error",
       t("halaqahHasAnyStudents", {
-        name: classGroup.name,
-        count: studentCount,
+        name: result.classGroup.name,
+        count: result.studentCount,
       }),
     );
   }
 
-  await prisma.classGroup.delete({
-    where: { id: classGroup.id },
-  });
-
   revalidateAdminHalaqahPaths();
   redirectAdminHalaqahWithMessage(
     "success",
-    t("halaqahDeleted", { name: classGroup.name }),
+    t("halaqahDeleted", { name: result.classGroup.name }),
   );
 }

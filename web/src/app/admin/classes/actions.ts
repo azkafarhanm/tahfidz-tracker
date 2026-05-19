@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -72,6 +73,13 @@ function revalidateAdminClassPaths() {
   invalidateCache("admin-dashboard");
   invalidateCache("report-admin");
   invalidateCache("students");
+}
+
+function isDeleteRaceError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    ["P2003", "P2025", "P2034"].includes(error.code)
+  );
 }
 
 export async function createAcademicClass(formData: FormData) {
@@ -214,5 +222,73 @@ export async function toggleAcademicClassActive(
     nextActiveState
       ? t("classActivated", { name: academicClass.name, year: academicClass.academicYear })
       : t("classDeactivated", { name: academicClass.name, year: academicClass.academicYear }),
+  );
+}
+
+export async function deleteAcademicClass(academicClassId: string) {
+  await requireAdminScope();
+  const t = await getTranslations("Validation");
+
+  let result;
+  try {
+    result = await prisma.$transaction(
+      async (tx) => {
+        const academicClass = await tx.academicClass.findUnique({
+          where: { id: academicClassId },
+          select: { id: true, name: true, academicYear: true },
+        });
+
+        if (!academicClass) {
+          return { status: "notFound" as const };
+        }
+
+        const studentCount = await tx.student.count({
+          where: { academicClassId: academicClass.id },
+        });
+
+        if (studentCount > 0) {
+          return {
+            status: "blocked" as const,
+            academicClass,
+            studentCount,
+          };
+        }
+
+        await tx.academicClass.delete({
+          where: { id: academicClass.id },
+        });
+
+        return { status: "deleted" as const, academicClass };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (isDeleteRaceError(error)) {
+      redirectAdminClassesWithMessage("error", t("deleteRaceDetected"));
+    }
+    throw error;
+  }
+
+  if (result.status === "notFound") {
+    redirectAdminClassesWithMessage("error", t("classNotFound"));
+  }
+
+  if (result.status === "blocked") {
+    redirectAdminClassesWithMessage(
+      "error",
+      t("classHasAnyStudents", {
+        name: result.academicClass.name,
+        count: result.studentCount,
+      }),
+    );
+  }
+
+  revalidateAdminClassPaths();
+  redirectAdminClassesWithMessage(
+    "success",
+    t("classDeleted", {
+      name: result.academicClass.name,
+      year: result.academicClass.academicYear,
+    }),
   );
 }

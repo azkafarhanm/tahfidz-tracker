@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -12,7 +13,7 @@ import {
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
-import { invalidateCache } from "@/lib/cache";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 
 const validGenders = new Set<string>(Object.values(Gender));
 
@@ -109,16 +110,22 @@ function redirectAdminStudentsWithMessage(
 function revalidateAdminStudentPaths(studentId?: string) {
   revalidatePath("/");
   revalidatePath("/students");
+  revalidatePath("/formative");
+  revalidatePath("/summative");
   revalidatePath("/admin");
   revalidatePath("/admin/students");
-  invalidateCache("admin-dashboard");
-  invalidateCache("report-admin");
-  invalidateCache("students");
-  invalidateCache("dashboard");
+  invalidateStudentRelatedCaches(studentId);
 
   if (studentId) {
     revalidatePath(`/students/${studentId}`);
   }
+}
+
+function isDeleteRaceError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    ["P2025", "P2034"].includes(error.code)
+  );
 }
 
 async function resolveStudentRelations(
@@ -272,5 +279,79 @@ export async function toggleStudentActive(
     nextActiveState
       ? t("adminStudentActivated", { name: student.fullName })
       : t("adminStudentDeactivated", { name: student.fullName }),
+  );
+}
+
+export async function deleteStudent(studentId: string) {
+  await requireAdminScope();
+  const t = await getTranslations("Validation");
+
+  let result;
+  try {
+    result = await prisma.$transaction(
+      async (tx) => {
+        const student = await tx.student.findUnique({
+          where: { id: studentId },
+          select: {
+            id: true,
+            fullName: true,
+            _count: {
+              select: {
+                memorizationRecords: true,
+                revisionRecords: true,
+                summativeScores: true,
+                targets: true,
+              },
+            },
+          },
+        });
+
+        if (!student) {
+          return { status: "notFound" as const };
+        }
+
+        const relatedDataCount =
+          student._count.memorizationRecords +
+          student._count.revisionRecords +
+          student._count.summativeScores +
+          student._count.targets;
+
+        if (relatedDataCount > 0) {
+          return { status: "blocked" as const, student, relatedDataCount };
+        }
+
+        await tx.student.delete({
+          where: { id: student.id },
+        });
+
+        return { status: "deleted" as const, student };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (isDeleteRaceError(error)) {
+      redirectAdminStudentsWithMessage("error", t("deleteRaceDetected"));
+    }
+    throw error;
+  }
+
+  if (result.status === "notFound") {
+    redirectAdminStudentsWithMessage("error", t("studentNotFound"));
+  }
+
+  if (result.status === "blocked") {
+    redirectAdminStudentsWithMessage(
+      "error",
+      t("adminStudentHasRelatedData", {
+        name: result.student.fullName,
+        count: result.relatedDataCount,
+      }),
+    );
+  }
+
+  revalidateAdminStudentPaths(result.student.id);
+  redirectAdminStudentsWithMessage(
+    "success",
+    t("adminStudentDeleted", { name: result.student.fullName }),
   );
 }

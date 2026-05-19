@@ -9,8 +9,9 @@ import {
   Users,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
-import { toggleStudentActive } from "./actions";
+import { deleteStudent, toggleStudentActive } from "./actions";
 import { getAdminStudentsData } from "@/lib/admin";
+import AdminDeleteButton from "@/components/AdminDeleteButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 
@@ -278,6 +279,24 @@ export default async function AdminStudentsPage({
                         {student.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
+                    <AdminDeleteButton
+                      action={deleteStudent.bind(null, student.id)}
+                      cancelLabel={t("cancelDeleteButton")}
+                      confirmLabel={t("confirmDeleteButton")}
+                      confirmMessage={t("confirmDeleteMessage", {
+                        name: student.fullName,
+                      })}
+                      deletingLabel={t("deletingButton")}
+                      disabled={student.deleteBlockingDataCount > 0}
+                      disabledReason={
+                        student.deleteBlockingDataCount > 0
+                          ? t("deleteBlockedByLearningData", {
+                              count: student.deleteBlockingDataCount,
+                            })
+                          : undefined
+                      }
+                      label={t("deleteButton")}
+                    />
                   </div>
                 </article>
               ))

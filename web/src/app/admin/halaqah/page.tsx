@@ -7,9 +7,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { toggleClassGroupActive } from "./actions";
+import { deleteClassGroup, toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
-import DeleteClassGroupButton from "./DeleteClassGroupButton";
+import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
 
 
@@ -254,12 +254,24 @@ export default async function AdminHalaqahPage({
                         {classGroup.isActive ? t("deactivateButton") : t("activateButton")}
                       </button>
                     </form>
-                    {classGroup.studentCount === 0 ? (
-                      <DeleteClassGroupButton
-                        classGroupId={classGroup.id}
-                        classGroupName={classGroup.name}
-                      />
-                    ) : null}
+                    <AdminDeleteButton
+                      action={deleteClassGroup.bind(null, classGroup.id)}
+                      cancelLabel={t("cancelDeleteButton")}
+                      confirmLabel={t("confirmDeleteButton")}
+                      confirmMessage={t("confirmDeleteMessage", {
+                        name: classGroup.name,
+                      })}
+                      deletingLabel={t("deletingButton")}
+                      disabled={classGroup.studentCount > 0}
+                      disabledReason={
+                        classGroup.studentCount > 0
+                          ? t("deleteBlockedByStudents", {
+                              count: classGroup.studentCount,
+                            })
+                          : undefined
+                      }
+                      label={t("deleteButton")}
+                    />
                   </div>
                 </article>
               ))
