@@ -398,7 +398,6 @@
     "joinedLabel": "انضم {date}",
     "activeTargetLabel": "أهداف نشطة",
     "totalRecordLabel": "إجمالي التسجيلات",
-    "storedTargetLabel": "الأهداف المحفوظة",
     "summativeScoreLabel": "درجات التجميعي",
     "editButton": "تعديل",
     "deactivateButton": "تعطيل",
@@ -410,7 +409,6 @@
     "cancelDeleteButton": "إلغاء",
     "deleteBlockedReason": "لا يمكن الحذف: {items}. عطّله بدلًا من الحذف.",
     "deleteBlockedRecordItem": "{count} سجلات",
-    "deleteBlockedTargetItem": "{count} أهداف محفوظة",
     "deleteBlockedSummativeItem": "{count} درجات تجميعية",
     "emptySearch": "لا يوجد طلاب مطابقون لهذا البحث.",
     "emptyNoData": "لا توجد بيانات طلاب للعرض بعد."

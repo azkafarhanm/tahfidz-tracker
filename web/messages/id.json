@@ -398,7 +398,6 @@
     "joinedLabel": "Bergabung {date}",
     "activeTargetLabel": "Target aktif",
     "totalRecordLabel": "Total catatan",
-    "storedTargetLabel": "Target tersimpan",
     "summativeScoreLabel": "Nilai sumatif",
     "editButton": "Ubah",
     "deactivateButton": "Nonaktifkan",
@@ -410,7 +409,6 @@
     "cancelDeleteButton": "Batal",
     "deleteBlockedReason": "Tidak bisa hapus: {items}. Nonaktifkan saja.",
     "deleteBlockedRecordItem": "{count} catatan",
-    "deleteBlockedTargetItem": "{count} target tersimpan",
     "deleteBlockedSummativeItem": "{count} nilai sumatif",
     "emptySearch": "Tidak ada santri yang cocok dengan pencarian ini.",
     "emptyNoData": "Belum ada data santri untuk ditampilkan."

@@ -87,7 +87,6 @@ function mapStudentSummary(student: {
     name: string;
   } | null;
   _count: {
-    targets: number;
     memorizationRecords: number;
     revisionRecords: number;
     summativeScores: number;
@@ -97,7 +96,7 @@ function mapStudentSummary(student: {
   const totalRecordCount =
     student._count.memorizationRecords + student._count.revisionRecords;
   const deleteBlockingDataCount =
-    totalRecordCount + student._count.targets + student._count.summativeScores;
+    totalRecordCount + student._count.summativeScores;
 
   return {
     id: student.id,
@@ -114,7 +113,6 @@ function mapStudentSummary(student: {
     halaqahLevel: halaqahLevelLabels[student.classGroup.level],
     classSummary: classInfo.classSummary,
     activeTargetCount,
-    storedTargetCount: student._count.targets,
     totalRecordCount,
     summativeScoreCount: student._count.summativeScores,
     deleteBlockingDataCount,
@@ -363,7 +361,6 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       },
       _count: {
         select: {
-          targets: true,
           memorizationRecords: true,
           revisionRecords: true,
           summativeScores: true,

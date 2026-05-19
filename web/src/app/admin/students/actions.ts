@@ -300,7 +300,6 @@ export async function deleteStudent(studentId: string) {
                 memorizationRecords: true,
                 revisionRecords: true,
                 summativeScores: true,
-                targets: true,
               },
             },
           },
@@ -313,8 +312,7 @@ export async function deleteStudent(studentId: string) {
         const relatedDataCount =
           student._count.memorizationRecords +
           student._count.revisionRecords +
-          student._count.summativeScores +
-          student._count.targets;
+          student._count.summativeScores;
 
         if (relatedDataCount > 0) {
           return { status: "blocked" as const, student, relatedDataCount };

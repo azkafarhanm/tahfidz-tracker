@@ -398,7 +398,6 @@
     "joinedLabel": "Joined {date}",
     "activeTargetLabel": "Active targets",
     "totalRecordLabel": "Total records",
-    "storedTargetLabel": "Stored targets",
     "summativeScoreLabel": "Summative scores",
     "editButton": "Edit",
     "deactivateButton": "Deactivate",
@@ -410,7 +409,6 @@
     "cancelDeleteButton": "Cancel",
     "deleteBlockedReason": "Cannot delete: {items}. Deactivate instead.",
     "deleteBlockedRecordItem": "{count} records",
-    "deleteBlockedTargetItem": "{count} stored targets",
     "deleteBlockedSummativeItem": "{count} summative scores",
     "emptySearch": "No students match this search.",
     "emptyNoData": "No student data to display yet."

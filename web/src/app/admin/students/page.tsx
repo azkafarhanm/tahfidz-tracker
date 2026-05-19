@@ -171,11 +171,6 @@ export default async function AdminStudentsPage({
                         count: student.totalRecordCount,
                       })
                     : null,
-                  student.storedTargetCount > 0
-                    ? t("deleteBlockedTargetItem", {
-                        count: student.storedTargetCount,
-                      })
-                    : null,
                   student.summativeScoreCount > 0
                     ? t("deleteBlockedSummativeItem", {
                         count: student.summativeScoreCount,
@@ -270,15 +265,6 @@ export default async function AdminStudentsPage({
                           strokeWidth={2.2}
                         />
                         {student.totalRecordCount}
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        {t("storedTargetLabel")}
-                      </p>
-                      <p className="mt-2 inline-flex items-center gap-2 text-lg font-semibold text-slate-950 dark:text-white">
-                        <Users aria-hidden="true" size={16} strokeWidth={2.2} />
-                        {student.storedTargetCount}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
