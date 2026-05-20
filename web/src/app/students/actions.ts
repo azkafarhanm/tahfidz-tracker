@@ -98,32 +98,29 @@ export async function createTeacherStudent(formData: FormData) {
 
   if (!resolvedClassGroupId) {
     const level = resolvedLevel as HalaqahLevel;
+    const academicYear = getCurrentAcademicYear();
 
-    const existing = await prisma.classGroup.findFirst({
-      where: { teacherId, grade: resolvedGrade, level, isActive: true },
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: teacherId },
+      select: { fullName: true },
     });
 
-    if (existing) {
-      resolvedClassGroupId = existing.id;
-    } else {
-      const teacher = await prisma.teacher.findUnique({
-        where: { id: teacherId },
-        select: { fullName: true },
-      });
+    // The unique constraint is (teacherId, academicYear, grade) — level is NOT part of it.
+    // Use upsert against that constraint to avoid a P2002 race condition.
+    const classGroup = await prisma.classGroup.upsert({
+      where: { teacherId_academicYear_grade: { teacherId, academicYear, grade: resolvedGrade } },
+      update: {},
+      create: {
+        teacherId,
+        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
+        level,
+        grade: resolvedGrade,
+        academicYear,
+        isActive: true,
+      },
+    });
 
-      const newClassGroup = await prisma.classGroup.create({
-        data: {
-          teacherId,
-          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
-          level,
-          grade: resolvedGrade,
-          academicYear: getCurrentAcademicYear(),
-          isActive: true,
-        },
-      });
-
-      resolvedClassGroupId = newClassGroup.id;
-    }
+    resolvedClassGroupId = classGroup.id;
   }
 
   await prisma.student.create({
