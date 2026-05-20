@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
+import LocalDateTime from "@/components/LocalDateTime";
 
 export const runtime = "nodejs";
 export const revalidate = 30;
@@ -199,7 +200,11 @@ export default async function AdminStudentDetailPage({
                       key={record.id}
                     >
                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
-                        {record.date}
+                        <LocalDateTime
+                          fallback={record.date}
+                          iso={record.dateTimeIso}
+                          locale={locale}
+                        />
                       </td>
                       <td className="py-3 pr-4">
                         <span

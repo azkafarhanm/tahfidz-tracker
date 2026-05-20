@@ -47,6 +47,7 @@ export async function createMurojaahRecord(
   const date = parseRecordDateTime(
     readString(formData, "date"),
     readString(formData, "time"),
+    readString(formData, "timezoneOffset"),
   );
   const statusValue = readString(formData, "status");
   const score = readInt(formData, "score");

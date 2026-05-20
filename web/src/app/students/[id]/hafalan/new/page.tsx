@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
-  CalendarDays,
   CheckCircle2,
-  Clock,
   ClipboardList,
   Hash,
   Save,
@@ -13,13 +11,10 @@ import {
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { getStudentFormContext } from "@/lib/students";
 import { createHafalanRecord } from "../actions";
-import {
-  todayInputValue,
-  nowTimeValue,
-  recordStatusOptions,
-} from "@/lib/format";
+import { recordStatusOptions } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
+import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
@@ -196,47 +191,10 @@ export default async function NewHafalanPage({
               </label>
             </div>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelDate")}
-              </span>
-              <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
-                <CalendarDays
-                  aria-hidden="true"
-                  className="shrink-0 text-slate-400 dark:text-slate-500"
-                  size={17}
-                  strokeWidth={2.2}
-                />
-                <input
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                  defaultValue={todayInputValue()}
-                  name="date"
-                  required
-                  type="date"
-                />
-              </div>
-            </label>
-
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelTime")}
-              </span>
-              <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
-                <Clock
-                  aria-hidden="true"
-                  className="shrink-0 text-slate-400 dark:text-slate-500"
-                  size={17}
-                  strokeWidth={2.2}
-                />
-                <input
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                  defaultValue={nowTimeValue()}
-                  name="time"
-                  required
-                  type="time"
-                />
-              </div>
-            </label>
+            <DeviceDateTimeFields
+              dateLabel={t("labelDate")}
+              timeLabel={t("labelTime")}
+            />
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">

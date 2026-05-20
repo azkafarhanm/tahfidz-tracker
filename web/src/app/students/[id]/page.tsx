@@ -19,6 +19,7 @@ import AppShell from "@/components/AppShell";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
+import LocalDateTime from "@/components/LocalDateTime";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -50,11 +51,13 @@ function LatestRecordCard({
   icon: Icon,
   label,
   record,
+  locale,
   t,
 }: {
   icon: typeof BookOpen;
   label: string;
   record: RecordItem | null;
+  locale: string;
   t: (key: string) => string;
 }) {
   return (
@@ -70,7 +73,13 @@ function LatestRecordCard({
           </p>
           {record ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">{record.date}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                <LocalDateTime
+                  fallback={record.date}
+                  iso={record.dateTimeIso}
+                  locale={locale}
+                />
+              </span>
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${recordStatusClass(record)}`}
               >
@@ -135,7 +144,17 @@ function TargetCard({ target, studentId, t }: { target: TargetItem; studentId: s
   );
 }
 
-function ActivityRow({ record, studentId, t }: { record: RecordItem; studentId: string; t: (key: string) => string }) {
+function ActivityRow({
+  record,
+  studentId,
+  locale,
+  t,
+}: {
+  record: RecordItem;
+  studentId: string;
+  locale: string;
+  t: (key: string) => string;
+}) {
   const Icon = record.type === "Hafalan" ? BookOpen : RotateCcw;
   const recordType = record.type === "Hafalan" ? "hafalan" : "murojaah";
 
@@ -161,7 +180,11 @@ function ActivityRow({ record, studentId, t }: { record: RecordItem; studentId: 
                 <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
               </Link>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {record.date}
+                <LocalDateTime
+                  fallback={record.date}
+                  iso={record.dateTimeIso}
+                  locale={locale}
+                />
               </p>
             </div>
           </div>
@@ -330,12 +353,14 @@ export default async function StudentDetailPage({
           <LatestRecordCard
             icon={BookOpen}
             label={t("latestHafalanLabel")}
+            locale={locale}
             record={student.latestHafalan}
             t={t}
           />
           <LatestRecordCard
             icon={RotateCcw}
             label={t("latestMurojaahLabel")}
+            locale={locale}
             record={student.latestMurojaah}
             t={t}
           />
@@ -400,6 +425,7 @@ export default async function StudentDetailPage({
               student.recentActivity.map((record) => (
                 <ActivityRow
                   key={`${record.type}-${record.id}`}
+                  locale={locale}
                   record={record}
                   studentId={student.id}
                   t={t}
@@ -435,7 +461,13 @@ export default async function StudentDetailPage({
                 <tbody>
                   {progress.records.map((r) => (
                     <tr className="border-b border-slate-100 dark:border-slate-800" key={r.id}>
-                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{r.date}</td>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
+                        <LocalDateTime
+                          fallback={r.date}
+                          iso={r.dateTimeIso}
+                          locale={locale}
+                        />
+                      </td>
                       <td className="py-3 pr-4">
                         <span className={
                           r.type === "Hafalan"

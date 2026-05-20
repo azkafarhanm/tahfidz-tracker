@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import SurahInput from "@/components/SurahInput";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
 
 type Student = {
@@ -26,8 +27,6 @@ type Student = {
 type GuidedQuickLogProps = {
   action: (formData: FormData) => Promise<void>;
   students: Student[];
-  todayDate: string;
-  nowTime: string;
   error?: string;
   success?: string;
 };
@@ -35,8 +34,6 @@ type GuidedQuickLogProps = {
 export default function GuidedQuickLog({
   action,
   students,
-  todayDate,
-  nowTime,
   error,
   success,
 }: GuidedQuickLogProps) {
@@ -402,8 +399,7 @@ export default function GuidedQuickLog({
                 </label>
               </section>
 
-              <input name="date" type="hidden" value={todayDate} />
-              <input name="time" type="hidden" value={nowTime} />
+              <DeviceDateTimeHiddenFields />
 
               <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
                 <button

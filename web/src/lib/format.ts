@@ -96,11 +96,6 @@ export function todayInputValue() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function nowTimeValue() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
-
 export type NavItem = {
   label: string;
   href: string;

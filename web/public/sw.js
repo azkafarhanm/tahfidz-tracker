@@ -1,4 +1,4 @@
-const CACHE_NAME = "tahfidzflow-v2";
+const CACHE_NAME = "tahfidzflow-v3";
 const STATIC_ASSETS = [
   "/manifest.json",
   "/icon-192.png",
@@ -15,15 +15,17 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
       )
-    )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", (event) => {
@@ -53,8 +55,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (url.pathname.startsWith("/_next/")) {
+    return;
+  }
+
   if (
-    url.pathname.startsWith("/_next/static") ||
     url.pathname.endsWith(".woff2") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".ico")

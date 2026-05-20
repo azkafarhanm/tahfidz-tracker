@@ -1,5 +1,4 @@
 import { getQuickLogStudents } from "@/lib/quick-log";
-import { todayInputValue, nowTimeValue } from "@/lib/format";
 import { createGuidedRecord } from "./actions";
 import GuidedQuickLog from "./GuidedQuickLog";
 import AppShell from "@/components/AppShell";
@@ -33,8 +32,6 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
       <GuidedQuickLog
         action={createGuidedRecord}
         students={students}
-        todayDate={todayInputValue()}
-        nowTime={nowTimeValue()}
         error={params?.error}
         success={params?.success}
       />

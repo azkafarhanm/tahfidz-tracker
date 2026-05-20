@@ -9,6 +9,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import ToastMessenger from "@/components/ToastMessenger";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import OfflineBanner from "@/components/OfflineBanner";
+import AppToaster from "@/components/AppToaster";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -23,7 +24,6 @@ const amiri = Amiri({
 });
 
 const InstallPrompt = dynamic(() => import("@/components/InstallPrompt"));
-const Toaster = dynamic(() => import("sonner").then((m) => m.Toaster));
 
 export const metadata: Metadata = {
   title: "TahfidzFlow",
@@ -67,7 +67,7 @@ export default async function RootLayout({
             <Suspense>
               <ToastMessenger />
             </Suspense>
-            <Toaster position="top-center" richColors closeButton />
+            <AppToaster />
             <OfflineBanner />
             <InstallPrompt />
             <ServiceWorkerRegistrar />

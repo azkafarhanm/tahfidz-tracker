@@ -3,9 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
-  CalendarDays,
   CheckCircle2,
-  Clock,
   ClipboardList,
   Hash,
   PencilLine,
@@ -19,6 +17,7 @@ import { updateRecord } from "@/lib/record-actions";
 import DeleteRecordButton from "./DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
+import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
@@ -218,54 +217,18 @@ export default async function EditRecordPage({
               </label>
             </div>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelDate")}
-              </span>
-              <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
-                <CalendarDays
-                  aria-hidden="true"
-                  className="shrink-0 text-slate-400 dark:text-slate-500"
-                  size={17}
-                  strokeWidth={2.2}
-                />
-                <input
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                  defaultValue={record.date}
-                  name="date"
-                  required
-                  type="date"
-                />
-              </div>
-            </label>
-
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelTime")}
-              </span>
-              <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900/30">
-                <Clock
-                  aria-hidden="true"
-                  className="shrink-0 text-slate-400 dark:text-slate-500"
-                  size={17}
-                  strokeWidth={2.2}
-                />
-                <input
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                  defaultValue={record.time}
-                  name="time"
-                  required
-                  type="time"
-                />
-              </div>
-            </label>
+            <DeviceDateTimeFields
+              dateLabel={t("labelDate")}
+              initialDateTimeIso={record.dateTimeIso}
+              timeLabel={t("labelTime")}
+            />
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <ClipboardList
                 aria-hidden="true"
-                className="text-emerald-800"
+                className="text-emerald-800 dark:text-emerald-400"
                 size={18}
                 strokeWidth={2.2}
               />
@@ -273,16 +236,16 @@ export default async function EditRecordPage({
             </div>
 
             <textarea
-              className="mt-4 min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:focus:bg-slate-800"
+              className="mt-4 min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
               defaultValue={record.notes}
               name="notes"
               placeholder={t("placeholderOptional")}
             />
           </section>
 
-          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur">
+          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
             <Link
-              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={`/students/${student.id}`}
             >
               {t("buttonCancel")}
@@ -297,11 +260,11 @@ export default async function EditRecordPage({
           </div>
         </form>
 
-        <section className="mt-6 rounded-2xl border border-red-200 bg-white p-4 shadow-sm">
+        <section className="mt-6 rounded-2xl border border-red-200 bg-white p-4 shadow-sm dark:border-red-900/70 dark:bg-slate-900 dark:shadow-none">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-950">{t("sectionDelete")}</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="text-sm font-semibold text-slate-950 dark:text-white">{t("sectionDelete")}</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {t("deleteConfirm", { surah: record.surah, from: record.fromAyah, to: record.toAyah })}
               </p>
             </div>

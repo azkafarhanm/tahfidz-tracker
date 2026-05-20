@@ -32,6 +32,7 @@ function formatLatestRecord(
 
   return {
     range: formatRange(record.surah, record.fromAyah, record.toAyah),
+    dateTimeIso: record.date.toISOString(),
     date: dateFormatter.format(record.date),
     status: statusLabels[record.status],
     needsReview: record.status === RecordStatus.PERLU_MUROJAAH,
@@ -56,6 +57,7 @@ function formatRecord(
     id: record.id,
     type,
     range: formatRange(record.surah, record.fromAyah, record.toAyah),
+    dateTimeIso: record.date.toISOString(),
     date: dateFormatter.format(record.date),
     status: statusLabels[record.status],
     score: record.score,

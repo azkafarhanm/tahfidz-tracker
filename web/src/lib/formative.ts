@@ -280,6 +280,7 @@ async function getStudentFormativeDetailInner(
       type: row.type,
       surah: row.surah,
       range: formatRange(row.surah, row.fromAyah, row.toAyah),
+      dateTimeIso: row.date.toISOString(),
       date: dateFormatter.format(row.date),
       time: timeFormatter.format(row.date),
       score: row.score,

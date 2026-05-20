@@ -16,6 +16,7 @@ import LogoutButton from "@/components/LogoutButton";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import LocalDateTime from "@/components/LocalDateTime";
 import { getLocaleTag } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -172,8 +173,21 @@ export default async function DashboardPreview() {
                       </p>
                     </div>
                      <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
-                      <p>{record.date}</p>
-                      <p className="mt-1">{record.time}</p>
+                      <p>
+                        <LocalDateTime
+                          fallback={record.date}
+                          iso={record.dateTimeIso}
+                          locale={locale}
+                        />
+                      </p>
+                      <p className="mt-1">
+                        <LocalDateTime
+                          fallback={record.time}
+                          iso={record.dateTimeIso}
+                          locale={locale}
+                          mode="time"
+                        />
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">

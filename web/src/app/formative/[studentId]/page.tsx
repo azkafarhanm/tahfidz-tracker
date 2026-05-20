@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
+import LocalDateTime from "@/components/LocalDateTime";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getStudentFormativeDetail } from "@/lib/formative";
@@ -216,7 +217,12 @@ export default async function FormativeDetailPage({
                       {record.status}
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      {record.date} - {record.time}
+                      <LocalDateTime
+                        fallback={`${record.date} - ${record.time}`}
+                        iso={record.dateTimeIso}
+                        locale={locale}
+                        mode="dateTime"
+                      />
                     </td>
                     <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
                       {record.notes || "-"}

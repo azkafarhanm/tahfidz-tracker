@@ -24,11 +24,44 @@ export function createFailFn(basePath: string) {
   };
 }
 
-export function parseRecordDateTime(dateValue: string, timeValue: string) {
+export function parseRecordDateTime(
+  dateValue: string,
+  timeValue: string,
+  timezoneOffsetValue?: string,
+) {
   if (!dateValue || !timeValue) return null;
 
-  const parsed = new Date(`${dateValue}T${timeValue}:00`);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(timeValue);
+  if (!dateMatch || !timeMatch) return null;
+
+  const [, yearValue, monthValue, dayValue] = dateMatch;
+  const [, hourValue, minuteValue] = timeMatch;
+  const year = Number(yearValue);
+  const month = Number(monthValue);
+  const day = Number(dayValue);
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+  const wallClockUtc = Date.UTC(year, month - 1, day, hour, minute);
+  const wallClockDate = new Date(wallClockUtc);
+
+  const validWallClock =
+    wallClockDate.getUTCFullYear() === year &&
+    wallClockDate.getUTCMonth() === month - 1 &&
+    wallClockDate.getUTCDate() === day &&
+    wallClockDate.getUTCHours() === hour &&
+    wallClockDate.getUTCMinutes() === minute;
+
+  if (!validWallClock) return null;
+
+  const timezoneOffset = /^-?\d+$/.test(timezoneOffsetValue ?? "")
+    ? Number(timezoneOffsetValue)
+    : Number.NaN;
+  if (Number.isFinite(timezoneOffset) && Math.abs(timezoneOffset) <= 14 * 60) {
+    return new Date(wallClockUtc + timezoneOffset * 60_000);
+  }
+
+  return new Date(wallClockUtc);
 }
 
 export function parseDateInput(dateValue: string) {
