@@ -65,7 +65,7 @@ export async function createGuidedRecord(formData: FormData) {
   }
 
   await validateRecordFields({
-    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail,
+    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
   const data = {

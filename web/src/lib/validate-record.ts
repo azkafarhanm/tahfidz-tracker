@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+type TFn = (key: string) => string;
 
 export async function validateRecordFields(input: {
   surah: string;
@@ -10,9 +10,9 @@ export async function validateRecordFields(input: {
   notes: string | null;
   validStatuses: Set<string>;
   fail: (message: string) => never;
+  t: TFn;
 }): Promise<void> {
-  const { surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail } = input;
-  const t = await getTranslations("Validation");
+  const { surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t } = input;
 
   if (!surah || surah.length > 80) {
     return fail(t("surahRequired"));

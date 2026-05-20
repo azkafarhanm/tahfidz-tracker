@@ -54,7 +54,7 @@ export async function createMurojaahRecord(
   const notes = readOptionalString(formData, "notes");
 
   await validateRecordFields({
-    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail,
+    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
   await prisma.revisionRecord.create({

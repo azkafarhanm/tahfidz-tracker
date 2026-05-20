@@ -509,20 +509,21 @@ export async function getAdminAcademicClassesData(query = "") {
       }
     : undefined;
 
-  const academicClasses = await prisma.academicClass.findMany({
-    where,
-    orderBy: [{ isActive: "desc" }, { grade: "asc" }, { section: "asc" }],
-    include: {
-      _count: {
-        select: {
-          students: true,
+  const [academicClasses, totalCount, activeCount] = await Promise.all([
+    prisma.academicClass.findMany({
+      where,
+      orderBy: [{ isActive: "desc" }, { grade: "asc" }, { section: "asc" }],
+      include: {
+        _count: {
+          select: {
+            students: true,
+          },
         },
       },
-    },
-  });
-
-  const totalCount = academicClasses.length;
-  const activeCount = academicClasses.filter((c) => c.isActive).length;
+    }),
+    prisma.academicClass.count(),
+    prisma.academicClass.count({ where: { isActive: true } }),
+  ]);
 
   return {
     counts: {
@@ -634,31 +635,32 @@ export async function getAdminClassGroupsData(query = "") {
       }
     : undefined;
 
-  const classGroups = await prisma.classGroup.findMany({
-    where,
-    orderBy: [{ isActive: "desc" }, { name: "asc" }],
-    include: {
-      teacher: {
-        select: {
-          fullName: true,
-          isActive: true,
-          user: {
-            select: {
-              isActive: true,
+  const [classGroups, totalCount, activeCount] = await Promise.all([
+    prisma.classGroup.findMany({
+      where,
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      include: {
+        teacher: {
+          select: {
+            fullName: true,
+            isActive: true,
+            user: {
+              select: {
+                isActive: true,
+              },
             },
           },
         },
-      },
-      _count: {
-        select: {
-          students: true,
+        _count: {
+          select: {
+            students: true,
+          },
         },
       },
-    },
-  });
-
-  const totalCount = classGroups.length;
-  const activeCount = classGroups.filter((g) => g.isActive).length;
+    }),
+    prisma.classGroup.count(),
+    prisma.classGroup.count({ where: { isActive: true } }),
+  ]);
 
   return {
     counts: {

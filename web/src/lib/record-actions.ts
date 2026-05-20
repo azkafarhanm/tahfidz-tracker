@@ -56,7 +56,7 @@ export async function updateRecord(
   const notes = readOptionalString(formData, "notes");
 
   await validateRecordFields({
-    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail,
+    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
   const data = {
