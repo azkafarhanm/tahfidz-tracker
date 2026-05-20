@@ -87,11 +87,12 @@ function mapStudentSummary(student: {
     name: string;
   } | null;
   _count: {
+    targets: number;
     memorizationRecords: number;
     revisionRecords: number;
     summativeScores: number;
   };
-}, activeTargetCount: number, dateFormatter: Intl.DateTimeFormat) {
+}, dateFormatter: Intl.DateTimeFormat) {
   const classInfo = formatClassSummary(student);
   const totalRecordCount =
     student._count.memorizationRecords + student._count.revisionRecords;
@@ -112,7 +113,7 @@ function mapStudentSummary(student: {
     halaqahName: student.classGroup.name,
     halaqahLevel: halaqahLevelLabels[student.classGroup.level],
     classSummary: classInfo.classSummary,
-    activeTargetCount,
+    activeTargetCount: student._count.targets,
     totalRecordCount,
     summativeScoreCount: student._count.summativeScores,
     deleteBlockingDataCount,
@@ -361,6 +362,9 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       },
       _count: {
         select: {
+          targets: {
+            where: { status: TargetStatus.ACTIVE },
+          },
           memorizationRecords: true,
           revisionRecords: true,
           summativeScores: true,
@@ -368,25 +372,6 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       },
     },
   });
-
-  const activeTargetsByStudentId =
-    students.length > 0
-      ? new Map(
-          (
-            await prisma.target.groupBy({
-              by: ["studentId"],
-              where: {
-                studentId: { in: students.map((student) => student.id) },
-                status: TargetStatus.ACTIVE,
-              },
-              _count: { _all: true },
-            })
-          ).map((targetCount) => [
-            targetCount.studentId,
-            targetCount._count._all,
-          ]),
-        )
-      : new Map<string, number>();
 
   const studentCount = students.length;
   const activeStudentCount = students.filter((s) => s.isActive).length;
@@ -399,11 +384,7 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       filteredStudentCount: students.length,
     },
     students: students.map((student) =>
-      mapStudentSummary(
-        student,
-        activeTargetsByStudentId.get(student.id) ?? 0,
-        dateFormatter,
-      ),
+      mapStudentSummary(student, dateFormatter),
     ),
     query: normalizedQuery,
   };

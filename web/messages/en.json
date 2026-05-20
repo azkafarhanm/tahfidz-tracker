@@ -448,6 +448,7 @@
   },
   "ThemeToggle": {
     "label": "Appearance",
+    "auto": "Auto",
     "light": "Light",
     "dark": "Dark",
     "system": "System"

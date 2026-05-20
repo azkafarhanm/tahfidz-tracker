@@ -19,7 +19,7 @@ export default function LiveSearchForm({
   buttonLabel,
   className,
   defaultValue = "",
-  debounceMs = 180,
+  debounceMs = 400,
   inputClassName,
   placeholder,
 }: LiveSearchFormProps) {
@@ -39,10 +39,15 @@ export default function LiveSearchForm({
       return;
     }
 
+    if (nextQuery.length === 1) {
+      return;
+    }
+
     const timeoutId = window.setTimeout(() => {
       startTransition(() => {
         router.replace(
           nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action,
+          { scroll: false },
         );
       });
     }, debounceMs);
@@ -57,6 +62,7 @@ export default function LiveSearchForm({
     startTransition(() => {
       router.replace(
         nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action,
+        { scroll: false },
       );
     });
   };

@@ -3,7 +3,7 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Clock3, Moon, Sun, Monitor } from "lucide-react";
 
 export default function ThemeToggle() {
   const t = useTranslations("ThemeToggle");
@@ -11,6 +11,7 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   const themes = [
+    { value: "auto", label: t("auto"), icon: Clock3 },
     { value: "system", label: t("system"), icon: Monitor },
     { value: "light", label: t("light"), icon: Sun },
     { value: "dark", label: t("dark"), icon: Moon },

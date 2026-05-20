@@ -448,6 +448,7 @@
   },
   "ThemeToggle": {
     "label": "المظهر",
+    "auto": "تلقائي",
     "light": "فاتح",
     "dark": "داكن",
     "system": "النظام"
