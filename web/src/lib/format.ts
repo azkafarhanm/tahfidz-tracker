@@ -1,11 +1,4 @@
 import {
-  Home as HomeIcon,
-  PlusCircle,
-  UserCircle,
-  Users,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import {
   HalaqahLevel,
   RecordStatus,
 } from "@/generated/prisma-next/enums";
@@ -90,29 +83,8 @@ export function formatClassSummary(student: {
 
 export function todayInputValue() {
   const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
-}
-
-export type NavItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  active: boolean;
-};
-
-const navItems: Omit<NavItem, "active">[] = [
-  { label: "Home", href: "/", icon: HomeIcon },
-  { label: "Santri", href: "/students", icon: Users },
-  { label: "Catat", href: "/quick-log", icon: PlusCircle },
-  { label: "Profil", href: "/profile", icon: UserCircle },
-];
-
-export function getNavigation(currentPath: string): NavItem[] {
-  return navItems.map((item) => ({
-    ...item,
-    active: item.href === currentPath,
-  }));
 }

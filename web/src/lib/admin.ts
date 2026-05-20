@@ -236,27 +236,28 @@ export async function getAdminTeachersData(query = "", locale = "id") {
       }
     : undefined;
 
-  const teachers = await prisma.teacher.findMany({
-    where,
-    orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
-    include: {
-      user: {
-        select: {
-          email: true,
-          isActive: true,
+  const [teachers, teacherCount, activeTeacherCount] = await Promise.all([
+    prisma.teacher.findMany({
+      where,
+      orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
+      include: {
+        user: {
+          select: {
+            email: true,
+            isActive: true,
+          },
+        },
+        _count: {
+          select: {
+            students: true,
+            classes: true,
+          },
         },
       },
-      _count: {
-        select: {
-          students: true,
-          classes: true,
-        },
-      },
-    },
-  });
-
-  const teacherCount = teachers.length;
-  const activeTeacherCount = teachers.filter((t) => t.isActive).length;
+    }),
+    prisma.teacher.count(),
+    prisma.teacher.count({ where: { isActive: true } }),
+  ]);
 
   return {
     counts: {
@@ -340,41 +341,42 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       }
     : undefined;
 
-  const students = await prisma.student.findMany({
-    where,
-    orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
-    include: {
-      teacher: {
-        select: {
-          fullName: true,
-        },
-      },
-      classGroup: {
-        select: {
-          name: true,
-          level: true,
-        },
-      },
-      academicClass: {
-        select: {
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          targets: {
-            where: { status: TargetStatus.ACTIVE },
+  const [students, studentCount, activeStudentCount] = await Promise.all([
+    prisma.student.findMany({
+      where,
+      orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
+      include: {
+        teacher: {
+          select: {
+            fullName: true,
           },
-          memorizationRecords: true,
-          revisionRecords: true,
-          summativeScores: true,
+        },
+        classGroup: {
+          select: {
+            name: true,
+            level: true,
+          },
+        },
+        academicClass: {
+          select: {
+            name: true,
+          },
+        },
+        _count: {
+          select: {
+            targets: {
+              where: { status: TargetStatus.ACTIVE },
+            },
+            memorizationRecords: true,
+            revisionRecords: true,
+            summativeScores: true,
+          },
         },
       },
-    },
-  });
-
-  const studentCount = students.length;
-  const activeStudentCount = students.filter((s) => s.isActive).length;
+    }),
+    prisma.student.count(),
+    prisma.student.count({ where: { isActive: true } }),
+  ]);
 
   return {
     counts: {
