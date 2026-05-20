@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
+import { halaqahLevelLabels } from "@/lib/format";
 import {
   createFailFn,
   parseDateInput,
@@ -111,7 +112,7 @@ export async function createTeacherStudent(formData: FormData) {
       update: {},
       create: {
         teacherId,
-        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
+        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade} (${halaqahLevelLabels[level]})`,
         level,
         grade: resolvedGrade,
         academicYear,
