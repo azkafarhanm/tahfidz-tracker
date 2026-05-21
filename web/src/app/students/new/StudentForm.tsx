@@ -246,39 +246,41 @@ export default function TeacherStudentForm({
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
-              {levels.map((lv) => {
-                const cg = selectedGrade
-                  ? options.classGroups.find(
-                      (classGroup) =>
-                        classGroup.levelKey === lv.key &&
-                        classGroup.grade === Number(selectedGrade),
-                    ) ?? null
+              {(() => {
+                // Grab any group from the selected grade to extract the base teacher/grade string
+                const anyGroupInGrade = selectedGrade
+                  ? options.classGroups.find((g) => g.grade === Number(selectedGrade))
                   : null;
-                const isSelected = selectedLevel === lv.key;
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
-                        : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-600"
-                    }`}
-                    key={lv.key}
-                    onClick={() => setSelectedLevel(lv.key)}
-                    type="button"
-                  >
-                    <span
-                      className={`text-sm font-bold ${
-                        isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
+                // Strip the suffix (e.g., "(Low)") so it doesn't redundantly leak into mismatching level buttons
+                const baseSubtitle = anyGroupInGrade?.name.replace(/\s*\([^)]*\)$/, "");
+
+                return levels.map((lv) => {
+                  const isSelected = selectedLevel === lv.key;
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
+                          : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-600"
                       }`}
+                      key={lv.key}
+                      onClick={() => setSelectedLevel(lv.key)}
+                      type="button"
                     >
-                      {lv.label}
-                    </span>
-                    <span className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">
-                      {cg ? cg.name : lv.desc}
-                    </span>
-                  </button>
-                );
+                      <span
+                        className={`text-sm font-bold ${
+                          isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
+                        }`}
+                      >
+                        {lv.label}
+                      </span>
+                      <span className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">
+                        {baseSubtitle || lv.desc}
+                      </span>
+                    </button>
+                  );
+                });
               })}
             </div>
           </section>
