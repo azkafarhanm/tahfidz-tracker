@@ -11,6 +11,7 @@ import {
 import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
+import DeleteStudentButton from "@/components/DeleteStudentButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import { requireSessionScope } from "@/lib/session";
@@ -256,7 +257,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.classSummary}</p>
                     </div>
                   </div>
-                  <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
+                  <div className="flex items-center gap-2">
+                    <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
+                    <DeleteStudentButton studentId={s.id} />
+                  </div>
                 </div>
               ))}
             </div>

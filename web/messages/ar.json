@@ -564,10 +564,16 @@
     "emptyRecords": "لا توجد سجلات حفظ أو مراجعة بعد."
   },
   "ReactivateStudent": {
-    "processing": "جاري المعالجة...",
-    "activate": "تفعيل"
-  },
-  "TargetActions": {
+        "processing": "جاري المعالجة...",
+        "activate": "تفعيل"
+      },
+    "DeleteStudent": {
+        "buttonDelete": "حذف",
+        "buttonProcessing": "جاري الحذف...",
+        "buttonConfirm": "نعم، حذف نهائي",
+        "buttonCancel": "إلغاء"
+      },
+   "TargetActions": {
     "complete": "إكمال",
     "cancel": "إلغاء"
   },
@@ -738,6 +744,9 @@
     "teacherOnlyEdit": "فقط المعلمون يمكنهم تعديل الطلاب.",
     "teacherOnlyDeactivate": "فقط المعلمون يمكنهم إلغاء تفعيل الطلاب.",
     "teacherOnlyReactivate": "فقط المعلمون يمكنهم إعادة تفعيل الطلاب.",
+    "teacherOnlyDelete": "فقط المعلمون يمكنهم حذف الطلاب.",
+    "teacherStudentHasRelatedData": "لا يمكن حذف {name} - لا يزال هناك {count} سجل مرتبط.",
+    "teacherStudentDeleted": "تم حذف الطالب {name} نهائياً.",
     "studentNameRequired": "اسم الطالب مطلوب (120 حرفًا كحد أقصى).",
     "halaqahLevelRequired": "مستوى الحلقة مطلوب.",
     "gradeRequired": "الصف مطلوب.",

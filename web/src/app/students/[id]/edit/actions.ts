@@ -11,6 +11,7 @@ import {
   readString,
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma-next/client";
 import { requireSessionScope } from "@/lib/session";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
@@ -176,7 +177,7 @@ export async function deactivateTeacherStudent(studentId: string) {
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
-    redirect(`/students?error=${encodeURIComponent(t("teacherOnlyDeactivate"))}`);
+    return { ok: false as const, error: t("teacherOnlyDeactivate") };
   }
 
   const student = await prisma.student.findFirst({
@@ -185,7 +186,7 @@ export async function deactivateTeacherStudent(studentId: string) {
   });
 
   if (!student) {
-    redirect(`/students?error=${encodeURIComponent(t("studentNotFound"))}`);
+    return { ok: false as const, error: t("studentNotFound") };
   }
 
   await prisma.student.update({
@@ -196,7 +197,7 @@ export async function deactivateTeacherStudent(studentId: string) {
   revalidatePath("/");
   revalidatePath("/students");
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students?success=${encodeURIComponent(t("studentDeactivated"))}`);
+  return { ok: true as const, message: t("studentDeactivated") };
 }
 
 export async function reactivateTeacherStudent(studentId: string) {
@@ -204,7 +205,7 @@ export async function reactivateTeacherStudent(studentId: string) {
   const { teacherId } = await requireSessionScope();
 
   if (!teacherId) {
-    redirect(`/students?error=${encodeURIComponent(t("teacherOnlyReactivate"))}`);
+    return { ok: false as const, error: t("teacherOnlyReactivate") };
   }
 
   const student = await prisma.student.findFirst({
@@ -213,7 +214,7 @@ export async function reactivateTeacherStudent(studentId: string) {
   });
 
   if (!student) {
-    redirect(`/students?error=${encodeURIComponent(t("studentNotFound"))}`);
+    return { ok: false as const, error: t("studentNotFound") };
   }
 
   await prisma.student.update({
@@ -224,5 +225,80 @@ export async function reactivateTeacherStudent(studentId: string) {
   revalidatePath("/");
   revalidatePath("/students");
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students?success=${encodeURIComponent(t("studentReactivated"))}`);
+  return { ok: true as const, message: t("studentReactivated") };
+}
+
+export async function deleteTeacherStudent(studentId: string) {
+  const t = await getTranslations("Validation");
+  const { teacherId } = await requireSessionScope();
+
+  if (!teacherId) {
+    return { ok: false as const, error: t("teacherOnlyDelete") };
+  }
+
+  let result;
+  try {
+    result = await prisma.$transaction(
+      async (tx) => {
+        const student = await tx.student.findFirst({
+          where: { id: studentId, teacherId, isActive: false },
+          select: {
+            id: true,
+            fullName: true,
+            _count: {
+              select: {
+                memorizationRecords: true,
+                revisionRecords: true,
+                summativeScores: true,
+              },
+            },
+          },
+        });
+
+        if (!student) {
+          return { status: "notFound" as const };
+        }
+
+        const relatedDataCount =
+          student._count.memorizationRecords +
+          student._count.revisionRecords +
+          student._count.summativeScores;
+
+        if (relatedDataCount > 0) {
+          return { status: "blocked" as const, student, relatedDataCount };
+        }
+
+        await tx.student.delete({
+          where: { id: student.id },
+        });
+
+        return { status: "deleted" as const, student };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return { ok: false as const, error: t("studentNotFound") };
+    }
+    throw error;
+  }
+
+  if (result.status === "notFound") {
+    return { ok: false as const, error: t("studentNotFound") };
+  }
+
+  if (result.status === "blocked") {
+    return {
+      ok: false as const,
+      error: t("teacherStudentHasRelatedData", {
+        name: result.student.fullName,
+        count: result.relatedDataCount,
+      }),
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/students");
+  invalidateStudentRelatedCaches(studentId);
+  return { ok: true as const, message: t("teacherStudentDeleted", { name: result.student.fullName }) };
 }

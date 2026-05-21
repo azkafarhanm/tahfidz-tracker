@@ -228,7 +228,7 @@ export default async function AdminStudentsPage({
                         strokeWidth={2.2}
                       />
                       <span className="truncate">
-                        {student.halaqahName} - {student.halaqahLevel}
+                        {student.halaqahName} ({student.halaqahLevel})
                       </span>
                     </div>
                     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">

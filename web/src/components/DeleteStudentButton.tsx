@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { deactivateTeacherStudent } from "./edit/actions";
+import { deleteTeacherStudent } from "@/app/students/[id]/edit/actions";
 
-export default function DeactivateButton({ studentId }: { studentId: string }) {
-  const t = useTranslations("DeactivateStudent");
+export default function DeleteStudentButton({ studentId }: { studentId: string }) {
+  const t = useTranslations("DeleteStudent");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmed, setConfirmed] = useState(false);
@@ -14,11 +14,11 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
   if (!confirmed) {
     return (
       <button
-        className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+        className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950"
         onClick={() => setConfirmed(true)}
         type="button"
       >
-        {t("buttonDeactivate")}
+        {t("buttonDelete")}
       </button>
     );
   }
@@ -30,7 +30,7 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
-            const result = await deactivateTeacherStudent(studentId);
+            const result = await deleteTeacherStudent(studentId);
             if (result.ok) {
               setConfirmed(false);
               router.refresh();
@@ -42,7 +42,7 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
         {isPending ? t("buttonProcessing") : t("buttonConfirm")}
       </button>
       <button
-        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
         onClick={() => setConfirmed(false)}
         type="button"
       >

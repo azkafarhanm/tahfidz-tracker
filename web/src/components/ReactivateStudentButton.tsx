@@ -2,10 +2,12 @@
 
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { reactivateTeacherStudent } from "@/app/students/[id]/edit/actions";
 
 export default function ReactivateStudentButton({ studentId }: { studentId: string; studentName: string }) {
   const t = useTranslations("ReactivateStudent");
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -15,7 +17,10 @@ export default function ReactivateStudentButton({ studentId }: { studentId: stri
       disabled={isPending}
       onClick={() => {
         startTransition(async () => {
-          await reactivateTeacherStudent(studentId);
+          const result = await reactivateTeacherStudent(studentId);
+          if (result.ok) {
+            router.refresh();
+          }
         });
       }}
       type="button"

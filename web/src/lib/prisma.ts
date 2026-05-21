@@ -7,7 +7,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: getDatabaseUrl() });
+  const adapter = new PrismaPg({
+    connectionString: getDatabaseUrl(),
+    ssl: true,
+    max: 1,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 15_000,
+  });
   return new PrismaClient({ adapter });
 }
 

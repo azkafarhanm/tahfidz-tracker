@@ -564,9 +564,15 @@
     "emptyRecords": "No hafalan or murojaah records yet."
   },
   "ReactivateStudent": {
-    "processing": "Processing...",
-    "activate": "Activate"
-  },
+      "processing": "Processing...",
+      "activate": "Activate"
+    },
+  "DeleteStudent": {
+      "buttonDelete": "Delete",
+      "buttonProcessing": "Deleting...",
+      "buttonConfirm": "Yes, delete permanently",
+      "buttonCancel": "Cancel"
+    },
   "TargetActions": {
     "complete": "Complete",
     "cancel": "Cancel"
@@ -738,6 +744,9 @@
     "teacherOnlyEdit": "Only teachers can edit students.",
     "teacherOnlyDeactivate": "Only teachers can deactivate students.",
     "teacherOnlyReactivate": "Only teachers can reactivate students.",
+    "teacherOnlyDelete": "Only teachers can delete students.",
+    "teacherStudentHasRelatedData": "Cannot delete {name} - still has {count} related records.",
+    "teacherStudentDeleted": "Student {name} permanently deleted.",
     "studentNameRequired": "Student name is required (max 120 characters).",
     "halaqahLevelRequired": "Halaqah level is required.",
     "gradeRequired": "Grade is required.",

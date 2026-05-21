@@ -564,9 +564,15 @@
     "emptyRecords": "Belum ada catatan hafalan atau murojaah."
   },
   "ReactivateStudent": {
-    "processing": "Memproses...",
-    "activate": "Aktifkan"
-  },
+      "processing": "Memproses...",
+      "activate": "Aktifkan"
+    },
+  "DeleteStudent": {
+      "buttonDelete": "Hapus",
+      "buttonProcessing": "Menghapus...",
+      "buttonConfirm": "Ya, hapus permanen",
+      "buttonCancel": "Batal"
+    },
   "TargetActions": {
     "complete": "Selesai",
     "cancel": "Batalkan"
@@ -738,6 +744,9 @@
     "teacherOnlyEdit": "Hanya guru yang dapat mengedit santri.",
     "teacherOnlyDeactivate": "Hanya guru yang dapat menonaktifkan santri.",
     "teacherOnlyReactivate": "Hanya guru yang dapat mengaktifkan santri.",
+    "teacherOnlyDelete": "Hanya guru yang dapat menghapus santri.",
+    "teacherStudentHasRelatedData": "Tidak bisa menghapus {name} - masih ada {count} data terkait.",
+    "teacherStudentDeleted": "Santri {name} berhasil dihapus permanen.",
     "studentNameRequired": "Nama santri wajib diisi dan maksimal 120 karakter.",
     "halaqahLevelRequired": "Level halaqah wajib dipilih.",
     "gradeRequired": "Kelas wajib dipilih.",
