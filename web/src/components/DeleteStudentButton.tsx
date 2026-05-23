@@ -8,11 +8,15 @@ import { deleteTeacherStudent } from "@/app/students/[id]/edit/actions";
 
 type DeleteStudentButtonProps = {
   disabledReason?: string;
+  onDeleteError?: (error: string) => void;
+  onDeleteStart?: () => void;
   studentId: string;
 };
 
 export default function DeleteStudentButton({
   disabledReason,
+  onDeleteError,
+  onDeleteStart,
   studentId,
 }: DeleteStudentButtonProps) {
   const t = useTranslations("DeleteStudent");
@@ -61,6 +65,7 @@ export default function DeleteStudentButton({
         className="rounded-xl bg-red-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-800 disabled:opacity-60"
         disabled={isPending}
         onClick={() => {
+          onDeleteStart?.();
           startTransition(async () => {
             const result = await deleteTeacherStudent(studentId);
             if (result.ok) {
@@ -69,6 +74,7 @@ export default function DeleteStudentButton({
             } else {
               setConfirmed(false);
               setError(result.error);
+              onDeleteError?.(result.error);
               router.refresh();
             }
           });

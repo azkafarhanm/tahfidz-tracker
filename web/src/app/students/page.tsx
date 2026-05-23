@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
-import ReactivateStudentButton from "@/components/ReactivateStudentButton";
-import DeleteStudentButton from "@/components/DeleteStudentButton";
+import InactiveStudentRow from "@/components/InactiveStudentRow";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import { requireSessionScope } from "@/lib/session";
@@ -245,53 +244,17 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               {t("inactiveDescription")}
             </p>
             <div className="mt-3 space-y-3">
-              {inactiveStudents.map((s) => {
-                const deleteBlockers = [
-                  s.totalRecordCount > 0
-                    ? t("deleteBlockedRecordItem", {
-                        count: s.totalRecordCount,
-                      })
-                    : null,
-                  s.summativeScoreCount > 0
-                    ? t("deleteBlockedSummativeItem", {
-                        count: s.summativeScoreCount,
-                      })
-                    : null,
-                  s.activeTargetCount > 0
-                    ? t("deleteBlockedTargetItem", {
-                        count: s.activeTargetCount,
-                      })
-                    : null,
-                ].filter(Boolean);
-                const deleteDisabledReason =
-                  deleteBlockers.length > 0
-                    ? t("deleteBlockedReason", {
-                        items: deleteBlockers.join(", "),
-                      })
-                    : undefined;
-
-                return (
-                  <div
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
-                    key={s.id}
-                  >
-                  <div className="flex items-center gap-3">
-                    <InitialsAvatar name={s.fullName} />
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-950 dark:text-white">{s.fullName}</p>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{s.classSummary}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ReactivateStudentButton studentId={s.id} studentName={s.fullName} />
-                    <DeleteStudentButton
-                      disabledReason={deleteDisabledReason}
-                      studentId={s.id}
-                    />
-                  </div>
-                  </div>
-                );
-              })}
+              {inactiveStudents.map((s) => (
+                <InactiveStudentRow
+                  activeTargetCount={s.activeTargetCount}
+                  classSummary={s.classSummary}
+                  fullName={s.fullName}
+                  id={s.id}
+                  key={s.id}
+                  summativeScoreCount={s.summativeScoreCount}
+                  totalRecordCount={s.totalRecordCount}
+                />
+              ))}
             </div>
           </section>
         ) : null}
