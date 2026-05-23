@@ -19,7 +19,7 @@ export default function LiveSearchForm({
   buttonLabel,
   className,
   defaultValue = "",
-  debounceMs = 400,
+  debounceMs = 250,
   inputClassName,
   placeholder,
 }: LiveSearchFormProps) {

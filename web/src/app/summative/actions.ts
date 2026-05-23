@@ -15,6 +15,7 @@ import {
   updateSummativeAssessment,
 } from "@/lib/summative";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
 export async function createSummativeAssessmentAction(formData: FormData) {
@@ -50,6 +51,7 @@ export async function createSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/summative");
   revalidatePath(`/formative/${payload.studentId}`);
   revalidatePath("/formative");
+  invalidateStudentRelatedCaches(payload.studentId);
   redirect(
     `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
   );
@@ -88,6 +90,7 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/summative");
   revalidatePath(`/formative/${payload.studentId}`);
   revalidatePath("/formative");
+  invalidateStudentRelatedCaches(payload.studentId);
   redirect(
     `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
   );
@@ -120,6 +123,7 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/summative");
   revalidatePath(`/formative/${studentId}`);
   revalidatePath("/formative");
+  invalidateStudentRelatedCaches(studentId);
   redirect(`/summative/${studentId}?semester=${semester}&deleted=1`);
 }
 

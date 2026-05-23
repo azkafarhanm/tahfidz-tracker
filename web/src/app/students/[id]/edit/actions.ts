@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
+import { Gender, HalaqahLevel, TargetStatus } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
   parseDateInput,
@@ -18,6 +18,34 @@ import { getCurrentAcademicYear } from "@/lib/academic-year";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
+
+function buildDeleteBlockerItems(
+  counts: {
+    activeTargets: number;
+    memorizationRecords: number;
+    revisionRecords: number;
+    summativeScores: number;
+  },
+  t: Awaited<ReturnType<typeof getTranslations>>,
+) {
+  const recordCount = counts.memorizationRecords + counts.revisionRecords;
+
+  return [
+    recordCount > 0
+      ? t("teacherStudentDeleteBlockedRecords", { count: recordCount })
+      : null,
+    counts.summativeScores > 0
+      ? t("teacherStudentDeleteBlockedSummative", {
+          count: counts.summativeScores,
+        })
+      : null,
+    counts.activeTargets > 0
+      ? t("teacherStudentDeleteBlockedTargets", {
+          count: counts.activeTargets,
+        })
+      : null,
+  ].filter((item): item is string => Boolean(item));
+}
 
 export async function updateTeacherStudent(
   studentId: string,
@@ -247,6 +275,7 @@ export async function deleteTeacherStudent(studentId: string) {
             fullName: true,
             _count: {
               select: {
+                targets: { where: { status: TargetStatus.ACTIVE } },
                 memorizationRecords: true,
                 revisionRecords: true,
                 summativeScores: true,
@@ -259,13 +288,18 @@ export async function deleteTeacherStudent(studentId: string) {
           return { status: "notFound" as const };
         }
 
-        const relatedDataCount =
-          student._count.memorizationRecords +
-          student._count.revisionRecords +
-          student._count.summativeScores;
+        const blockerItems = buildDeleteBlockerItems(
+          {
+            activeTargets: student._count.targets,
+            memorizationRecords: student._count.memorizationRecords,
+            revisionRecords: student._count.revisionRecords,
+            summativeScores: student._count.summativeScores,
+          },
+          t,
+        );
 
-        if (relatedDataCount > 0) {
-          return { status: "blocked" as const, student, relatedDataCount };
+        if (blockerItems.length > 0) {
+          return { status: "blocked" as const, student, blockerItems };
         }
 
         await tx.student.delete({
@@ -290,9 +324,9 @@ export async function deleteTeacherStudent(studentId: string) {
   if (result.status === "blocked") {
     return {
       ok: false as const,
-      error: t("teacherStudentHasRelatedData", {
+      error: t("teacherStudentDeleteBlockedReason", {
         name: result.student.fullName,
-        count: result.relatedDataCount,
+        items: result.blockerItems.join(", "),
       }),
     };
   }

@@ -5,7 +5,6 @@ import {
   TargetType,
 } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
-import { cached } from "@/lib/cache";
 import {
   getDateFormatter,
   statusLabels,
@@ -107,8 +106,7 @@ const genderLabels: Record<Gender, string> = {
 
 export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
   const normalizedQuery = query.trim().toLowerCase();
-  const cacheKey = `students:${teacherId ?? "admin"}:${normalizedQuery}:${locale}`;
-  return cached(cacheKey, 30_000, () => getStudentsDataInner(normalizedQuery, teacherId, locale));
+  return getStudentsDataInner(normalizedQuery, teacherId, locale);
 }
 
 async function getStudentsDataInner(normalizedQuery: string, teacherId?: string | null, locale = "id") {
@@ -194,8 +192,7 @@ async function getStudentsDataInner(normalizedQuery: string, teacherId?: string 
 }
 
 export async function getInactiveStudentsData(teacherId?: string | null) {
-  const cacheKey = `students-inactive:${teacherId ?? "admin"}`;
-  return cached(cacheKey, 30_000, () => getInactiveStudentsDataInner(teacherId));
+  return getInactiveStudentsDataInner(teacherId);
 }
 
 async function getInactiveStudentsDataInner(teacherId?: string | null) {
@@ -208,13 +205,32 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
     include: {
       classGroup: { select: { name: true, level: true } },
       academicClass: { select: { name: true } },
+      _count: {
+        select: {
+          memorizationRecords: true,
+          revisionRecords: true,
+          summativeScores: true,
+          targets: {
+            where: { status: TargetStatus.ACTIVE },
+          },
+        },
+      },
     },
   });
 
   return students.map((s) => ({
+    activeTargetCount: s._count.targets,
+    deleteBlockingDataCount:
+      s._count.memorizationRecords +
+      s._count.revisionRecords +
+      s._count.summativeScores +
+      s._count.targets,
     id: s.id,
     fullName: s.fullName,
     ...formatClassSummary(s),
+    summativeScoreCount: s._count.summativeScores,
+    totalRecordCount:
+      s._count.memorizationRecords + s._count.revisionRecords,
   }));
 }
 

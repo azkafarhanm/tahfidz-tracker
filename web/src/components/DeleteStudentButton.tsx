@@ -3,14 +3,42 @@
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import { deleteTeacherStudent } from "@/app/students/[id]/edit/actions";
 
-export default function DeleteStudentButton({ studentId }: { studentId: string }) {
+type DeleteStudentButtonProps = {
+  disabledReason?: string;
+  studentId: string;
+};
+
+export default function DeleteStudentButton({
+  disabledReason,
+  studentId,
+}: DeleteStudentButtonProps) {
   const t = useTranslations("DeleteStudent");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (disabledReason) {
+    return (
+      <div className="flex min-w-0 flex-col items-end gap-1">
+        <button
+          aria-disabled="true"
+          className="inline-flex min-h-10 cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-2 text-xs font-semibold text-red-400 opacity-70 dark:border-red-950 dark:bg-slate-900 dark:text-red-500"
+          onClick={(event) => event.preventDefault()}
+          type="button"
+        >
+          <Trash2 aria-hidden="true" size={14} strokeWidth={2.2} />
+          {t("buttonDelete")}
+        </button>
+        <p className="max-w-72 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
+          {disabledReason}
+        </p>
+      </div>
+    );
+  }
 
   if (!confirmed) {
     return (
@@ -41,6 +69,7 @@ export default function DeleteStudentButton({ studentId }: { studentId: string }
             } else {
               setConfirmed(false);
               setError(result.error);
+              router.refresh();
             }
           });
         }}

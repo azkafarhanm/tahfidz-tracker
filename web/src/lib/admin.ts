@@ -97,7 +97,7 @@ function mapStudentSummary(student: {
   const totalRecordCount =
     student._count.memorizationRecords + student._count.revisionRecords;
   const deleteBlockingDataCount =
-    totalRecordCount + student._count.summativeScores;
+    totalRecordCount + student._count.summativeScores + student._count.targets;
 
   return {
     id: student.id,

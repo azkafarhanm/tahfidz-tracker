@@ -176,6 +176,11 @@ export default async function AdminStudentsPage({
                         count: student.summativeScoreCount,
                       })
                     : null,
+                  student.activeTargetCount > 0
+                    ? t("deleteBlockedTargetItem", {
+                        count: student.activeTargetCount,
+                      })
+                    : null,
                 ].filter(Boolean);
                 const deleteDisabledReason =
                   deleteBlockers.length > 0
