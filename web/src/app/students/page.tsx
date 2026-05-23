@@ -18,7 +18,7 @@ import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Students");

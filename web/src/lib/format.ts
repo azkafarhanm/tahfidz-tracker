@@ -30,12 +30,6 @@ export function getTimeFormatter(locale?: string) {
   });
 }
 
-export const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
 export const statusLabels: Record<RecordStatus, string> = {
   [RecordStatus.LANCAR]: "Lancar",
   [RecordStatus.CUKUP]: "Cukup",
@@ -83,8 +77,8 @@ export function formatClassSummary(student: {
 
 export function todayInputValue() {
   const d = new Date();
-  const yyyy = d.getUTCFullYear();
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }

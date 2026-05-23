@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
+import TimezoneCookie from "@/components/TimezoneCookie";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export default function AppShell({
 
   return (
     <>
+      <TimezoneCookie />
       {showNav ? <Sidebar userName={userName} isAdmin={isAdmin} /> : null}
       <main
         className={`min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white ${

@@ -116,3 +116,36 @@ export const surahList = [
 ];
 
 export type SurahInfo = (typeof surahList)[number];
+
+export function findSurah(name: string): SurahInfo | undefined {
+  if (!name) return undefined;
+  
+  const cleanName = name.trim().toLowerCase();
+  
+  // 1. Exact match (case insensitive)
+  let found = surahList.find(s => s.name.toLowerCase() === cleanName);
+  if (found) return found;
+
+  // Helper to strip prefixes and special chars
+  const normalize = (str: string) => {
+    return str
+      .toLowerCase()
+      .replace(/^(al|an|at|ar|as|asy|adz|az|ai|ad|at|al-|-)+/gi, "")
+      .replace(/[^a-z0-9]/gi, "");
+  };
+
+  const normInput = normalize(cleanName);
+  if (!normInput) return undefined;
+
+  // 2. Normalized match
+  found = surahList.find(s => normalize(s.name) === normInput);
+  if (found) return found;
+
+  // 3. Fallback: startsWith or includes
+  found = surahList.find(s => {
+    const normSurah = normalize(s.name);
+    return normSurah.includes(normInput) || normInput.includes(normSurah);
+  });
+  
+  return found;
+}

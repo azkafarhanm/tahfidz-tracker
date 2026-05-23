@@ -4,6 +4,7 @@ import {
   formatClassSummary as formatStudentClassSummary,
   statusLabels,
 } from "@/lib/format";
+import { findSurah } from "@/lib/surahs";
 
 export type QuickLogRecordType = "HAFALAN" | "MUROJAAH";
 
@@ -328,8 +329,6 @@ export function parseQuickLogInput(
     errors.push("Nomor ayat harus berupa angka positif.");
   } else if (rangeResult.toAyah < rangeResult.fromAyah) {
     errors.push("Ayat akhir tidak boleh lebih kecil dari ayat awal.");
-  } else if (rangeResult.toAyah > 286) {
-    errors.push("Nomor ayat terlalu besar. Periksa kembali rentangnya.");
   }
 
   if (
@@ -350,6 +349,12 @@ export function parseQuickLogInput(
 
   if (!surah || surah.length > 80) {
     errors.push("Nama surah wajib terbaca dan maksimal 80 karakter.");
+  } else if (rangeResult.fromAyah && rangeResult.toAyah && rangeResult.toAyah >= rangeResult.fromAyah) {
+    const matchedSurah = findSurah(surah);
+    const maxAyah = matchedSurah ? matchedSurah.ayahs : 286;
+    if (rangeResult.toAyah > maxAyah) {
+      errors.push("Nomor ayat terlalu besar. Periksa kembali rentangnya.");
+    }
   }
 
   if (errors.length > 0) {

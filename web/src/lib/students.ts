@@ -220,11 +220,32 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
 
 export async function getStudentDetailData(studentId: string, teacherId?: string | null, locale = "id") {
   const dateFormatter = getDateFormatter(locale);
-  const student = await prisma.student.findFirst({
+
+  const check = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { id: true, isActive: true, teacherId: true, fullName: true }
+  });
+
+  if (!check) {
+    return null;
+  }
+
+  if (teacherId && check.teacherId !== teacherId) {
+    return { isUnauthorized: true } as const;
+  }
+
+  if (!check.isActive) {
+    return {
+      isInactive: true,
+      id: check.id,
+      fullName: check.fullName,
+      isOwnStudent: !teacherId || check.teacherId === teacherId
+    } as const;
+  }
+
+  const student = await prisma.student.findUnique({
     where: {
       id: studentId,
-      isActive: true,
-      ...(teacherId ? { teacherId } : {}),
     },
     include: {
       classGroup: {

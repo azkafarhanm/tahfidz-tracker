@@ -1,6 +1,7 @@
 "use server";
 
 import { Prisma } from "@/generated/prisma-next/client";
+import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { requireSessionScope } from "@/lib/session";
@@ -18,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function createSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   const payload = await parseSummativePayload(formData);
   const student = await prisma.student.findFirst({
@@ -39,11 +41,15 @@ export async function createSummativeAssessmentAction(formData: FormData) {
     await saveSummativeAssessment(payload);
   } catch (error) {
     if (isUniqueSummativeError(error)) {
-      throw new Error((await getTranslations("Validation"))("summativeDuplicate"));
+      redirect(`/summative/${payload.studentId}?error=${encodeURIComponent(t("summativeDuplicate"))}`);
     }
     throw error;
   }
 
+  revalidatePath(`/summative/${payload.studentId}`);
+  revalidatePath("/summative");
+  revalidatePath(`/formative/${payload.studentId}`);
+  revalidatePath("/formative");
   redirect(
     `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
   );
@@ -51,6 +57,7 @@ export async function createSummativeAssessmentAction(formData: FormData) {
 
 export async function updateSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   if (!assessmentId) {
@@ -72,11 +79,15 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
     await updateSummativeAssessment(assessmentId, payload);
   } catch (error) {
     if (isUniqueSummativeError(error)) {
-      throw new Error((await getTranslations("Validation"))("summativeDuplicate"));
+      redirect(`/summative/${payload.studentId}?error=${encodeURIComponent(t("summativeDuplicate"))}`);
     }
     throw error;
   }
 
+  revalidatePath(`/summative/${payload.studentId}`);
+  revalidatePath("/summative");
+  revalidatePath(`/formative/${payload.studentId}`);
+  revalidatePath("/formative");
   redirect(
     `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
   );
@@ -105,6 +116,10 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
 
   await deleteSummativeAssessment(assessmentId);
 
+  revalidatePath(`/summative/${studentId}`);
+  revalidatePath("/summative");
+  revalidatePath(`/formative/${studentId}`);
+  revalidatePath("/formative");
   redirect(`/summative/${studentId}?semester=${semester}&deleted=1`);
 }
 

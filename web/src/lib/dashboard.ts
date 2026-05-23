@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
@@ -8,32 +9,61 @@ import {
   formatRange,
 } from "@/lib/format";
 
-function startOfToday() {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date;
+function getUserToday(timezoneOffsetMinutes: number | null): Date {
+  const now = new Date();
+  if (timezoneOffsetMinutes === null) {
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  }
+  const utcMs = now.getTime();
+  const userWallMs = utcMs - timezoneOffsetMinutes * 60_000;
+  const userWall = new Date(userWallMs);
+  const userMidnightUtcMs = Date.UTC(
+    userWall.getUTCFullYear(),
+    userWall.getUTCMonth(),
+    userWall.getUTCDate(),
+    0, 0, 0, 0,
+  );
+  return new Date(userMidnightUtcMs + timezoneOffsetMinutes * 60_000);
 }
 
-function startOfWeek() {
-  const date = startOfToday();
-  const day = date.getDay();
+function getWeekStart(today: Date, timezoneOffsetMinutes: number | null): Date {
+  const ms = today.getTime();
+  let day: number;
+  if (timezoneOffsetMinutes === null) {
+    day = new Date(ms).getUTCDay();
+  } else {
+    const userWallMs = ms - timezoneOffsetMinutes * 60_000;
+    day = new Date(userWallMs).getUTCDay();
+  }
   const diff = day === 0 ? 6 : day - 1;
-  date.setDate(date.getDate() - diff);
-  return date;
+  return new Date(ms - diff * 86_400_000);
 }
 
 function countAyahs(fromAyah: number, toAyah: number) {
   return Math.max(toAyah - fromAyah + 1, 0);
 }
 
-export async function getDashboardData(teacherId?: string | null, locale = "id") {
-  const cacheKey = `dashboard:${teacherId ?? "admin"}:${locale}`;
-  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId, locale));
+async function readTimezoneOffset(): Promise<number | null> {
+  try {
+    const store = await cookies();
+    const raw = store.get("tz-offset")?.value;
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && Math.abs(n) <= 14 * 60 ? n : null;
+  } catch {
+    return null;
+  }
 }
 
-async function getDashboardDataInner(teacherId?: string | null, locale = "id") {
-  const today = startOfToday();
-  const weekStart = startOfWeek();
+export async function getDashboardData(teacherId?: string | null, locale = "id") {
+  const tzOffset = await readTimezoneOffset();
+  const cacheKey = `dashboard:${teacherId ?? "admin"}:${locale}:${tzOffset ?? "utc"}`;
+  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId, locale, tzOffset));
+}
+
+async function getDashboardDataInner(teacherId?: string | null, locale = "id", tzOffset: number | null = null) {
+  const today = getUserToday(tzOffset);
+  const weekStart = getWeekStart(today, tzOffset);
   const teacherFilter = teacherId ? { teacherId } : {};
   const dateFormatter = getDateFormatter(locale);
   const timeFormatter = getTimeFormatter(locale);

@@ -11,6 +11,7 @@ import {
   readString,
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma-next/client";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
 
@@ -264,36 +265,70 @@ export async function deleteTeacher(teacherId: string) {
   await requireAdminScope();
   const t = await getTranslations("Validation");
 
-  const teacher = await prisma.teacher.findUnique({
-    where: { id: teacherId },
-    select: { id: true, userId: true, fullName: true },
-  });
+  let result;
+  try {
+    result = await prisma.$transaction(
+      async (tx) => {
+        const teacher = await tx.teacher.findUnique({
+          where: { id: teacherId },
+          select: { id: true, userId: true, fullName: true },
+        });
 
-  if (!teacher) {
+        if (!teacher) {
+          return { status: "notFound" as const };
+        }
+
+        const studentCount = await tx.student.count({
+          where: { teacherId: teacher.id },
+        });
+
+        if (studentCount > 0) {
+          return { status: "hasStudents" as const, teacher, studentCount };
+        }
+
+        const classGroupCount = await tx.classGroup.count({
+          where: { teacherId: teacher.id },
+        });
+
+        if (classGroupCount > 0) {
+          return { status: "hasClassGroups" as const, teacher, classGroupCount };
+        }
+
+        await tx.teacher.delete({ where: { id: teacher.id } });
+        await tx.user.delete({ where: { id: teacher.userId } });
+
+        return { status: "deleted" as const, teacher };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2025" || error.code === "P2014")
+    ) {
+      redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
+    }
+    throw error;
+  }
+
+  if (result.status === "notFound") {
     redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
   }
 
-  const studentCount = await prisma.student.count({
-    where: { teacherId: teacher.id },
-  });
-
-  if (studentCount > 0) {
-    redirectAdminTeachersWithMessage("error", t("teacherHasStudents", { name: teacher.fullName, count: studentCount }));
+  if (result.status === "hasStudents") {
+    redirectAdminTeachersWithMessage(
+      "error",
+      t("teacherHasStudents", { name: result.teacher.fullName, count: result.studentCount }),
+    );
   }
 
-  const classGroupCount = await prisma.classGroup.count({
-    where: { teacherId: teacher.id },
-  });
-
-  if (classGroupCount > 0) {
-    redirectAdminTeachersWithMessage("error", t("teacherHasClassGroups", { name: teacher.fullName, count: classGroupCount }));
+  if (result.status === "hasClassGroups") {
+    redirectAdminTeachersWithMessage(
+      "error",
+      t("teacherHasClassGroups", { name: result.teacher.fullName, count: result.classGroupCount }),
+    );
   }
-
-  await prisma.$transaction([
-    prisma.teacher.delete({ where: { id: teacher.id } }),
-    prisma.user.delete({ where: { id: teacher.userId } }),
-  ]);
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", t("teacherDeleted", { name: teacher.fullName }));
+  redirectAdminTeachersWithMessage("success", t("teacherDeleted", { name: result.teacher.fullName }));
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { reactivateTeacherStudent } from "@/app/students/[id]/edit/actions";
@@ -9,23 +9,30 @@ export default function ReactivateStudentButton({ studentId }: { studentId: stri
   const t = useTranslations("ReactivateStudent");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   return (
-    <button
-      aria-busy={isPending}
-      className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950"
-      disabled={isPending}
-      onClick={() => {
-        startTransition(async () => {
-          const result = await reactivateTeacherStudent(studentId);
-          if (result.ok) {
-            router.refresh();
-          }
-        });
-      }}
-      type="button"
-    >
-      {isPending ? t("processing") : t("activate")}
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      <button
+        aria-busy={isPending}
+        className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950"
+        disabled={isPending}
+        onClick={() => {
+          setError(null);
+          startTransition(async () => {
+            const result = await reactivateTeacherStudent(studentId);
+            if (result.ok) {
+              router.refresh();
+            } else {
+              setError(result.error);
+            }
+          });
+        }}
+        type="button"
+      >
+        {isPending ? t("processing") : t("activate")}
+      </button>
+    </div>
   );
 }

@@ -7,6 +7,8 @@ type CacheEntry<T> = {
 const store = new Map<string, CacheEntry<unknown>>();
 const DEFAULT_MAX_ENTRIES = 500;
 
+const isDebug = process.env.NODE_ENV === "development" || process.env.APP_CACHE_DEBUG === "true";
+
 function getMaxEntries() {
   const configured = Number.parseInt(
     process.env.APP_MEMORY_CACHE_MAX_ENTRIES ?? "",
@@ -19,10 +21,15 @@ function getMaxEntries() {
 
 function sweep() {
   const now = Date.now();
+  let count = 0;
   for (const [key, entry] of store) {
     if (entry.expiresAt <= now) {
       store.delete(key);
+      count++;
     }
+  }
+  if (isDebug && count > 0) {
+    console.log(`[Cache SWEEP] Swept and evicted ${count} expired entries. (Current size: ${store.size})`);
   }
 }
 
@@ -34,6 +41,9 @@ function evictOldestEntries() {
     const oldestKey = store.keys().next().value;
     if (oldestKey === undefined) return;
     store.delete(oldestKey);
+    if (isDebug) {
+      console.log(`[Cache EVICT] Evicted oldest entry: "${oldestKey}" to maintain max entries limit (${maxEntries})`);
+    }
   }
 }
 
@@ -42,6 +52,9 @@ export function cached<T>(key: string, ttlMs: number, factory: () => Promise<T>)
   const entry = store.get(key);
 
   if (entry && entry.expiresAt > now) {
+    if (isDebug) {
+      console.log(`[Cache HIT] key: "${key}"`);
+    }
     if ("data" in entry) {
       return Promise.resolve(entry.data as T);
     }
@@ -50,7 +63,14 @@ export function cached<T>(key: string, ttlMs: number, factory: () => Promise<T>)
       return entry.promise as Promise<T>;
     }
   } else if (entry) {
+    if (isDebug) {
+      console.log(`[Cache EXPIRED] key: "${key}"`);
+    }
     store.delete(key);
+  } else {
+    if (isDebug) {
+      console.log(`[Cache MISS] key: "${key}"`);
+    }
   }
 
   const promise = factory().then((data) => {
@@ -71,15 +91,24 @@ export function cached<T>(key: string, ttlMs: number, factory: () => Promise<T>)
 }
 
 export function invalidateCache(prefix: string) {
+  let count = 0;
   for (const key of store.keys()) {
     if (key.startsWith(prefix)) {
       store.delete(key);
+      count++;
     }
+  }
+  if (isDebug && count > 0) {
+    console.log(`[Cache INVALIDATE] prefix: "${prefix}" matched and deleted ${count} entries. (Current size: ${store.size})`);
   }
 }
 
 export function clearCache() {
+  const count = store.size;
   store.clear();
+  if (isDebug) {
+    console.log(`[Cache CLEAR] Cleared all ${count} cache entries.`);
+  }
 }
 
 export function getCacheSize() {

@@ -8,10 +8,12 @@ import {
   ClipboardList,
   Download,
   FileText,
+  Lock,
   PencilLine,
   PlusCircle,
   RotateCcw,
   Target,
+  UserX,
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
 import { getStudentProgressData } from "@/lib/reports";
@@ -20,14 +22,16 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
 import LocalDateTime from "@/components/LocalDateTime";
+import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type StudentDetail = NonNullable<
-  Awaited<ReturnType<typeof getStudentDetailData>>
+type StudentDetail = Extract<
+  NonNullable<Awaited<ReturnType<typeof getStudentDetailData>>>,
+  { recentActivity: unknown }
 >;
 type RecordItem = StudentDetail["recentActivity"][number];
 type TargetItem = StudentDetail["activeTargets"][number];
@@ -219,8 +223,20 @@ export async function generateMetadata({ params }: StudentDetailPageProps) {
 
   const teacherId = scope.teacherId;
   const student = await getStudentDetailData(id, teacherId);
+  if (!student) {
+    return { title: `${t("heading")} - TahfidzFlow` };
+  }
+
+  if ("isUnauthorized" in student) {
+    return { title: "Akses Ditolak - TahfidzFlow" };
+  }
+
+  if ("isInactive" in student) {
+    return { title: `${student.fullName} (Nonaktif) - TahfidzFlow` };
+  }
+
   return {
-    title: student ? `${student.fullName} - TahfidzFlow` : `${t("heading")} - TahfidzFlow`,
+    title: `${student.fullName} - TahfidzFlow`,
   };
 }
 
@@ -236,6 +252,82 @@ export default async function StudentDetailPage({
 
   if (!student) {
     notFound();
+  }
+
+  if ("isUnauthorized" in student) {
+    return (
+      <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
+        <div className="mx-auto max-w-lg py-12">
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400">
+              <Lock aria-hidden="true" size={32} strokeWidth={2} />
+            </div>
+            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">Akses Ditolak</h1>
+            <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+              Anda tidak memiliki akses untuk melihat data santri ini.
+            </p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 leading-relaxed">
+              Data ini hanya dapat diakses oleh Ustadz/Ustadzah pembimbing yang bersangkutan atau Administrator sistem.
+            </p>
+            <div className="mt-8">
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
+                href="/students"
+              >
+                Kembali ke Daftar Santri
+              </Link>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if ("isInactive" in student) {
+    return (
+      <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
+        <div className="mx-auto max-w-lg py-12">
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+              <UserX aria-hidden="true" size={32} strokeWidth={2} />
+            </div>
+            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">Santri Nonaktif</h1>
+            <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
+              Akun santri <span className="font-semibold text-slate-900 dark:text-white">{student.fullName}</span> saat ini berstatus nonaktif.
+            </p>
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 leading-relaxed">
+              Data santri yang dinonaktifkan diarsipkan untuk menjaga kebersihan halaqah harian.
+            </p>
+
+            {student.isOwnStudent ? (
+              <div className="mt-8 border-t border-slate-100 pt-6 dark:border-slate-800">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+                  Sebagai pembimbing, Anda dapat mengaktifkan kembali santri ini untuk memulai pencatatan hafalan baru.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                    href="/students"
+                  >
+                    Batal
+                  </Link>
+                  <ReactivateStudentButton studentId={student.id} studentName={student.fullName} />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-8">
+                <Link
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
+                  href="/students"
+                >
+                  Kembali ke Daftar Santri
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </AppShell>
+    );
   }
 
   const progress = await getStudentProgressData(id, isAdmin ? null : teacherId, locale);

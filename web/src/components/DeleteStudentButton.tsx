@@ -10,16 +10,20 @@ export default function DeleteStudentButton({ studentId }: { studentId: string }
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [confirmed, setConfirmed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!confirmed) {
     return (
-      <button
-        className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950"
-        onClick={() => setConfirmed(true)}
-        type="button"
-      >
-        {t("buttonDelete")}
-      </button>
+      <div className="flex flex-col items-end gap-1">
+        {error ? <p className="text-xs text-red-600">{error}</p> : null}
+        <button
+          className="rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950"
+          onClick={() => { setConfirmed(true); setError(null); }}
+          type="button"
+        >
+          {t("buttonDelete")}
+        </button>
+      </div>
     );
   }
 
@@ -34,6 +38,9 @@ export default function DeleteStudentButton({ studentId }: { studentId: string }
             if (result.ok) {
               setConfirmed(false);
               router.refresh();
+            } else {
+              setConfirmed(false);
+              setError(result.error);
             }
           });
         }}

@@ -20,7 +20,7 @@ import LocalDateTime from "@/components/LocalDateTime";
 import { getLocaleTag } from "@/lib/format";
 
 export const runtime = "nodejs";
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Sidebar");

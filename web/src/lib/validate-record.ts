@@ -1,3 +1,5 @@
+import { findSurah } from "./surahs";
+
 type TFn = (key: string) => string;
 
 export async function validateRecordFields(input: {
@@ -26,7 +28,9 @@ export async function validateRecordFields(input: {
     return fail(t("ayahRange"));
   }
 
-  if (toAyah > 286) {
+  const matchedSurah = findSurah(surah);
+  const maxAyah = matchedSurah ? matchedSurah.ayahs : 286;
+  if (toAyah > maxAyah) {
     return fail(t("ayahTooLarge"));
   }
 

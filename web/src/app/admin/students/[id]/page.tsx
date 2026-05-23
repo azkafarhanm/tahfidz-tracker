@@ -14,7 +14,7 @@ import { requireAdminScope } from "@/lib/session";
 import LocalDateTime from "@/components/LocalDateTime";
 
 export const runtime = "nodejs";
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 type AdminStudentDetailPageProps = {
   params: Promise<{ id: string }>;

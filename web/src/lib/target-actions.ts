@@ -178,7 +178,7 @@ export async function updateTarget(targetId: string, formData: FormData) {
   redirect(`/students/${target.studentId}?success=${encodeURIComponent(t("targetUpdated"))}`);
 }
 
-export async function cancelTarget(targetId: string) {
+export async function cancelTarget(targetId: string): Promise<{ ok: boolean; error?: string }> {
   const { teacherId, isAdmin } = await requireSessionScope();
 
   const target = await prisma.target.findUnique({
@@ -191,10 +191,13 @@ export async function cancelTarget(targetId: string) {
     },
   });
 
-  if (!target || target.status !== TargetStatus.ACTIVE) return;
+  if (!target || target.status !== TargetStatus.ACTIVE) {
+    return { ok: false, error: "Target not found or not active" };
+  }
 
-  // Admin can manage any student; teacher can only manage their own students
-  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) return;
+  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) {
+    return { ok: false, error: "Not authorized" };
+  }
 
   await prisma.target.update({
     where: { id: targetId },
@@ -203,9 +206,10 @@ export async function cancelTarget(targetId: string) {
 
   invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
+  return { ok: true };
 }
 
-export async function completeTarget(targetId: string) {
+export async function completeTarget(targetId: string): Promise<{ ok: boolean; error?: string }> {
   const { teacherId, isAdmin } = await requireSessionScope();
 
   const target = await prisma.target.findUnique({
@@ -218,10 +222,13 @@ export async function completeTarget(targetId: string) {
     },
   });
 
-  if (!target || target.status !== TargetStatus.ACTIVE) return;
+  if (!target || target.status !== TargetStatus.ACTIVE) {
+    return { ok: false, error: "Target not found or not active" };
+  }
 
-  // Admin can manage any student; teacher can only manage their own students
-  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) return;
+  if (!target.student || (!isAdmin && target.student.teacherId !== teacherId)) {
+    return { ok: false, error: "Not authorized" };
+  }
 
   await prisma.target.update({
     where: { id: targetId },
@@ -230,4 +237,5 @@ export async function completeTarget(targetId: string) {
 
   invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
+  return { ok: true };
 }

@@ -15,7 +15,7 @@ import AppShell from "@/components/AppShell";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Reports");

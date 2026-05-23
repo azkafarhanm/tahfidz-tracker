@@ -7,9 +7,11 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
+  const connectionString = getDatabaseUrl();
+  const ssl = !connectionString.includes("localhost") && !connectionString.includes("127.0.0.1");
   const adapter = new PrismaPg({
-    connectionString: getDatabaseUrl(),
-    ssl: true,
+    connectionString,
+    ssl,
     max: 1,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
