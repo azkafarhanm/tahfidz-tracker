@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
-import InactiveStudentRow from "@/components/InactiveStudentRow";
+import InactiveStudentsSection from "@/components/InactiveStudentsSection";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import { requireSessionScope } from "@/lib/session";
@@ -238,25 +238,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         </section>
 
         {!isAdmin && inactiveStudents.length > 0 ? (
-          <section className="mt-6">
-            <h2 className="text-lg font-semibold">{t("inactiveHeading")}</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              {t("inactiveDescription")}
-            </p>
-            <div className="mt-3 space-y-3">
-              {inactiveStudents.map((s) => (
-                <InactiveStudentRow
-                  activeTargetCount={s.activeTargetCount}
-                  classSummary={s.classSummary}
-                  fullName={s.fullName}
-                  id={s.id}
-                  key={s.id}
-                  summativeScoreCount={s.summativeScoreCount}
-                  totalRecordCount={s.totalRecordCount}
-                />
-              ))}
-            </div>
-          </section>
+          <InactiveStudentsSection students={inactiveStudents} />
         ) : null}
 
       </AppShell>

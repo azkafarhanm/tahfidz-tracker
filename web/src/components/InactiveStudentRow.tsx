@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import DeleteStudentButton from "@/components/DeleteStudentButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
@@ -9,8 +8,11 @@ import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 type InactiveStudentRowProps = {
   activeTargetCount: number;
   classSummary: string;
+  error?: string | null;
   fullName: string;
   id: string;
+  onDeleteError: (error: string) => void;
+  onDeleteStart: () => void;
   summativeScoreCount: number;
   totalRecordCount: number;
 };
@@ -18,14 +20,15 @@ type InactiveStudentRowProps = {
 export default function InactiveStudentRow({
   activeTargetCount,
   classSummary,
+  error,
   fullName,
   id,
+  onDeleteError,
+  onDeleteStart,
   summativeScoreCount,
   totalRecordCount,
 }: InactiveStudentRowProps) {
   const t = useTranslations("Students");
-  const [isOptimisticallyDeleted, setIsOptimisticallyDeleted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const deleteBlockers = [
     totalRecordCount > 0
@@ -42,10 +45,6 @@ export default function InactiveStudentRow({
     deleteBlockers.length > 0
       ? t("deleteBlockedReason", { items: deleteBlockers.join(", ") })
       : undefined;
-
-  if (isOptimisticallyDeleted) {
-    return null;
-  }
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
@@ -71,14 +70,8 @@ export default function InactiveStudentRow({
           <ReactivateStudentButton studentId={id} studentName={fullName} />
           <DeleteStudentButton
             disabledReason={deleteDisabledReason}
-            onDeleteError={(message) => {
-              setIsOptimisticallyDeleted(false);
-              setError(message);
-            }}
-            onDeleteStart={() => {
-              setError(null);
-              setIsOptimisticallyDeleted(true);
-            }}
+            onDeleteError={onDeleteError}
+            onDeleteStart={onDeleteStart}
             studentId={id}
           />
         </div>
