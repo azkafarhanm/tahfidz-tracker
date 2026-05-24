@@ -297,6 +297,23 @@ export async function getTeacherFormativeExportData(
   academicYear: string,
   classLevel?: number,
 ) {
+  const cacheKey = `formative-export:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}`;
+  return cached(cacheKey, 30_000, () =>
+    getTeacherFormativeExportDataInner(
+      teacherId,
+      semester,
+      academicYear,
+      classLevel,
+    ),
+  );
+}
+
+async function getTeacherFormativeExportDataInner(
+  teacherId: string | null,
+  semester: Semester,
+  academicYear: string,
+  classLevel?: number,
+) {
   const { start, end } = getSemesterDateRange(academicYear, semester);
 
   const students = await prisma.student.findMany({
@@ -312,6 +329,7 @@ export async function getTeacherFormativeExportData(
         select: {
           grade: true,
           name: true,
+          level: true,
         },
       },
       academicClass: {

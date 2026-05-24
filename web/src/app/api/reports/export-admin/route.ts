@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { auth } from "@/auth";
 import { RecordStatus } from "@/generated/prisma-next/enums";
+import { finalizeTableSheet } from "@/lib/excel";
 import { formatRange, halaqahLevelLabels, statusLabels } from "@/lib/format";
 import { getAdminReportData } from "@/lib/reports";
 import { prisma } from "@/lib/prisma";
@@ -160,13 +161,6 @@ export async function GET() {
       { header: "Metrik", key: "metric", width: 25 },
       { header: "Nilai", key: "value", width: 15 },
     ];
-    summarySheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF064E3B" },
-    };
-    summarySheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-
     [
       { metric: "Total Guru Aktif", value: adminData.totalTeachers },
       { metric: "Total Santri Aktif", value: adminData.totalStudents },
@@ -174,6 +168,7 @@ export async function GET() {
       { metric: "Total Murojaah", value: adminData.totalMurojaah },
       { metric: "Target Aktif", value: adminData.totalActiveTargets },
     ].forEach((row) => summarySheet.addRow(row));
+    finalizeTableSheet(summarySheet);
 
     const teacherSheet = workbook.addWorksheet("Data Guru");
     teacherSheet.columns = [
@@ -182,12 +177,6 @@ export async function GET() {
       { header: "Jumlah Santri", key: "studentCount", width: 15 },
       { header: "Jumlah Halaqah", key: "classGroupCount", width: 15 },
     ];
-    teacherSheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF064E3B" },
-    };
-    teacherSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
     adminData.teachers.forEach((t) =>
       teacherSheet.addRow({
         name: t.fullName,
@@ -196,6 +185,10 @@ export async function GET() {
         classGroupCount: t.classGroupCount,
       }),
     );
+    finalizeTableSheet(teacherSheet, {
+      wrapColumns: ["name", "email"],
+      centerColumns: ["studentCount", "classGroupCount"],
+    });
 
     const usedSheetNames = new Set<string>(["Ringkasan", "Data Guru"]);
 
@@ -213,12 +206,6 @@ export async function GET() {
         { header: "Status", key: "lastStatus", width: 16 },
         { header: "Perlu Cek", key: "needsReview", width: 12 },
       ];
-      sheet.getRow(1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF064E3B" },
-      };
-      sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
       const rows = rowsByTeacher.get(teacher.id) ?? [];
       rows.forEach((s) =>
         sheet.addRow({
@@ -233,6 +220,10 @@ export async function GET() {
           needsReview: s.needsReview ? "Ya" : "Tidak",
         }),
       );
+      finalizeTableSheet(sheet, {
+        wrapColumns: ["name", "halaqah", "lastRange", "lastStatus"],
+        centerColumns: ["hafalanCount", "murojaahCount", "avgScore", "needsReview"],
+      });
     }
 
     const buffer = await workbook.xlsx.writeBuffer();

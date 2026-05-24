@@ -2,9 +2,11 @@ import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   formatRange,
+  halaqahLevelLabels,
   statusLabels,
 } from "@/lib/format";
 import { isSemesterValue, parseSemester, semesterLabel } from "@/lib/summative";
@@ -54,37 +56,61 @@ export async function GET(request: Request) {
       classLevel,
     );
 
-    const groupedRows = new Map<string, typeof exportData.rows>();
-    for (const row of exportData.rows) {
-      const list = groupedRows.get(row.studentId) ?? [];
-      list.push(row);
-      groupedRows.set(row.studentId, list);
-    }
     const studentsById = new Map(
       exportData.students.map((student) => [student.id, student]),
     );
+    const studentSummary = new Map<
+      string,
+      {
+        totalCount: number;
+        hafalanCount: number;
+        murojaahCount: number;
+        scoredCount: number;
+        totalScore: number;
+        latestScore: number | null;
+        latestScoreDate: Date | null;
+      }
+    >();
+
+    for (const row of exportData.rows) {
+      const current = studentSummary.get(row.studentId) ?? {
+        totalCount: 0,
+        hafalanCount: 0,
+        murojaahCount: 0,
+        scoredCount: 0,
+        totalScore: 0,
+        latestScore: null,
+        latestScoreDate: null,
+      };
+
+      current.totalCount += 1;
+      if (row.type === "Hafalan") {
+        current.hafalanCount += 1;
+      } else {
+        current.murojaahCount += 1;
+      }
+
+      if (row.score !== null) {
+        current.scoredCount += 1;
+        current.totalScore += row.score;
+        if (!current.latestScoreDate || row.date.getTime() > current.latestScoreDate.getTime()) {
+          current.latestScore = row.score;
+          current.latestScoreDate = row.date;
+        }
+      }
+
+      studentSummary.set(row.studentId, current);
+    }
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
     workbook.created = new Date();
-
-    const headerFill = {
-      type: "pattern" as const,
-      pattern: "solid" as const,
-      fgColor: { argb: "FF064E3B" },
-    };
-    const headerFont = {
-      bold: true,
-      color: { argb: "FFFFFFFF" },
-    };
 
     const infoSheet = workbook.addWorksheet("Info");
     infoSheet.columns = [
       { header: "Keterangan", key: "key", width: 26 },
       { header: "Nilai", key: "value", width: 24 },
     ];
-    infoSheet.getRow(1).fill = headerFill;
-    infoSheet.getRow(1).font = headerFont;
     [
       { key: "Tahun ajaran", value: academicYear },
       { key: "Kelas", value: classLevel },
@@ -92,6 +118,7 @@ export async function GET(request: Request) {
       { key: "Jumlah santri", value: exportData.students.length },
       { key: "Jumlah catatan", value: exportData.rows.length },
     ].forEach((row) => infoSheet.addRow(row));
+    finalizeTableSheet(infoSheet);
 
     const summarySheet = workbook.addWorksheet("Ringkasan");
     summarySheet.columns = [
@@ -99,32 +126,20 @@ export async function GET(request: Request) {
       { header: "Nama Santri", key: "studentName", width: 28 },
       { header: "Kelas Akademik", key: "academicClassName", width: 18 },
       { header: "Halaqah", key: "halaqahName", width: 24 },
+      { header: "Level", key: "halaqahLevel", width: 12 },
       { header: "Hafalan", key: "hafalanCount", width: 12 },
       { header: "Murojaah", key: "murojaahCount", width: 12 },
-      { header: "Total", key: "totalCount", width: 10 },
-      { header: "Nilai Harian", key: "dailyScores", width: 40 },
+      { header: "Total Catatan", key: "totalCount", width: 14 },
+      { header: "Skor Tercatat", key: "scoredCount", width: 14 },
+      { header: "Nilai Terakhir", key: "latestScore", width: 14 },
       { header: "Rata-rata Santri", key: "averageScore", width: 16 },
     ];
-    summarySheet.getRow(1).fill = headerFill;
-    summarySheet.getRow(1).font = headerFont;
 
     exportData.students.forEach((student, index) => {
-      const rows = (groupedRows.get(student.id) ?? []).sort(
-        (left, right) => right.date.getTime() - left.date.getTime(),
-      );
-      const scores = rows
-        .map((row) => row.score)
-        .filter((score): score is number => score !== null);
-      const hafalanCount = rows.filter((row) => row.type === "Hafalan").length;
-      const murojaahCount = rows.filter((row) => row.type === "Murojaah").length;
-      const scoredRows = rows
-        .filter((row): row is (typeof rows)[number] & { score: number } => row.score !== null)
-        .sort((left, right) => left.date.getTime() - right.date.getTime());
+      const summary = studentSummary.get(student.id);
       const averageScore =
-        scores.length > 0
-          ? Math.round(
-              (scores.reduce((sum, score) => sum + score, 0) / scores.length) * 10,
-            ) / 10
+        summary && summary.scoredCount > 0
+          ? Math.round((summary.totalScore / summary.scoredCount) * 10) / 10
           : "-";
 
       summarySheet.addRow({
@@ -132,20 +147,60 @@ export async function GET(request: Request) {
         studentName: student.fullName,
         academicClassName: student.academicClass?.name ?? "-",
         halaqahName: student.classGroup.name,
-        hafalanCount,
-        murojaahCount,
-        totalCount: rows.length,
-        dailyScores:
-          scoredRows.length > 0
-            ? scoredRows
-                .map(
-                  (row) =>
-                    `${jakartaDateFormatter.format(row.date)}: ${row.score}`,
-                )
-                .join(" | ")
-            : "-",
+        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+        hafalanCount: summary?.hafalanCount ?? 0,
+        murojaahCount: summary?.murojaahCount ?? 0,
+        totalCount: summary?.totalCount ?? 0,
+        scoredCount: summary?.scoredCount ?? 0,
+        latestScore: summary?.latestScore ?? "-",
         averageScore,
       });
+    });
+    finalizeTableSheet(summarySheet, {
+      centerColumns: [
+        "no",
+        "hafalanCount",
+        "murojaahCount",
+        "totalCount",
+        "scoredCount",
+        "latestScore",
+        "averageScore",
+      ],
+    });
+
+    const dailyScoreSheet = workbook.addWorksheet("Skor Harian");
+    dailyScoreSheet.columns = [
+      { header: "No", key: "no", width: 6 },
+      { header: "Nama Santri", key: "studentName", width: 28 },
+      { header: "Kelas Akademik", key: "academicClassName", width: 18 },
+      { header: "Halaqah", key: "halaqahName", width: 26 },
+      { header: "Tanggal", key: "date", width: 18 },
+      { header: "Jenis", key: "type", width: 12 },
+      { header: "Materi", key: "range", width: 28 },
+      { header: "Nilai", key: "score", width: 10 },
+      { header: "Status", key: "status", width: 18 },
+    ];
+
+    exportData.rows
+      .filter((row): row is (typeof exportData.rows)[number] & { score: number } => row.score !== null)
+      .forEach((row, index) => {
+        const student = studentsById.get(row.studentId);
+
+        dailyScoreSheet.addRow({
+          no: index + 1,
+          studentName: row.studentName,
+          academicClassName: student?.academicClass?.name ?? "-",
+          halaqahName: student?.classGroup.name ?? "-",
+          date: jakartaDateFormatter.format(row.date),
+          type: row.type,
+          range: formatRange(row.surah, row.fromAyah, row.toAyah),
+          score: row.score,
+          status: statusLabels[row.status],
+        });
+      });
+    finalizeTableSheet(dailyScoreSheet, {
+      wrapColumns: ["studentName", "halaqahName", "range", "status"],
+      centerColumns: ["no", "score"],
     });
 
     const detailSheet = workbook.addWorksheet("Detail Formatif");
@@ -161,8 +216,6 @@ export async function GET(request: Request) {
       { header: "Tanggal", key: "date", width: 16 },
       { header: "Catatan", key: "notes", width: 30 },
     ];
-    detailSheet.getRow(1).fill = headerFill;
-    detailSheet.getRow(1).font = headerFont;
 
     exportData.rows.forEach((row, index) => {
       const student = studentsById.get(row.studentId);
@@ -179,6 +232,10 @@ export async function GET(request: Request) {
         date: jakartaDateFormatter.format(row.date),
         notes: row.notes ?? "",
       });
+    });
+    finalizeTableSheet(detailSheet, {
+      wrapColumns: ["studentName", "halaqahName", "range", "status", "notes"],
+      centerColumns: ["no", "score"],
     });
 
     const buffer = await workbook.xlsx.writeBuffer();

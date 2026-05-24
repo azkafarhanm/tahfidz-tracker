@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData, getTeacherFormativeOverview } from "@/lib/formative";
 import { statusLabels, formatRange } from "@/lib/format";
 import { getTeacherReportData } from "@/lib/reports";
@@ -69,21 +70,11 @@ export async function GET(request: Request) {
     workbook.creator = "TahfidzFlow";
     workbook.created = new Date();
 
-    const headerFill = {
-      type: "pattern" as const,
-      pattern: "solid" as const,
-      fgColor: { argb: "FF064E3B" },
-    };
-    const headerFont = { bold: true, color: { argb: "FFFFFFFF" } };
-
     const summarySheet = workbook.addWorksheet("Ringkasan");
     summarySheet.columns = [
       { header: "Metrik", key: "metric", width: 28 },
       { header: "Nilai", key: "value", width: 20 },
     ];
-    summarySheet.getRow(1).fill = headerFill;
-    summarySheet.getRow(1).font = headerFont;
-
     [
       { metric: "Tahun Ajaran", value: academicYear },
       { metric: "Jumlah Santri Aktif", value: summary.studentCount },
@@ -93,6 +84,7 @@ export async function GET(request: Request) {
       { metric: "Perlu Cek / Murojaah", value: summary.needsReviewCount },
       { metric: "Target Aktif", value: summary.activeTargetCount },
     ].forEach((row) => summarySheet.addRow(row));
+    finalizeTableSheet(summarySheet);
 
     const progressSheet = workbook.addWorksheet("Progres Santri");
     progressSheet.columns = [
@@ -107,8 +99,6 @@ export async function GET(request: Request) {
       { header: "Tanggal Terakhir", key: "lastActivity", width: 18 },
       { header: "Status", key: "lastStatus", width: 16 },
     ];
-    progressSheet.getRow(1).fill = headerFill;
-    progressSheet.getRow(1).font = headerFont;
     summary.students.forEach((student) => {
       progressSheet.addRow({
         name: student.fullName,
@@ -123,6 +113,10 @@ export async function GET(request: Request) {
         lastStatus: student.needsReview ? "Perlu Cek" : student.lastStatus,
       });
     });
+    finalizeTableSheet(progressSheet, {
+      wrapColumns: ["name", "halaqah", "lastRange", "lastStatus"],
+      centerColumns: ["hafalanCount", "murojaahCount", "avgScore"],
+    });
 
     const formativeRecapSheet = workbook.addWorksheet("Rekap Formatif");
     formativeRecapSheet.columns = [
@@ -135,9 +129,6 @@ export async function GET(request: Request) {
       { header: "Total", key: "total", width: 10 },
       { header: "Rata-rata", key: "average", width: 12 },
     ];
-    formativeRecapSheet.getRow(1).fill = headerFill;
-    formativeRecapSheet.getRow(1).font = headerFont;
-
     for (const [label, overview] of [
       [semesterLabel(Semester.GANJIL), formativeGanjil],
       [semesterLabel(Semester.GENAP), formativeGenap],
@@ -155,6 +146,16 @@ export async function GET(request: Request) {
         });
       });
     }
+    finalizeTableSheet(formativeRecapSheet, {
+      wrapColumns: ["studentName", "halaqah"],
+      centerColumns: [
+        "semester",
+        "hafalanCount",
+        "murojaahCount",
+        "total",
+        "average",
+      ],
+    });
 
     const formativeDetailSheet = workbook.addWorksheet("Detail Formatif");
     formativeDetailSheet.columns = [
@@ -167,9 +168,6 @@ export async function GET(request: Request) {
       { header: "Tanggal", key: "date", width: 16 },
       { header: "Catatan", key: "notes", width: 30 },
     ];
-    formativeDetailSheet.getRow(1).fill = headerFill;
-    formativeDetailSheet.getRow(1).font = headerFont;
-
     for (const [label, detail] of [
       [semesterLabel(Semester.GANJIL), formativeRowsGanjil],
       [semesterLabel(Semester.GENAP), formativeRowsGenap],
@@ -187,6 +185,10 @@ export async function GET(request: Request) {
         });
       });
     }
+    finalizeTableSheet(formativeDetailSheet, {
+      wrapColumns: ["studentName", "range", "status", "notes"],
+      centerColumns: ["semester", "score"],
+    });
 
     const summativeRecapSheet = workbook.addWorksheet("Rekap Sumatif");
     summativeRecapSheet.columns = [
@@ -197,9 +199,6 @@ export async function GET(request: Request) {
       { header: "Total Penilaian", key: "total", width: 16 },
       { header: "Rata-rata", key: "average", width: 12 },
     ];
-    summativeRecapSheet.getRow(1).fill = headerFill;
-    summativeRecapSheet.getRow(1).font = headerFont;
-
     for (const [label, overview] of [
       [semesterLabel(Semester.GANJIL), summativeGanjil],
       [semesterLabel(Semester.GENAP), summativeGenap],
@@ -215,6 +214,10 @@ export async function GET(request: Request) {
         });
       });
     }
+    finalizeTableSheet(summativeRecapSheet, {
+      wrapColumns: ["studentName", "halaqah"],
+      centerColumns: ["semester", "total", "average"],
+    });
 
     const summativeDetailSheet = workbook.addWorksheet("Detail Sumatif");
     summativeDetailSheet.columns = [
@@ -226,9 +229,6 @@ export async function GET(request: Request) {
       { header: "Catatan", key: "notes", width: 30 },
       { header: "Tanggal", key: "createdAt", width: 16 },
     ];
-    summativeDetailSheet.getRow(1).fill = headerFill;
-    summativeDetailSheet.getRow(1).font = headerFont;
-
     for (const [label, detail] of [
       [semesterLabel(Semester.GANJIL), summativeRowsGanjil],
       [semesterLabel(Semester.GENAP), summativeRowsGenap],
@@ -245,6 +245,10 @@ export async function GET(request: Request) {
         });
       });
     }
+    finalizeTableSheet(summativeDetailSheet, {
+      wrapColumns: ["studentName", "surah", "arabic", "notes"],
+      centerColumns: ["semester", "score"],
+    });
 
     const buffer = await workbook.xlsx.writeBuffer();
     const date = new Date().toISOString().split("T")[0];

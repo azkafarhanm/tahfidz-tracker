@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { auth } from "@/auth";
+import { finalizeTableSheet } from "@/lib/excel";
 import { getStudentProgressData } from "@/lib/reports";
 import { getStudentSummativeHistory } from "@/lib/summative";
 
@@ -40,13 +41,6 @@ export async function GET(request: Request) {
       { header: "Metrik", key: "metric", width: 25 },
       { header: "Nilai", key: "value", width: 18 },
     ];
-    summarySheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF064E3B" },
-    };
-    summarySheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-
     [
       { metric: "Nama Santri", value: data.fullName },
       { metric: "Halaqah", value: data.halaqahName },
@@ -56,6 +50,7 @@ export async function GET(request: Request) {
       { metric: "Total Murojaah", value: data.murojaahCount },
       { metric: "Rata-rata Skor", value: data.avgScore || "-" },
     ].forEach((row) => summarySheet.addRow(row));
+    finalizeTableSheet(summarySheet);
 
     const historySheet = workbook.addWorksheet("Riwayat");
     historySheet.columns = [
@@ -65,13 +60,6 @@ export async function GET(request: Request) {
       { header: "Skor", key: "score", width: 10 },
       { header: "Status", key: "status", width: 16 },
     ];
-    historySheet.getRow(1).fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF064E3B" },
-    };
-    historySheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-
     data.records.forEach((r) => {
       const row = historySheet.addRow({
         date: r.date,
@@ -88,6 +76,10 @@ export async function GET(request: Request) {
         };
       }
     });
+    finalizeTableSheet(historySheet, {
+      wrapColumns: ["range", "status"],
+      centerColumns: ["score"],
+    });
 
     if (data.activeTargets.length > 0) {
       const targetSheet = workbook.addWorksheet("Target Aktif");
@@ -98,13 +90,10 @@ export async function GET(request: Request) {
         { header: "Target Selesai", key: "endDate", width: 18 },
         { header: "Catatan", key: "notes", width: 30 },
       ];
-      targetSheet.getRow(1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF064E3B" },
-      };
-      targetSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
       data.activeTargets.forEach((t) => targetSheet.addRow(t));
+      finalizeTableSheet(targetSheet, {
+        wrapColumns: ["range", "notes"],
+      });
     }
 
     const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
@@ -117,12 +106,6 @@ export async function GET(request: Request) {
         { header: "Nilai", key: "score", width: 10 },
         { header: "Catatan", key: "notes", width: 30 },
       ];
-      summativeSheet.getRow(1).fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF064E3B" },
-      };
-      summativeSheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
       summativeScores.forEach((s) =>
         summativeSheet.addRow({
           semester: s.semester === "GANJIL" ? "Ganjil" : "Genap",
@@ -132,6 +115,10 @@ export async function GET(request: Request) {
           notes: s.notes ?? "",
         }),
       );
+      finalizeTableSheet(summativeSheet, {
+        wrapColumns: ["surahName", "notes"],
+        centerColumns: ["semester", "surahNumber", "score"],
+      });
     }
 
     const buffer = await workbook.xlsx.writeBuffer();

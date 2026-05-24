@@ -395,6 +395,24 @@ export async function getTeacherSummativeExportData(
   academicYear: string,
   classLevel?: number,
 ) {
+  const cacheKey = `summative-export:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}`;
+
+  return cached(cacheKey, 30_000, () =>
+    getTeacherSummativeExportDataInner(
+      teacherId,
+      semester,
+      academicYear,
+      classLevel,
+    ),
+  );
+}
+
+async function getTeacherSummativeExportDataInner(
+  teacherId: string | null,
+  semester: Semester,
+  academicYear: string,
+  classLevel?: number,
+) {
   const students = await prisma.student.findMany({
     where: {
       ...(teacherId ? { teacherId } : {}),

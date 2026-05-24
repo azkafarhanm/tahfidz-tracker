@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { finalizeTableSheet } from "@/lib/excel";
 import {
   getTeacherSummativeExportData,
   isSemesterValue,
@@ -58,23 +59,11 @@ export async function GET(request: Request) {
     workbook.creator = "TahfidzFlow";
     workbook.created = new Date();
 
-    const headerFill = {
-      type: "pattern" as const,
-      pattern: "solid" as const,
-      fgColor: { argb: "FF064E3B" },
-    };
-    const headerFont = {
-      bold: true,
-      color: { argb: "FFFFFFFF" },
-    };
-
     const infoSheet = workbook.addWorksheet("Info");
     infoSheet.columns = [
       { header: "Keterangan", key: "key", width: 26 },
       { header: "Nilai", key: "value", width: 24 },
     ];
-    infoSheet.getRow(1).fill = headerFill;
-    infoSheet.getRow(1).font = headerFont;
     [
       { key: "Tahun ajaran", value: academicYear },
       { key: "Kelas", value: classLevel },
@@ -82,6 +71,7 @@ export async function GET(request: Request) {
       { key: "Jumlah santri", value: exportData.students.length },
       { key: "Jumlah penilaian", value: exportData.rows.length },
     ].forEach((row) => infoSheet.addRow(row));
+    finalizeTableSheet(infoSheet);
 
     const summarySheet = workbook.addWorksheet("Ringkasan");
     summarySheet.columns = [
@@ -94,8 +84,6 @@ export async function GET(request: Request) {
       { header: "Nilai Terakhir", key: "latestScore", width: 14 },
       { header: "Rata-rata Santri", key: "averageScore", width: 16 },
     ];
-    summarySheet.getRow(1).fill = headerFill;
-    summarySheet.getRow(1).font = headerFont;
     const latestRowByStudent = new Map<string, (typeof exportData.rows)[number]>();
     for (const row of exportData.rows) {
       if (!latestRowByStudent.has(row.studentId)) {
@@ -116,6 +104,15 @@ export async function GET(request: Request) {
         averageScore: student.averageScore ?? "-",
       });
     });
+    finalizeTableSheet(summarySheet, {
+      wrapColumns: ["studentName", "halaqahName", "latestSurah"],
+      centerColumns: [
+        "no",
+        "totalAssessments",
+        "latestScore",
+        "averageScore",
+      ],
+    });
 
     const detailSheet = workbook.addWorksheet("Detail Sumatif");
     detailSheet.columns = [
@@ -131,9 +128,6 @@ export async function GET(request: Request) {
       { header: "Catatan", key: "notes", width: 30 },
       { header: "Tanggal", key: "createdAt", width: 16 },
     ];
-    detailSheet.getRow(1).fill = headerFill;
-    detailSheet.getRow(1).font = headerFont;
-
     exportData.rows.forEach((row, index) => {
       detailSheet.addRow({
         no: index + 1,
@@ -148,6 +142,10 @@ export async function GET(request: Request) {
         notes: row.notes ?? "",
         createdAt: jakartaDateFormatter.format(row.createdAt),
       });
+    });
+    finalizeTableSheet(detailSheet, {
+      wrapColumns: ["studentName", "halaqahName", "surahName", "surahArabicName", "notes"],
+      centerColumns: ["no", "semester", "surahNumber", "score"],
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
