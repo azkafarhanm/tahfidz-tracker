@@ -658,7 +658,7 @@
     "nameAndTeacher": "الاسم والمعلّم",
     "halaqahName": "اسم الحلقة",
     "halaqahNamePlaceholder": "مثال: الأستاذ إبراهيم - الصف 7",
-    "halaqahNameDescription": "استخدم النمط: اسم المعلّم - الصف N لتبقى عناوين البطاقات سهلة القراءة.",
+    "halaqahNameDescription": "يجب أن يكون لكل معلم حلقة واحدة فقط لكل صف ولكل عام دراسي. إذا تغيّر المستوى فحدّث الحلقة نفسها.",
     "responsibleTeacher": "المعلّم المسؤول",
     "selectTeacher": "اختر معلّمًا",
     "inactive": "غير نشط",
@@ -895,7 +895,7 @@
     "detailButton": "التفاصيل",
     "backToList": "العودة إلى الملخص",
     "detailHeading": "تفصيل تكويني",
-    "detailDescription": "جميع السجلات اليومية لهذا الفصل، جاهزة للمراجعة والتصدير.",
+    "detailDescription": "تنتج الدرجات التكوينية من سجلات الحفظ والمراجعة. استخدم إجراء السطر لتعديل السجل الأصلي أو حذفه.",
     "emptyRecordsHeading": "لا توجد سجلات يومية بعد.",
     "emptyRecordsDescription": "سجل الحفظ أو المراجعة أولًا حتى يظهر الملخص التكويني هنا.",
     "colType": "النوع",
@@ -903,7 +903,8 @@
     "colScore": "الدرجة",
     "colStatus": "الحالة",
     "colRecordedAt": "تاريخ التسجيل",
-    "colNotes": "ملاحظات"
+    "colNotes": "ملاحظات",
+    "editButton": "تعديل"
   },
   "Summative": {
     "heading": "الدرجات التقييمية",
@@ -952,6 +953,7 @@
     "savingButton": "جارٍ الحفظ...",
     "savedSuccess": "تم حفظ الدرجات التقييمية بنجاح.",
     "deletedSuccess": "تم حذف التقييم التجميعي بنجاح.",
+    "deleteFailed": "لم يتم العثور على التقييم التجميعي أو تغيّرت بياناته. أعد التحميل ثم حاول مرة أخرى.",
     "recommendationLabel": "سور استرشادية للصف",
     "recommendationSubtext": "لمتابعة الأهداف فقط، وليس حدًا للتقييم.",
     "colSurah": "السورة",

@@ -658,7 +658,7 @@
     "nameAndTeacher": "Name and Teacher",
     "halaqahName": "Halaqah Name",
     "halaqahNamePlaceholder": "e.g. Ustadz Ibrahim Lc - Grade 7",
-    "halaqahNameDescription": "Use the pattern: Teacher name - Grade N, so card titles stay easy to scan.",
+    "halaqahNameDescription": "Each teacher should only have one halaqah per class and academic year. If the level changes, update the same halaqah.",
     "responsibleTeacher": "Responsible Teacher",
     "selectTeacher": "Select teacher",
     "inactive": "Inactive",
@@ -895,7 +895,7 @@
     "detailButton": "Detail",
     "backToList": "Back to recap",
     "detailHeading": "Formative Detail",
-    "detailDescription": "All daily records for this semester, ready for review and export.",
+    "detailDescription": "Formative scores come from hafalan and murojaah records. Use each row action to edit or remove the source record.",
     "emptyRecordsHeading": "No daily records yet.",
     "emptyRecordsDescription": "Log hafalan or murojaah first so the formative recap appears here.",
     "colType": "Type",
@@ -903,7 +903,8 @@
     "colScore": "Score",
     "colStatus": "Status",
     "colRecordedAt": "Recorded at",
-    "colNotes": "Notes"
+    "colNotes": "Notes",
+    "editButton": "Edit"
   },
   "Summative": {
     "heading": "Summative Scores",
@@ -952,6 +953,7 @@
     "savingButton": "Saving...",
     "savedSuccess": "Summative scores saved successfully.",
     "deletedSuccess": "Summative assessment deleted successfully.",
+    "deleteFailed": "The summative assessment was not found or has changed. Reload and try again.",
       "recommendationLabel": "Class guidance surahs",
       "recommendationSubtext": "For target monitoring, not a grading limit.",
       "colSurah": "Surah",

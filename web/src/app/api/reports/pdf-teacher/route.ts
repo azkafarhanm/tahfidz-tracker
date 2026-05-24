@@ -60,7 +60,7 @@ export async function GET(request: Request) {
 
     const pdfBuffer = await generatePdf("Laporan Guru - TahfidzFlow", [
       { type: "title", text: "Laporan Guru" },
-      { type: "text", text: `Tahun ajaran ${academicYear}` },
+      { type: "text", text: `Ringkasan progres guru untuk tahun ajaran ${academicYear}.` },
       { type: "subtitle", text: "Ringkasan" },
       {
         type: "cards",
@@ -73,13 +73,13 @@ export async function GET(request: Request) {
           { label: "TARGET", value: summary.activeTargetCount },
         ],
       },
-      { type: "subtitle", text: "Progres Santri" },
+      { type: "subtitle", text: "Ringkasan Santri" },
       {
         type: "table",
-        headers: ["Nama", "Halaqah", "Hafalan", "Murojaah", "Skor", "Status"],
+        headers: ["Nama", "Halaqah", "Hafalan", "Murojaah", "Skor", "Status Terakhir"],
         rows: summary.students.map((student) => [
           student.fullName,
-          student.halaqahName,
+          `${student.halaqahName} (${student.halaqahLevel})`,
           String(student.hafalanCount),
           String(student.murojaahCount),
           String(student.avgScore || "-"),
@@ -172,7 +172,7 @@ export async function GET(request: Request) {
       },
       {
         type: "text",
-        text: `Status formatif mengikuti catatan harian aktif. Label seperti "${statusLabels.PERLU_MUROJAAH}" tetap dipertahankan dari sumber catatan.`,
+        text: `Status formatif mengikuti catatan harian aktif. Label seperti "${statusLabels.PERLU_MUROJAAH}" tetap diambil dari catatan asli agar evaluasi tetap konsisten.`,
       },
     ]);
 

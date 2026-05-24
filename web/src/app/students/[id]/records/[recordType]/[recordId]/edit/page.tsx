@@ -14,7 +14,7 @@ import { recordStatusOptions } from "@/lib/format";
 import { getStudentFormContext } from "@/lib/students";
 import { getRecordData } from "@/lib/records";
 import { updateRecord } from "@/lib/record-actions";
-import DeleteRecordButton from "./DeleteRecordButton";
+import DeleteRecordButton from "@/components/DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
@@ -29,7 +29,7 @@ type EditRecordPageProps = {
     recordType: "hafalan" | "murojaah";
     recordId: string;
   }>;
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; returnTo?: string }>;
 };
 
 export async function generateMetadata({ params }: EditRecordPageProps) {
@@ -50,6 +50,10 @@ export default async function EditRecordPage({
   const { id, recordType, recordId } = await params;
   const { teacherId, isAdmin } = await requireSessionScope();
   const query = await searchParams;
+  const returnTo =
+    query?.returnTo && query.returnTo.startsWith("/") && !query.returnTo.startsWith("//")
+      ? query.returnTo
+      : undefined;
 
   const [record, student] = await Promise.all([
     getRecordData(recordId, recordType, isAdmin ? null : teacherId),
@@ -64,7 +68,7 @@ export default async function EditRecordPage({
     redirect(`/students/${id}`);
   }
 
-  const action = updateRecord.bind(null, student.id, recordType, recordId);
+  const action = updateRecord.bind(null, student.id, recordType, recordId, returnTo);
   const Icon = recordType === "hafalan" ? BookOpen : RotateCcw;
   const typeLabel =
     recordType === "hafalan" ? t("typeHafalan") : t("typeMurojaah");
@@ -80,7 +84,7 @@ export default async function EditRecordPage({
           <div className="min-w-0">
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400"
-              href={`/students/${student.id}`}
+              href={returnTo ?? `/students/${student.id}`}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {student.fullName}
@@ -246,7 +250,7 @@ export default async function EditRecordPage({
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
             <Link
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              href={`/students/${student.id}`}
+              href={returnTo ?? `/students/${student.id}`}
             >
               {t("buttonCancel")}
             </Link>
@@ -272,6 +276,7 @@ export default async function EditRecordPage({
               studentId={student.id}
               recordType={recordType}
               recordId={recordId}
+              returnTo={returnTo}
             />
           </div>
         </section>

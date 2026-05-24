@@ -17,6 +17,7 @@ export async function GET() {
 
     const pdfBuffer = await generatePdf("Laporan Admin - TahfidzFlow", [
       { type: "title", text: "Laporan Admin" },
+      { type: "text", text: "Ringkasan data guru dan santri aktif di TahfidzFlow." },
       { type: "subtitle", text: "Ringkasan" },
       {
         type: "cards",
@@ -28,10 +29,10 @@ export async function GET() {
           { label: "TARGET", value: data.totalActiveTargets },
         ],
       },
-      { type: "subtitle", text: "Data Guru" },
+      { type: "subtitle", text: "Daftar Guru" },
       {
         type: "table",
-        headers: ["Nama", "Email", "Santri", "Halaqah"],
+        headers: ["Nama", "Email", "Santri Aktif", "Halaqah Aktif"],
         rows: data.teachers.map((t) => [
           t.fullName,
           t.email,

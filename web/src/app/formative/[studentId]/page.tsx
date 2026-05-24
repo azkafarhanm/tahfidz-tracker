@@ -5,7 +5,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
-import LocalDateTime from "@/components/LocalDateTime";
+import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
+import FormativeRecordsTable from "./FormativeRecordsTable";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getStudentFormativeDetail } from "@/lib/formative";
@@ -25,6 +26,8 @@ type FormativeDetailPageProps = {
   }>;
   searchParams?: Promise<{
     semester?: string;
+    error?: string;
+    success?: string;
   }>;
 };
 
@@ -52,6 +55,7 @@ export default async function FormativeDetailPage({
     query?.semester && isSemesterValue(query.semester)
       ? query.semester
       : defaultSemester;
+  const returnTo = `/formative/${studentId}?semester=${semesterValue}`;
 
   const academicYear = getCurrentAcademicYear();
   const detail = await getStudentFormativeDetail(
@@ -94,21 +98,14 @@ export default async function FormativeDetailPage({
       </header>
 
       <section className="mt-6 flex flex-wrap items-center gap-3">
-        <div className="flex rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-          {[Semester.GANJIL, Semester.GENAP].map((option) => (
-            <Link
-              key={option}
-              href={`/formative/${studentId}?semester=${option}`}
-              className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
-                semesterValue === option
-                  ? "bg-emerald-900 text-white"
-                  : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-              }`}
-            >
-              {option === Semester.GANJIL ? t("ganjil") : t("genap")}
-            </Link>
-          ))}
-        </div>
+        <SegmentedLinkTabs
+          ariaLabel={t("semesterLabel")}
+          currentValue={semesterValue}
+          options={[
+            { value: Semester.GANJIL, label: t("ganjil"), href: `/formative/${studentId}?semester=${Semester.GANJIL}` },
+            { value: Semester.GENAP, label: t("genap"), href: `/formative/${studentId}?semester=${Semester.GENAP}` },
+          ]}
+        />
 
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {academicYear}
@@ -162,77 +159,26 @@ export default async function FormativeDetailPage({
           </div>
         </div>
 
-        {detail.records.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-600 dark:text-slate-400">
-            <p className="font-medium">{t("emptyRecordsHeading")}</p>
-            <p className="mt-1">{t("emptyRecordsDescription")}</p>
+        {query?.success ? (
+          <div className="border-b border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-200">
+            {query.success}
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
-                  <th className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colType")}
-                  </th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colMaterial")}
-                  </th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colScore")}
-                  </th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colStatus")}
-                  </th>
-                  <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colRecordedAt")}
-                  </th>
-                  <th className="px-5 py-3 font-semibold text-slate-700 dark:text-slate-300">
-                    {t("colNotes")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {detail.records.map((record, index) => (
-                  <tr
-                    key={`${record.type}-${record.id}`}
-                    className={`border-b border-slate-100 dark:border-slate-800 ${
-                      index % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/20" : ""
-                    }`}
-                  >
-                    <td className="px-5 py-4">
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                        {record.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      {record.range}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="font-semibold text-emerald-800 dark:text-emerald-400">
-                        {record.score ?? "-"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      {record.status}
-                    </td>
-                    <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      <LocalDateTime
-                        fallback={`${record.date} - ${record.time}`}
-                        iso={record.dateTimeIso}
-                        locale={locale}
-                        mode="dateTime"
-                      />
-                    </td>
-                    <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
-                      {record.notes || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : null}
+
+        {query?.error ? (
+          <div className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm font-medium text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
+            {query.error}
           </div>
-        )}
+        ) : null}
+
+        <FormativeRecordsTable
+          emptyDescription={t("emptyRecordsDescription")}
+          emptyHeading={t("emptyRecordsHeading")}
+          locale={locale}
+          records={detail.records}
+          returnTo={returnTo}
+          studentId={studentId}
+        />
       </section>
     </AppShell>
   );

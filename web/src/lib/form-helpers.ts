@@ -18,9 +18,17 @@ export function readInt(formData: FormData, key: string) {
 
 export function createFailFn(basePath: string) {
   return (message: string, extra?: Record<string, string>): never => {
-    const params = new URLSearchParams(extra);
+    const [pathname, existingSearch = ""] = basePath.split("?", 2);
+    const params = new URLSearchParams(existingSearch);
+
+    if (extra) {
+      for (const [key, value] of Object.entries(extra)) {
+        params.set(key, value);
+      }
+    }
+
     params.set("error", message);
-    redirect(`${basePath}?${params.toString()}`);
+    redirect(`${pathname}?${params.toString()}`);
   };
 }
 

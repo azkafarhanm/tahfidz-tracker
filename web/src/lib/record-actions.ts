@@ -18,17 +18,47 @@ import {
 
 const validStatuses = new Set<string>(Object.values(RecordStatus));
 
+function resolveReturnPath(
+  returnTo: string | undefined,
+  fallbackPath: string,
+  params: { error?: string; success?: string } = {},
+) {
+  const basePath =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : fallbackPath;
+  const [pathname, existingSearch = ""] = basePath.split("?", 2);
+  const searchParams = new URLSearchParams(existingSearch);
+
+  if (params.error) {
+    searchParams.set("error", params.error);
+  }
+
+  if (params.success) {
+    searchParams.set("success", params.success);
+  }
+
+  const query = searchParams.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
 export async function updateRecord(
   studentId: string,
   recordType: "hafalan" | "murojaah",
   recordId: string,
+  returnTo: string | undefined,
   formData: FormData,
 ) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const t = await getTranslations("Validation");
-  const fail = createFailFn(`/students/${studentId}/records/${recordType}/${recordId}/edit`);
+  const editPath = `/students/${studentId}/records/${recordType}/${recordId}/edit`;
+  const editReturnPath = returnTo
+    ? `${editPath}?returnTo=${encodeURIComponent(returnTo)}`
+    : editPath;
+  const successPath = resolveReturnPath(returnTo, `/students/${studentId}`);
+  const fail = createFailFn(editReturnPath);
 
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
@@ -91,18 +121,21 @@ export async function updateRecord(
   revalidatePath("/formative");
   revalidatePath(`/formative/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordUpdated"))}`);
+  redirect(resolveReturnPath(successPath, `/students/${studentId}`, { success: t("recordUpdated") }));
 }
 
 export async function deleteRecord(
   studentId: string,
   recordType: "hafalan" | "murojaah",
   recordId: string,
+  returnTo?: string,
 ) {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
   const t = await getTranslations("Validation");
+  const fallbackPath = `/students/${studentId}`;
+  const redirectPath = resolveReturnPath(returnTo, fallbackPath);
 
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
@@ -110,11 +143,19 @@ export async function deleteRecord(
   });
 
   if (!student) {
-    redirect(`/students/${studentId}?error=${encodeURIComponent(t("studentNotFound"))}`);
+    return {
+      ok: false,
+      error: t("studentNotFound"),
+      redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("studentNotFound") }),
+    };
   }
 
   if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
-    redirect(`/students/${studentId}?error=${encodeURIComponent(t("noPermissionDelete"))}`);
+    return {
+      ok: false,
+      error: t("noPermissionDelete"),
+      redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("noPermissionDelete") }),
+    };
   }
 
   if (recordType === "murojaah") {
@@ -123,7 +164,11 @@ export async function deleteRecord(
       select: { id: true },
     });
     if (!existing) {
-      redirect(`/students/${studentId}?error=${encodeURIComponent(t("recordNotFound"))}`);
+      return {
+        ok: false,
+        error: t("recordNotFound"),
+        redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("recordNotFound") }),
+      };
     }
     await prisma.revisionRecord.delete({ where: { id: recordId } });
   } else {
@@ -132,7 +177,11 @@ export async function deleteRecord(
       select: { id: true },
     });
     if (!existing) {
-      redirect(`/students/${studentId}?error=${encodeURIComponent(t("recordNotFound"))}`);
+      return {
+        ok: false,
+        error: t("recordNotFound"),
+        redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("recordNotFound") }),
+      };
     }
     await prisma.memorizationRecord.delete({ where: { id: recordId } });
   }
@@ -143,5 +192,9 @@ export async function deleteRecord(
   revalidatePath("/formative");
   revalidatePath(`/formative/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("recordDeleted"))}`);
+  return {
+    ok: true,
+    success: t("recordDeleted"),
+    redirectTo: resolveReturnPath(redirectPath, fallbackPath, { success: t("recordDeleted") }),
+  };
 }

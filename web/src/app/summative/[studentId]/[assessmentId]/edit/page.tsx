@@ -3,15 +3,13 @@ import { ArrowLeft, PencilLine } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import DeleteSummativeButton from "@/components/DeleteSummativeButton";
 import { requireSessionScope } from "@/lib/session";
 import {
   getStudentSummativeAssessmentForEdit,
   isSemesterValue,
 } from "@/lib/summative";
-import {
-  deleteSummativeAssessmentAction,
-  updateSummativeAssessmentAction,
-} from "@/app/summative/actions";
+import { updateSummativeAssessmentAction } from "@/app/summative/actions";
 import SummativeAssessmentForm from "@/app/summative/SummativeAssessmentForm";
 
 export const runtime = "nodejs";
@@ -101,17 +99,13 @@ export default async function SummativeEditPage({
             surah: `${assessment.surah.number}. ${assessment.surah.name}`,
           })}
         </p>
-        <form action={deleteSummativeAssessmentAction} className="mt-4">
-          <input type="hidden" name="assessmentId" value={assessment.id} />
-          <input type="hidden" name="studentId" value={studentId} />
-          <input type="hidden" name="semester" value={assessment.semester} />
-          <button
-            type="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-rose-300 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 dark:border-rose-800 dark:bg-slate-950 dark:text-rose-300 dark:hover:bg-rose-950"
-          >
-            {t("deleteButton")}
-          </button>
-        </form>
+        <div className="mt-4">
+          <DeleteSummativeButton
+            assessmentId={assessment.id}
+            semester={assessment.semester}
+            studentId={studentId}
+          />
+        </div>
       </section>
     </AppShell>
   );

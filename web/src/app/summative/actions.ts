@@ -18,6 +18,18 @@ import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year"
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
+function buildSummativeRedirectPath(
+  studentId: string,
+  semester: string,
+  params: Record<string, string>,
+) {
+  const searchParams = new URLSearchParams({
+    semester,
+    ...params,
+  });
+  return `/summative/${studentId}?${searchParams.toString()}`;
+}
+
 export async function createSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
   const t = await getTranslations("Validation");
@@ -98,13 +110,18 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
 
 export async function deleteSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
+  const t = await getTranslations("Summative");
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   const studentId = String(formData.get("studentId") ?? "").trim();
   const semester = String(formData.get("semester") ?? getSemesterForDate(new Date()));
 
   if (!assessmentId || !studentId) {
-    redirect("/summative");
+    return {
+      ok: false,
+      error: t("deleteFailed"),
+      redirectTo: "/summative",
+    };
   }
 
   const current = await getStudentSummativeAssessmentForEdit(
@@ -114,7 +131,11 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
   );
 
   if (!current) {
-    redirect(`/summative/${studentId}`);
+    return {
+      ok: false,
+      error: t("deleteFailed"),
+      redirectTo: buildSummativeRedirectPath(studentId, semester, { error: t("deleteFailed") }),
+    };
   }
 
   await deleteSummativeAssessment(assessmentId);
@@ -124,7 +145,11 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
   revalidatePath(`/formative/${studentId}`);
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/summative/${studentId}?semester=${semester}&deleted=1`);
+  return {
+    ok: true,
+    success: t("deletedSuccess"),
+    redirectTo: buildSummativeRedirectPath(studentId, semester, { deleted: "1" }),
+  };
 }
 
 async function parseSummativePayload(formData: FormData) {

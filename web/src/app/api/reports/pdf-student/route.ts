@@ -31,11 +31,14 @@ export async function GET(request: Request) {
 
     const pdfBuffer = await generatePdf(`${data.fullName} - TahfidzFlow`, [
       { type: "title", text: data.fullName },
-      { type: "subtitle", text: "Info" },
+      { type: "text", text: "Ringkasan progres santri." },
+      { type: "subtitle", text: "Informasi Santri" },
       {
         type: "cards",
+        columns: 2,
         items: [
-          { label: "HALAQAH", value: `${data.halaqahName} (${data.halaqahLevel})` },
+          { label: "HALAQAH", value: data.halaqahName },
+          { label: "LEVEL", value: data.halaqahLevel },
           { label: "KELAS", value: data.academicClassName },
           { label: "HAFALAN", value: data.hafalanCount },
           { label: "MUROJAAH", value: data.murojaahCount },
@@ -57,7 +60,7 @@ export async function GET(request: Request) {
             },
           ]
         : []),
-      { type: "subtitle", text: "Riwayat Hafalan & Murojaah" },
+      { type: "subtitle", text: "Riwayat Pembelajaran" },
       ...(data.records.length > 0
         ? [
             {
@@ -72,7 +75,7 @@ export async function GET(request: Request) {
               ]),
             },
           ]
-        : [{ type: "text" as const, text: "Belum ada catatan." }]),
+        : [{ type: "text" as const, text: "Belum ada riwayat hafalan atau murojaah pada periode ini." }]),
       ...(summativeScores.length > 0
         ? [
             { type: "subtitle" as const, text: "Nilai Sumatif" },
@@ -86,7 +89,7 @@ export async function GET(request: Request) {
               ]),
             },
           ]
-        : []),
+        : [{ type: "text" as const, text: "Belum ada nilai sumatif yang tersimpan." }]),
     ]);
 
     const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();

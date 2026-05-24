@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
+import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import {
@@ -117,42 +118,28 @@ export default async function SummativePage({
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
             {t("classLabel")}
           </span>
-          <div className="flex rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-            {classOptions.map((option) => (
-              <Link
-                key={option.value}
-                href={`/summative?semester=${semesterValue}&classLevel=${option.value}`}
-                className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
-                  classLevelValue === option.value
-                    ? "bg-emerald-900 text-white"
-                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`}
-              >
-                {option.label}
-              </Link>
-            ))}
-          </div>
+          <SegmentedLinkTabs
+            ariaLabel={t("classLabel")}
+            currentValue={classLevelValue}
+            options={classOptions.map((option) => ({
+              ...option,
+              href: `/summative?semester=${semesterValue}&classLevel=${option.value}`,
+            }))}
+          />
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
             {t("semesterLabel")}
           </span>
-          <div className="flex rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-            {semesterOptions.map((option) => (
-              <Link
-                key={option.value}
-                href={`/summative?semester=${option.value}&classLevel=${classLevelValue}`}
-                className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
-                  semesterValue === option.value
-                    ? "bg-emerald-900 text-white"
-                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`}
-              >
-                {option.label}
-              </Link>
-            ))}
-          </div>
+          <SegmentedLinkTabs
+            ariaLabel={t("semesterLabel")}
+            currentValue={semesterValue}
+            options={semesterOptions.map((option) => ({
+              ...option,
+              href: `/summative?semester=${option.value}&classLevel=${classLevelValue}`,
+            }))}
+          />
         </div>
 
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">

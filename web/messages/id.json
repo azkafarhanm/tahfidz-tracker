@@ -658,7 +658,7 @@
     "nameAndTeacher": "Nama dan Guru",
     "halaqahName": "Nama halaqah",
     "halaqahNamePlaceholder": "Contoh: Ustadz Ibrahim Lc - Kelas 7",
-    "halaqahNameDescription": "Gunakan format: Nama guru - Kelas N agar judul kartu mudah dipindai.",
+    "halaqahNameDescription": "Satu guru hanya memiliki satu halaqah per kelas dan tahun ajaran. Jika level berubah, cukup ubah halaqah yang sama.",
     "responsibleTeacher": "Guru pembimbing",
     "selectTeacher": "Pilih guru",
     "inactive": "Nonaktif",
@@ -895,7 +895,7 @@
     "detailButton": "Detail",
     "backToList": "Kembali ke rekap",
     "detailHeading": "Detail Formatif",
-    "detailDescription": "Seluruh catatan harian semester ini, siap dipakai untuk evaluasi dan ekspor.",
+    "detailDescription": "Nilai formatif berasal dari catatan hafalan dan murojaah. Gunakan aksi per baris untuk mengubah atau menghapus sumber nilainya.",
     "emptyRecordsHeading": "Belum ada catatan harian.",
     "emptyRecordsDescription": "Catat hafalan atau murojaah terlebih dahulu agar rekap formatif tampil di sini.",
     "colType": "Jenis",
@@ -903,7 +903,8 @@
     "colScore": "Nilai",
     "colStatus": "Status",
     "colRecordedAt": "Dicatat pada",
-    "colNotes": "Catatan"
+    "colNotes": "Catatan",
+    "editButton": "Ubah"
   },
   "Summative": {
     "heading": "Nilai Sumatif",
@@ -952,6 +953,7 @@
     "savingButton": "Menyimpan...",
     "savedSuccess": "Nilai sumatif berhasil disimpan.",
     "deletedSuccess": "Penilaian sumatif berhasil dihapus.",
+    "deleteFailed": "Penilaian sumatif tidak ditemukan atau sudah berubah. Muat ulang lalu coba lagi.",
       "recommendationLabel": "Surah acuan kelas",
       "recommendationSubtext": "Untuk monitoring target, bukan batas penilaian.",
       "colSurah": "Surah",

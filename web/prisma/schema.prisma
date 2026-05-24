@@ -122,7 +122,7 @@ model ClassGroup {
   @@index([level])
   @@index([isActive])
   @@index([teacherId, isActive, grade, level])
-  @@unique([teacherId, academicYear, grade, level])
+  @@unique([teacherId, academicYear, grade])
 }
 
 model Student {
