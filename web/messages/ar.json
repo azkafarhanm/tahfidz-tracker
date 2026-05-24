@@ -173,7 +173,7 @@
     "accountRoleLabel": "دور الحساب",
     "roleAdmin": "مدير النظام",
     "roleTeacher": "معلّم",
-    "roleDescriptionAdmin": "يمكنه عرض ملخصات النظام ومتابعة أساسات المرحلة 4.",
+    "roleDescriptionAdmin": "يمكنه عرض ملخصات النظام وإدارة بيانات التحفيظ.",
     "roleDescriptionTeacher": "يمكنه تسجيل الحفظ والمراجعة ومتابعة الطلاب المخصصين له.",
     "adminAccessLabel": "صلاحية الإدارة",
     "adminAccessAvailable": "متاحة",
@@ -188,6 +188,7 @@
     "actionsDescriptionTeacher": "استخدم هذه الصفحة للوصول إلى مناطق المعلّم الرئيسية وتسجيل الخروج.",
     "openAdminPanelButton": "فتح لوحة الإدارة",
     "viewStudentsButton": "عرض الطلاب",
+    "changeEmailButton": "تغيير البريد الإلكتروني",
     "changePasswordButton": "تغيير كلمة المرور"
   },
   "Reports": {
@@ -227,7 +228,7 @@
   },
   "AdminDashboard": {
     "heading": "لوحة الإدارة",
-    "description": "ملخص النظام وأساسات المرحلة 4.",
+    "description": "ملخص النظام وإدارة بيانات TahfidzFlow.",
     "activeUsersLabel": "المستخدمون النشطون",
     "activeUsersSubtext": "المدراء والمعلّمون النشطون",
     "totalRecordsLabel": "إجمالي التسجيلات",
@@ -241,8 +242,8 @@
     "statHalaqahSubtext": "مجموعات حلقات نشطة",
     "statActiveTargets": "أهداف نشطة",
     "statActiveTargetsSubtext": "جميع المعلّمين",
-    "managementHeading": "مناطق الإدارة التالية",
-    "phaseBadge": "المرحلة 4",
+    "managementHeading": "مناطق الإدارة الرئيسية",
+    "phaseBadge": "لوحة الإدارة",
     "areaGuruTitle": "المعلّمون",
     "areaGuruDescription": "إدارة حسابات المعلّمين والتفعيل وتوزيع الصلاحيات.",
     "areaGuruAction": "فتح الوحدة",
@@ -593,6 +594,17 @@
     "saving": "جاري الحفظ...",
     "submit": "حفظ كلمة المرور الجديدة"
   },
+  "ChangeEmail": {
+    "backLink": "الملف الشخصي",
+    "heading": "تغيير البريد الإلكتروني",
+    "description": "حدّث بريد تسجيل الدخول مع التحقق بكلمة المرور الحالية.",
+    "currentPassword": "كلمة المرور الحالية",
+    "newEmail": "البريد الإلكتروني الجديد",
+    "confirmEmail": "تأكيد البريد الإلكتروني الجديد",
+    "helper": "استخدم بريدًا إلكترونيًا نشطًا يسهل الوصول إليه. سيُستخدم العنوان الجديد في تسجيلات الدخول القادمة وإشعارات الحساب.",
+    "saving": "جارٍ الحفظ...",
+    "submit": "حفظ البريد الإلكتروني الجديد"
+  },
   "AdminFormPage": {
     "addTeacher": "إضافة معلّم",
     "addTeacherDescription": "إنشاء حساب معلّم جديد لتسجيل الحفظ والمراجعة.",
@@ -785,6 +797,10 @@
     "passwordLength": "يجب أن تكون كلمة المرور الجديدة {min}-{max} حرفًا.",
     "passwordMismatch": "تأكيد كلمة المرور غير متطابق.",
     "passwordChanged": "تم تغيير كلمة المرور.",
+    "emailFormatInvalid": "البريد الإلكتروني الجديد غير صالح.",
+    "emailMismatch": "تأكيد البريد الإلكتروني غير متطابق.",
+    "emailUnchanged": "البريد الإلكتروني الجديد مطابق للبريد الحالي.",
+    "emailChanged": "تم تحديث البريد الإلكتروني للحساب بنجاح.",
     "teacherNameRequired": "اسم المعلم مطلوب (120 حرفًا كحد أقصى).",
     "teacherEmailRequired": "بريد المعلم الإلكتروني مطلوب وصالح (120 حرفًا كحد أقصى).",
     "teacherPhoneTooLong": "رقم الهاتف يجب أن يكون 30 حرفًا أو أقل.",
@@ -862,6 +878,11 @@
   },
   "Offline": {
     "banner": "أنت غير متصل بالإنترنت. بعض الميزات غير متاحة."
+  },
+  "OfflinePage": {
+    "heading": "انقطع الاتصال",
+    "description": "هذه الصفحة غير متاحة بدون إنترنت حاليًا. أعد اتصال جهازك ثم حاول مرة أخرى.",
+    "homeButton": "العودة إلى لوحة التحكم"
   },
   "Formative": {
     "heading": "ملخص تكويني",

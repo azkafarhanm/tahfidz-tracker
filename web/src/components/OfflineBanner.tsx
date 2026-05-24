@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { WifiOff } from "lucide-react";
 
 export default function OfflineBanner() {
+  const t = useTranslations("Offline");
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function OfflineBanner() {
       }}
     >
       <WifiOff size={14} />
-      Anda sedang offline. Beberapa fitur tidak tersedia.
+      {t("banner")}
     </div>
   );
 }

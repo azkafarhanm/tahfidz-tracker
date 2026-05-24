@@ -12,6 +12,7 @@ export const authConfig: NextAuthConfig = {
       const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
       const isStaticAsset = /\.[^/]+$/.test(nextUrl.pathname);
       const isPublicRoute =
+        nextUrl.pathname === "/offline" ||
         nextUrl.pathname.startsWith("/_next") ||
         nextUrl.pathname.startsWith("/favicon") ||
         isStaticAsset;

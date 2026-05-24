@@ -9,10 +9,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type QuickLogPageProps = {
-  searchParams?: Promise<{
-    error?: string;
-    success?: string;
-  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata() {
@@ -22,7 +19,7 @@ export async function generateMetadata() {
 
 export default async function QuickLogPage({ searchParams }: QuickLogPageProps) {
   const t = await getTranslations("QuickLog");
-  const params = await searchParams;
+  await searchParams;
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const students = await getQuickLogStudents(teacherId);
   const userName = session?.user?.name ?? t("defaultUserName");
@@ -32,8 +29,6 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
       <GuidedQuickLog
         action={createGuidedRecord}
         students={students}
-        error={params?.error}
-        success={params?.success}
       />
     </AppShell>
   );

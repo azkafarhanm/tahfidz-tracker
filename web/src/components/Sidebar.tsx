@@ -7,50 +7,21 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   BookOpen,
-  BookText,
-  Home,
-  PlusCircle,
   UserCircle,
-  Users,
   ShieldCheck,
-  GraduationCap,
-  UserRound,
-  BarChart3,
-  ClipboardList,
   LogOut,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
+import { adminNavigationItems, teacherNavigationItems } from "@/lib/navigation";
 
 const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
-
-const teacherNavKeys = [
-  { key: "navDashboard", href: "/", icon: Home },
-  { key: "navSantri", href: "/students", icon: Users },
-  { key: "navCatatCepat", href: "/quick-log", icon: PlusCircle },
-  { key: "navFormatif", href: "/formative", icon: BookText },
-  { key: "navSumatif", href: "/summative", icon: ClipboardList },
-  { key: "navProfil", href: "/profile", icon: UserCircle },
-] as const;
-
-const adminNavKeys = [
-  { key: "navDashboard", href: "/", icon: Home },
-  { key: "roleAdmin", href: "/admin", icon: ShieldCheck },
-  { key: "navGuru", href: "/admin/teachers", icon: Users },
-  { key: "navKelas", href: "/admin/classes", icon: GraduationCap },
-  { key: "navHalaqah", href: "/admin/halaqah", icon: BookOpen },
-  { key: "navSantri", href: "/admin/students", icon: UserRound },
-  { key: "navFormatif", href: "/formative", icon: BookText },
-  { key: "navSumatif", href: "/summative", icon: ClipboardList },
-  { key: "navLaporan", href: "/admin/reports", icon: BarChart3 },
-  { key: "navProfil", href: "/profile", icon: UserCircle },
-] as const;
 
 export default function Sidebar({ userName, isAdmin }: { userName: string; isAdmin: boolean }) {
   const pathname = usePathname();
   const t = useTranslations("Sidebar");
-  const navKeys = isAdmin ? adminNavKeys : teacherNavKeys;
+  const navKeys = isAdmin ? adminNavigationItems : teacherNavigationItems;
 
   return (
     <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-screen sm:w-64 sm:flex-col sm:overflow-hidden">

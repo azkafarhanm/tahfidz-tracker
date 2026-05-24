@@ -3,8 +3,10 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { playNotificationSound } from "@/lib/feedback";
 
 const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 const FloatingSurahs = dynamic(() => import("@/components/FloatingSurahs"), {
@@ -32,14 +34,20 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(t("errorWrongCredentials"));
+        const message = t("errorWrongCredentials");
+        setError(message);
+        toast.error(message);
+        playNotificationSound("error");
         setIsLoading(false);
         return;
       }
 
       window.location.href = "/";
     } catch {
-      setError(t("errorGeneric"));
+      const message = t("errorGeneric");
+      setError(message);
+      toast.error(message);
+      playNotificationSound("error");
       setIsLoading(false);
     }
   };
@@ -60,12 +68,9 @@ export default function LoginPage() {
         {/* Login Card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-400 px-4 py-3 rounded-xl text-sm">
-                {error}
-              </div>
-            )}
+            <p aria-live="polite" className="sr-only">
+              {error}
+            </p>
 
             {/* Login Field */}
             <div>

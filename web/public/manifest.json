@@ -1,8 +1,10 @@
 {
   "name": "TahfidzFlow",
   "short_name": "TahfidzFlow",
+  "id": "/",
   "description": "Mobile-first hafalan and murojaah management for teachers.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f7f4ee",
   "theme_color": "#064e3b",

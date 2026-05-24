@@ -173,7 +173,7 @@
     "accountRoleLabel": "Peran akun",
     "roleAdmin": "Administrator",
     "roleTeacher": "Guru",
-    "roleDescriptionAdmin": "Memiliki akses untuk melihat ringkasan sistem dan melanjutkan fondasi Phase 4.",
+    "roleDescriptionAdmin": "Memiliki akses untuk melihat ringkasan sistem dan mengelola data tahfidz.",
     "roleDescriptionTeacher": "Memiliki akses untuk mencatat hafalan, murojaah, dan memantau santri sendiri.",
     "adminAccessLabel": "Akses admin",
     "adminAccessAvailable": "Tersedia",
@@ -188,6 +188,7 @@
     "actionsDescriptionTeacher": "Gunakan halaman ini untuk membuka area utama guru dan keluar dari akun.",
     "openAdminPanelButton": "Buka Panel Admin",
     "viewStudentsButton": "Lihat Santri",
+    "changeEmailButton": "Ubah Email",
     "changePasswordButton": "Ubah Password"
   },
   "Reports": {
@@ -227,7 +228,7 @@
   },
   "AdminDashboard": {
     "heading": "Panel Admin",
-    "description": "Ringkasan sistem dan fondasi Phase 4.",
+    "description": "Ringkasan sistem dan pengelolaan data TahfidzFlow.",
     "activeUsersLabel": "Pengguna aktif",
     "activeUsersSubtext": "admin dan guru aktif",
     "totalRecordsLabel": "Total catatan",
@@ -241,8 +242,8 @@
     "statHalaqahSubtext": "grup halaqah aktif",
     "statActiveTargets": "Target aktif",
     "statActiveTargetsSubtext": "semua guru",
-    "managementHeading": "Area pengelolaan berikutnya",
-    "phaseBadge": "Phase 4",
+    "managementHeading": "Area pengelolaan utama",
+    "phaseBadge": "Panel Admin",
     "areaGuruTitle": "Guru",
     "areaGuruDescription": "Kelola akun guru, aktivasi, dan pembagian akses.",
     "areaGuruAction": "Buka modul",
@@ -593,6 +594,17 @@
     "saving": "Menyimpan...",
     "submit": "Simpan Password Baru"
   },
+  "ChangeEmail": {
+    "backLink": "Profil",
+    "heading": "Ubah Email",
+    "description": "Perbarui email login akun Anda dengan verifikasi password saat ini.",
+    "currentPassword": "Password saat ini",
+    "newEmail": "Email baru",
+    "confirmEmail": "Konfirmasi email baru",
+    "helper": "Gunakan email aktif yang mudah Anda akses. Perubahan berlaku untuk login berikutnya dan notifikasi akun.",
+    "saving": "Menyimpan...",
+    "submit": "Simpan Email Baru"
+  },
   "AdminFormPage": {
     "addTeacher": "Tambah Guru",
     "addTeacherDescription": "Buat akun guru baru untuk mencatat hafalan dan murojaah.",
@@ -785,6 +797,10 @@
     "passwordLength": "Password baru harus {min}-{max} karakter.",
     "passwordMismatch": "Konfirmasi password tidak cocok.",
     "passwordChanged": "Password berhasil diubah.",
+    "emailFormatInvalid": "Email baru tidak valid.",
+    "emailMismatch": "Konfirmasi email tidak cocok.",
+    "emailUnchanged": "Email baru sama dengan email saat ini.",
+    "emailChanged": "Email akun berhasil diperbarui.",
     "teacherNameRequired": "Nama guru wajib diisi dan maksimal 120 karakter.",
     "teacherEmailRequired": "Email guru wajib valid dan maksimal 120 karakter.",
     "teacherPhoneTooLong": "Nomor telepon maksimal 30 karakter.",
@@ -862,6 +878,11 @@
   },
   "Offline": {
     "banner": "Anda sedang offline. Beberapa fitur tidak tersedia."
+  },
+  "OfflinePage": {
+    "heading": "Koneksi terputus",
+    "description": "Halaman ini belum tersedia tanpa internet. Sambungkan kembali perangkat Anda lalu coba lagi.",
+    "homeButton": "Kembali ke dashboard"
   },
   "Formative": {
     "heading": "Rekap Formatif",

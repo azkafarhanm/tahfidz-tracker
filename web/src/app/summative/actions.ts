@@ -33,6 +33,7 @@ function buildSummativeRedirectPath(
 export async function createSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
   const t = await getTranslations("Validation");
+  const tSummative = await getTranslations("Summative");
 
   const payload = await parseSummativePayload(formData);
   const student = await prisma.student.findFirst({
@@ -65,13 +66,16 @@ export async function createSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(payload.studentId);
   redirect(
-    `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
+    `/summative/${payload.studentId}?semester=${payload.semester}&success=${encodeURIComponent(
+      tSummative("savedSuccess"),
+    )}`,
   );
 }
 
 export async function updateSummativeAssessmentAction(formData: FormData) {
   const { teacherId } = await requireSessionScope();
   const t = await getTranslations("Validation");
+  const tSummative = await getTranslations("Summative");
 
   const assessmentId = String(formData.get("assessmentId") ?? "").trim();
   if (!assessmentId) {
@@ -104,7 +108,9 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(payload.studentId);
   redirect(
-    `/summative/${payload.studentId}?semester=${payload.semester}&saved=1`,
+    `/summative/${payload.studentId}?semester=${payload.semester}&success=${encodeURIComponent(
+      tSummative("savedSuccess"),
+    )}`,
   );
 }
 
@@ -148,7 +154,9 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
   return {
     ok: true,
     success: t("deletedSuccess"),
-    redirectTo: buildSummativeRedirectPath(studentId, semester, { deleted: "1" }),
+    redirectTo: buildSummativeRedirectPath(studentId, semester, {
+      success: t("deletedSuccess"),
+    }),
   };
 }
 

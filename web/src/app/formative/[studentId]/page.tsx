@@ -159,18 +159,6 @@ export default async function FormativeDetailPage({
           </div>
         </div>
 
-        {query?.success ? (
-          <div className="border-b border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-200">
-            {query.success}
-          </div>
-        ) : null}
-
-        {query?.error ? (
-          <div className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm font-medium text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
-            {query.error}
-          </div>
-        ) : null}
-
         <FormativeRecordsTable
           emptyDescription={t("emptyRecordsDescription")}
           emptyHeading={t("emptyRecordsHeading")}

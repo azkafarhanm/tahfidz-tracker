@@ -2,15 +2,12 @@
 
 import { useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
 
 export default function ChangePasswordPage() {
   const t = useTranslations("ChangePassword");
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -36,13 +33,6 @@ export default function ChangePasswordPage() {
             </div>
           </div>
         </header>
-
-        {error ? (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-400">
-            {error}
-          </div>
-        ) : null}
-
         <form
           className="mt-5 space-y-4"
           action={(formData) => {

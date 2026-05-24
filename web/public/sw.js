@@ -1,5 +1,7 @@
-const CACHE_NAME = "tahfidzflow-v3";
+const CACHE_NAME = "tahfidzflow-v4";
+const OFFLINE_PAGE = "/offline";
 const STATIC_ASSETS = [
+  OFFLINE_PAGE,
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
@@ -44,13 +46,30 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(
-        () =>
-          new Response("Offline", {
+      caches.open(CACHE_NAME).then(async (cache) => {
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        } catch {
+          const cachedPage = await cache.match(request);
+          if (cachedPage) {
+            return cachedPage;
+          }
+
+          const offlineResponse = await cache.match(OFFLINE_PAGE);
+          if (offlineResponse) {
+            return offlineResponse;
+          }
+
+          return new Response("Offline", {
             status: 503,
             headers: { "Content-Type": "text/plain; charset=utf-8" },
-          })
-      )
+          });
+        }
+      })
     );
     return;
   }
@@ -61,6 +80,8 @@ self.addEventListener("fetch", (event) => {
 
   if (
     url.pathname.endsWith(".woff2") ||
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
     url.pathname.endsWith(".png") ||
     url.pathname.endsWith(".ico")
   ) {

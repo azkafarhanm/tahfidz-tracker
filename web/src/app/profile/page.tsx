@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   KeyRound,
   Mail,
+  MailCheck,
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
@@ -11,6 +12,7 @@ import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -22,15 +24,17 @@ export async function generateMetadata() {
 }
 
 type ProfilePageProps = {
-  searchParams?: Promise<{
-    success?: string;
-  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const t = await getTranslations("Profile");
   const { session, isAdmin } = await requireSessionScope();
-  const query = await searchParams;
+  await searchParams;
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true },
+  });
   const roleDescription = isAdmin
     ? t("roleDescriptionAdmin")
     : t("roleDescriptionTeacher");
@@ -63,19 +67,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </header>
 
-        {query?.success ? (
-          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
-            {query.success}
-          </div>
-        ) : null}
-
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <p className="text-sm text-emerald-100">{t("activeAccountLabel")}</p>
           <h2 className="mt-3 text-3xl font-semibold">{session.user.name}</h2>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-slate-100">
               <Mail aria-hidden="true" size={15} strokeWidth={2.2} />
-              {session.user.email}
+              {currentUser?.email ?? session.user.email}
             </span>
             <span className="rounded-full bg-emerald-400/15 px-3 py-1 font-medium text-emerald-100">
               {isAdmin ? t("roleBadgeAdmin") : t("roleBadgeTeacher")}
@@ -144,6 +142,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               href={studentsHref}
             >
                {t("viewStudentsButton")}
+            </Link>
+            <Link
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+              href="/profile/change-email"
+            >
+              <MailCheck aria-hidden="true" size={15} strokeWidth={2.2} />
+               {t("changeEmailButton")}
             </Link>
             <Link
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
