@@ -16,10 +16,22 @@ const SPEED_TEXT = 28;
 const PAUSE_MS = 600;
 const HOLD_MS = 5500;
 const FADE_MS = 1200;
+const STORAGE_KEY = "tahfidzflow-motivation-idx";
+
+function loadStoredIndex(total: number): number {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const n = parseInt(raw, 10);
+      if (Number.isFinite(n) && n >= 0 && n < total) return n;
+    }
+  } catch {}
+  return 0;
+}
 
 export default function MotivationCard() {
   const verses = getAllMotivations();
-  const [verseIdx, setVerseIdx] = useState(0);
+  const [verseIdx, setVerseIdx] = useState(() => loadStoredIndex(verses.length));
   const [phase, setPhase] = useState<Phase>("typing-arabic");
   const [charCount, setCharCount] = useState(0);
   const [opacity, setOpacity] = useState(1);
@@ -74,7 +86,11 @@ export default function MotivationCard() {
 
       case "fadeout":
         timer = setTimeout(() => {
-          setVerseIdx((i) => (i + 1) % verses.length);
+          setVerseIdx((i) => {
+            const next = (i + 1) % verses.length;
+            try { localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
+            return next;
+          });
           setCharCount(0);
           setOpacity(1);
           setPhase("typing-arabic");
