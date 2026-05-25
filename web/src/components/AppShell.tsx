@@ -1,6 +1,8 @@
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import TimezoneCookie from "@/components/TimezoneCookie";
+import FloatingIslamicClock from "@/components/FloatingIslamicClock";
+import MobileUtilityBar from "@/components/MobileUtilityBar";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -18,17 +20,26 @@ export default function AppShell({
   hideNav,
 }: AppShellProps) {
   const showNav = !hideNav;
+  const showMobileUtilityBar = showNav && currentPath !== "/profile";
 
   return (
     <>
       <TimezoneCookie />
       {showNav ? <Sidebar userName={userName} isAdmin={isAdmin} /> : null}
+      {showNav ? <FloatingIslamicClock /> : null}
       <main
         className={`min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white ${
           showNav ? "sm:ml-64 rtl:sm:ml-0 rtl:sm:mr-64" : ""
         }`}
       >
-        <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
+        <div
+          className={`mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8 ${
+            showNav ? "pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pb-5" : ""
+          }`}
+        >
+          {showMobileUtilityBar ? (
+            <MobileUtilityBar userName={userName} isAdmin={isAdmin} />
+          ) : null}
           {children}
           {showNav ? <BottomNav currentPath={currentPath} isAdmin={isAdmin} /> : null}
         </div>

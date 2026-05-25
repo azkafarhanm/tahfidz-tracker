@@ -132,7 +132,7 @@ export default async function DashboardPreview() {
                      <div className="min-w-0">
                        <div className="flex items-center gap-3">
                           <InitialsAvatar name={ot.studentName} />
-                          <p className="truncate font-semibold text-slate-950 dark:text-white">{ot.studentName}</p>
+                         <p className="truncate font-semibold text-slate-950 dark:text-white">{ot.studentName}</p>
                        </div>
                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{ot.range}</p>
                      </div>
@@ -151,7 +151,7 @@ export default async function DashboardPreview() {
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
              <h2 className="text-lg font-semibold">{t("recentActivityHeading")}</h2>
-             <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400">
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400">
               {dashboard.needsReviewCount} {t("needsReviewBadge")}
             </span>
           </div>
@@ -170,7 +170,7 @@ export default async function DashboardPreview() {
                        </p>
                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                          {record.type === "Hafalan" ? t("quickActionHafalan") : t("quickActionMurojaah")} - {record.range}
-                      </p>
+                       </p>
                     </div>
                      <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                       <p>
