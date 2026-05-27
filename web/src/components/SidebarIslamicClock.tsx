@@ -196,26 +196,36 @@ export default function SidebarIslamicClock() {
 
   useEffect(() => {
     setMounted(true);
-    setTime(new Date());
+    let intervalId: number | undefined;
 
-    const intervalId = window.setInterval(() => {
+    function startClock() {
       setTime(new Date());
-    }, 1000);
-
-    return () => {
       window.clearInterval(intervalId);
-    };
-  }, []);
-
-  useEffect(() => {
-    function syncOnVisibility() {
-      if (!document.hidden) {
+      intervalId = window.setInterval(() => {
         setTime(new Date());
+      }, 1000);
+    }
+
+    function stopClock() {
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    }
+
+    function syncOnVisibility() {
+      if (document.hidden) {
+        stopClock();
+      } else {
+        startClock();
       }
+    }
+
+    if (!document.hidden) {
+      startClock();
     }
 
     document.addEventListener("visibilitychange", syncOnVisibility);
     return () => {
+      stopClock();
       document.removeEventListener("visibilitychange", syncOnVisibility);
     };
   }, []);

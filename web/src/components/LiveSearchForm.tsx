@@ -45,7 +45,6 @@ export default function LiveSearchForm({
 
     const timeoutId = window.setTimeout(() => {
       const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
-      router.prefetch(nextHref);
       startTransition(() => {
         router.replace(nextHref, { scroll: false });
       });
@@ -59,7 +58,6 @@ export default function LiveSearchForm({
 
     const nextQuery = query.trim();
     const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
-    router.prefetch(nextHref);
     startTransition(() => {
       router.replace(nextHref, { scroll: false });
     });

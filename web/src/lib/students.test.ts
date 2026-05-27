@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { clearCache } from "./cache";
 import { getStudentDetailData } from "./students";
 import { prisma } from "./prisma";
 
@@ -12,6 +13,7 @@ vi.mock("./prisma", () => ({
 
 describe("getStudentDetailData", () => {
   beforeEach(() => {
+    clearCache();
     vi.clearAllMocks();
   });
 

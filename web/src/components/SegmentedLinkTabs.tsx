@@ -28,18 +28,16 @@ export default function SegmentedLinkTabs({
     setOptimisticValue(currentValue);
   }, [currentValue]);
 
-  useEffect(() => {
-    for (const option of options) {
-      if (option.value !== currentValue) {
-        router.prefetch(option.href);
-      }
-    }
-  }, [currentValue, options, router]);
-
   const activeValue = useMemo(
     () => (isPending ? optimisticValue : currentValue),
     [currentValue, isPending, optimisticValue],
   );
+
+  function prefetchOption(option: SegmentedLinkOption) {
+    if (option.value !== currentValue) {
+      router.prefetch(option.href);
+    }
+  }
 
   return (
     <div
@@ -70,7 +68,8 @@ export default function SegmentedLinkTabs({
                 router.replace(option.href, { scroll: false });
               });
             }}
-            onMouseEnter={() => router.prefetch(option.href)}
+            onMouseEnter={() => prefetchOption(option)}
+            onFocus={() => prefetchOption(option)}
             role="tab"
             type="button"
           >

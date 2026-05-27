@@ -96,6 +96,7 @@ function revalidateAdminHalaqahPaths() {
   invalidateCache("admin-dashboard");
   invalidateCache("report-admin");
   invalidateCache("students");
+  invalidateCache("quick-log-students");
   invalidateCache("dashboard");
 }
 

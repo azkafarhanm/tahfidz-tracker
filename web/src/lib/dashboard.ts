@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { Prisma } from "@/generated/prisma-next/client";
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
@@ -39,8 +40,55 @@ function getWeekStart(today: Date, timezoneOffsetMinutes: number | null): Date {
   return new Date(ms - diff * 86_400_000);
 }
 
-function countAyahs(fromAyah: number, toAyah: number) {
-  return Math.max(toAyah - fromAyah + 1, 0);
+type AyahTotalRow = {
+  total: bigint | number | string | null;
+};
+
+function teacherFilterSql(teacherId?: string | null) {
+  return teacherId ? Prisma.sql`AND "teacherId" = ${teacherId}` : Prisma.empty;
+}
+
+function toNumberTotal(value: AyahTotalRow["total"]) {
+  if (typeof value === "bigint") return Number(value);
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+async function sumWeeklyMemorizationAyahs(teacherId: string | null | undefined, weekStart: Date) {
+  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
+    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
+    FROM "MemorizationRecord"
+    WHERE "date" >= ${weekStart}
+    ${teacherFilterSql(teacherId)}
+  `);
+
+  return toNumberTotal(rows[0]?.total);
+}
+
+async function sumWeeklyRevisionAyahs(teacherId: string | null | undefined, weekStart: Date) {
+  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
+    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
+    FROM "RevisionRecord"
+    WHERE "date" >= ${weekStart}
+    ${teacherFilterSql(teacherId)}
+  `);
+
+  return toNumberTotal(rows[0]?.total);
+}
+
+async function sumActiveTargetAyahs(teacherId: string | null | undefined) {
+  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
+    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
+    FROM "Target"
+    WHERE "status" = ${TargetStatus.ACTIVE}::"TargetStatus"
+    ${teacherFilterSql(teacherId)}
+  `);
+
+  return toNumberTotal(rows[0]?.total);
 }
 
 async function readTimezoneOffset(): Promise<number | null> {
@@ -73,9 +121,9 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     revisionRecords,
     todayMemorizationCount,
     todayRevisionCount,
-    weeklyMemorization,
-    weeklyRevision,
-    activeTargets,
+    weeklyMemorizationAyahs,
+    weeklyRevisionAyahs,
+    weeklyTargetAyahs,
     completedTargets,
     needsReviewCount,
     overdueTargets,
@@ -98,18 +146,9 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     prisma.revisionRecord.count({
       where: { ...teacherFilter, date: { gte: today } },
     }),
-    prisma.memorizationRecord.findMany({
-      where: { ...teacherFilter, date: { gte: weekStart } },
-      select: { fromAyah: true, toAyah: true },
-    }),
-    prisma.revisionRecord.findMany({
-      where: { ...teacherFilter, date: { gte: weekStart } },
-      select: { fromAyah: true, toAyah: true },
-    }),
-    prisma.target.findMany({
-      where: { ...teacherFilter, status: TargetStatus.ACTIVE },
-      select: { fromAyah: true, toAyah: true },
-    }),
+    sumWeeklyMemorizationAyahs(teacherId, weekStart),
+    sumWeeklyRevisionAyahs(teacherId, weekStart),
+    sumActiveTargetAyahs(teacherId),
     prisma.target.count({
       where: { ...teacherFilter, status: TargetStatus.COMPLETED },
     }),
@@ -173,14 +212,7 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5);
 
-  const weeklyRecordedAyahs = [...weeklyMemorization, ...weeklyRevision].reduce(
-    (total, record) => total + countAyahs(record.fromAyah, record.toAyah),
-    0,
-  );
-  const weeklyTargetAyahs = activeTargets.reduce(
-    (total, target) => total + countAyahs(target.fromAyah, target.toAyah),
-    0,
-  );
+  const weeklyRecordedAyahs = weeklyMemorizationAyahs + weeklyRevisionAyahs;
   const targetProgress =
     weeklyTargetAyahs > 0
       ? Math.min(Math.round((weeklyRecordedAyahs / weeklyTargetAyahs) * 100), 100)

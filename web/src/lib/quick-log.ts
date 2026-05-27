@@ -1,4 +1,5 @@
 import { RecordStatus } from "@/generated/prisma-next/enums";
+import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   formatClassSummary as formatStudentClassSummary,
@@ -41,6 +42,11 @@ export const quickLogTypeLabels: Record<QuickLogRecordType, string> = {
 };
 
 export const quickLogStatusLabels = statusLabels;
+const QUICK_LOG_CACHE_TTL_MS = 30_000;
+
+function scopeKey(teacherId?: string | null) {
+  return teacherId ?? "admin";
+}
 
 function normalizeSpaces(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -264,6 +270,14 @@ function extractRange(value: string) {
 }
 
 export async function getQuickLogStudents(teacherId?: string | null) {
+  return cached(
+    `quick-log-students:${scopeKey(teacherId)}`,
+    QUICK_LOG_CACHE_TTL_MS,
+    () => getQuickLogStudentsInner(teacherId),
+  );
+}
+
+async function getQuickLogStudentsInner(teacherId?: string | null) {
   const students = await prisma.student.findMany({
     where: {
       isActive: true,

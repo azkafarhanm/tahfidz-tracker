@@ -4,6 +4,7 @@ import {
   TargetStatus,
   TargetType,
 } from "@/generated/prisma-next/enums";
+import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   getDateFormatter,
@@ -104,9 +105,19 @@ const genderLabels: Record<Gender, string> = {
   [Gender.FEMALE]: "Perempuan",
 };
 
+const STUDENT_CACHE_TTL_MS = 30_000;
+
+function scopeKey(teacherId?: string | null) {
+  return teacherId ?? "admin";
+}
+
 export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
   const normalizedQuery = query.trim().toLowerCase();
-  const result = await getStudentsDataInner(normalizedQuery, teacherId, locale, 1, 12);
+  const result = await cached(
+    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:1:12`,
+    STUDENT_CACHE_TTL_MS,
+    () => getStudentsDataInner(normalizedQuery, teacherId, locale, 1, 12),
+  );
   return result.students;
 }
 
@@ -118,7 +129,20 @@ export async function getStudentsPageData(
   pageSize = 12,
 ) {
   const normalizedQuery = query.trim().toLowerCase();
-  return getStudentsDataInner(normalizedQuery, teacherId, locale, page, pageSize);
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  return cached(
+    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:${safePage}:${safePageSize}`,
+    STUDENT_CACHE_TTL_MS,
+    () =>
+      getStudentsDataInner(
+        normalizedQuery,
+        teacherId,
+        locale,
+        safePage,
+        safePageSize,
+      ),
+  );
 }
 
 async function getStudentsDataInner(
@@ -185,9 +209,12 @@ async function getStudentsDataInner(
             status: true,
           },
         },
-        targets: {
-          where: { status: TargetStatus.ACTIVE },
-          select: { id: true },
+        _count: {
+          select: {
+            targets: {
+              where: { status: TargetStatus.ACTIVE },
+            },
+          },
         },
       },
       orderBy: { fullName: "asc" },
@@ -214,7 +241,7 @@ async function getStudentsDataInner(
         fullName: student.fullName,
         ...classInfo,
         notes: student.notes,
-        activeTargetCount: student.targets.length,
+        activeTargetCount: student._count.targets,
         latestHafalan,
         latestMurojaah,
         needsReview,
@@ -224,7 +251,11 @@ async function getStudentsDataInner(
 }
 
 export async function getInactiveStudentsData(teacherId?: string | null) {
-  return getInactiveStudentsDataInner(teacherId);
+  return cached(
+    `students:inactive:${scopeKey(teacherId)}`,
+    STUDENT_CACHE_TTL_MS,
+    () => getInactiveStudentsDataInner(teacherId),
+  );
 }
 
 async function getInactiveStudentsDataInner(teacherId?: string | null) {
@@ -267,6 +298,14 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
 }
 
 export async function getStudentDetailData(studentId: string, teacherId?: string | null, locale = "id") {
+  return cached(
+    `students:detail:${scopeKey(teacherId)}:${locale}:${studentId}`,
+    STUDENT_CACHE_TTL_MS,
+    () => getStudentDetailDataInner(studentId, teacherId, locale),
+  );
+}
+
+async function getStudentDetailDataInner(studentId: string, teacherId?: string | null, locale = "id") {
   const dateFormatter = getDateFormatter(locale);
 
   const check = await prisma.student.findUnique({

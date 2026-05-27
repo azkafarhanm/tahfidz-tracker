@@ -43,9 +43,7 @@ export default function GlobalError({
               Terjadi Kesalahan
             </h1>
             <p style={{ marginTop: 8, color: "#64748b", fontSize: 14 }}>
-              {process.env.NODE_ENV === "development" && error.message
-                ? error.message
-                : "Sistem mengalami gangguan. Silakan coba lagi."}
+              Sistem mengalami gangguan. Silakan coba lagi.
             </p>
             <button
               onClick={reset}

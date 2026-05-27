@@ -27,9 +27,7 @@ export default function AdminError({
         </div>
         <h1 className="mt-6 text-2xl font-semibold text-slate-950 dark:text-white">{t("heading")}</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          {process.env.NODE_ENV === "development" && error.message
-            ? error.message
-            : t("fallbackMessage")}
+          {t("fallbackMessage")}
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <button

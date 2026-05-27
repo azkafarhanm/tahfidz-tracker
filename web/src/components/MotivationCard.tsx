@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getAllMotivations } from "@/lib/motivations";
+import { useMediaQuery } from "@/components/useMediaQuery";
 
 type Phase =
   | "typing-arabic"
@@ -25,6 +26,7 @@ export default function MotivationCard() {
   const [phase, setPhase] = useState<Phase>("typing-arabic");
   const [charCount, setCharCount] = useState(0);
   const [opacity, setOpacity] = useState(1);
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", false);
 
   const verse = verses[verseIdx];
   const hasArabic = Boolean(verse.arabic);
@@ -46,7 +48,7 @@ export default function MotivationCard() {
   }, [verses.length]);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || reducedMotion) return;
     let timer: ReturnType<typeof setTimeout>;
 
     switch (phase) {
@@ -101,24 +103,27 @@ export default function MotivationCard() {
     }
 
     return () => clearTimeout(timer);
-  }, [phase, charCount, verse, goNext, verses.length, hasArabic, mounted]);
+  }, [phase, charCount, verse, goNext, verses.length, hasArabic, mounted, reducedMotion]);
 
   const arabicVisible =
-    phase === "typing-arabic"
+    reducedMotion
+      ? verse.arabic ?? ""
+      : phase === "typing-arabic"
       ? (verse.arabic ?? "").slice(0, charCount)
       : phase !== "fadeout"
       ? verse.arabic ?? ""
       : "";
 
-  const showArabic = hasArabic && phase !== "fadeout";
+  const showArabic = hasArabic && (reducedMotion || phase !== "fadeout");
   const showText =
+    reducedMotion ||
     phase === "typing-text" ||
     phase === "show-ref" ||
     phase === "hold";
-  const showRef = phase === "show-ref" || phase === "hold";
+  const showRef = reducedMotion || phase === "show-ref" || phase === "hold";
 
   const textVisible =
-    phase === "typing-text"
+    !reducedMotion && phase === "typing-text"
       ? verse.text.slice(0, charCount)
       : verse.text;
 
@@ -142,7 +147,7 @@ export default function MotivationCard() {
   return (
     <div
       className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition-opacity duration-[1200ms] ease-in-out dark:border-emerald-900 dark:bg-slate-900"
-      style={{ opacity }}
+      style={{ opacity: reducedMotion ? 1 : opacity }}
     >
       {showArabic && (
         <p
@@ -150,7 +155,7 @@ export default function MotivationCard() {
           dir="rtl"
         >
           {arabicVisible}
-          {phase === "typing-arabic" && (
+          {!reducedMotion && phase === "typing-arabic" && (
             <span
               className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle dark:bg-emerald-400"
               style={{ height: "1em" }}
@@ -162,13 +167,13 @@ export default function MotivationCard() {
         {showText && (
           <>
             &ldquo;{textVisible}
-            {phase === "typing-text" && (
+            {!reducedMotion && phase === "typing-text" && (
               <span
                 className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle dark:bg-emerald-400"
                 style={{ height: "1em" }}
               />
             )}
-            {phase !== "typing-text" && <span>&rdquo;</span>}
+            {(reducedMotion || phase !== "typing-text") && <span>&rdquo;</span>}
           </>
         )}
       </div>

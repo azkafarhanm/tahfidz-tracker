@@ -36,9 +36,7 @@ export default function Error({
           </div>
           <h1 className="mt-6 text-2xl font-semibold">{t("heading")}</h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            {process.env.NODE_ENV === "development" && error.message
-              ? error.message
-              : t("fallbackMessage")}
+            {t("fallbackMessage")}
           </p>
           <Link
             className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"

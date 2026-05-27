@@ -123,6 +123,7 @@ export function invalidateStudentRelatedCaches(studentId?: string) {
   invalidateCache("admin-dashboard");
   invalidateCache("dashboard");
   invalidateCache("students");
+  invalidateCache("quick-log-students");
   invalidateCache("formative-");
   invalidateCache("summative-");
   invalidateCache("report-admin");

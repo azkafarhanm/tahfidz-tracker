@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "vitest";
-import { cached, clearCache, getCacheSize } from "./cache";
+import {
+  cached,
+  clearCache,
+  getCacheSize,
+  invalidateStudentRelatedCaches,
+} from "./cache";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -73,4 +78,14 @@ test("cached evicts oldest entries when the cache reaches its limit", async () =
   await cached("three", 1_000, async () => 3);
 
   assert.equal(getCacheSize(), 2);
+});
+
+test("invalidateStudentRelatedCaches clears student and quick-log caches", async () => {
+  await cached("students:list:teacher:id::1:12", 1_000, async () => 1);
+  await cached("quick-log-students:teacher", 1_000, async () => 2);
+  await cached("unrelated", 1_000, async () => 3);
+
+  invalidateStudentRelatedCaches("student-1");
+
+  assert.equal(getCacheSize(), 1);
 });

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import {
   BookOpen,
@@ -12,9 +10,8 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
 import NavigationLinks from "@/components/NavigationLinks";
+import DesktopMotivationCard from "@/components/DesktopMotivationCard";
 import { adminNavigationItems, teacherNavigationItems } from "@/lib/navigation";
-
-const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 
 export default async function Sidebar({
   userName,
@@ -64,9 +61,7 @@ export default async function Sidebar({
 
       <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
         <div className="mb-3">
-          <Suspense fallback={<div className="h-32 rounded-2xl border border-slate-100 bg-slate-50 animate-pulse dark:border-slate-800 dark:bg-slate-800" />}>
-            <MotivationCard />
-          </Suspense>
+          <DesktopMotivationCard />
         </div>
         <div className="mb-3">
           <LanguageSwitcher currentLocale={locale} />

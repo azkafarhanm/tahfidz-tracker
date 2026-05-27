@@ -1,15 +1,8 @@
-import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import TimezoneCookie from "@/components/TimezoneCookie";
 import MobileUtilityBar from "@/components/MobileUtilityBar";
-
-const FloatingIslamicClock = dynamic(
-  () => import("@/components/FloatingIslamicClock"),
-  {
-    loading: () => null,
-  },
-);
+import FloatingIslamicClockGate from "@/components/FloatingIslamicClockGate";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -35,7 +28,7 @@ export default async function AppShell({
       {showNav ? (
         <Sidebar currentPath={currentPath} userName={userName} isAdmin={isAdmin} />
       ) : null}
-      {showNav ? <FloatingIslamicClock /> : null}
+      {showNav ? <FloatingIslamicClockGate /> : null}
       <main
         className={`min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white ${
           showNav ? "sm:ml-64 rtl:sm:ml-0 rtl:sm:mr-64" : ""
