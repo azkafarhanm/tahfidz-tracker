@@ -16,18 +16,15 @@ import {
   UserX,
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
-import { getStudentProgressData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
 import TargetActions from "@/components/TargetActions";
-import LocalDateTime from "@/components/LocalDateTime";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 type StudentDetail = Extract<
   NonNullable<Awaited<ReturnType<typeof getStudentDetailData>>>,
@@ -55,13 +52,11 @@ function LatestRecordCard({
   icon: Icon,
   label,
   record,
-  locale,
   t,
 }: {
   icon: typeof BookOpen;
   label: string;
   record: RecordItem | null;
-  locale: string;
   t: (key: string) => string;
 }) {
   return (
@@ -78,11 +73,7 @@ function LatestRecordCard({
           {record ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                <LocalDateTime
-                  fallback={record.date}
-                  iso={record.dateTimeIso}
-                  locale={locale}
-                />
+                {record.date}
               </span>
               <span
                 className={`rounded-full px-3 py-1 text-xs font-medium ${recordStatusClass(record)}`}
@@ -151,12 +142,10 @@ function TargetCard({ target, studentId, t }: { target: TargetItem; studentId: s
 function ActivityRow({
   record,
   studentId,
-  locale,
   t,
 }: {
   record: RecordItem;
   studentId: string;
-  locale: string;
   t: (key: string) => string;
 }) {
   const Icon = record.type === "Hafalan" ? BookOpen : RotateCcw;
@@ -184,11 +173,7 @@ function ActivityRow({
                 <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
               </Link>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                <LocalDateTime
-                  fallback={record.date}
-                  iso={record.dateTimeIso}
-                  locale={locale}
-                />
+                {record.date}
               </p>
             </div>
           </div>
@@ -214,30 +199,10 @@ function ActivityRow({
 }
 
 export async function generateMetadata({ params }: StudentDetailPageProps) {
-  const { id } = await params;
   const t = await getTranslations("Students");
-  const scope = await getSessionScope();
-  if (!scope) {
-    return { title: `${t("heading")} - TahfidzFlow` };
-  }
-
-  const teacherId = scope.teacherId;
-  const student = await getStudentDetailData(id, teacherId);
-  if (!student) {
-    return { title: `${t("heading")} - TahfidzFlow` };
-  }
-
-  if ("isUnauthorized" in student) {
-    return { title: "Akses Ditolak - TahfidzFlow" };
-  }
-
-  if ("isInactive" in student) {
-    return { title: `${student.fullName} (Nonaktif) - TahfidzFlow` };
-  }
-
-  return {
-    title: `${student.fullName} - TahfidzFlow`,
-  };
+  await params;
+  await getSessionScope();
+  return { title: `${t("heading")} - TahfidzFlow` };
 }
 
 export default async function StudentDetailPage({
@@ -330,7 +295,6 @@ export default async function StudentDetailPage({
     );
   }
 
-  const progress = await getStudentProgressData(id, isAdmin ? null : teacherId, locale);
   const t = await getTranslations("StudentDetail");
 
   return (
@@ -445,14 +409,12 @@ export default async function StudentDetailPage({
           <LatestRecordCard
             icon={BookOpen}
             label={t("latestHafalanLabel")}
-            locale={locale}
             record={student.latestHafalan}
             t={t}
           />
           <LatestRecordCard
             icon={RotateCcw}
             label={t("latestMurojaahLabel")}
-            locale={locale}
             record={student.latestMurojaah}
             t={t}
           />
@@ -517,7 +479,6 @@ export default async function StudentDetailPage({
               student.recentActivity.map((record) => (
                 <ActivityRow
                   key={`${record.type}-${record.id}`}
-                  locale={locale}
                   record={record}
                   studentId={student.id}
                   t={t}
@@ -531,12 +492,12 @@ export default async function StudentDetailPage({
           </div>
         </section>
 
-        {progress && progress.records.length > 6 ? (
+        {student.historyRecords.length > 6 ? (
           <section className="mt-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t("allHistoryHeading")}</h2>
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {progress.records.length} {t("allHistoryBadge")}
+                {student.historyRecords.length} {t("allHistoryBadge")}
               </span>
             </div>
             <div className="mt-3 overflow-x-auto">
@@ -551,14 +512,10 @@ export default async function StudentDetailPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {progress.records.map((r) => (
+                  {student.historyRecords.map((r) => (
                     <tr className="border-b border-slate-100 dark:border-slate-800" key={r.id}>
                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
-                        <LocalDateTime
-                          fallback={r.date}
-                          iso={r.dateTimeIso}
-                          locale={locale}
-                        />
+                        {r.date}
                       </td>
                       <td className="py-3 pr-4">
                         <span className={

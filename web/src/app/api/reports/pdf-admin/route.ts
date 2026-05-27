@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getAdminReportData } from "@/lib/reports";
-import { generatePdf } from "@/lib/pdf";
+import { getRequestSessionScope } from "@/lib/session";
+import { createPdfStreamResponse } from "@/lib/pdf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
+    const scope = await getRequestSessionScope();
+    if (!scope?.isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const data = await getAdminReportData();
 
-    const pdfBuffer = await generatePdf("Laporan Admin - TahfidzFlow", [
+    const date = new Date().toISOString().split("T")[0];
+    return createPdfStreamResponse("Laporan Admin - TahfidzFlow", [
       { type: "title", text: "Laporan Admin" },
       { type: "text", text: "Ringkasan data guru dan santri aktif di TahfidzFlow." },
       { type: "subtitle", text: "Ringkasan" },
@@ -40,16 +41,7 @@ export async function GET() {
           String(t.classGroupCount),
         ]),
       },
-    ]);
-
-    const date = new Date().toISOString().split("T")[0];
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="laporan-admin-${date}.pdf"`,
-      },
-    });
+    ], `laporan-admin-${date}.pdf`);
   } catch (error) {
     console.error("Failed to generate admin PDF report", error);
     return NextResponse.json(

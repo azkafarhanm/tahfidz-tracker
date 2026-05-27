@@ -2,6 +2,8 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   PencilLine,
   Mail,
   Phone,
@@ -16,7 +18,6 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("AdminTeachers");
@@ -28,8 +29,16 @@ type AdminTeachersPageProps = {
     q?: string;
     success?: string;
     error?: string;
+    page?: string;
   }>;
 };
+
+const PAGE_SIZE = 12;
+
+function parsePage(value?: string) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export default async function AdminTeachersPage({
   searchParams,
@@ -38,7 +47,22 @@ export default async function AdminTeachersPage({
   const locale = await getLocale();
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
-  const { counts, teachers } = await getAdminTeachersData(query, locale);
+  const page = parsePage(params?.page);
+  const { counts, teachers, pagination } = await getAdminTeachersData(
+    query,
+    locale,
+    page,
+    PAGE_SIZE,
+  );
+  const buildPageHref = (nextPage: number) => {
+    const nextParams = new URLSearchParams();
+    if (query) nextParams.set("q", query);
+    if (nextPage > 1) nextParams.set("page", String(nextPage));
+    const search = nextParams.toString();
+    return search ? `/admin/teachers?${search}` : "/admin/teachers";
+  };
+  const hasPreviousPage = pagination.page > 1;
+  const hasNextPage = pagination.page < pagination.totalPages;
 
   return (
     <>
@@ -145,7 +169,7 @@ export default async function AdminTeachersPage({
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {t("visibleCount", { count: counts.filteredTeacherCount })}
+                {teachers.length}/{counts.filteredTeacherCount}
               </span>
             </div>
           </div>
@@ -264,6 +288,34 @@ export default async function AdminTeachersPage({
               </div>
             )}
           </div>
+
+          {pagination.totalPages > 1 ? (
+            <div className="mt-4 flex items-center justify-between gap-3">
+              {hasPreviousPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref(pagination.page - 1)}
+                >
+                  <ChevronLeft aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {pagination.page} / {pagination.totalPages}
+              </span>
+              {hasNextPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref(pagination.page + 1)}
+                >
+                  <ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+            </div>
+          ) : null}
         </section>
     </>
   );

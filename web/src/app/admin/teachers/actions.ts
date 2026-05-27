@@ -15,7 +15,7 @@ import { Prisma } from "@/generated/prisma-next/client";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
 
-const MIN_PASSWORD_LENGTH = 4;
+const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 72;
 
 type TeacherFormInput = {

@@ -1,5 +1,6 @@
 import { requireAdminScope } from "@/lib/session";
 import AdminShell from "@/components/AdminShell";
+import ScopedIntlProvider from "@/components/ScopedIntlProvider";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,5 +9,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { session } = await requireAdminScope();
   const userName = session.user.name?.split(" ")[0] ?? "Admin";
 
-  return <AdminShell userName={userName}>{children}</AdminShell>;
+  return (
+    <ScopedIntlProvider
+      namespaces={[
+        "AdminClassForm",
+        "AdminHalaqahForm",
+        "AdminStudentForm",
+        "AdminTeacherForm",
+        "DeleteTeacher",
+        "Error",
+      ]}
+    >
+      <AdminShell userName={userName}>{children}</AdminShell>
+    </ScopedIntlProvider>
+  );
 }

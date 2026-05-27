@@ -1,23 +1,28 @@
-"use client";
-
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { BookOpen, ShieldCheck, UserCircle } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type MobileUtilityBarProps = {
+  currentPath: string;
   userName: string;
   isAdmin: boolean;
 };
 
-export default function MobileUtilityBar({
+export default async function MobileUtilityBar({
+  currentPath,
   userName,
   isAdmin,
 }: MobileUtilityBarProps) {
-  const t = useTranslations("Sidebar");
-  const profileT = useTranslations("Profile");
+  const locale = await getLocale();
+  const [t, profileT, themeT] = await Promise.all([
+    getTranslations("Sidebar"),
+    getTranslations("Profile"),
+    getTranslations("ThemeToggle"),
+  ]);
   const RoleIcon = isAdmin ? ShieldCheck : BookOpen;
+  const isProfile = currentPath === "/profile";
 
   return (
     <section className="mb-4 rounded-[1.75rem] border border-slate-200 bg-white/95 p-4 shadow-lg shadow-slate-950/5 backdrop-blur sm:hidden dark:border-slate-700 dark:bg-slate-900/95">
@@ -37,17 +42,24 @@ export default function MobileUtilityBar({
             </div>
           </Link>
         </div>
-        <Link
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-          href="/profile"
-        >
-          <UserCircle aria-hidden="true" size={17} strokeWidth={2.2} />
-          <span className="max-w-24 truncate">{userName}</span>
-        </Link>
+        {isProfile ? (
+          <div className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <UserCircle aria-hidden="true" size={17} strokeWidth={2.2} />
+            <span className="max-w-24 truncate">{userName}</span>
+          </div>
+        ) : (
+          <Link
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+            href="/profile"
+          >
+            <UserCircle aria-hidden="true" size={17} strokeWidth={2.2} />
+            <span className="max-w-24 truncate">{userName}</span>
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/90">
-        <LanguageSwitcher />
+        <LanguageSwitcher currentLocale={locale} />
       </div>
 
       <div className="mt-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/90">
@@ -60,7 +72,14 @@ export default function MobileUtilityBar({
           </p>
         </div>
         <div className="mt-3 overflow-x-auto">
-          <ThemeToggle />
+          <ThemeToggle
+            labels={{
+              auto: themeT("auto"),
+              dark: themeT("dark"),
+              light: themeT("light"),
+              system: themeT("system"),
+            }}
+          />
         </div>
       </div>
     </section>

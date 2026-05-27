@@ -12,7 +12,7 @@ type AppShellProps = {
   hideNav?: boolean;
 };
 
-export default function AppShell({
+export default async function AppShell({
   children,
   currentPath,
   userName,
@@ -25,7 +25,9 @@ export default function AppShell({
   return (
     <>
       <TimezoneCookie />
-      {showNav ? <Sidebar userName={userName} isAdmin={isAdmin} /> : null}
+      {showNav ? (
+        <Sidebar currentPath={currentPath} userName={userName} isAdmin={isAdmin} />
+      ) : null}
       {showNav ? <FloatingIslamicClock /> : null}
       <main
         className={`min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white ${
@@ -38,7 +40,7 @@ export default function AppShell({
           }`}
         >
           {showMobileUtilityBar ? (
-            <MobileUtilityBar userName={userName} isAdmin={isAdmin} />
+            <MobileUtilityBar currentPath={currentPath} userName={userName} isAdmin={isAdmin} />
           ) : null}
           {children}
           {showNav ? <BottomNav currentPath={currentPath} isAdmin={isAdmin} /> : null}

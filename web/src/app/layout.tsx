@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Amiri } from "next/font/google";
-import { Suspense } from "react";
-import dynamic from "next/dynamic";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import ScopedIntlProvider from "@/components/ScopedIntlProvider";
 import ThemeProvider from "@/components/ThemeProvider";
-import ToastMessenger from "@/components/ToastMessenger";
-import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
-import OfflineBanner from "@/components/OfflineBanner";
-import AppToaster from "@/components/AppToaster";
+import RootClientEffects from "@/components/RootClientEffects";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,8 +17,6 @@ const amiri = Amiri({
   weight: "400",
   subsets: ["arabic"],
 });
-
-const InstallPrompt = dynamic(() => import("@/components/InstallPrompt"));
 
 export const metadata: Metadata = {
   title: "TahfidzFlow",
@@ -55,23 +48,28 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-  const messages = await getMessages();
+  const [offlineT, installT] = await Promise.all([
+    getTranslations("Offline"),
+    getTranslations("InstallPrompt"),
+  ]);
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <html lang={locale} dir={dir} className={`${geistSans.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
+          <ScopedIntlProvider namespaces={["Error"]}>
             {children}
-            <Suspense>
-              <ToastMessenger />
-            </Suspense>
-            <AppToaster />
-            <OfflineBanner />
-            <InstallPrompt />
-            <ServiceWorkerRegistrar />
-          </NextIntlClientProvider>
+            <RootClientEffects
+              installPromptLabels={{
+                buttonInstall: installT("buttonInstall"),
+                buttonLater: installT("buttonLater"),
+                description: installT("description"),
+                title: installT("title"),
+              }}
+              offlineBannerMessage={offlineT("banner")}
+            />
+          </ScopedIntlProvider>
         </ThemeProvider>
       </body>
     </html>

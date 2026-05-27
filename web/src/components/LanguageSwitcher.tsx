@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useTransition } from "react";
-import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
@@ -70,13 +69,16 @@ function FlagIcon({ code }: { code: (typeof languages)[number]["code"] }) {
   );
 }
 
-export default function LanguageSwitcher() {
-  const locale = useLocale();
+type LanguageSwitcherProps = {
+  currentLocale: string;
+};
+
+export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   function handleChange(code: string) {
-    if (code === locale) return;
+    if (code === currentLocale) return;
 
     startTransition(async () => {
       await setLocale(code);
@@ -95,9 +97,9 @@ export default function LanguageSwitcher() {
         {languages.map(({ code, label }) => (
           <button
             aria-label={label}
-            aria-pressed={locale === code}
+            aria-pressed={currentLocale === code}
             className={`inline-flex min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[11px] font-medium transition ${
-              locale === code
+              currentLocale === code
                 ? "bg-emerald-50 text-emerald-900 shadow-sm dark:bg-emerald-950 dark:text-emerald-400"
                 : "text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}

@@ -26,7 +26,6 @@ import {
 import SummativeAssessmentsTable from "./SummativeAssessmentsTable";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 type SummativeDetailPageProps = {
   params: Promise<{

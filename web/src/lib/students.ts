@@ -106,89 +106,121 @@ const genderLabels: Record<Gender, string> = {
 
 export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
   const normalizedQuery = query.trim().toLowerCase();
-  return getStudentsDataInner(normalizedQuery, teacherId, locale);
+  const result = await getStudentsDataInner(normalizedQuery, teacherId, locale, 1, 12);
+  return result.students;
 }
 
-async function getStudentsDataInner(normalizedQuery: string, teacherId?: string | null, locale = "id") {
+export async function getStudentsPageData(
+  query = "",
+  teacherId?: string | null,
+  locale = "id",
+  page = 1,
+  pageSize = 12,
+) {
+  const normalizedQuery = query.trim().toLowerCase();
+  return getStudentsDataInner(normalizedQuery, teacherId, locale, page, pageSize);
+}
+
+async function getStudentsDataInner(
+  normalizedQuery: string,
+  teacherId?: string | null,
+  locale = "id",
+  page = 1,
+  pageSize = 12,
+) {
   const dateFormatter = getDateFormatter(locale);
-  const students = await prisma.student.findMany({
-    where: {
-      isActive: true,
-      ...(teacherId ? { teacherId } : {}),
-      ...(normalizedQuery
-        ? {
-            OR: [
-              { fullName: { startsWith: normalizedQuery, mode: "insensitive" } },
-              {
-                academicClass: {
-                  name: { startsWith: normalizedQuery, mode: "insensitive" },
-                },
+  const where = {
+    isActive: true,
+    ...(teacherId ? { teacherId } : {}),
+    ...(normalizedQuery
+      ? {
+          OR: [
+            { fullName: { startsWith: normalizedQuery, mode: "insensitive" as const } },
+            {
+              academicClass: {
+                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
               },
-              {
-                classGroup: {
-                  name: { startsWith: normalizedQuery, mode: "insensitive" },
-                },
+            },
+            {
+              classGroup: {
+                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
               },
-            ],
-          }
-        : {}),
-    },
-    include: {
-      classGroup: {
-        select: { name: true, level: true },
-      },
-      academicClass: {
-        select: { name: true },
-      },
-      memorizationRecords: {
-        orderBy: { date: "desc" },
-        take: 1,
-        select: {
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
+            },
+          ],
+        }
+      : {}),
+  };
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const [totalCount, students] = await Promise.all([
+    prisma.student.count({ where }),
+    prisma.student.findMany({
+      where,
+      include: {
+        classGroup: {
+          select: { name: true, level: true },
+        },
+        academicClass: {
+          select: { name: true },
+        },
+        memorizationRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
+        },
+        revisionRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
+        },
+        targets: {
+          where: { status: TargetStatus.ACTIVE },
+          select: { id: true },
         },
       },
-      revisionRecords: {
-        orderBy: { date: "desc" },
-        take: 1,
-        select: {
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
-        },
-      },
-      targets: {
-        where: { status: TargetStatus.ACTIVE },
-        select: { id: true },
-      },
-    },
-    orderBy: { fullName: "asc" },
-  });
+      orderBy: { fullName: "asc" },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
+  ]);
 
-  return students.map((student) => {
-    const latestHafalan = formatLatestRecord(student.memorizationRecords[0], dateFormatter);
-    const latestMurojaah = formatLatestRecord(student.revisionRecords[0], dateFormatter);
-    const needsReview = Boolean(
-      latestHafalan?.needsReview || latestMurojaah?.needsReview,
-    );
-    const classInfo = formatClassSummary(student);
+  return {
+    totalCount,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages: Math.max(1, Math.ceil(totalCount / safePageSize)),
+    students: students.map((student) => {
+      const latestHafalan = formatLatestRecord(student.memorizationRecords[0], dateFormatter);
+      const latestMurojaah = formatLatestRecord(student.revisionRecords[0], dateFormatter);
+      const needsReview = Boolean(
+        latestHafalan?.needsReview || latestMurojaah?.needsReview,
+      );
+      const classInfo = formatClassSummary(student);
 
-    return {
-      id: student.id,
-      fullName: student.fullName,
-      ...classInfo,
-      notes: student.notes,
-      activeTargetCount: student.targets.length,
-      latestHafalan,
-      latestMurojaah,
-      needsReview,
-    };
-  });
+      return {
+        id: student.id,
+        fullName: student.fullName,
+        ...classInfo,
+        notes: student.notes,
+        activeTargetCount: student.targets.length,
+        latestHafalan,
+        latestMurojaah,
+        needsReview,
+      };
+    }),
+  };
 }
 
 export async function getInactiveStudentsData(teacherId?: string | null) {
@@ -272,7 +304,7 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
       },
       memorizationRecords: {
         orderBy: { date: "desc" },
-        take: 8,
+        take: 50,
         select: {
           id: true,
           surah: true,
@@ -286,7 +318,7 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
       },
       revisionRecords: {
         orderBy: { date: "desc" },
-        take: 8,
+        take: 50,
         select: {
           id: true,
           surah: true,
@@ -326,10 +358,11 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
   const murojaahRecords = student.revisionRecords.map((record) =>
     formatRecord(record, "Murojaah", dateFormatter),
   );
-  const recentActivity = [...hafalanRecords, ...murojaahRecords]
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 6);
-  const needsReviewCount = recentActivity.filter(
+  const historyRecords = [...hafalanRecords, ...murojaahRecords].sort(
+    (a, b) => b.timestamp - a.timestamp,
+  );
+  const latestActivity = historyRecords.slice(0, 6);
+  const needsReviewCount = historyRecords.filter(
     (record) => record.needsReview,
   ).length;
   const classInfo = formatClassSummary(student);
@@ -346,7 +379,8 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
     latestMurojaah: murojaahRecords[0] ?? null,
     hafalanRecords,
     murojaahRecords,
-    recentActivity,
+    recentActivity: latestActivity,
+    historyRecords,
     needsReviewCount,
   };
 }

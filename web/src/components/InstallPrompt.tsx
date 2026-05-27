@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -9,8 +8,16 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-export default function InstallPrompt() {
-  const t = useTranslations("InstallPrompt");
+type InstallPromptProps = {
+  labels: {
+    buttonInstall: string;
+    buttonLater: string;
+    description: string;
+    title: string;
+  };
+};
+
+export default function InstallPrompt({ labels }: InstallPromptProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
@@ -37,9 +44,9 @@ export default function InstallPrompt() {
           <Download aria-hidden="true" size={18} strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-950 dark:text-white">{t("title")}</p>
+          <p className="font-semibold text-slate-950 dark:text-white">{labels.title}</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {t("description")}
+            {labels.description}
           </p>
         </div>
       </div>
@@ -53,7 +60,7 @@ export default function InstallPrompt() {
           }}
           type="button"
         >
-          {t("buttonInstall")}
+          {labels.buttonInstall}
         </button>
         <button
           className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
@@ -63,7 +70,7 @@ export default function InstallPrompt() {
           }}
           type="button"
         >
-          {t("buttonLater")}
+          {labels.buttonLater}
         </button>
       </div>
     </div>

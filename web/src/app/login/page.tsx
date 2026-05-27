@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { BookOpen, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { playNotificationSound } from "@/lib/feedback";
+import { useSearchParams } from "next/navigation";
 
 const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 const FloatingSurahs = dynamic(() => import("@/components/FloatingSurahs"), {
@@ -15,11 +16,21 @@ const FloatingSurahs = dynamic(() => import("@/components/FloatingSurahs"), {
 
 export default function LoginPage() {
   const t = useTranslations("Login");
+  const searchParams = useSearchParams();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const reauth = searchParams.get("reauth") === "1";
+
+  useEffect(() => {
+    if (!reauth) {
+      return;
+    }
+
+    void signOut({ redirect: false });
+  }, [reauth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

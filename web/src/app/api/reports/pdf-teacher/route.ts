@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
 import { getTeacherFormativeExportData, getTeacherFormativeOverview } from "@/lib/formative";
 import { statusLabels, formatRange } from "@/lib/format";
-import { generatePdf } from "@/lib/pdf";
+import { createPdfStreamResponse } from "@/lib/pdf";
 import { getTeacherReportData } from "@/lib/reports";
+import { getRequestSessionScope } from "@/lib/session";
 import {
   getTeacherSummativeExportData,
   getTeacherSummativeOverview,
@@ -17,19 +17,19 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const scope = await getRequestSessionScope();
+    if (!scope) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isAdmin = session.user.role === "ADMIN";
+    const isAdmin = scope.isAdmin;
     const paramTeacherId = new URL(request.url).searchParams.get("teacherId");
 
     let teacherId: string;
     if (isAdmin && paramTeacherId) {
       teacherId = paramTeacherId;
-    } else if (!isAdmin && session.user.teacherId) {
-      teacherId = session.user.teacherId;
+    } else if (!isAdmin && scope.teacherId) {
+      teacherId = scope.teacherId;
     } else {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -58,7 +58,8 @@ export async function GET(request: Request) {
       getTeacherSummativeExportData(teacherId, Semester.GENAP, academicYear),
     ]);
 
-    const pdfBuffer = await generatePdf("Laporan Guru - TahfidzFlow", [
+    const date = new Date().toISOString().split("T")[0];
+    return createPdfStreamResponse("Laporan Guru - TahfidzFlow", [
       { type: "title", text: "Laporan Guru" },
       { type: "text", text: `Ringkasan progres guru untuk tahun ajaran ${academicYear}.` },
       { type: "subtitle", text: "Ringkasan" },
@@ -174,16 +175,7 @@ export async function GET(request: Request) {
         type: "text",
         text: `Status formatif mengikuti catatan harian aktif. Label seperti "${statusLabels.PERLU_MUROJAAH}" tetap diambil dari catatan asli agar evaluasi tetap konsisten.`,
       },
-    ]);
-
-    const date = new Date().toISOString().split("T")[0];
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="laporan-guru-${date}.pdf"`,
-      },
-    });
+    ], `laporan-guru-${date}.pdf`);
   } catch (error) {
     console.error("Failed to generate teacher PDF report", error);
     return NextResponse.json(

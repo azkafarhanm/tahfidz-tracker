@@ -18,7 +18,6 @@ import { requireSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 type FormativeDetailPageProps = {
   params: Promise<{
@@ -162,7 +161,6 @@ export default async function FormativeDetailPage({
         <FormativeRecordsTable
           emptyDescription={t("emptyRecordsDescription")}
           emptyHeading={t("emptyRecordsHeading")}
-          locale={locale}
           records={detail.records}
           returnTo={returnTo}
           studentId={studentId}

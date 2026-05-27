@@ -5,7 +5,6 @@ import Link from "next/link";
 import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteRecordButton from "@/components/DeleteRecordButton";
-import LocalDateTime from "@/components/LocalDateTime";
 
 type FormativeRecord = {
   id: string;
@@ -22,7 +21,6 @@ type FormativeRecord = {
 type FormativeRecordsTableProps = {
   emptyDescription: string;
   emptyHeading: string;
-  locale: string;
   records: FormativeRecord[];
   returnTo: string;
   studentId: string;
@@ -31,7 +29,6 @@ type FormativeRecordsTableProps = {
 export default function FormativeRecordsTable({
   emptyDescription,
   emptyHeading,
-  locale,
   records,
   returnTo,
   studentId,
@@ -110,12 +107,7 @@ export default function FormativeRecordsTable({
                   {record.status}
                 </td>
                 <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                  <LocalDateTime
-                    fallback={`${record.date} - ${record.time}`}
-                    iso={record.dateTimeIso}
-                    locale={locale}
-                    mode="dateTime"
-                  />
+                  {record.date} - {record.time}
                 </td>
                 <td className="px-5 py-4 text-slate-700 dark:text-slate-300">
                   {record.notes || "-"}

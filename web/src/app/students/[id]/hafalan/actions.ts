@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { validateRecordFields } from "@/lib/validate-record";
+import { requireSessionScope } from "@/lib/session";
 import {
   readString,
   readOptionalString,
@@ -22,8 +22,7 @@ export async function createHafalanRecord(
   studentId: string,
   formData: FormData,
 ) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const { session } = await requireSessionScope();
 
   const t = await getTranslations("Validation");
   const fail = createFailFn(`/students/${studentId}/hafalan/new`);

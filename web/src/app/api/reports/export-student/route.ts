@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { auth } from "@/auth";
-import { finalizeTableSheet } from "@/lib/excel";
+import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getStudentProgressData } from "@/lib/reports";
+import { getRequestSessionScope } from "@/lib/session";
 import { getStudentSummativeHistory } from "@/lib/summative";
 
 export const runtime = "nodejs";
@@ -10,13 +10,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const scope = await getRequestSessionScope();
+    if (!scope) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const teacherId =
-      session.user.role === "ADMIN" ? null : session.user.teacherId;
+    const teacherId = scope.isAdmin ? null : scope.teacherId;
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
 
@@ -121,18 +120,12 @@ export async function GET(request: Request) {
       });
     }
 
-    const buffer = await workbook.xlsx.writeBuffer();
     const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();
     const date = new Date().toISOString().split("T")[0];
-
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="progres-${safeName}-${date}.xlsx"`,
-      },
-    });
+    return createWorkbookStreamResponse(
+      workbook,
+      `progres-${safeName}-${date}.xlsx`,
+    );
   } catch (error) {
     console.error("Failed to export student Excel report", error);
     return NextResponse.json(

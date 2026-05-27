@@ -46,14 +46,28 @@ export type FormativeOverviewStudent = {
   needsReview: boolean;
 };
 
+export type FormativeOverviewResult = {
+  students: FormativeOverviewStudent[];
+  totalAssessments: number;
+  averageScore: number | null;
+  totalStudentCount: number;
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  } | null;
+};
+
 export async function getTeacherFormativeOverview(
   teacherId: string | null,
   semester: Semester,
   academicYear: string,
   classLevel?: number,
   locale = "id",
+  page?: number,
+  pageSize?: number,
 ) {
-  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
+  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? "all"}:${pageSize ?? "all"}`;
   return cached(cacheKey, 30_000, () =>
     getTeacherFormativeOverviewInner(
       teacherId,
@@ -61,6 +75,8 @@ export async function getTeacherFormativeOverview(
       academicYear,
       classLevel,
       locale,
+      page,
+      pageSize,
     ),
   );
 }
@@ -71,43 +87,101 @@ async function getTeacherFormativeOverviewInner(
   academicYear: string,
   classLevel: number | undefined,
   locale: string,
+  page?: number,
+  pageSize?: number,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const { start, end } = getSemesterDateRange(academicYear, semester);
+  const studentWhere = {
+    ...(teacherId ? { teacherId } : {}),
+    isActive: true,
+    ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+  };
+  const safePage = page ? Math.max(1, page) : undefined;
+  const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
 
-  const students = await prisma.student.findMany({
-    where: {
-      ...(teacherId ? { teacherId } : {}),
-      isActive: true,
-      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
-    },
-    select: {
-      id: true,
-      fullName: true,
-      classGroup: {
+  const [totalStudentCount, students, hafalanAggregate, murojaahAggregate] =
+    await Promise.all([
+      prisma.student.count({ where: studentWhere }),
+      prisma.student.findMany({
+        where: studentWhere,
         select: {
-          name: true,
-          level: true,
+          id: true,
+          fullName: true,
+          classGroup: {
+            select: {
+              name: true,
+              level: true,
+            },
+          },
+          academicClass: {
+            select: {
+              name: true,
+            },
+          },
         },
-      },
-      academicClass: {
-        select: {
-          name: true,
+        orderBy: {
+          fullName: "asc",
         },
-      },
-    },
-    orderBy: {
-      fullName: "asc",
-    },
-  });
+        ...(safePage && safePageSize
+          ? {
+              skip: (safePage - 1) * safePageSize,
+              take: safePageSize,
+            }
+          : {}),
+      }),
+      prisma.memorizationRecord.aggregate({
+        where: {
+          ...(teacherId ? { teacherId } : {}),
+          date: {
+            gte: start,
+            lte: end,
+          },
+          student: studentWhere,
+        },
+        _count: { _all: true, score: true },
+        _sum: { score: true },
+      }),
+      prisma.revisionRecord.aggregate({
+        where: {
+          ...(teacherId ? { teacherId } : {}),
+          date: {
+            gte: start,
+            lte: end,
+          },
+          student: studentWhere,
+        },
+        _count: { _all: true, score: true },
+        _sum: { score: true },
+      }),
+    ]);
 
   const studentIds = students.map((student) => student.id);
+  const totalAssessments =
+    hafalanAggregate._count._all + murojaahAggregate._count._all;
+  const totalScoredAssessments =
+    hafalanAggregate._count.score + murojaahAggregate._count.score;
+  const scoreSum =
+    (hafalanAggregate._sum.score ?? 0) + (murojaahAggregate._sum.score ?? 0);
+
   if (studentIds.length === 0) {
     return {
       students: [] as FormativeOverviewStudent[],
-      totalAssessments: 0,
-      averageScore: null as number | null,
-    };
+      totalAssessments,
+      averageScore:
+        totalScoredAssessments > 0
+          ? Math.round((scoreSum / totalScoredAssessments) * 10) / 10
+          : null,
+      totalStudentCount,
+      pagination:
+        safePage && safePageSize
+          ? {
+              page: safePage,
+              pageSize: safePageSize,
+              totalPages: Math.max(1, Math.ceil(totalStudentCount / safePageSize)),
+            }
+          : null,
+    } satisfies FormativeOverviewResult;
   }
 
   const rows = await getTeacherFormativeRows(
@@ -125,11 +199,6 @@ async function getTeacherFormativeOverviewInner(
     list.push(row);
     grouped.set(row.studentId, list);
   }
-
-  const allScores = rows
-    .map((row) => row.score)
-    .filter((score): score is number => score !== null);
-
   return {
     students: students.map((student) => {
       const studentRows = (grouped.get(student.id) ?? []).sort(
@@ -174,15 +243,21 @@ async function getTeacherFormativeOverviewInner(
         needsReview: latest?.status === RecordStatus.PERLU_MUROJAAH,
       };
     }),
-    totalAssessments: rows.length,
+    totalAssessments,
     averageScore:
-      allScores.length > 0
-        ? Math.round(
-            (allScores.reduce((sum, score) => sum + score, 0) / allScores.length) *
-              10,
-          ) / 10
+      totalScoredAssessments > 0
+        ? Math.round((scoreSum / totalScoredAssessments) * 10) / 10
         : null,
-  };
+    totalStudentCount,
+    pagination:
+      safePage && safePageSize
+        ? {
+            page: safePage,
+            pageSize: safePageSize,
+            totalPages: Math.max(1, Math.ceil(totalStudentCount / safePageSize)),
+          }
+        : null,
+  } satisfies FormativeOverviewResult;
 }
 
 export async function getStudentFormativeDetail(

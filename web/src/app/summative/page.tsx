@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, Download, FilePlus2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Download,
+  FilePlus2,
+} from "lucide-react";
 import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
@@ -21,7 +28,6 @@ import {
 } from "@/lib/summative";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Summative");
@@ -33,8 +39,16 @@ type SummativePageProps = {
     semester?: string;
     classLevel?: string;
     saved?: string;
+    page?: string;
   }>;
 };
+
+const PAGE_SIZE = 12;
+
+function parsePage(value?: string) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export default async function SummativePage({
   searchParams,
@@ -58,6 +72,7 @@ export default async function SummativePage({
       : defaultSemester;
   const classLevel = parseClassLevelValue(params?.classLevel) ?? preferredClassLevel;
   const classLevelValue = String(classLevel);
+  const page = parsePage(params?.page);
 
   const academicYear = getCurrentAcademicYear();
   const semester = parseSemester(semesterValue);
@@ -67,7 +82,20 @@ export default async function SummativePage({
     academicYear,
     classLevel,
     locale,
+    page,
+    PAGE_SIZE,
   );
+  const buildPageHref = (nextPage: number) => {
+    const nextParams = new URLSearchParams();
+    nextParams.set("semester", semesterValue);
+    nextParams.set("classLevel", classLevelValue);
+    if (nextPage > 1) nextParams.set("page", String(nextPage));
+    return `/summative?${nextParams.toString()}`;
+  };
+  const hasPreviousPage = (overview.pagination?.page ?? 1) > 1;
+  const hasNextPage =
+    overview.pagination !== null &&
+    overview.pagination.page < overview.pagination.totalPages;
 
   const classOptions = [
     { value: "7", label: t("grade7") },
@@ -161,7 +189,7 @@ export default async function SummativePage({
             {t("studentCountLabel")}
           </p>
           <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
-            {overview.students.length}
+            {overview.totalStudentCount}
           </p>
         </article>
         <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
@@ -190,6 +218,11 @@ export default async function SummativePage({
                 {t("studentListDescription")}
               </p>
             </div>
+            {overview.pagination ? (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                {overview.students.length}/{overview.totalStudentCount}
+              </span>
+            ) : null}
           </div>
 
           <div className="overflow-x-auto">
@@ -274,6 +307,34 @@ export default async function SummativePage({
               </tbody>
             </table>
           </div>
+
+          {overview.pagination && overview.pagination.totalPages > 1 ? (
+            <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-700">
+              {hasPreviousPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref((overview.pagination?.page ?? 1) - 1)}
+                >
+                  <ChevronLeft aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {overview.pagination.page} / {overview.pagination.totalPages}
+              </span>
+              {hasNextPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref((overview.pagination?.page ?? 1) + 1)}
+                >
+                  <ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+            </div>
+          ) : null}
         </section>
       )}
     </AppShell>

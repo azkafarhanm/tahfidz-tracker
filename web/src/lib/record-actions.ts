@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
+import { requireSessionScope } from "@/lib/session";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -49,8 +49,7 @@ export async function updateRecord(
   returnTo: string | undefined,
   formData: FormData,
 ) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const { session } = await requireSessionScope();
 
   const t = await getTranslations("Validation");
   const editPath = `/students/${studentId}/records/${recordType}/${recordId}/edit`;
@@ -130,8 +129,7 @@ export async function deleteRecord(
   recordId: string,
   returnTo?: string,
 ) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const { session } = await requireSessionScope();
 
   const t = await getTranslations("Validation");
   const fallbackPath = `/students/${studentId}`;

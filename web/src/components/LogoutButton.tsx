@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useTransition } from "react";
-import { useTranslations } from "next-intl";
 import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,13 +9,14 @@ import { useRouter } from "next/navigation";
 type LogoutButtonProps = {
   className?: string;
   icon?: ReactNode;
+  label: string;
 };
 
 export default function LogoutButton({
   className,
   icon,
-}: LogoutButtonProps = {}) {
-  const t = useTranslations("LogoutButton");
+  label,
+}: LogoutButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -39,7 +39,7 @@ export default function LogoutButton({
       type="button"
     >
       {icon ?? <LogOut className="h-5 w-5" />}
-      <span>{t("label")}</span>
+      <span>{label}</span>
     </button>
   );
 }

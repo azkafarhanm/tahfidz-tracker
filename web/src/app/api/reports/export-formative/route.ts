@@ -1,14 +1,14 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
-import { finalizeTableSheet } from "@/lib/excel";
+import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   formatRange,
   halaqahLevelLabels,
   statusLabels,
 } from "@/lib/format";
+import { getRequestSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester, semesterLabel } from "@/lib/summative";
 
 export const runtime = "nodejs";
@@ -23,14 +23,13 @@ const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const scope = await getRequestSessionScope();
+    if (!scope) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const teacherId =
-      session.user.role === "ADMIN" ? null : session.user.teacherId ?? null;
-    if (session.user.role !== "ADMIN" && !teacherId) {
+    const teacherId = scope.isAdmin ? null : scope.teacherId;
+    if (!scope.isAdmin && !teacherId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -238,17 +237,11 @@ export async function GET(request: Request) {
       centerColumns: ["no", "score"],
     });
 
-    const buffer = await workbook.xlsx.writeBuffer();
     const date = new Date().toISOString().split("T")[0];
-
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="rekap-formatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx"`,
-      },
-    });
+    return createWorkbookStreamResponse(
+      workbook,
+      `rekap-formatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
+    );
   } catch (error) {
     console.error("Failed to export formative Excel report", error);
     return NextResponse.json(

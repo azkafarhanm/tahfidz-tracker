@@ -2,19 +2,26 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import { Clock3, Moon, Sun, Monitor } from "lucide-react";
 
-export default function ThemeToggle() {
-  const t = useTranslations("ThemeToggle");
+type ThemeToggleProps = {
+  labels: {
+    auto: string;
+    system: string;
+    light: string;
+    dark: string;
+  };
+};
+
+export default function ThemeToggle({ labels }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   const themes = [
-    { value: "auto", label: t("auto"), icon: Clock3 },
-    { value: "system", label: t("system"), icon: Monitor },
-    { value: "light", label: t("light"), icon: Sun },
-    { value: "dark", label: t("dark"), icon: Moon },
+    { value: "auto", label: labels.auto, icon: Clock3 },
+    { value: "system", label: labels.system, icon: Monitor },
+    { value: "light", label: labels.light, icon: Sun },
+    { value: "dark", label: labels.dark, icon: Moon },
   ] as const;
 
   useEffect(() => setMounted(true), []);

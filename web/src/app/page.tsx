@@ -16,11 +16,9 @@ import LogoutButton from "@/components/LogoutButton";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import LocalDateTime from "@/components/LocalDateTime";
 import { getLocaleTag } from "@/lib/format";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Sidebar");
@@ -28,8 +26,11 @@ export async function generateMetadata() {
 }
 
 export default async function DashboardPreview() {
-  const t = await getTranslations("Dashboard");
   const locale = await getLocale();
+  const [t, logoutT] = await Promise.all([
+    getTranslations("Dashboard"),
+    getTranslations("LogoutButton"),
+  ]);
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const dashboard = await getDashboardData(teacherId, locale);
   const userName = session?.user?.name ?? t("defaultUserName");
@@ -65,7 +66,7 @@ export default async function DashboardPreview() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <LogoutButton />
+            <LogoutButton label={logoutT("label")} />
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-lg font-semibold text-white shadow-lg shadow-emerald-900/20">
               {userName.charAt(0).toUpperCase()}
             </div>
@@ -173,20 +174,11 @@ export default async function DashboardPreview() {
                        </p>
                     </div>
                      <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
-                      <p>
-                        <LocalDateTime
-                          fallback={record.date}
-                          iso={record.dateTimeIso}
-                          locale={locale}
-                        />
+                     <p>
+                        {record.date}
                       </p>
                       <p className="mt-1">
-                        <LocalDateTime
-                          fallback={record.time}
-                          iso={record.dateTimeIso}
-                          locale={locale}
-                          mode="time"
-                        />
+                        {record.time}
                       </p>
                     </div>
                   </div>

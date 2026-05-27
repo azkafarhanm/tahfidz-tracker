@@ -1,20 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { adminNavigationItems, teacherNavigationItems } from "@/lib/navigation";
 
-export default function BottomNav({
+export default async function BottomNav({
   currentPath,
   isAdmin,
 }: {
   currentPath: string;
   isAdmin: boolean;
 }) {
-  const t = useTranslations("Sidebar");
-  const pathname = usePathname();
-  const activePath = pathname || currentPath;
+  const t = await getTranslations("Sidebar");
   const navItems = isAdmin ? adminNavigationItems : teacherNavigationItems;
 
   return (
@@ -23,8 +18,8 @@ export default function BottomNav({
         <div className="flex min-w-max gap-2">
           {navItems.map(({ key, href, icon: Icon }) => {
             const active =
-              activePath === href ||
-              (href !== "/" && href !== "/admin" && activePath.startsWith(href));
+              currentPath === href ||
+              (href !== "/" && href !== "/admin" && currentPath.startsWith(href));
             return (
               <Link
                 aria-current={active ? "page" : undefined}

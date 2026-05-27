@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export type SessionScope = {
   session: Session;
@@ -26,15 +27,75 @@ function toSessionScope(session: Session | null): SessionScope | null {
   };
 }
 
+async function validateSessionScope(session: Session | null) {
+  const scope = toSessionScope(session);
+
+  if (!scope) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: scope.session.user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      teacher: {
+        select: {
+          id: true,
+          isActive: true,
+        },
+      },
+    },
+  });
+
+  if (!user?.isActive) {
+    return null;
+  }
+
+  if (user.role === "ADMIN") {
+    scope.session.user.name = user.name;
+    scope.session.user.email = user.email;
+    scope.session.user.role = user.role;
+    scope.session.user.teacherId = undefined;
+    return {
+      session: scope.session,
+      isAdmin: true,
+      teacherId: null,
+    } satisfies SessionScope;
+  }
+
+  if (!user.teacher?.id || !user.teacher.isActive) {
+    return null;
+  }
+
+  scope.session.user.name = user.name;
+  scope.session.user.email = user.email;
+  scope.session.user.role = user.role;
+  scope.session.user.teacherId = user.teacher.id;
+
+  return {
+    session: scope.session,
+    isAdmin: false,
+    teacherId: user.teacher.id,
+  } satisfies SessionScope;
+}
+
 export async function getSessionScope() {
-  return toSessionScope(await auth());
+  return validateSessionScope(await auth());
+}
+
+export async function getRequestSessionScope() {
+  return validateSessionScope(await auth());
 }
 
 export async function requireSessionScope() {
-  const scope = toSessionScope(await auth());
+  const scope = await getRequestSessionScope();
 
   if (!scope) {
-    redirect("/login");
+    redirect("/login?reauth=1");
   }
 
   return scope;

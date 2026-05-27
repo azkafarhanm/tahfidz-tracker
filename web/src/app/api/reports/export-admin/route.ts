@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { auth } from "@/auth";
 import { RecordStatus } from "@/generated/prisma-next/enums";
-import { finalizeTableSheet } from "@/lib/excel";
+import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { formatRange, halaqahLevelLabels, statusLabels } from "@/lib/format";
 import { getAdminReportData } from "@/lib/reports";
 import { prisma } from "@/lib/prisma";
+import { getRequestSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user || session.user.role !== "ADMIN") {
+    const scope = await getRequestSessionScope();
+    if (!scope?.isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -226,17 +226,11 @@ export async function GET() {
       });
     }
 
-    const buffer = await workbook.xlsx.writeBuffer();
     const date = new Date().toISOString().split("T")[0];
-
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="laporan-admin-${date}.xlsx"`,
-      },
-    });
+    return createWorkbookStreamResponse(
+      workbook,
+      `laporan-admin-${date}.xlsx`,
+    );
   } catch (error) {
     console.error("Failed to export admin Excel report", error);
     return NextResponse.json(

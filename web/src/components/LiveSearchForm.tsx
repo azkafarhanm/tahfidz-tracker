@@ -44,11 +44,10 @@ export default function LiveSearchForm({
     }
 
     const timeoutId = window.setTimeout(() => {
+      const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
+      router.prefetch(nextHref);
       startTransition(() => {
-        router.replace(
-          nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action,
-          { scroll: false },
-        );
+        router.replace(nextHref, { scroll: false });
       });
     }, debounceMs);
 
@@ -59,11 +58,10 @@ export default function LiveSearchForm({
     event.preventDefault();
 
     const nextQuery = query.trim();
+    const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
+    router.prefetch(nextHref);
     startTransition(() => {
-      router.replace(
-        nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action,
-        { scroll: false },
-      );
+      router.replace(nextHref, { scroll: false });
     });
   };
 

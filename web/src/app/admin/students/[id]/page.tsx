@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -11,10 +11,8 @@ import {
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
-import LocalDateTime from "@/components/LocalDateTime";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 type AdminStudentDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -23,31 +21,20 @@ type AdminStudentDetailPageProps = {
 export async function generateMetadata({
   params,
 }: AdminStudentDetailPageProps) {
-  const { id } = await params;
   const t = await getTranslations("AdminStudents");
-  const locale = await getLocale();
-
   await requireAdminScope();
-
-  const data = await getStudentProgressData(id, null, locale);
-
-  return {
-    title: data
-      ? `${data.fullName} - Admin - TahfidzFlow`
-      : `${t("heading")} - Admin - TahfidzFlow`,
-  };
+  await params;
+  return { title: `${t("heading")} - Admin - TahfidzFlow` };
 }
 
 export default async function AdminStudentDetailPage({
   params,
 }: AdminStudentDetailPageProps) {
   const { id } = await params;
-  const locale = await getLocale();
-
   await requireAdminScope();
 
   const [data, t] = await Promise.all([
-    getStudentProgressData(id, null, locale),
+    getStudentProgressData(id, null),
     getTranslations("AdminStudentDetail"),
   ]);
 
@@ -200,11 +187,7 @@ export default async function AdminStudentDetailPage({
                       key={record.id}
                     >
                       <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">
-                        <LocalDateTime
-                          fallback={record.date}
-                          iso={record.dateTimeIso}
-                          locale={locale}
-                        />
+                        {record.date}
                       </td>
                       <td className="py-3 pr-4">
                         <span

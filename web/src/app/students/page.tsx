@@ -2,13 +2,15 @@ import Link from "next/link";
 import {
   ArrowLeft,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   PlusCircle,
   RotateCcw,
   ShieldCheck,
   Target,
   Users,
 } from "lucide-react";
-import { getStudentsData, getInactiveStudentsData } from "@/lib/students";
+import { getStudentsPageData, getInactiveStudentsData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import InactiveStudentsSection from "@/components/InactiveStudentsSection";
 import InitialsAvatar from "@/components/InitialsAvatar";
@@ -17,7 +19,6 @@ import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Students");
@@ -29,17 +30,35 @@ type StudentsPageProps = {
     q?: string;
     success?: string;
     error?: string;
+    page?: string;
   }>;
 };
+
+const PAGE_SIZE = 12;
+
+function parsePage(value?: string) {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
 
 export default async function StudentsPage({ searchParams }: StudentsPageProps) {
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
+  const page = parsePage(params?.page);
   const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const students = await getStudentsData(query, teacherId, locale);
+  const studentPage = await getStudentsPageData(query, teacherId, locale, page, PAGE_SIZE);
   const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
   const t = await getTranslations("Students");
+  const buildPageHref = (nextPage: number) => {
+    const nextParams = new URLSearchParams();
+    if (query) nextParams.set("q", query);
+    if (nextPage > 1) nextParams.set("page", String(nextPage));
+    const search = nextParams.toString();
+    return search ? `/students?${search}` : "/students";
+  };
+  const hasPreviousPage = studentPage.page > 1;
+  const hasNextPage = studentPage.page < studentPage.totalPages;
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -79,7 +98,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("activeStudentsLabel")}</p>
-              <p className="mt-3 text-4xl font-semibold">{students.length}</p>
+              <p className="mt-3 text-4xl font-semibold">{studentPage.totalCount}</p>
               <p className="mt-1 text-sm text-slate-300">
                 {t("activeStudentsSubtext")}
               </p>
@@ -87,7 +106,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
               <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
               <p className="mt-1 text-xl font-semibold">
-                {students.filter((student) => student.needsReview).length}
+                {studentPage.students.filter((student) => student.needsReview).length}
               </p>
             </div>
           </div>
@@ -116,14 +135,14 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {students.length} {t("activeCountBadge")}
+                {studentPage.students.length}/{studentPage.totalCount} {t("activeCountBadge")}
               </span>
             </div>
           </div>
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {students.length > 0 ? (
-              students.map((student) => (
+            {studentPage.students.length > 0 ? (
+              studentPage.students.map((student) => (
                 <Link
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
                   href={`/students/${student.id}`}
@@ -224,6 +243,34 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               </div>
             )}
           </div>
+
+          {studentPage.totalPages > 1 ? (
+            <div className="mt-4 flex items-center justify-between gap-3">
+              {hasPreviousPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref(studentPage.page - 1)}
+                >
+                  <ChevronLeft aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {studentPage.page} / {studentPage.totalPages}
+              </span>
+              {hasNextPage ? (
+                <Link
+                  className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                  href={buildPageHref(studentPage.page + 1)}
+                >
+                  <ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+                </Link>
+              ) : (
+                <span className="h-10 w-10" aria-hidden="true" />
+              )}
+            </div>
+          ) : null}
         </section>
 
         {!isAdmin && inactiveStudents.length > 0 ? (

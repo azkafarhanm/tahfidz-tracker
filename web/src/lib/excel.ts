@@ -1,3 +1,4 @@
+import { PassThrough, Readable } from "node:stream";
 import ExcelJS from "exceljs";
 
 const headerFill: ExcelJS.FillPattern = {
@@ -84,5 +85,31 @@ export function finalizeTableSheet(
         bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
       };
     });
+  });
+}
+
+export function createWorkbookStreamResponse(
+  workbook: ExcelJS.Workbook,
+  filename: string,
+) {
+  const stream = new PassThrough();
+
+  void workbook.xlsx
+    .write(stream)
+    .then(() => {
+      stream.end();
+    })
+    .catch((error) => {
+      stream.destroy(error instanceof Error ? error : new Error(String(error)));
+    });
+
+  return new Response(Readable.toWeb(stream) as ReadableStream, {
+    status: 200,
+    headers: {
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-store",
+    },
   });
 }

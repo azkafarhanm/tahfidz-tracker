@@ -1,12 +1,12 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
-import { finalizeTableSheet } from "@/lib/excel";
+import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData, getTeacherFormativeOverview } from "@/lib/formative";
 import { statusLabels, formatRange } from "@/lib/format";
 import { getTeacherReportData } from "@/lib/reports";
+import { getRequestSessionScope } from "@/lib/session";
 import {
   getTeacherSummativeExportData,
   getTeacherSummativeOverview,
@@ -25,19 +25,19 @@ const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const scope = await getRequestSessionScope();
+    if (!scope) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const isAdmin = session.user.role === "ADMIN";
+    const isAdmin = scope.isAdmin;
     const paramTeacherId = new URL(request.url).searchParams.get("teacherId");
 
     let teacherId: string;
     if (isAdmin && paramTeacherId) {
       teacherId = paramTeacherId;
-    } else if (!isAdmin && session.user.teacherId) {
-      teacherId = session.user.teacherId;
+    } else if (!isAdmin && scope.teacherId) {
+      teacherId = scope.teacherId;
     } else {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -250,17 +250,11 @@ export async function GET(request: Request) {
       centerColumns: ["semester", "score"],
     });
 
-    const buffer = await workbook.xlsx.writeBuffer();
     const date = new Date().toISOString().split("T")[0];
-
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="laporan-guru-${date}.xlsx"`,
-      },
-    });
+    return createWorkbookStreamResponse(
+      workbook,
+      `laporan-guru-${date}.xlsx`,
+    );
   } catch (error) {
     console.error("Failed to export teacher Excel report", error);
     return NextResponse.json(

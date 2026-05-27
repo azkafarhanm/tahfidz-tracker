@@ -9,8 +9,8 @@ import {
   quickLogTypeLabels,
 } from "@/lib/quick-log";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
+import { requireSessionScope } from "@/lib/session";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -25,8 +25,7 @@ const validTypes = new Set<string>(Object.keys(quickLogTypeLabels));
 const fail = createFailFn("/quick-log");
 
 export async function createGuidedRecord(formData: FormData) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const { session } = await requireSessionScope();
 
   const t = await getTranslations("Validation");
   const studentId = readString(formData, "studentId");

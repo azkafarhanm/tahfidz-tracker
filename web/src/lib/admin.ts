@@ -206,7 +206,12 @@ async function getAdminDashboardDataInner(locale = "id") {
   };
 }
 
-export async function getAdminTeachersData(query = "", locale = "id") {
+export async function getAdminTeachersData(
+  query = "",
+  locale = "id",
+  page = 1,
+  pageSize = 12,
+) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
   const where = normalizedQuery
@@ -236,7 +241,9 @@ export async function getAdminTeachersData(query = "", locale = "id") {
       }
     : undefined;
 
-  const [teachers, teacherCount, activeTeacherCount] = await Promise.all([
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const [teachers, teacherCount, activeTeacherCount, filteredTeacherCount] = await Promise.all([
     prisma.teacher.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -254,9 +261,12 @@ export async function getAdminTeachersData(query = "", locale = "id") {
           },
         },
       },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     }),
     prisma.teacher.count(),
     prisma.teacher.count({ where: { isActive: true } }),
+    prisma.teacher.count({ where }),
   ]);
 
   return {
@@ -264,10 +274,15 @@ export async function getAdminTeachersData(query = "", locale = "id") {
       teacherCount,
       activeTeacherCount,
       inactiveTeacherCount: teacherCount - activeTeacherCount,
-      filteredTeacherCount: teachers.length,
+      filteredTeacherCount,
     },
     teachers: teachers.map((teacher) => mapTeacherSummary(teacher, dateFormatter)),
     query: normalizedQuery,
+    pagination: {
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(filteredTeacherCount / safePageSize)),
+    },
   };
 }
 
@@ -301,7 +316,12 @@ export async function getAdminTeacherFormData(teacherId: string) {
   };
 }
 
-export async function getAdminStudentsData(query = "", locale = "id") {
+export async function getAdminStudentsData(
+  query = "",
+  locale = "id",
+  page = 1,
+  pageSize = 12,
+) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
   const where = normalizedQuery
@@ -341,7 +361,9 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       }
     : undefined;
 
-  const [students, studentCount, activeStudentCount] = await Promise.all([
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const [students, studentCount, activeStudentCount, filteredStudentCount] = await Promise.all([
     prisma.student.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -373,9 +395,12 @@ export async function getAdminStudentsData(query = "", locale = "id") {
           },
         },
       },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     }),
     prisma.student.count(),
     prisma.student.count({ where: { isActive: true } }),
+    prisma.student.count({ where }),
   ]);
 
   return {
@@ -383,12 +408,17 @@ export async function getAdminStudentsData(query = "", locale = "id") {
       studentCount,
       activeStudentCount,
       inactiveStudentCount: studentCount - activeStudentCount,
-      filteredStudentCount: students.length,
+      filteredStudentCount,
     },
     students: students.map((student) =>
       mapStudentSummary(student, dateFormatter),
     ),
     query: normalizedQuery,
+    pagination: {
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(filteredStudentCount / safePageSize)),
+    },
   };
 }
 
@@ -488,7 +518,11 @@ export async function getAdminStudentFormOptions() {
   };
 }
 
-export async function getAdminAcademicClassesData(query = "") {
+export async function getAdminAcademicClassesData(
+  query = "",
+  page = 1,
+  pageSize = 12,
+) {
   const normalizedQuery = query.trim();
   const where = normalizedQuery
     ? {
@@ -509,7 +543,9 @@ export async function getAdminAcademicClassesData(query = "") {
       }
     : undefined;
 
-  const [academicClasses, totalCount, activeCount] = await Promise.all([
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const [academicClasses, totalCount, activeCount, filteredCount] = await Promise.all([
     prisma.academicClass.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { grade: "asc" }, { section: "asc" }],
@@ -520,9 +556,12 @@ export async function getAdminAcademicClassesData(query = "") {
           },
         },
       },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     }),
     prisma.academicClass.count(),
     prisma.academicClass.count({ where: { isActive: true } }),
+    prisma.academicClass.count({ where }),
   ]);
 
   return {
@@ -530,7 +569,7 @@ export async function getAdminAcademicClassesData(query = "") {
       totalCount,
       activeCount,
       inactiveCount: totalCount - activeCount,
-      filteredCount: academicClasses.length,
+      filteredCount,
     },
     academicClasses: academicClasses.map((academicClass) => ({
       id: academicClass.id,
@@ -542,6 +581,11 @@ export async function getAdminAcademicClassesData(query = "") {
       studentCount: academicClass._count.students,
     })),
     query: normalizedQuery,
+    pagination: {
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(filteredCount / safePageSize)),
+    },
   };
 }
 
@@ -586,7 +630,11 @@ export async function getAdminAcademicClassFormOptions() {
   return { academicYears };
 }
 
-export async function getAdminClassGroupsData(query = "") {
+export async function getAdminClassGroupsData(
+  query = "",
+  page = 1,
+  pageSize = 12,
+) {
   const normalizedQuery = query.trim();
   const parsedGrade = Number.parseInt(normalizedQuery, 10);
   const where = normalizedQuery
@@ -635,7 +683,9 @@ export async function getAdminClassGroupsData(query = "") {
       }
     : undefined;
 
-  const [classGroups, totalCount, activeCount] = await Promise.all([
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const [classGroups, totalCount, activeCount, filteredCount] = await Promise.all([
     prisma.classGroup.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { name: "asc" }],
@@ -657,9 +707,12 @@ export async function getAdminClassGroupsData(query = "") {
           },
         },
       },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     }),
     prisma.classGroup.count(),
     prisma.classGroup.count({ where: { isActive: true } }),
+    prisma.classGroup.count({ where }),
   ]);
 
   return {
@@ -667,7 +720,7 @@ export async function getAdminClassGroupsData(query = "") {
       totalCount,
       activeCount,
       inactiveCount: totalCount - activeCount,
-      filteredCount: classGroups.length,
+      filteredCount,
     },
     classGroups: classGroups.map((classGroup) => ({
       id: classGroup.id,
@@ -686,6 +739,11 @@ export async function getAdminClassGroupsData(query = "") {
       studentCount: classGroup._count.students,
     })),
     query: normalizedQuery,
+    pagination: {
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(filteredCount / safePageSize)),
+    },
   };
 }
 

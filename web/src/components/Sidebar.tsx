@@ -1,10 +1,7 @@
-"use client";
-
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import {
   BookOpen,
   UserCircle,
@@ -18,9 +15,21 @@ import { adminNavigationItems, teacherNavigationItems } from "@/lib/navigation";
 
 const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 
-export default function Sidebar({ userName, isAdmin }: { userName: string; isAdmin: boolean }) {
-  const pathname = usePathname();
-  const t = useTranslations("Sidebar");
+export default async function Sidebar({
+  currentPath,
+  userName,
+  isAdmin,
+}: {
+  currentPath: string;
+  userName: string;
+  isAdmin: boolean;
+}) {
+  const locale = await getLocale();
+  const [t, themeT, logoutT] = await Promise.all([
+    getTranslations("Sidebar"),
+    getTranslations("ThemeToggle"),
+    getTranslations("LogoutButton"),
+  ]);
   const navKeys = isAdmin ? adminNavigationItems : teacherNavigationItems;
 
   return (
@@ -45,7 +54,9 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
 
       <nav className="shrink-0 p-3 space-y-1">
         {navKeys.map(({ key, href, icon: Icon }) => {
-          const active = pathname === href || (href !== "/" && href !== "/admin" && pathname.startsWith(href));
+          const active =
+            currentPath === href ||
+            (href !== "/" && href !== "/admin" && currentPath.startsWith(href));
           return (
             <Link
               aria-current={active ? "page" : undefined}
@@ -73,14 +84,21 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
           </Suspense>
         </div>
         <div className="mb-3">
-          <LanguageSwitcher />
+          <LanguageSwitcher currentLocale={locale} />
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
           <div className="flex items-center justify-between gap-3">
             <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
               {userName}
             </p>
-            <ThemeToggle />
+            <ThemeToggle
+              labels={{
+                auto: themeT("auto"),
+                dark: themeT("dark"),
+                light: themeT("light"),
+                system: themeT("system"),
+              }}
+            />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <Link
@@ -93,6 +111,7 @@ export default function Sidebar({ userName, isAdmin }: { userName: string; isAdm
             <LogoutButton
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 hover:text-red-800 dark:border-red-900 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950"
               icon={<LogOut className="h-4 w-4" />}
+              label={logoutT("label")}
             />
           </div>
         </div>

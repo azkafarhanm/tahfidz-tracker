@@ -40,6 +40,17 @@ export type SummativeOverviewStudent = {
   latestDate: string;
 };
 
+export type SummativeOverviewResult = {
+  students: SummativeOverviewStudent[];
+  totalAssessments: number;
+  totalStudentCount: number;
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  } | null;
+};
+
 export type SummativeAssessmentDetail = {
   id: string;
   surahId: string;
@@ -156,8 +167,10 @@ export async function getTeacherSummativeOverview(
   academicYear: string,
   classLevel?: number,
   locale = "id",
+  page?: number,
+  pageSize?: number,
 ) {
-  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}`;
+  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? "all"}:${pageSize ?? "all"}`;
 
   return cached(cacheKey, 30_000, () =>
     getTeacherSummativeOverviewInner(
@@ -166,6 +179,8 @@ export async function getTeacherSummativeOverview(
       academicYear,
       classLevel,
       locale,
+      page,
+      pageSize,
     ),
   );
 }
@@ -176,49 +191,70 @@ async function getTeacherSummativeOverviewInner(
   academicYear: string,
   classLevel: number | undefined,
   locale: string,
+  page?: number,
+  pageSize?: number,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const students = await prisma.student.findMany({
-    where: {
-      ...(teacherId ? { teacherId } : {}),
-      isActive: true,
-      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
-    },
-    select: {
-      id: true,
-      fullName: true,
-      classGroup: {
-        select: {
-          name: true,
-          level: true,
-        },
+  const studentWhere = {
+    ...(teacherId ? { teacherId } : {}),
+    isActive: true,
+    ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+  };
+  const safePage = page ? Math.max(1, page) : undefined;
+  const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
+  const [totalStudentCount, totalAssessments, students] = await Promise.all([
+    prisma.student.count({ where: studentWhere }),
+    prisma.summativeScore.count({
+      where: {
+        semester,
+        academicYear,
+        student: studentWhere,
       },
-      academicClass: {
-        select: {
-          name: true,
-        },
-      },
-      summativeScores: {
-        where: {
-          semester,
-          academicYear,
-        },
-        include: {
-          surah: {
-            select: {
-              name: true,
-            },
+    }),
+    prisma.student.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        fullName: true,
+        classGroup: {
+          select: {
+            name: true,
+            level: true,
           },
         },
-        orderBy: {
-          createdAt: "desc",
+        academicClass: {
+          select: {
+            name: true,
+          },
+        },
+        summativeScores: {
+          where: {
+            semester,
+            academicYear,
+          },
+          include: {
+            surah: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
         },
       },
-    },
-    orderBy: {
-      fullName: "asc",
-    },
-  });
+      orderBy: {
+        fullName: "asc",
+      },
+      ...(safePage && safePageSize
+        ? {
+            skip: (safePage - 1) * safePageSize,
+            take: safePageSize,
+          }
+        : {}),
+    }),
+  ]);
 
   return {
     students: students.map((student) => {
@@ -240,11 +276,17 @@ async function getTeacherSummativeOverviewInner(
         latestDate: latest ? dateFormatter.format(latest.createdAt) : "-",
       } satisfies SummativeOverviewStudent;
     }),
-    totalAssessments: students.reduce(
-      (sum, student) => sum + student.summativeScores.length,
-      0,
-    ),
-  };
+    totalAssessments,
+    totalStudentCount,
+    pagination:
+      safePage && safePageSize
+        ? {
+            page: safePage,
+            pageSize: safePageSize,
+            totalPages: Math.max(1, Math.ceil(totalStudentCount / safePageSize)),
+          }
+        : null,
+  } satisfies SummativeOverviewResult;
 }
 
 export async function getStudentSummativeDetail(

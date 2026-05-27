@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getStudentProgressData } from "@/lib/reports";
+import { getRequestSessionScope } from "@/lib/session";
 import { getStudentSummativeHistory } from "@/lib/summative";
-import { generatePdf } from "@/lib/pdf";
+import { createPdfStreamResponse } from "@/lib/pdf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user) {
+    const scope = await getRequestSessionScope();
+    if (!scope) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const teacherId = session.user.role === "ADMIN" ? null : session.user.teacherId;
+    const teacherId = scope.isAdmin ? null : scope.teacherId;
     const { searchParams } = new URL(request.url);
     const studentId = searchParams.get("studentId");
 
@@ -29,78 +29,74 @@ export async function GET(request: Request) {
 
     const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
 
-    const pdfBuffer = await generatePdf(`${data.fullName} - TahfidzFlow`, [
-      { type: "title", text: data.fullName },
-      { type: "text", text: "Ringkasan progres santri." },
-      { type: "subtitle", text: "Informasi Santri" },
-      {
-        type: "cards",
-        columns: 2,
-        items: [
-          { label: "HALAQAH", value: data.halaqahName },
-          { label: "LEVEL", value: data.halaqahLevel },
-          { label: "KELAS", value: data.academicClassName },
-          { label: "HAFALAN", value: data.hafalanCount },
-          { label: "MUROJAAH", value: data.murojaahCount },
-          { label: "SKOR", value: data.avgScore || "-" },
-        ],
-      },
-      ...(data.activeTargets.length > 0
-        ? [
-            { type: "subtitle" as const, text: "Target Aktif" },
-            {
-              type: "table" as const,
-              headers: ["Tipe", "Ayat", "Mulai", "Target"],
-              rows: data.activeTargets.map((t) => [
-                t.type,
-                t.range,
-                t.startDate,
-                t.endDate,
-              ]),
-            },
-          ]
-        : []),
-      { type: "subtitle", text: "Riwayat Pembelajaran" },
-      ...(data.records.length > 0
-        ? [
-            {
-              type: "table" as const,
-              headers: ["Tanggal", "Tipe", "Ayat", "Skor", "Status"],
-              rows: data.records.map((r) => [
-                r.date,
-                r.type,
-                r.range,
-                String(r.score ?? "-"),
-                r.status,
-              ]),
-            },
-          ]
-        : [{ type: "text" as const, text: "Belum ada riwayat hafalan atau murojaah pada periode ini." }]),
-      ...(summativeScores.length > 0
-        ? [
-            { type: "subtitle" as const, text: "Nilai Sumatif" },
-            {
-              type: "table" as const,
-              headers: ["Semester", "Surah", "Nilai"],
-              rows: summativeScores.map((s) => [
-                s.semester === "GANJIL" ? "Ganjil" : "Genap",
-                `${s.surahNumber}. ${s.surahName}`,
-                String(s.score),
-              ]),
-            },
-          ]
-        : [{ type: "text" as const, text: "Belum ada nilai sumatif yang tersimpan." }]),
-    ]);
-
     const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();
     const date = new Date().toISOString().split("T")[0];
-    return new NextResponse(new Uint8Array(pdfBuffer), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="progres-${safeName}-${date}.pdf"`,
-      },
-    });
+    return createPdfStreamResponse(
+      `${data.fullName} - TahfidzFlow`,
+      [
+        { type: "title", text: data.fullName },
+        { type: "text", text: "Ringkasan progres santri." },
+        { type: "subtitle", text: "Informasi Santri" },
+        {
+          type: "cards",
+          columns: 2,
+          items: [
+            { label: "HALAQAH", value: data.halaqahName },
+            { label: "LEVEL", value: data.halaqahLevel },
+            { label: "KELAS", value: data.academicClassName },
+            { label: "HAFALAN", value: data.hafalanCount },
+            { label: "MUROJAAH", value: data.murojaahCount },
+            { label: "SKOR", value: data.avgScore || "-" },
+          ],
+        },
+        ...(data.activeTargets.length > 0
+          ? [
+              { type: "subtitle" as const, text: "Target Aktif" },
+              {
+                type: "table" as const,
+                headers: ["Tipe", "Ayat", "Mulai", "Target"],
+                rows: data.activeTargets.map((t) => [
+                  t.type,
+                  t.range,
+                  t.startDate,
+                  t.endDate,
+                ]),
+              },
+            ]
+          : []),
+        { type: "subtitle", text: "Riwayat Pembelajaran" },
+        ...(data.records.length > 0
+          ? [
+              {
+                type: "table" as const,
+                headers: ["Tanggal", "Tipe", "Ayat", "Skor", "Status"],
+                rows: data.records.map((r) => [
+                  r.date,
+                  r.type,
+                  r.range,
+                  String(r.score ?? "-"),
+                  r.status,
+                ]),
+              },
+            ]
+          : [{ type: "text" as const, text: "Belum ada riwayat hafalan atau murojaah pada periode ini." }]),
+        ...(summativeScores.length > 0
+          ? [
+              { type: "subtitle" as const, text: "Nilai Sumatif" },
+              {
+                type: "table" as const,
+                headers: ["Semester", "Surah", "Nilai"],
+                rows: summativeScores.map((s) => [
+                  s.semester === "GANJIL" ? "Ganjil" : "Genap",
+                  `${s.surahNumber}. ${s.surahName}`,
+                  String(s.score),
+                ]),
+              },
+            ]
+          : [{ type: "text" as const, text: "Belum ada nilai sumatif yang tersimpan." }]),
+      ],
+      `progres-${safeName}-${date}.pdf`,
+    );
   } catch (error) {
     console.error("Failed to generate student PDF report", error);
     return NextResponse.json(

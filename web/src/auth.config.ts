@@ -9,6 +9,7 @@ export const authConfig: NextAuthConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isLoginPage = nextUrl.pathname === "/login";
+      const isForcedReauth = nextUrl.searchParams.get("reauth") === "1";
       const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth");
       const isStaticAsset = /\.[^/]+$/.test(nextUrl.pathname);
       const isPublicRoute =
@@ -20,7 +21,9 @@ export const authConfig: NextAuthConfig = {
       if (isApiAuthRoute) return true;
 
       if (isLoginPage) {
-        if (isLoggedIn) return Response.redirect(new URL("/", nextUrl));
+        if (isLoggedIn && !isForcedReauth) {
+          return Response.redirect(new URL("/", nextUrl));
+        }
         return true;
       }
 

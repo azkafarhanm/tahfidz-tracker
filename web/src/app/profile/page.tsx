@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -16,7 +16,6 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata() {
   const t = await getTranslations("Profile");
@@ -28,9 +27,14 @@ type ProfilePageProps = {
 };
 
 export default async function ProfilePage({ searchParams }: ProfilePageProps) {
-  const t = await getTranslations("Profile");
+  const locale = await getLocale();
   const { session, isAdmin } = await requireSessionScope();
   await searchParams;
+  const [t, themeT, logoutT] = await Promise.all([
+    getTranslations("Profile"),
+    getTranslations("ThemeToggle"),
+    getTranslations("LogoutButton"),
+  ]);
   const currentUser = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { email: true },
@@ -109,12 +113,19 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("themeLabel")}</p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t("themeDescription")}</p>
           <div className="mt-3">
-            <ThemeToggle />
+            <ThemeToggle
+              labels={{
+                auto: themeT("auto"),
+                dark: themeT("dark"),
+                light: themeT("light"),
+                system: themeT("system"),
+              }}
+            />
           </div>
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <LanguageSwitcher />
+          <LanguageSwitcher currentLocale={locale} />
         </section>
 
         <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
@@ -157,7 +168,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <KeyRound aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changePasswordButton")}
             </Link>
-            <LogoutButton />
+            <LogoutButton label={logoutT("label")} />
           </div>
         </section>
 

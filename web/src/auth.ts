@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { UserRole } from "@/generated/prisma-next/enums";
 import { authConfig } from "@/auth.config";
+import {
+  checkRateLimit,
+  clearRateLimit,
+  getClientAddress,
+  registerRateLimitFailure,
+} from "@/lib/rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -43,7 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         identifier: { label: "Login", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const rawIdentifier =
           typeof credentials?.identifier === "string"
             ? credentials.identifier
@@ -59,6 +65,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ? "admin@tahfidzflow.local"
             : identifier;
         const password = credentials.password as string;
+        const clientAddress = getClientAddress(request);
+        const rateLimitKey = `login:${email}:${clientAddress}`;
+        const rateLimit = checkRateLimit(rateLimitKey, {
+          limit: 5,
+          windowMs: 10 * 60_000,
+          blockMs: 15 * 60_000,
+        });
+
+        if (!rateLimit.allowed) {
+          return null;
+        }
 
         const user = await prisma.user.findUnique({
           where: { email },
@@ -66,18 +83,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.passwordHash || !user.isActive) {
+          registerRateLimitFailure(rateLimitKey, {
+            limit: 5,
+            windowMs: 10 * 60_000,
+            blockMs: 15 * 60_000,
+          });
           return null;
         }
 
         if (user.role === "TEACHER" && (!user.teacher || !user.teacher.isActive)) {
+          registerRateLimitFailure(rateLimitKey, {
+            limit: 5,
+            windowMs: 10 * 60_000,
+            blockMs: 15 * 60_000,
+          });
           return null;
         }
 
         const isValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isValid) {
+          registerRateLimitFailure(rateLimitKey, {
+            limit: 5,
+            windowMs: 10 * 60_000,
+            blockMs: 15 * 60_000,
+          });
           return null;
         }
+
+        clearRateLimit(rateLimitKey);
 
         return {
           id: user.id,

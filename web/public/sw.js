@@ -1,4 +1,4 @@
-const CACHE_NAME = "tahfidzflow-v4";
+const CACHE_NAME = "tahfidzflow-v5";
 const OFFLINE_PAGE = "/offline";
 const STATIC_ASSETS = [
   OFFLINE_PAGE,
@@ -48,17 +48,8 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
         try {
-          const response = await fetch(request);
-          if (response.ok) {
-            cache.put(request, response.clone());
-          }
-          return response;
+          return await fetch(request, { cache: "no-store" });
         } catch {
-          const cachedPage = await cache.match(request);
-          if (cachedPage) {
-            return cachedPage;
-          }
-
           const offlineResponse = await cache.match(OFFLINE_PAGE);
           if (offlineResponse) {
             return offlineResponse;
