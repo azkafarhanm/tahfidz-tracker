@@ -16,6 +16,7 @@ import { getAdminStudentsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
 
 export const runtime = "nodejs";
@@ -311,24 +312,29 @@ export default async function AdminStudentsPage({
                       />
                       {t("editButton")}
                     </Link>
-                    <form
-                      action={toggleStudentActive.bind(
-                        null,
-                        student.id,
-                        !student.isActive,
-                      )}
-                    >
-                      <button
-                        className={
-                          student.isActive
-                            ? "inline-flex min-h-11 items-center justify-center rounded-2xl bg-amber-100 px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-400 dark:hover:bg-amber-800"
-                            : "inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
-                        }
-                        type="submit"
-                      >
-                        {student.isActive ? t("deactivateButton") : t("activateButton")}
-                      </button>
-                    </form>
+                    {student.isActive ? (
+                      <InlineConfirmActionButton
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmDeactivateButton")}
+                        confirmMessage={t("confirmDeactivateMessage", {
+                          name: student.fullName,
+                        })}
+                        label={t("deactivateButton")}
+                        onAction={toggleStudentActive.bind(null, student.id, false)}
+                        pendingLabel={t("deactivatingButton")}
+                        showSuccessToast={false}
+                        tone="warning"
+                      />
+                    ) : (
+                      <form action={toggleStudentActive.bind(null, student.id, true)}>
+                        <button
+                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
+                          type="submit"
+                        >
+                          {t("activateButton")}
+                        </button>
+                      </form>
+                    )}
                     <AdminDeleteButton
                       action={deleteStudent.bind(null, student.id)}
                       cancelLabel={t("cancelDeleteButton")}

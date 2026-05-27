@@ -1,14 +1,17 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
+import PasswordRequirements from "@/components/PasswordRequirements";
 
 export default function ChangePasswordPage() {
   const t = useTranslations("ChangePassword");
   const [isPending, startTransition] = useTransition();
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -64,12 +67,22 @@ export default function ChangePasswordPage() {
               className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               id="newPassword"
               maxLength={72}
-              minLength={4}
+              minLength={8}
               name="newPassword"
+              onChange={(event) => setNewPassword(event.target.value)}
               required
               type="password"
             />
-             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("minChars")}</p>
+            <PasswordRequirements
+              confirmPassword={confirmPassword}
+              labels={{
+                hasLetter: t("passwordRuleLetter"),
+                hasNumber: t("passwordRuleNumber"),
+                matches: t("passwordRuleMatch"),
+                minLength: t("passwordRuleMin", { min: 8 }),
+              }}
+              password={newPassword}
+            />
           </div>
 
           <div>
@@ -81,8 +94,9 @@ export default function ChangePasswordPage() {
               className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20"
               id="confirmPassword"
               maxLength={72}
-              minLength={4}
+              minLength={8}
               name="confirmPassword"
+              onChange={(event) => setConfirmPassword(event.target.value)}
               required
               type="password"
             />

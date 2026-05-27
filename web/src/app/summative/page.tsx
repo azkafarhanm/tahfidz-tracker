@@ -135,12 +135,6 @@ export default async function SummativePage({
         </div>
       </header>
 
-      {params?.saved ? (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
-          {t("savedSuccess")}
-        </div>
-      ) : null}
-
       <section className="mt-6 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">

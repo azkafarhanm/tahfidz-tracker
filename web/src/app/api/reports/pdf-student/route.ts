@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getStudentProgressData } from "@/lib/reports";
+import { getStudentExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
-import { getStudentSummativeHistory } from "@/lib/summative";
 import { createPdfStreamResponse } from "@/lib/pdf";
 
 export const runtime = "nodejs";
@@ -22,12 +21,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "studentId is required" }, { status: 400 });
     }
 
-    const data = await getStudentProgressData(studentId, teacherId);
-    if (!data) {
+    const exportBundle = await getStudentExportBundle(studentId, teacherId, "id");
+    if (!exportBundle) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-
-    const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
+    const { progress: data, summativeScores } = exportBundle;
 
     const safeName = data.fullName.replace(/\s+/g, "-").toLowerCase();
     const date = new Date().toISOString().split("T")[0];

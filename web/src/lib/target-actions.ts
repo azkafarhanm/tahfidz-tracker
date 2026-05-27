@@ -178,8 +178,11 @@ export async function updateTarget(targetId: string, formData: FormData) {
   redirect(`/students/${target.studentId}?success=${encodeURIComponent(t("targetUpdated"))}`);
 }
 
-export async function cancelTarget(targetId: string): Promise<{ ok: boolean; error?: string }> {
+export async function cancelTarget(
+  targetId: string,
+): Promise<{ ok: boolean; error?: string; message?: string }> {
   const { teacherId, isAdmin } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   const target = await prisma.target.findUnique({
     where: { id: targetId },
@@ -206,11 +209,12 @@ export async function cancelTarget(targetId: string): Promise<{ ok: boolean; err
 
   invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
-  return { ok: true };
+  return { ok: true, message: t("targetCancelled") };
 }
 
-export async function completeTarget(targetId: string): Promise<{ ok: boolean; error?: string }> {
+export async function completeTarget(targetId: string): Promise<{ ok: boolean; error?: string; message?: string }> {
   const { teacherId, isAdmin } = await requireSessionScope();
+  const t = await getTranslations("Validation");
 
   const target = await prisma.target.findUnique({
     where: { id: targetId },
@@ -237,5 +241,5 @@ export async function completeTarget(targetId: string): Promise<{ ok: boolean; e
 
   invalidateStudentRelatedCaches(target.studentId);
   revalidatePath(`/students/${target.studentId}`);
-  return { ok: true };
+  return { ok: true, message: t("targetCompleted") };
 }

@@ -11,12 +11,12 @@ import {
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
+import NavigationLinks from "@/components/NavigationLinks";
 import { adminNavigationItems, teacherNavigationItems } from "@/lib/navigation";
 
 const MotivationCard = dynamic(() => import("@/components/MotivationCard"));
 
 export default async function Sidebar({
-  currentPath,
   userName,
   isAdmin,
 }: {
@@ -53,26 +53,11 @@ export default async function Sidebar({
       </div>
 
       <nav className="shrink-0 p-3 space-y-1">
-        {navKeys.map(({ key, href, icon: Icon }) => {
-          const active =
-            currentPath === href ||
-            (href !== "/" && href !== "/admin" && currentPath.startsWith(href));
-          return (
-            <Link
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                active
-                  ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-              }`}
-              href={href}
-              key={href}
-            >
-              <Icon aria-hidden="true" size={18} strokeWidth={active ? 2.3 : 2} />
-              {t(key)}
-            </Link>
-          );
-        })}
+        <NavigationLinks
+          items={navKeys}
+          labels={Object.fromEntries(navKeys.map(({ key }) => [key, t(key)]))}
+          variant="sidebar"
+        />
       </nav>
 
       <div className="flex-1" />

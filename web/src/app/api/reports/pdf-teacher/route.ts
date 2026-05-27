@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
-import { getTeacherFormativeExportData, getTeacherFormativeOverview } from "@/lib/formative";
 import { statusLabels, formatRange } from "@/lib/format";
 import { createPdfStreamResponse } from "@/lib/pdf";
-import { getTeacherReportData } from "@/lib/reports";
+import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
-import {
-  getTeacherSummativeExportData,
-  getTeacherSummativeOverview,
-  semesterLabel,
-} from "@/lib/summative";
+import { semesterLabel } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,27 +31,12 @@ export async function GET(request: Request) {
     const locale = "id";
     const academicYear = getCurrentAcademicYear();
 
-    const [
-      summary,
-      formativeGanjil,
-      formativeGenap,
-      formativeRowsGanjil,
-      formativeRowsGenap,
-      summativeGanjil,
-      summativeGenap,
-      summativeRowsGanjil,
-      summativeRowsGenap,
-    ] = await Promise.all([
-      getTeacherReportData(teacherId, locale),
-      getTeacherFormativeOverview(teacherId, Semester.GANJIL, academicYear, undefined, locale),
-      getTeacherFormativeOverview(teacherId, Semester.GENAP, academicYear, undefined, locale),
-      getTeacherFormativeExportData(teacherId, Semester.GANJIL, academicYear),
-      getTeacherFormativeExportData(teacherId, Semester.GENAP, academicYear),
-      getTeacherSummativeOverview(teacherId, Semester.GANJIL, academicYear, undefined, locale),
-      getTeacherSummativeOverview(teacherId, Semester.GENAP, academicYear, undefined, locale),
-      getTeacherSummativeExportData(teacherId, Semester.GANJIL, academicYear),
-      getTeacherSummativeExportData(teacherId, Semester.GENAP, academicYear),
-    ]);
+    const teacherBundle = await getTeacherExportBundle(
+      teacherId,
+      locale,
+      academicYear,
+    );
+    const summary = teacherBundle.summary;
 
     const date = new Date().toISOString().split("T")[0];
     return createPdfStreamResponse("Laporan Guru - TahfidzFlow", [
@@ -92,14 +72,14 @@ export async function GET(request: Request) {
         type: "table",
         headers: ["Semester", "Nama", "Total", "Rata-rata", "Terakhir"],
         rows: [
-          ...formativeGanjil.students.map((student) => [
+          ...teacherBundle.formative[Semester.GANJIL].recap.map((student) => [
             semesterLabel(Semester.GANJIL),
             student.fullName,
             String(student.totalAssessments),
             String(student.averageScore ?? "-"),
             student.latestRange,
           ]),
-          ...formativeGenap.students.map((student) => [
+          ...teacherBundle.formative[Semester.GENAP].recap.map((student) => [
             semesterLabel(Semester.GENAP),
             student.fullName,
             String(student.totalAssessments),
@@ -113,14 +93,14 @@ export async function GET(request: Request) {
         type: "table",
         headers: ["Semester", "Nama", "Jenis", "Materi", "Nilai"],
         rows: [
-          ...formativeRowsGanjil.rows.map((row) => [
+          ...teacherBundle.formative[Semester.GANJIL].exportData.rows.map((row) => [
             semesterLabel(Semester.GANJIL),
             row.studentName,
             row.type,
             formatRange(row.surah, row.fromAyah, row.toAyah),
             String(row.score ?? "-"),
           ]),
-          ...formativeRowsGenap.rows.map((row) => [
+          ...teacherBundle.formative[Semester.GENAP].exportData.rows.map((row) => [
             semesterLabel(Semester.GENAP),
             row.studentName,
             row.type,
@@ -134,14 +114,14 @@ export async function GET(request: Request) {
         type: "table",
         headers: ["Semester", "Nama", "Jumlah", "Rata-rata", "Catatan"],
         rows: [
-          ...summativeGanjil.students.map((student) => [
+          ...teacherBundle.summative[Semester.GANJIL].recap.map((student) => [
             semesterLabel(Semester.GANJIL),
             student.fullName,
             String(student.totalAssessments),
             String(student.averageScore ?? "-"),
             student.latestAssessment,
           ]),
-          ...summativeGenap.students.map((student) => [
+          ...teacherBundle.summative[Semester.GENAP].recap.map((student) => [
             semesterLabel(Semester.GENAP),
             student.fullName,
             String(student.totalAssessments),
@@ -155,14 +135,14 @@ export async function GET(request: Request) {
         type: "table",
         headers: ["Semester", "Nama", "Surah", "Nilai", "Catatan"],
         rows: [
-          ...summativeRowsGanjil.rows.map((row) => [
+          ...teacherBundle.summative[Semester.GANJIL].exportData.rows.map((row) => [
             semesterLabel(Semester.GANJIL),
             row.studentName,
             `${row.surahNumber}. ${row.surahName}`,
             String(row.score),
             row.notes ?? "-",
           ]),
-          ...summativeRowsGenap.rows.map((row) => [
+          ...teacherBundle.summative[Semester.GENAP].exportData.rows.map((row) => [
             semesterLabel(Semester.GENAP),
             row.studentName,
             `${row.surahNumber}. ${row.surahName}`,

@@ -1,12 +1,18 @@
-import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
+import { RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
+import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   getDateFormatter,
   statusLabels,
   halaqahLevelLabels,
   formatRange,
 } from "@/lib/format";
+import {
+  getStudentSummativeHistory,
+  getTeacherSummativeExportData,
+} from "@/lib/summative";
 
 export async function getTeacherReportData(teacherId: string, locale = "id") {
   return cached(`report-teacher:${teacherId}:${locale}`, 30_000, () => getTeacherReportDataInner(teacherId, locale));
@@ -32,6 +38,9 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
           select: {
             memorizationRecords: true,
             revisionRecords: true,
+            targets: {
+              where: { status: TargetStatus.ACTIVE },
+            },
           },
         },
         memorizationRecords: {
@@ -56,16 +65,6 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
             date: true,
             status: true,
             score: true,
-          },
-        },
-        targets: {
-          where: { status: TargetStatus.ACTIVE },
-          select: {
-            id: true,
-            surah: true,
-            fromAyah: true,
-            toAyah: true,
-            endDate: true,
           },
         },
       },
@@ -171,7 +170,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
     totalMurojaah,
     avgScore,
     needsReviewCount: needsReview.length,
-    activeTargetCount: students.reduce((sum, s) => sum + s.targets.length, 0),
+    activeTargetCount: students.reduce((sum, s) => sum + s._count.targets, 0),
     students: students.map((s) => {
       const lastH = s.memorizationRecords[0];
       const lastM = s.revisionRecords[0];
@@ -204,10 +203,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
         needsReview:
           lastH?.status === RecordStatus.PERLU_MUROJAAH ||
           lastM?.status === RecordStatus.PERLU_MUROJAAH,
-        activeTargets: s.targets.map((t) => ({
-          range: formatRange(t.surah, t.fromAyah, t.toAyah),
-          endDate: dateFormatter.format(t.endDate),
-        })),
+        activeTargets: s._count.targets,
       };
     }),
   };
@@ -402,4 +398,355 @@ async function getAdminReportDataInner(locale = "id") {
       joinedAt: dateFormatter.format(t.createdAt),
     })),
   };
+}
+
+type TeacherFormativeSummaryStudent = {
+  fullName: string;
+  halaqahName: string;
+  halaqahLevel: string;
+  academicClassName: string;
+  hafalanCount: number;
+  murojaahCount: number;
+  totalAssessments: number;
+  averageScore: number | null;
+  latestRange: string;
+};
+
+type TeacherSummativeSummaryStudent = {
+  fullName: string;
+  halaqahName: string;
+  academicClassName: string;
+  totalAssessments: number;
+  averageScore: number | null;
+  latestAssessment: string;
+};
+
+type TeacherFormativeExportBundle = Awaited<
+  ReturnType<typeof getTeacherFormativeExportData>
+>;
+type TeacherSummativeExportBundle = Awaited<
+  ReturnType<typeof getTeacherSummativeExportData>
+>;
+
+export async function getTeacherExportBundle(
+  teacherId: string,
+  locale = "id",
+  academicYear = getCurrentAcademicYear(),
+) {
+  return cached(
+    `export-bundle:teacher:${teacherId}:${locale}:${academicYear}`,
+    30_000,
+    async () => {
+      const [summary, formativeGanjil, formativeGenap, summativeGanjil, summativeGenap] =
+        await Promise.all([
+          getTeacherReportData(teacherId, locale),
+          getTeacherFormativeExportData(teacherId, Semester.GANJIL, academicYear),
+          getTeacherFormativeExportData(teacherId, Semester.GENAP, academicYear),
+          getTeacherSummativeExportData(teacherId, Semester.GANJIL, academicYear),
+          getTeacherSummativeExportData(teacherId, Semester.GENAP, academicYear),
+        ]);
+
+      return {
+        academicYear,
+        summary,
+        formative: {
+          [Semester.GANJIL]: {
+            exportData: formativeGanjil,
+            recap: summarizeTeacherFormativeExport(formativeGanjil),
+          },
+          [Semester.GENAP]: {
+            exportData: formativeGenap,
+            recap: summarizeTeacherFormativeExport(formativeGenap),
+          },
+        },
+        summative: {
+          [Semester.GANJIL]: {
+            exportData: summativeGanjil,
+            recap: summarizeTeacherSummativeExport(summativeGanjil),
+          },
+          [Semester.GENAP]: {
+            exportData: summativeGenap,
+            recap: summarizeTeacherSummativeExport(summativeGenap),
+          },
+        },
+      };
+    },
+  );
+}
+
+function summarizeTeacherFormativeExport(
+  exportData: TeacherFormativeExportBundle,
+) {
+  const byStudent = new Map<
+    string,
+    {
+      hafalanCount: number;
+      murojaahCount: number;
+      totalScore: number;
+      scoredCount: number;
+      latestDate: number;
+      latestRange: string;
+    }
+  >();
+
+  for (const row of exportData.rows) {
+    const current = byStudent.get(row.studentId) ?? {
+      hafalanCount: 0,
+      murojaahCount: 0,
+      totalScore: 0,
+      scoredCount: 0,
+      latestDate: Number.NEGATIVE_INFINITY,
+      latestRange: "-",
+    };
+
+    if (row.type === "Hafalan") {
+      current.hafalanCount += 1;
+    } else {
+      current.murojaahCount += 1;
+    }
+
+    if (row.score !== null) {
+      current.totalScore += row.score;
+      current.scoredCount += 1;
+    }
+
+    const rowTime = row.date.getTime();
+    if (rowTime > current.latestDate) {
+      current.latestDate = rowTime;
+      current.latestRange = formatRange(row.surah, row.fromAyah, row.toAyah);
+    }
+
+    byStudent.set(row.studentId, current);
+  }
+
+  return exportData.students.map((student) => {
+    const summary = byStudent.get(student.id);
+    const totalAssessments =
+      (summary?.hafalanCount ?? 0) + (summary?.murojaahCount ?? 0);
+
+    return {
+      fullName: student.fullName,
+      halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+      halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+      academicClassName: student.academicClass?.name ?? "-",
+      hafalanCount: summary?.hafalanCount ?? 0,
+      murojaahCount: summary?.murojaahCount ?? 0,
+      totalAssessments,
+      averageScore:
+        summary && summary.scoredCount > 0
+          ? Math.round((summary.totalScore / summary.scoredCount) * 10) / 10
+          : null,
+      latestRange: summary?.latestRange ?? "-",
+    } satisfies TeacherFormativeSummaryStudent;
+  });
+}
+
+function summarizeTeacherSummativeExport(
+  exportData: TeacherSummativeExportBundle,
+) {
+  const latestByStudent = new Map<
+    string,
+    { createdAt: number; assessment: string }
+  >();
+
+  for (const row of exportData.rows) {
+    const current = latestByStudent.get(row.studentId);
+    const assessment = `${row.surahNumber}. ${row.surahName}`;
+    const createdAt = row.createdAt.getTime();
+    if (!current || createdAt > current.createdAt) {
+      latestByStudent.set(row.studentId, { createdAt, assessment });
+    }
+  }
+
+  return exportData.students.map((student) => ({
+    fullName: student.fullName,
+    halaqahName: student.halaqahName,
+    academicClassName: student.academicClassName,
+    totalAssessments: student.totalAssessments,
+    averageScore: student.averageScore,
+    latestAssessment: latestByStudent.get(student.id)?.assessment ?? "-",
+  } satisfies TeacherSummativeSummaryStudent));
+}
+
+export async function getStudentExportBundle(
+  studentId: string,
+  teacherId: string | null,
+  locale = "id",
+) {
+  return cached(
+    `export-bundle:student:${studentId}:${teacherId ?? "admin"}:${locale}`,
+    30_000,
+    async () => {
+      const [progress, summativeScores] = await Promise.all([
+        getStudentProgressData(studentId, teacherId, locale),
+        getStudentSummativeHistory(studentId, undefined, teacherId, {
+          skipTeacherOwnershipCheck: true,
+        }),
+      ]);
+
+      if (!progress) {
+        return null;
+      }
+
+      return {
+        progress,
+        summativeScores,
+      };
+    },
+  );
+}
+
+export async function getAdminExportBundle(locale = "id") {
+  return cached(`export-bundle:admin:${locale}`, 30_000, async () => {
+    const adminData = await getAdminReportData(locale);
+    const teacherDirectory = adminData.teachers.map((teacher) => ({
+      id: teacher.id,
+      fullName: teacher.fullName,
+    }));
+
+    const students = await prisma.student.findMany({
+      where: {
+        isActive: true,
+        teacher: {
+          isActive: true,
+        },
+      },
+      orderBy: [{ teacher: { fullName: "asc" } }, { fullName: "asc" }],
+      select: {
+        id: true,
+        teacherId: true,
+        fullName: true,
+        classGroup: {
+          select: {
+            name: true,
+            level: true,
+          },
+        },
+        _count: {
+          select: {
+            memorizationRecords: true,
+            revisionRecords: true,
+          },
+        },
+        memorizationRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
+        },
+        revisionRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    const studentIds = students.map((student) => student.id);
+    const [memorizationStats, revisionStats] =
+      studentIds.length > 0
+        ? await Promise.all([
+            prisma.memorizationRecord.groupBy({
+              by: ["studentId"],
+              where: {
+                studentId: { in: studentIds },
+                score: { not: null },
+              },
+              _avg: { score: true },
+              _count: { score: true },
+            }),
+            prisma.revisionRecord.groupBy({
+              by: ["studentId"],
+              where: {
+                studentId: { in: studentIds },
+                score: { not: null },
+              },
+              _avg: { score: true },
+              _count: { score: true },
+            }),
+          ])
+        : [[], []] as const;
+
+    const scoreStatsByStudent = new Map<
+      string,
+      { scoreTotal: number; count: number }
+    >();
+
+    for (const row of [...memorizationStats, ...revisionStats]) {
+      const average = row._avg.score;
+      const count = row._count.score;
+      if (average === null || count === 0) continue;
+
+      const current = scoreStatsByStudent.get(row.studentId) ?? {
+        scoreTotal: 0,
+        count: 0,
+      };
+      current.scoreTotal += average * count;
+      current.count += count;
+      scoreStatsByStudent.set(row.studentId, current);
+    }
+
+    const rowsByTeacher = new Map<
+      string,
+      Array<{
+        fullName: string;
+        halaqahName: string;
+        halaqahLevel: string;
+        hafalanCount: number;
+        murojaahCount: number;
+        avgScore: number;
+        lastRange: string;
+        lastStatus: string;
+        needsReview: boolean;
+      }>
+    >();
+
+    for (const student of students) {
+      const lastHafalan = student.memorizationRecords[0];
+      const lastMurojaah = student.revisionRecords[0];
+      const latest = [lastHafalan, lastMurojaah]
+        .filter((record): record is NonNullable<typeof lastHafalan> => Boolean(record))
+        .sort((left, right) => right.date.getTime() - left.date.getTime())[0];
+      const scoreStats = scoreStatsByStudent.get(student.id);
+
+      const row = {
+        fullName: student.fullName,
+        halaqahName: student.classGroup.name,
+        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+        hafalanCount: student._count.memorizationRecords,
+        murojaahCount: student._count.revisionRecords,
+        avgScore: scoreStats
+          ? Math.round(scoreStats.scoreTotal / scoreStats.count)
+          : 0,
+        lastRange: latest
+          ? formatRange(latest.surah, latest.fromAyah, latest.toAyah)
+          : "-",
+        lastStatus: latest ? statusLabels[latest.status] : "-",
+        needsReview:
+          lastHafalan?.status === RecordStatus.PERLU_MUROJAAH ||
+          lastMurojaah?.status === RecordStatus.PERLU_MUROJAAH,
+      };
+
+      const rows = rowsByTeacher.get(student.teacherId) ?? [];
+      rows.push(row);
+      rowsByTeacher.set(student.teacherId, rows);
+    }
+
+    return {
+      summary: adminData,
+      teachers: teacherDirectory,
+      rowsByTeacher,
+    };
+  });
 }

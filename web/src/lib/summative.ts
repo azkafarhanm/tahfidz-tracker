@@ -227,22 +227,6 @@ async function getTeacherSummativeOverviewInner(
             name: true,
           },
         },
-        summativeScores: {
-          where: {
-            semester,
-            academicYear,
-          },
-          include: {
-            surah: {
-              select: {
-                name: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        },
       },
       orderBy: {
         fullName: "asc",
@@ -256,10 +240,93 @@ async function getTeacherSummativeOverviewInner(
     }),
   ]);
 
+  const studentIds = students.map((student) => student.id);
+  if (studentIds.length === 0) {
+    return {
+      students: [],
+      totalAssessments,
+      totalStudentCount,
+      pagination:
+        safePage && safePageSize
+          ? {
+              page: safePage,
+              pageSize: safePageSize,
+              totalPages: Math.max(1, Math.ceil(totalStudentCount / safePageSize)),
+            }
+          : null,
+    } satisfies SummativeOverviewResult;
+  }
+
+  const studentScoreWhere = {
+    studentId: { in: studentIds },
+    semester,
+    academicYear,
+  } satisfies Prisma.SummativeScoreWhereInput;
+
+  const [scoreStats, latestTimestamps] = await Promise.all([
+    prisma.summativeScore.groupBy({
+      by: ["studentId"],
+      where: studentScoreWhere,
+      _count: { _all: true },
+      _avg: { score: true },
+    }),
+    prisma.summativeScore.groupBy({
+      by: ["studentId"],
+      where: studentScoreWhere,
+      _max: { createdAt: true },
+    }),
+  ]);
+
+  const latestRows =
+    latestTimestamps.length > 0
+      ? await prisma.summativeScore.findMany({
+          where: {
+            OR: latestTimestamps
+              .filter((row) => row._max.createdAt)
+              .map((row) => ({
+                studentId: row.studentId,
+                createdAt: row._max.createdAt!,
+                semester,
+                academicYear,
+              })),
+          },
+          select: {
+            studentId: true,
+            createdAt: true,
+            surah: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        })
+      : [];
+
+  const statsByStudent = new Map(
+    scoreStats.map((row) => [
+      row.studentId,
+      {
+        totalAssessments: row._count._all,
+        averageScore:
+          row._avg.score !== null ? roundAverage([row._avg.score]) : null,
+      },
+    ]),
+  );
+  const latestByStudent = new Map<string, { latestAssessment: string; latestDate: string }>();
+  for (const row of latestRows) {
+    if (latestByStudent.has(row.studentId)) {
+      continue;
+    }
+    latestByStudent.set(row.studentId, {
+      latestAssessment: row.surah.name,
+      latestDate: dateFormatter.format(row.createdAt),
+    });
+  }
+
   return {
     students: students.map((student) => {
-      const validScores = student.summativeScores.map((score) => score.score);
-      const latest = student.summativeScores[0];
+      const stats = statsByStudent.get(student.id);
+      const latest = latestByStudent.get(student.id);
 
       return {
         id: student.id,
@@ -267,13 +334,10 @@ async function getTeacherSummativeOverviewInner(
         halaqahName: student.classGroup.name,
         halaqahLevel: halaqahLevelLabels[student.classGroup.level],
         academicClassName: student.academicClass?.name ?? "-",
-        totalAssessments: student.summativeScores.length,
-        averageScore:
-          validScores.length > 0
-            ? roundAverage(validScores)
-            : null,
-        latestAssessment: latest ? latest.surah.name : "-",
-        latestDate: latest ? dateFormatter.format(latest.createdAt) : "-",
+        totalAssessments: stats?.totalAssessments ?? 0,
+        averageScore: stats?.averageScore ?? null,
+        latestAssessment: latest?.latestAssessment ?? "-",
+        latestDate: latest?.latestDate ?? "-",
       } satisfies SummativeOverviewStudent;
     }),
     totalAssessments,
@@ -476,44 +540,86 @@ async function getTeacherSummativeExportDataInner(
           name: true,
         },
       },
-      summativeScores: {
-        where: {
-          semester,
-          academicYear,
-        },
-        include: {
-          surah: {
-            select: {
-              number: true,
-              name: true,
-              arabicName: true,
-            },
-          },
-        },
-        orderBy: [
-          {
-            createdAt: "desc",
-          },
-          {
-            surah: {
-              number: "asc",
-            },
-          },
-        ],
-      },
     },
     orderBy: {
       fullName: "asc",
     },
   });
 
-  const rows: SummativeExportRow[] = students.flatMap((student) =>
-    student.summativeScores.map((assessment) => ({
-      studentId: student.id,
-      studentName: student.fullName,
-      academicClassName: student.academicClass?.name ?? "-",
-      halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
-      classLevel: student.classGroup.grade,
+  const studentIds = students.map((student) => student.id);
+  const rows =
+    studentIds.length > 0
+      ? await prisma.summativeScore.findMany({
+          where: {
+            studentId: { in: studentIds },
+            semester,
+            academicYear,
+          },
+          select: {
+            studentId: true,
+            score: true,
+            notes: true,
+            createdAt: true,
+            semester: true,
+            surah: {
+              select: {
+                number: true,
+                name: true,
+                arabicName: true,
+              },
+            },
+            student: {
+              select: {
+                fullName: true,
+              },
+            },
+          },
+          orderBy: [
+            {
+              createdAt: "desc",
+            },
+            {
+              surah: {
+                number: "asc",
+              },
+            },
+          ],
+        })
+      : [];
+
+  const studentMetadata = new Map(
+    students.map((student) => [
+      student.id,
+      {
+        academicClassName: student.academicClass?.name ?? "-",
+        halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        classLevel: student.classGroup.grade,
+      },
+    ]),
+  );
+  const studentSummaries = new Map<
+    string,
+    { totalAssessments: number; scoreTotal: number; scoredCount: number }
+  >();
+
+  const exportRows: SummativeExportRow[] = rows.map((assessment) => {
+    const current = studentSummaries.get(assessment.studentId) ?? {
+      totalAssessments: 0,
+      scoreTotal: 0,
+      scoredCount: 0,
+    };
+    current.totalAssessments += 1;
+    current.scoreTotal += assessment.score;
+    current.scoredCount += 1;
+    studentSummaries.set(assessment.studentId, current);
+    const metadata = studentMetadata.get(assessment.studentId);
+
+    return {
+      studentId: assessment.studentId,
+      studentName: assessment.student.fullName,
+      academicClassName: metadata?.academicClassName ?? "-",
+      halaqahName: metadata?.halaqahName ?? "-",
+      classLevel: metadata?.classLevel ?? 0,
       semester: assessment.semester,
       surahNumber: assessment.surah.number,
       surahName: assessment.surah.name,
@@ -521,23 +627,26 @@ async function getTeacherSummativeExportDataInner(
       score: assessment.score,
       notes: assessment.notes,
       createdAt: assessment.createdAt,
-    })),
-  );
+    };
+  });
 
   return {
     students: students.map((student) => {
-      const studentScores = student.summativeScores.map((assessment) => assessment.score);
+      const summary = studentSummaries.get(student.id);
       return {
         id: student.id,
         fullName: student.fullName,
         academicClassName: student.academicClass?.name ?? "-",
         halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
         classLevel: student.classGroup.grade,
-        totalAssessments: student.summativeScores.length,
-        averageScore: studentScores.length > 0 ? roundAverage(studentScores) : null,
+        totalAssessments: summary?.totalAssessments ?? 0,
+        averageScore:
+          summary && summary.scoredCount > 0
+            ? Math.round((summary.scoreTotal / summary.scoredCount) * 10) / 10
+            : null,
       };
     }),
-    rows,
+    rows: exportRows,
   };
 }
 
@@ -664,8 +773,11 @@ export async function getStudentSummativeHistory(
   studentId: string,
   academicYear?: string,
   teacherId?: string | null,
+  options?: {
+    skipTeacherOwnershipCheck?: boolean;
+  },
 ): Promise<SummativeScoreRow[]> {
-  if (teacherId) {
+  if (teacherId && !options?.skipTeacherOwnershipCheck) {
     const student = await prisma.student.findFirst({
       where: { id: studentId, teacherId },
       select: { id: true },

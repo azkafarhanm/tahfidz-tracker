@@ -12,10 +12,12 @@ import {
   Users,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
-import { toggleTeacherActive } from "./actions";
+import { deleteTeacher, toggleTeacherActive } from "./actions";
 import { getAdminTeachersData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import AdminDeleteButton from "@/components/AdminDeleteButton";
 
 export const runtime = "nodejs";
 
@@ -44,6 +46,7 @@ export default async function AdminTeachersPage({
   searchParams,
 }: AdminTeachersPageProps) {
   const t = await getTranslations("AdminTeachers");
+  const validationT = await getTranslations("Validation");
   const locale = await getLocale();
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
@@ -176,8 +179,26 @@ export default async function AdminTeachersPage({
 
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {teachers.length > 0 ? (
-              teachers.map((teacher) => (
-                <article
+              teachers.map((teacher) => {
+                const deleteBlockers = [
+                  teacher.studentCount > 0
+                    ? validationT("teacherHasStudents", {
+                        name: teacher.fullName,
+                        count: teacher.studentCount,
+                      })
+                    : null,
+                  teacher.classGroupCount > 0
+                    ? validationT("teacherHasClassGroups", {
+                        name: teacher.fullName,
+                        count: teacher.classGroupCount,
+                      })
+                    : null,
+                ].filter(Boolean);
+                const deleteDisabledReason =
+                  deleteBlockers.length > 0 ? deleteBlockers.join(" ") : undefined;
+
+                return (
+                  <article
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
                   key={teacher.id}
                 >
@@ -259,27 +280,46 @@ export default async function AdminTeachersPage({
                       />
                       {t("editButton")}
                     </Link>
-                    <form
-                      action={toggleTeacherActive.bind(
-                        null,
-                        teacher.id,
-                        !teacher.isActive,
-                      )}
-                    >
-                      <button
-                        className={
-                          teacher.isActive
-                            ? "inline-flex min-h-11 items-center justify-center rounded-2xl bg-amber-100 px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-400 dark:hover:bg-amber-800"
-                            : "inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
-                        }
-                        type="submit"
-                      >
-                        {teacher.isActive ? t("deactivateButton") : t("activateButton")}
-                      </button>
-                    </form>
+                    {teacher.isActive ? (
+                      <InlineConfirmActionButton
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmDeactivateButton")}
+                        confirmMessage={t("confirmDeactivateMessage", {
+                          name: teacher.fullName,
+                        })}
+                        label={t("deactivateButton")}
+                        onAction={toggleTeacherActive.bind(null, teacher.id, false)}
+                        pendingLabel={t("deactivatingButton")}
+                        showSuccessToast={false}
+                        tone="warning"
+                      />
+                    ) : (
+                      <form action={toggleTeacherActive.bind(null, teacher.id, true)}>
+                        <button
+                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
+                          type="submit"
+                        >
+                          {t("activateButton")}
+                        </button>
+                      </form>
+                    )}
+                    <AdminDeleteButton
+                      action={deleteTeacher.bind(null, teacher.id)}
+                      cancelLabel={t("cancelDeleteButton")}
+                      confirmLabel={t("confirmDeleteButton")}
+                      confirmMessage={t("confirmDeleteMessage", {
+                        name: teacher.fullName,
+                      })}
+                      deletingLabel={t("deletingButton")}
+                      dialogTitle={t("deleteDialogTitle")}
+                      disabled={Boolean(deleteDisabledReason)}
+                      disabledReason={deleteDisabledReason}
+                      label={t("deleteButton")}
+                    />
                   </div>
                 </article>
-              ))
+                );
+              })
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
                 {query

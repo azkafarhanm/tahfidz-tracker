@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import FormAlert from "@/components/FormAlert";
 
 const iconMap = {
   PlusCircle,
@@ -109,11 +110,7 @@ export default function ClassGroupForm({
           </div>
         </header>
 
-        {error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
-            {error}
-          </div>
-        ) : null}
+        {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">

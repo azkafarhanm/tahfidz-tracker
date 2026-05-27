@@ -1,8 +1,15 @@
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import TimezoneCookie from "@/components/TimezoneCookie";
-import FloatingIslamicClock from "@/components/FloatingIslamicClock";
 import MobileUtilityBar from "@/components/MobileUtilityBar";
+
+const FloatingIslamicClock = dynamic(
+  () => import("@/components/FloatingIslamicClock"),
+  {
+    loading: () => null,
+  },
+);
 
 type AppShellProps = {
   children: React.ReactNode;

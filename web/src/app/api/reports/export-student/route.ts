@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
-import { getStudentProgressData } from "@/lib/reports";
+import { getStudentExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
-import { getStudentSummativeHistory } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,10 +25,11 @@ export async function GET(request: Request) {
       );
     }
 
-    const data = await getStudentProgressData(studentId, teacherId);
-    if (!data) {
+    const exportBundle = await getStudentExportBundle(studentId, teacherId, "id");
+    if (!exportBundle) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    const { progress: data, summativeScores } = exportBundle;
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -95,7 +95,6 @@ export async function GET(request: Request) {
       });
     }
 
-    const summativeScores = await getStudentSummativeHistory(studentId, undefined, teacherId);
     if (summativeScores.length > 0) {
       const summativeSheet = workbook.addWorksheet("Nilai Sumatif");
       summativeSheet.columns = [

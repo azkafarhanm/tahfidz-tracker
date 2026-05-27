@@ -301,7 +301,16 @@
     "deactivateButton": "تعطيل",
     "activateButton": "تفعيل",
     "emptySearch": "لا يوجد معلّمون مطابقون لهذا البحث.",
-    "emptyNoData": "لا توجد بيانات معلّمين للعرض بعد."
+    "emptyNoData": "لا توجد بيانات معلّمين للعرض بعد.",
+    "confirmDeactivateButton": "???? ????",
+    "confirmDeactivateMessage": "????? ???? {name}?",
+    "deactivatingButton": "???? ????????...",
+    "deleteButton": "\u062d\u0630\u0641",
+    "confirmDeleteButton": "\u0646\u0639\u0645\u060c \u062d\u0630\u0641",
+    "confirmDeleteMessage": "\u062d\u0630\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0639\u0644\u0645 {name} \u0628\u0634\u0643\u0644 \u0646\u0647\u0627\u0626\u064a\u061f \u0644\u0627 \u064a\u0645\u0643\u0646 \u0627\u0644\u062a\u0631\u0627\u062c\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621.",
+    "deletingButton": "\u062c\u0627\u0631\u064d \u0627\u0644\u062d\u0630\u0641...",
+    "deleteDialogTitle": "\u062d\u0630\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0639\u0644\u0645",
+    "cancelDeleteButton": "?????"
   },
   "AdminClasses": {
     "backLink": "لوحة الإدارة",
@@ -338,7 +347,10 @@
     "cancelDeleteButton": "إلغاء",
     "deleteBlockedByStudents": "انقل {count} طلاب أولًا.",
     "emptySearch": "لا توجد فصول مطابقة لهذا البحث.",
-    "emptyNoData": "لا توجد بيانات فصول للعرض بعد."
+    "emptyNoData": "لا توجد بيانات فصول للعرض بعد.",
+    "confirmDeactivateButton": "???? ????",
+    "confirmDeactivateMessage": "????? ???? {name}?",
+    "deactivatingButton": "???? ????????..."
   },
   "AdminHalaqah": {
     "backLink": "لوحة الإدارة",
@@ -376,7 +388,10 @@
     "cancelDeleteButton": "إلغاء",
     "deleteBlockedByStudents": "انقل {count} طلاب أولًا.",
     "emptySearch": "لا توجد حلقات مطابقة لهذا البحث.",
-    "emptyNoData": "لا توجد بيانات حلقات للعرض بعد."
+    "emptyNoData": "لا توجد بيانات حلقات للعرض بعد.",
+    "confirmDeactivateButton": "???? ????",
+    "confirmDeactivateMessage": "????? ?????? {name}?",
+    "deactivatingButton": "???? ????????..."
   },
   "AdminStudents": {
     "backLink": "لوحة الإدارة",
@@ -417,7 +432,10 @@
     "deleteBlockedSummativeItem": "{count} درجات تجميعية",
     "deleteBlockedTargetItem": "{count} أهداف نشطة",
     "emptySearch": "لا يوجد طلاب مطابقون لهذا البحث.",
-    "emptyNoData": "لا توجد بيانات طلاب للعرض بعد."
+    "emptyNoData": "لا توجد بيانات طلاب للعرض بعد.",
+    "confirmDeactivateButton": "???? ????",
+    "confirmDeactivateMessage": "????? ?????? {name}?",
+    "deactivatingButton": "???? ????????..."
   },
   "AdminReports": {
     "backLink": "لوحة الإدارة",
@@ -499,7 +517,8 @@
     "buttonDeactivate": "تعطيل",
     "buttonProcessing": "جارٍ المعالجة...",
     "buttonConfirm": "نعم، تعطيل",
-    "buttonCancel": "إلغاء"
+    "buttonCancel": "إلغاء",
+    "confirmMessage": "????? ??? ?????? ?? ??????? ???????"
   },
   "StudentFormPage": {
     "teacherOnly": "فقط المعلّمون يمكنهم إضافة الطلاب.",
@@ -570,18 +589,23 @@
     "emptyRecords": "لا توجد سجلات حفظ أو مراجعة بعد."
   },
   "ReactivateStudent": {
-        "processing": "جاري المعالجة...",
-        "activate": "تفعيل"
-      },
-    "DeleteStudent": {
-        "buttonDelete": "حذف",
-        "buttonProcessing": "جاري الحذف...",
-        "buttonConfirm": "نعم، حذف نهائي",
-        "buttonCancel": "إلغاء"
-      },
-   "TargetActions": {
+    "processing": "جاري المعالجة...",
+    "activate": "تفعيل"
+  },
+  "DeleteStudent": {
+    "buttonDelete": "حذف",
+    "buttonProcessing": "جاري الحذف...",
+    "buttonConfirm": "نعم، حذف نهائي",
+    "buttonCancel": "إلغاء",
+    "confirmMessage": "??? ??? ?????? ????????"
+  },
+  "TargetActions": {
     "complete": "إكمال",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "confirmCancel": "???? ???? ?????",
+    "cancelDelete": "?????",
+    "cancelConfirmMessage": "????? ??? ????? ??????",
+    "processing": "???? ????????..."
   },
   "ChangePassword": {
     "backLink": "الملف الشخصي",
@@ -589,10 +613,14 @@
     "description": "تحديث كلمة مرور تسجيل الدخول.",
     "currentPassword": "كلمة المرور الحالية",
     "newPassword": "كلمة المرور الجديدة",
-    "minChars": "4 أحرف على الأقل.",
+    "minChars": "8 ???? ??? ?????.",
     "confirmPassword": "تأكيد كلمة المرور الجديدة",
     "saving": "جاري الحفظ...",
-    "submit": "حفظ كلمة المرور الجديدة"
+    "submit": "حفظ كلمة المرور الجديدة",
+    "passwordRuleMin": "??? ????? {min} ????",
+    "passwordRuleLetter": "????? ??? ???",
+    "passwordRuleNumber": "????? ??? ???",
+    "passwordRuleMatch": "????? ????? ???? ??????"
   },
   "ChangeEmail": {
     "backLink": "الملف الشخصي",
@@ -608,7 +636,7 @@
   "AdminFormPage": {
     "addTeacher": "إضافة معلّم",
     "addTeacherDescription": "إنشاء حساب معلّم جديد لتسجيل الحفظ والمراجعة.",
-    "addTeacherPasswordDescription": "4 أحرف على الأقل. يمكن للمعلّم تغيير كلمة المرور لاحقًا.",
+    "addTeacherPasswordDescription": "8 ???? ??? ????? ?? ???? ??????. ???? ?????? ????? ???? ?????? ??????.",
     "backTeacherDirectory": "دليل المعلّمين",
     "saveTeacher": "حفظ المعلّم",
     "editTeacher": "تعديل المعلّم",
@@ -649,7 +677,10 @@
     "accountActiveDescription": "عطّل لإيقاف الوصول بدون حذف البيانات.",
     "adminNotes": "ملاحظات الإدارة",
     "adminNotesDescription": "هذه البيانات يديرها المدير. ستدخل التغييرات حيز التنفيذ فورًا.",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "passwordRuleMin": "??? ????? {min} ????",
+    "passwordRuleLetter": "????? ??? ???",
+    "passwordRuleNumber": "????? ??? ???"
   },
   "AdminClassForm": {
     "classDetails": "تفاصيل الفصل",
@@ -742,7 +773,8 @@
     "delete": "حذف",
     "deleting": "جارٍ الحذف...",
     "confirmDelete": "نعم، حذف",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "confirmMessage": "??? ??? ????? ????????"
   },
   "SurahInput": {
     "placeholder": "ابحث عن اسم السورة أو رقمها",
@@ -874,7 +906,10 @@
     "summativeSemesterInvalid": "فصل التقييم التجميعي غير صالح.",
     "summativeSurahNotFound": "لم يتم العثور على السورة الخاصة بالتقييم التجميعي. يرجى اختيار سورة من القائمة المتاحة.",
     "summativeDuplicate": "يوجد بالفعل تقييم تجميعي لهذه السورة وهذا الفصل. يرجى تعديل السجل الموجود بدلًا من ذلك.",
-    "unauthorized": "ليس لديك صلاحية الوصول إلى هذه البيانات."
+    "unauthorized": "ليس لديك صلاحية الوصول إلى هذه البيانات.",
+    "passwordLetterNumber": "??? ?? ????? ???? ?????? ??? ??? ???? ??? ?????.",
+    "targetCancelled": "?? ????? ????? ?????.",
+    "targetCompleted": "?? ????? ????? ?????."
   },
   "Offline": {
     "banner": "أنت غير متصل بالإنترنت. بعض الميزات غير متاحة."

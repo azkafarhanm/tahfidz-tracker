@@ -5,10 +5,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
+import {
+  hasLetterAndNumber,
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/password-rules";
 import { requireSessionScope } from "@/lib/session";
-
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 72;
 
 export async function changePassword(formData: FormData) {
   const { session } = await requireSessionScope();
@@ -42,6 +44,10 @@ export async function changePassword(formData: FormData) {
 
   if (newPassword.length < MIN_PASSWORD_LENGTH || newPassword.length > MAX_PASSWORD_LENGTH) {
     redirect(`/profile/change-password?error=${encodeURIComponent(t("passwordLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH }))}`);
+  }
+
+  if (!hasLetterAndNumber(newPassword)) {
+    redirect(`/profile/change-password?error=${encodeURIComponent(t("passwordLetterNumber"))}`);
   }
 
   if (newPassword !== confirmPassword) {

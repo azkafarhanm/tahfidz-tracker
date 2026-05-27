@@ -18,20 +18,10 @@ const HOLD_MS = 5500;
 const FADE_MS = 1200;
 const STORAGE_KEY = "tahfidzflow-motivation-idx";
 
-function loadStoredIndex(total: number): number {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const n = parseInt(raw, 10);
-      if (Number.isFinite(n) && n >= 0 && n < total) return n;
-    }
-  } catch {}
-  return 0;
-}
-
 export default function MotivationCard() {
   const verses = getAllMotivations();
-  const [verseIdx, setVerseIdx] = useState(() => loadStoredIndex(verses.length));
+  const [mounted, setMounted] = useState(false);
+  const [verseIdx, setVerseIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>("typing-arabic");
   const [charCount, setCharCount] = useState(0);
   const [opacity, setOpacity] = useState(1);
@@ -45,6 +35,18 @@ export default function MotivationCard() {
   }, []);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const n = parseInt(raw, 10);
+        if (Number.isFinite(n) && n >= 0 && n < verses.length) setVerseIdx(n);
+      }
+    } catch {}
+    setMounted(true);
+  }, [verses.length]);
+
+  useEffect(() => {
+    if (!mounted) return;
     let timer: ReturnType<typeof setTimeout>;
 
     switch (phase) {
@@ -99,7 +101,7 @@ export default function MotivationCard() {
     }
 
     return () => clearTimeout(timer);
-  }, [phase, charCount, verse, goNext, verses.length, hasArabic]);
+  }, [phase, charCount, verse, goNext, verses.length, hasArabic, mounted]);
 
   const arabicVisible =
     phase === "typing-arabic"
@@ -126,6 +128,16 @@ export default function MotivationCard() {
       : verse.type === "hadith"
       ? "📜"
       : "✨";
+
+  if (!mounted) {
+    return (
+      <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm dark:border-emerald-900 dark:bg-slate-900">
+        <div className="h-6 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+        <div className="mt-3 h-4 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+        <div className="mt-2 h-3 w-2/3 mx-auto animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+      </div>
+    );
+  }
 
   return (
     <div

@@ -100,9 +100,18 @@
   },
   "StudentDetail": {
     "backLink": "Santri",
+    "backToStudents": "Back to student list",
+    "cancelReactivateButton": "Cancel",
     "editButton": "Edit",
     "excelButton": "Excel",
     "pdfButton": "PDF",
+    "accessDeniedHeading": "Access denied",
+    "accessDeniedDescription": "You do not have permission to view this santri.",
+    "accessDeniedHelp": "Only the assigned teacher or a system administrator can open this record.",
+    "inactiveHeading": "Inactive santri",
+    "inactiveDescription": "Santri account <name></name> is currently inactive.",
+    "inactiveArchiveNote": "Inactive santri remain archived so learning history stays clean and traceable.",
+    "inactiveOwnerHint": "As the supervising teacher, you can reactivate this santri before logging new hafalan or murojaah.",
     "summaryLabel": "Santri summary",
     "activeTargetsSubtext": "active targets",
     "needsReviewLabel": "Needs review",
@@ -300,8 +309,17 @@
     "editButton": "Edit",
     "deactivateButton": "Deactivate",
     "activateButton": "Activate",
+    "deleteButton": "Delete",
     "emptySearch": "No teachers match this search.",
-    "emptyNoData": "No teacher data to display yet."
+    "emptyNoData": "No teacher data to display yet.",
+    "confirmDeactivateButton": "Yes, deactivate",
+    "confirmDeactivateMessage": "Deactivate account {name}?",
+    "deactivatingButton": "Processing...",
+    "confirmDeleteButton": "Yes, delete",
+    "confirmDeleteMessage": "Delete teacher account {name} permanently? This action cannot be undone.",
+    "deletingButton": "Deleting...",
+    "deleteDialogTitle": "Delete teacher account",
+    "cancelDeleteButton": "Cancel"
   },
   "AdminClasses": {
     "backLink": "Admin Panel",
@@ -338,7 +356,10 @@
     "cancelDeleteButton": "Cancel",
     "deleteBlockedByStudents": "Move {count} students first.",
     "emptySearch": "No classes match this search.",
-    "emptyNoData": "No class data to display yet."
+    "emptyNoData": "No class data to display yet.",
+    "confirmDeactivateButton": "Yes, deactivate",
+    "confirmDeactivateMessage": "Deactivate class {name}?",
+    "deactivatingButton": "Processing..."
   },
   "AdminHalaqah": {
     "backLink": "Admin Panel",
@@ -376,7 +397,10 @@
     "cancelDeleteButton": "Cancel",
     "deleteBlockedByStudents": "Move {count} students first.",
     "emptySearch": "No halaqah match this search.",
-    "emptyNoData": "No halaqah data to display yet."
+    "emptyNoData": "No halaqah data to display yet.",
+    "confirmDeactivateButton": "Yes, deactivate",
+    "confirmDeactivateMessage": "Deactivate halaqah {name}?",
+    "deactivatingButton": "Processing..."
   },
   "AdminStudents": {
     "backLink": "Admin Panel",
@@ -417,7 +441,10 @@
     "deleteBlockedSummativeItem": "{count} summative scores",
     "deleteBlockedTargetItem": "{count} active targets",
     "emptySearch": "No students match this search.",
-    "emptyNoData": "No student data to display yet."
+    "emptyNoData": "No student data to display yet.",
+    "confirmDeactivateButton": "Yes, deactivate",
+    "confirmDeactivateMessage": "Deactivate student {name}?",
+    "deactivatingButton": "Processing..."
   },
   "AdminReports": {
     "backLink": "Admin Panel",
@@ -463,7 +490,7 @@
     "label": "Language",
     "indonesian": "Indonesia",
     "english": "English",
-    "arabic": "\u0627\u0644\u0639\u0631\u0628\u064a\u0629"
+    "arabic": "العربية"
   },
   "StudentForm": {
     "backLink": "Students",
@@ -499,7 +526,8 @@
     "buttonDeactivate": "Deactivate",
     "buttonProcessing": "Processing...",
     "buttonConfirm": "Yes, deactivate",
-    "buttonCancel": "Cancel"
+    "buttonCancel": "Cancel",
+    "confirmMessage": "Deactivate this student from the active list?"
   },
   "StudentFormPage": {
     "teacherOnly": "Only teachers can add students.",
@@ -570,18 +598,23 @@
     "emptyRecords": "No hafalan or murojaah records yet."
   },
   "ReactivateStudent": {
-      "processing": "Processing...",
-      "activate": "Activate"
-    },
+    "processing": "Processing...",
+    "activate": "Activate"
+  },
   "DeleteStudent": {
-      "buttonDelete": "Delete",
-      "buttonProcessing": "Deleting...",
-      "buttonConfirm": "Yes, delete permanently",
-      "buttonCancel": "Cancel"
-    },
+    "buttonDelete": "Delete",
+    "buttonProcessing": "Deleting...",
+    "buttonConfirm": "Yes, delete permanently",
+    "buttonCancel": "Cancel",
+    "confirmMessage": "Delete this student permanently?"
+  },
   "TargetActions": {
     "complete": "Complete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirmCancel": "Yes, cancel",
+    "cancelDelete": "Back",
+    "cancelConfirmMessage": "Cancel this active target?",
+    "processing": "Processing..."
   },
   "ChangePassword": {
     "backLink": "Profile",
@@ -589,10 +622,14 @@
     "description": "Update your account login password.",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
-    "minChars": "Minimum 4 characters.",
+    "minChars": "Minimum 8 characters.",
     "confirmPassword": "Confirm New Password",
     "saving": "Saving...",
-    "submit": "Save New Password"
+    "submit": "Save New Password",
+    "passwordRuleMin": "At least {min} characters",
+    "passwordRuleLetter": "Contains a letter",
+    "passwordRuleNumber": "Contains a number",
+    "passwordRuleMatch": "Matches confirmation password"
   },
   "ChangeEmail": {
     "backLink": "Profile",
@@ -608,7 +645,7 @@
   "AdminFormPage": {
     "addTeacher": "Add Teacher",
     "addTeacherDescription": "Create a new teacher account for logging hafalan and murojaah.",
-    "addTeacherPasswordDescription": "Minimum 4 characters. The teacher can change the password later.",
+    "addTeacherPasswordDescription": "Minimum 8 characters with letters and numbers. The teacher can change the password later.",
     "backTeacherDirectory": "Teacher Directory",
     "saveTeacher": "Save Teacher",
     "editTeacher": "Edit Teacher",
@@ -649,7 +686,10 @@
     "accountActiveDescription": "Deactivate to suspend access without deleting data.",
     "adminNotes": "Admin Notes",
     "adminNotesDescription": "This data is managed by admin. Changes will take effect immediately.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "passwordRuleMin": "At least {min} characters",
+    "passwordRuleLetter": "Contains a letter",
+    "passwordRuleNumber": "Contains a number"
   },
   "AdminClassForm": {
     "classDetails": "Class Details",
@@ -742,7 +782,8 @@
     "delete": "Delete",
     "deleting": "Deleting...",
     "confirmDelete": "Yes, delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "confirmMessage": "Delete this record permanently?"
   },
   "SurahInput": {
     "placeholder": "Search surah name or number",
@@ -874,7 +915,10 @@
     "summativeSemesterInvalid": "Invalid summative semester.",
     "summativeSurahNotFound": "Summative surah was not found. Please select a surah from the available list.",
     "summativeDuplicate": "A summative score for this surah and semester already exists. Please edit the existing record instead.",
-    "unauthorized": "You do not have access to this data."
+    "unauthorized": "You do not have access to this data.",
+    "passwordLetterNumber": "Password must contain at least one letter and one number.",
+    "targetCancelled": "Active target has been cancelled.",
+    "targetCompleted": "Active target has been completed."
   },
   "Offline": {
     "banner": "You are offline. Some features are unavailable."
@@ -895,23 +939,23 @@
     "grade9": "Grade 9",
     "ganjil": "Odd",
     "genap": "Even",
-      "exportExcel": "Download Excel",
-      "studentCountLabel": "Students",
-      "assessmentCountLabel": "Assessments",
-      "averageLabel": "Average",
-      "studentAverageLabel": "Student average",
-      "studentListHeading": "Student recap list",
-      "studentListDescription": "Review daily assessment summaries for each student per semester.",
+    "exportExcel": "Download Excel",
+    "studentCountLabel": "Students",
+    "assessmentCountLabel": "Assessments",
+    "averageLabel": "Average",
+    "studentAverageLabel": "Student average",
+    "studentListHeading": "Student recap list",
+    "studentListDescription": "Review daily assessment summaries for each student per semester.",
     "emptyStudentsHeading": "No active students for this recap yet.",
     "emptyStudentsDescription": "Add hafalan or murojaah records first so the formative recap can populate.",
     "colStudent": "Student",
-      "colHalaqah": "Halaqah",
-      "colHafalan": "Hafalan",
-      "colMurojaah": "Murojaah",
-      "colDailyScores": "Daily scores",
-      "colStudentAverage": "Student average",
-      "colAverage": "Average",
-      "colLatest": "Latest",
+    "colHalaqah": "Halaqah",
+    "colHafalan": "Hafalan",
+    "colMurojaah": "Murojaah",
+    "colDailyScores": "Daily scores",
+    "colStudentAverage": "Student average",
+    "colAverage": "Average",
+    "colLatest": "Latest",
     "colAction": "Action",
     "detailButton": "Detail",
     "backToList": "Back to recap",
@@ -937,15 +981,15 @@
     "semesterLabel": "Semester",
     "grade7": "Grade 7",
     "grade8": "Grade 8",
-      "grade9": "Grade 9",
-      "ganjil": "Odd",
-      "genap": "Even",
-      "targetCount": "{count} class guidance surahs",
-      "studentCountLabel": "Students",
-      "assessmentCountLabel": "Assessments",
-      "classAverageLabel": "Class average",
-      "averageLabel": "Average",
-      "studentAverageLabel": "Student average",
+    "grade9": "Grade 9",
+    "ganjil": "Odd",
+    "genap": "Even",
+    "targetCount": "{count} class guidance surahs",
+    "studentCountLabel": "Students",
+    "assessmentCountLabel": "Assessments",
+    "classAverageLabel": "Class average",
+    "averageLabel": "Average",
+    "studentAverageLabel": "Student average",
     "studentListHeading": "Student assessment list",
     "studentListDescription": "Open a student detail page to add or edit per-surah assessments.",
     "emptyStudentsHeading": "No active students in this class yet.",
@@ -975,9 +1019,9 @@
     "savedSuccess": "Summative scores saved successfully.",
     "deletedSuccess": "Summative assessment deleted successfully.",
     "deleteFailed": "The summative assessment was not found or has changed. Reload and try again.",
-      "recommendationLabel": "Class guidance surahs",
-      "recommendationSubtext": "For target monitoring, not a grading limit.",
-      "colSurah": "Surah",
+    "recommendationLabel": "Class guidance surahs",
+    "recommendationSubtext": "For target monitoring, not a grading limit.",
+    "colSurah": "Surah",
     "colScore": "Score",
     "colNotes": "Notes",
     "colRecordedAt": "Recorded at",

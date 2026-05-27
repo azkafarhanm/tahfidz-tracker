@@ -37,9 +37,6 @@ type StudentDetailPageProps = {
   params: Promise<{
     id: string;
   }>;
-  searchParams?: Promise<{
-    success?: string;
-  }>;
 };
 
 function recordStatusClass(record: RecordItem) {
@@ -207,11 +204,10 @@ export async function generateMetadata({ params }: StudentDetailPageProps) {
 
 export default async function StudentDetailPage({
   params,
-  searchParams,
 }: StudentDetailPageProps) {
   const { id } = await params;
-  const pageParams = await searchParams;
   const locale = await getLocale();
+  const t = await getTranslations("StudentDetail");
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const student = await getStudentDetailData(id, teacherId, locale);
 
@@ -227,19 +223,21 @@ export default async function StudentDetailPage({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400">
               <Lock aria-hidden="true" size={32} strokeWidth={2} />
             </div>
-            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">Akses Ditolak</h1>
+            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">
+              {t("accessDeniedHeading")}
+            </h1>
             <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
-              Anda tidak memiliki akses untuk melihat data santri ini.
+              {t("accessDeniedDescription")}
             </p>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 leading-relaxed">
-              Data ini hanya dapat diakses oleh Ustadz/Ustadzah pembimbing yang bersangkutan atau Administrator sistem.
+              {t("accessDeniedHelp")}
             </p>
             <div className="mt-8">
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
                 href="/students"
               >
-                Kembali ke Daftar Santri
+                {t("backToStudents")}
               </Link>
             </div>
           </div>
@@ -256,25 +254,33 @@ export default async function StudentDetailPage({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
               <UserX aria-hidden="true" size={32} strokeWidth={2} />
             </div>
-            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">Santri Nonaktif</h1>
+            <h1 className="mt-6 text-xl font-bold text-slate-950 dark:text-white">
+              {t("inactiveHeading")}
+            </h1>
             <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">
-              Akun santri <span className="font-semibold text-slate-900 dark:text-white">{student.fullName}</span> saat ini berstatus nonaktif.
+              {t.rich("inactiveDescription", {
+                name: () => (
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {student.fullName}
+                  </span>
+                ),
+              })}
             </p>
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-500 leading-relaxed">
-              Data santri yang dinonaktifkan diarsipkan untuk menjaga kebersihan halaqah harian.
+              {t("inactiveArchiveNote")}
             </p>
 
             {student.isOwnStudent ? (
               <div className="mt-8 border-t border-slate-100 pt-6 dark:border-slate-800">
                 <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-                  Sebagai pembimbing, Anda dapat mengaktifkan kembali santri ini untuk memulai pencatatan hafalan baru.
+                  {t("inactiveOwnerHint")}
                 </p>
                 <div className="flex justify-center gap-3">
                   <Link
                     className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                     href="/students"
                   >
-                    Batal
+                    {t("cancelReactivateButton")}
                   </Link>
                   <ReactivateStudentButton studentId={student.id} studentName={student.fullName} />
                 </div>
@@ -285,7 +291,7 @@ export default async function StudentDetailPage({
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
                   href="/students"
                 >
-                  Kembali ke Daftar Santri
+                  {t("backToStudents")}
                 </Link>
               </div>
             )}
@@ -294,8 +300,6 @@ export default async function StudentDetailPage({
       </AppShell>
     );
   }
-
-  const t = await getTranslations("StudentDetail");
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -349,12 +353,6 @@ export default async function StudentDetailPage({
             </div>
           </div>
         </header>
-
-        {pageParams?.success ? (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-400">
-            {pageParams.success}
-          </div>
-        ) : null}
 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">

@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import FormAlert from "@/components/FormAlert";
 
 type ClassGroupOption = {
   id: string;
@@ -118,11 +119,7 @@ export default function TeacherStudentForm({
           </div>
         </header>
 
-        {error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
-            {error}
-          </div>
-        ) : null}
+        {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
           <input

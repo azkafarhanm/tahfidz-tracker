@@ -3,15 +3,10 @@ import { NextResponse } from "next/server";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
-import { getTeacherFormativeExportData, getTeacherFormativeOverview } from "@/lib/formative";
 import { statusLabels, formatRange } from "@/lib/format";
-import { getTeacherReportData } from "@/lib/reports";
+import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
-import {
-  getTeacherSummativeExportData,
-  getTeacherSummativeOverview,
-  semesterLabel,
-} from "@/lib/summative";
+import { semesterLabel } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,27 +39,12 @@ export async function GET(request: Request) {
     const locale = "id";
     const academicYear = getCurrentAcademicYear();
 
-    const [
-      summary,
-      formativeGanjil,
-      formativeGenap,
-      formativeRowsGanjil,
-      formativeRowsGenap,
-      summativeGanjil,
-      summativeGenap,
-      summativeRowsGanjil,
-      summativeRowsGenap,
-    ] = await Promise.all([
-      getTeacherReportData(teacherId, locale),
-      getTeacherFormativeOverview(teacherId, Semester.GANJIL, academicYear, undefined, locale),
-      getTeacherFormativeOverview(teacherId, Semester.GENAP, academicYear, undefined, locale),
-      getTeacherFormativeExportData(teacherId, Semester.GANJIL, academicYear),
-      getTeacherFormativeExportData(teacherId, Semester.GENAP, academicYear),
-      getTeacherSummativeOverview(teacherId, Semester.GANJIL, academicYear, undefined, locale),
-      getTeacherSummativeOverview(teacherId, Semester.GENAP, academicYear, undefined, locale),
-      getTeacherSummativeExportData(teacherId, Semester.GANJIL, academicYear),
-      getTeacherSummativeExportData(teacherId, Semester.GENAP, academicYear),
-    ]);
+    const teacherBundle = await getTeacherExportBundle(
+      teacherId,
+      locale,
+      academicYear,
+    );
+    const summary = teacherBundle.summary;
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -130,14 +110,14 @@ export async function GET(request: Request) {
       { header: "Rata-rata", key: "average", width: 12 },
     ];
     for (const [label, overview] of [
-      [semesterLabel(Semester.GANJIL), formativeGanjil],
-      [semesterLabel(Semester.GENAP), formativeGenap],
+      [semesterLabel(Semester.GANJIL), teacherBundle.formative[Semester.GANJIL].recap],
+      [semesterLabel(Semester.GENAP), teacherBundle.formative[Semester.GENAP].recap],
     ] as const) {
-      overview.students.forEach((student) => {
+      overview.forEach((student) => {
         formativeRecapSheet.addRow({
           semester: label,
           studentName: student.fullName,
-          halaqah: `${student.halaqahName} (${student.halaqahLevel})`,
+          halaqah: student.halaqahName,
           className: student.academicClassName,
           hafalanCount: student.hafalanCount,
           murojaahCount: student.murojaahCount,
@@ -169,8 +149,8 @@ export async function GET(request: Request) {
       { header: "Catatan", key: "notes", width: 30 },
     ];
     for (const [label, detail] of [
-      [semesterLabel(Semester.GANJIL), formativeRowsGanjil],
-      [semesterLabel(Semester.GENAP), formativeRowsGenap],
+      [semesterLabel(Semester.GANJIL), teacherBundle.formative[Semester.GANJIL].exportData],
+      [semesterLabel(Semester.GENAP), teacherBundle.formative[Semester.GENAP].exportData],
     ] as const) {
       detail.rows.forEach((row) => {
         formativeDetailSheet.addRow({
@@ -200,14 +180,14 @@ export async function GET(request: Request) {
       { header: "Rata-rata", key: "average", width: 12 },
     ];
     for (const [label, overview] of [
-      [semesterLabel(Semester.GANJIL), summativeGanjil],
-      [semesterLabel(Semester.GENAP), summativeGenap],
+      [semesterLabel(Semester.GANJIL), teacherBundle.summative[Semester.GANJIL].recap],
+      [semesterLabel(Semester.GENAP), teacherBundle.summative[Semester.GENAP].recap],
     ] as const) {
-      overview.students.forEach((student) => {
+      overview.forEach((student) => {
         summativeRecapSheet.addRow({
           semester: label,
           studentName: student.fullName,
-          halaqah: `${student.halaqahName} (${student.halaqahLevel})`,
+          halaqah: student.halaqahName,
           className: student.academicClassName,
           total: student.totalAssessments,
           average: student.averageScore ?? "-",
@@ -230,8 +210,8 @@ export async function GET(request: Request) {
       { header: "Tanggal", key: "createdAt", width: 16 },
     ];
     for (const [label, detail] of [
-      [semesterLabel(Semester.GANJIL), summativeRowsGanjil],
-      [semesterLabel(Semester.GENAP), summativeRowsGenap],
+      [semesterLabel(Semester.GANJIL), teacherBundle.summative[Semester.GANJIL].exportData],
+      [semesterLabel(Semester.GENAP), teacherBundle.summative[Semester.GENAP].exportData],
     ] as const) {
       detail.rows.forEach((row) => {
         summativeDetailSheet.addRow({

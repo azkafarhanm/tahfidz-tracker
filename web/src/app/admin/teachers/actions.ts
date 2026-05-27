@@ -14,9 +14,11 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma-next/client";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
-
-const MIN_PASSWORD_LENGTH = 8;
-const MAX_PASSWORD_LENGTH = 72;
+import {
+  hasLetterAndNumber,
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/password-rules";
 
 type TeacherFormInput = {
   fullName: string;
@@ -101,6 +103,10 @@ async function validateTeacherInput(
       t("passwordLength", { min: MIN_PASSWORD_LENGTH, max: MAX_PASSWORD_LENGTH }),
       extras,
     );
+  }
+
+  if (input.password && !hasLetterAndNumber(input.password)) {
+    fail(t("passwordLetterNumber"), extras);
   }
 }
 

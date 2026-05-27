@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { RecordStatus } from "@/generated/prisma-next/enums";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
-import { formatRange, halaqahLevelLabels, statusLabels } from "@/lib/format";
-import { getAdminReportData } from "@/lib/reports";
-import { prisma } from "@/lib/prisma";
+import { getAdminExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -17,140 +14,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [adminData, teachers, students] = await Promise.all([
-      getAdminReportData(),
-      prisma.teacher.findMany({
-        where: { isActive: true },
-        orderBy: { fullName: "asc" },
-        select: { id: true, fullName: true },
-      }),
-      prisma.student.findMany({
-        where: {
-          isActive: true,
-          teacher: {
-            isActive: true,
-          },
-        },
-        orderBy: [{ teacher: { fullName: "asc" } }, { fullName: "asc" }],
-        select: {
-          id: true,
-          teacherId: true,
-          fullName: true,
-          classGroup: {
-            select: {
-              name: true,
-              level: true,
-            },
-          },
-          _count: {
-            select: {
-              memorizationRecords: true,
-              revisionRecords: true,
-            },
-          },
-          memorizationRecords: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: {
-              surah: true,
-              fromAyah: true,
-              toAyah: true,
-              date: true,
-              status: true,
-            },
-          },
-          revisionRecords: {
-            orderBy: { date: "desc" },
-            take: 1,
-            select: {
-              surah: true,
-              fromAyah: true,
-              toAyah: true,
-              date: true,
-              status: true,
-            },
-          },
-        },
-      }),
-    ]);
-    const studentIds = students.map((student) => student.id);
-    const [memorizationStats, revisionStats] = studentIds.length > 0
-      ? await Promise.all([
-          prisma.memorizationRecord.groupBy({
-            by: ["studentId"],
-            where: {
-              studentId: { in: studentIds },
-              score: { not: null },
-            },
-            _avg: { score: true },
-            _count: { score: true },
-          }),
-          prisma.revisionRecord.groupBy({
-            by: ["studentId"],
-            where: {
-              studentId: { in: studentIds },
-              score: { not: null },
-            },
-            _avg: { score: true },
-            _count: { score: true },
-          }),
-        ])
-      : [[], []] as const;
-    const scoreStatsByStudent = new Map<string, { scoreTotal: number; count: number }>();
-
-    for (const row of [...memorizationStats, ...revisionStats]) {
-      const average = row._avg.score;
-      const count = row._count.score;
-      if (average === null || count === 0) continue;
-
-      const current = scoreStatsByStudent.get(row.studentId) ?? {
-        scoreTotal: 0,
-        count: 0,
-      };
-      current.scoreTotal += average * count;
-      current.count += count;
-      scoreStatsByStudent.set(row.studentId, current);
-    }
-    const rowsByTeacher = new Map<string, Array<{
-      fullName: string;
-      halaqahName: string;
-      halaqahLevel: string;
-      hafalanCount: number;
-      murojaahCount: number;
-      avgScore: number;
-      lastRange: string;
-      lastStatus: string;
-      needsReview: boolean;
-    }>>();
-
-    for (const student of students) {
-      const lastHafalan = student.memorizationRecords[0];
-      const lastMurojaah = student.revisionRecords[0];
-      const latest = [lastHafalan, lastMurojaah]
-        .filter((record): record is NonNullable<typeof lastHafalan> => Boolean(record))
-        .sort((left, right) => right.date.getTime() - left.date.getTime())[0];
-      const scoreStats = scoreStatsByStudent.get(student.id);
-      const row = {
-        fullName: student.fullName,
-        halaqahName: student.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-        hafalanCount: student._count.memorizationRecords,
-        murojaahCount: student._count.revisionRecords,
-        avgScore: scoreStats
-          ? Math.round(scoreStats.scoreTotal / scoreStats.count)
-          : 0,
-        lastRange: latest
-          ? formatRange(latest.surah, latest.fromAyah, latest.toAyah)
-          : "-",
-        lastStatus: latest ? statusLabels[latest.status] : "-",
-        needsReview:
-          lastHafalan?.status === RecordStatus.PERLU_MUROJAAH ||
-          lastMurojaah?.status === RecordStatus.PERLU_MUROJAAH,
-      };
-      const rows = rowsByTeacher.get(student.teacherId) ?? [];
-      rows.push(row);
-      rowsByTeacher.set(student.teacherId, rows);
-    }
+    const adminBundle = await getAdminExportBundle();
+    const adminData = adminBundle.summary;
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -192,7 +57,7 @@ export async function GET() {
 
     const usedSheetNames = new Set<string>(["Ringkasan", "Data Guru"]);
 
-    for (const teacher of teachers) {
+    for (const teacher of adminBundle.teachers) {
       const sheetName = getUniqueSheetName(teacher.fullName, usedSheetNames);
       const sheet = workbook.addWorksheet(sheetName);
       sheet.columns = [
@@ -206,7 +71,7 @@ export async function GET() {
         { header: "Status", key: "lastStatus", width: 16 },
         { header: "Perlu Cek", key: "needsReview", width: 12 },
       ];
-      const rows = rowsByTeacher.get(teacher.id) ?? [];
+      const rows = adminBundle.rowsByTeacher.get(teacher.id) ?? [];
       rows.forEach((s) =>
         sheet.addRow({
           name: s.fullName,

@@ -3,7 +3,6 @@ import TeacherForm from "../../TeacherForm";
 import { updateTeacher } from "../../actions";
 import { getAdminTeacherFormData } from "@/lib/admin";
 import { requireAdminScope } from "@/lib/session";
-import DeleteTeacherButton from "./DeleteTeacherButton";
 import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
@@ -47,7 +46,7 @@ export default async function EditTeacherPage({
   const action = updateTeacher.bind(null, teacher.id);
 
   return (
-    <div className="space-y-6">
+    <div>
       <TeacherForm
         action={action}
         backHref="/admin/teachers"
@@ -66,7 +65,6 @@ export default async function EditTeacherPage({
           isActive: query?.isActive ? query.isActive === "true" : teacher.isActive,
         }}
       />
-      <DeleteTeacherButton teacherId={teacher.id} teacherName={teacher.fullName} />
     </div>
   );
 }

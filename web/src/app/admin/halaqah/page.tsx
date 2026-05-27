@@ -13,6 +13,7 @@ import { deleteClassGroup, toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
 
 export const runtime = "nodejs";
@@ -247,24 +248,29 @@ export default async function AdminHalaqahPage({
                       />
                       {t("editButton")}
                     </Link>
-                    <form
-                      action={toggleClassGroupActive.bind(
-                        null,
-                        classGroup.id,
-                        !classGroup.isActive,
-                      )}
-                    >
-                      <button
-                        className={
-                          classGroup.isActive
-                            ? "inline-flex min-h-11 items-center justify-center rounded-2xl bg-amber-100 px-4 text-sm font-semibold text-amber-900 transition hover:bg-amber-200"
-                            : "inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200"
-                        }
-                        type="submit"
-                      >
-                        {classGroup.isActive ? t("deactivateButton") : t("activateButton")}
-                      </button>
-                    </form>
+                    {classGroup.isActive ? (
+                      <InlineConfirmActionButton
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmDeactivateButton")}
+                        confirmMessage={t("confirmDeactivateMessage", {
+                          name: classGroup.name,
+                        })}
+                        label={t("deactivateButton")}
+                        onAction={toggleClassGroupActive.bind(null, classGroup.id, false)}
+                        pendingLabel={t("deactivatingButton")}
+                        showSuccessToast={false}
+                        tone="warning"
+                      />
+                    ) : (
+                      <form action={toggleClassGroupActive.bind(null, classGroup.id, true)}>
+                        <button
+                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
+                          type="submit"
+                        >
+                          {t("activateButton")}
+                        </button>
+                      </form>
+                    )}
                     <AdminDeleteButton
                       action={deleteClassGroup.bind(null, classGroup.id)}
                       cancelLabel={t("cancelDeleteButton")}

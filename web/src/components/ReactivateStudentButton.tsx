@@ -3,13 +3,22 @@
 import { useTransition, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { reactivateTeacherStudent } from "@/app/students/[id]/edit/actions";
+import { playNotificationSound } from "@/lib/feedback";
 
-export default function ReactivateStudentButton({ studentId }: { studentId: string; studentName: string }) {
+export default function ReactivateStudentButton({
+  studentId,
+  studentName: _studentName,
+}: {
+  studentId: string;
+  studentName: string;
+}) {
   const t = useTranslations("ReactivateStudent");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  void _studentName;
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -23,9 +32,15 @@ export default function ReactivateStudentButton({ studentId }: { studentId: stri
           startTransition(async () => {
             const result = await reactivateTeacherStudent(studentId);
             if (result.ok) {
+              if (result.message) {
+                toast.success(result.message);
+                playNotificationSound("success");
+              }
               router.refresh();
             } else {
               setError(result.error);
+              toast.error(result.error);
+              playNotificationSound("error");
             }
           });
         }}

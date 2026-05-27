@@ -100,9 +100,18 @@
   },
   "StudentDetail": {
     "backLink": "Santri",
+    "backToStudents": "Kembali ke daftar santri",
+    "cancelReactivateButton": "Batal",
     "editButton": "Edit",
     "excelButton": "Excel",
     "pdfButton": "PDF",
+    "accessDeniedHeading": "Akses ditolak",
+    "accessDeniedDescription": "Anda tidak memiliki akses untuk melihat data santri ini.",
+    "accessDeniedHelp": "Data ini hanya dapat diakses oleh guru pembimbing terkait atau administrator sistem.",
+    "inactiveHeading": "Santri nonaktif",
+    "inactiveDescription": "Akun santri <name></name> saat ini berstatus nonaktif.",
+    "inactiveArchiveNote": "Santri nonaktif tetap diarsipkan agar riwayat pembelajaran tetap rapi dan mudah ditelusuri.",
+    "inactiveOwnerHint": "Sebagai pembimbing, Anda dapat mengaktifkan kembali santri ini sebelum mencatat hafalan atau murojaah baru.",
     "summaryLabel": "Ringkasan santri",
     "activeTargetsSubtext": "target aktif",
     "needsReviewLabel": "Perlu cek",
@@ -300,8 +309,17 @@
     "editButton": "Ubah",
     "deactivateButton": "Nonaktifkan",
     "activateButton": "Aktifkan",
+    "deleteButton": "Hapus",
     "emptySearch": "Tidak ada guru yang cocok dengan pencarian ini.",
-    "emptyNoData": "Belum ada data guru untuk ditampilkan."
+    "emptyNoData": "Belum ada data guru untuk ditampilkan.",
+    "confirmDeactivateButton": "Ya, nonaktifkan",
+    "confirmDeactivateMessage": "Nonaktifkan akun {name}?",
+    "deactivatingButton": "Memproses...",
+    "confirmDeleteButton": "Ya, hapus",
+    "confirmDeleteMessage": "Hapus akun guru {name} secara permanen? Tindakan ini tidak bisa dibatalkan.",
+    "deletingButton": "Menghapus...",
+    "deleteDialogTitle": "Hapus akun guru",
+    "cancelDeleteButton": "Batal"
   },
   "AdminClasses": {
     "backLink": "Panel Admin",
@@ -338,7 +356,10 @@
     "cancelDeleteButton": "Batal",
     "deleteBlockedByStudents": "Pindahkan {count} santri dulu.",
     "emptySearch": "Tidak ada kelas yang cocok dengan pencarian ini.",
-    "emptyNoData": "Belum ada data kelas untuk ditampilkan."
+    "emptyNoData": "Belum ada data kelas untuk ditampilkan.",
+    "confirmDeactivateButton": "Ya, nonaktifkan",
+    "confirmDeactivateMessage": "Nonaktifkan kelas {name}?",
+    "deactivatingButton": "Memproses..."
   },
   "AdminHalaqah": {
     "backLink": "Panel Admin",
@@ -376,7 +397,10 @@
     "cancelDeleteButton": "Batal",
     "deleteBlockedByStudents": "Pindahkan {count} santri dulu.",
     "emptySearch": "Tidak ada halaqah yang cocok dengan pencarian ini.",
-    "emptyNoData": "Belum ada data halaqah untuk ditampilkan."
+    "emptyNoData": "Belum ada data halaqah untuk ditampilkan.",
+    "confirmDeactivateButton": "Ya, nonaktifkan",
+    "confirmDeactivateMessage": "Nonaktifkan halaqah {name}?",
+    "deactivatingButton": "Memproses..."
   },
   "AdminStudents": {
     "backLink": "Panel Admin",
@@ -417,7 +441,10 @@
     "deleteBlockedSummativeItem": "{count} nilai sumatif",
     "deleteBlockedTargetItem": "{count} target aktif",
     "emptySearch": "Tidak ada santri yang cocok dengan pencarian ini.",
-    "emptyNoData": "Belum ada data santri untuk ditampilkan."
+    "emptyNoData": "Belum ada data santri untuk ditampilkan.",
+    "confirmDeactivateButton": "Ya, nonaktifkan",
+    "confirmDeactivateMessage": "Nonaktifkan santri {name}?",
+    "deactivatingButton": "Memproses..."
   },
   "AdminReports": {
     "backLink": "Panel Admin",
@@ -499,7 +526,8 @@
     "buttonDeactivate": "Nonaktifkan",
     "buttonProcessing": "Memproses...",
     "buttonConfirm": "Ya, nonaktifkan",
-    "buttonCancel": "Batal"
+    "buttonCancel": "Batal",
+    "confirmMessage": "Nonaktifkan santri ini dari daftar aktif?"
   },
   "StudentFormPage": {
     "teacherOnly": "Hanya guru yang dapat menambah santri.",
@@ -570,18 +598,23 @@
     "emptyRecords": "Belum ada catatan hafalan atau murojaah."
   },
   "ReactivateStudent": {
-      "processing": "Memproses...",
-      "activate": "Aktifkan"
-    },
+    "processing": "Memproses...",
+    "activate": "Aktifkan"
+  },
   "DeleteStudent": {
-      "buttonDelete": "Hapus",
-      "buttonProcessing": "Menghapus...",
-      "buttonConfirm": "Ya, hapus permanen",
-      "buttonCancel": "Batal"
-    },
+    "buttonDelete": "Hapus",
+    "buttonProcessing": "Menghapus...",
+    "buttonConfirm": "Ya, hapus permanen",
+    "buttonCancel": "Batal",
+    "confirmMessage": "Hapus santri ini secara permanen?"
+  },
   "TargetActions": {
     "complete": "Selesai",
-    "cancel": "Batalkan"
+    "cancel": "Batalkan",
+    "confirmCancel": "Ya, batalkan",
+    "cancelDelete": "Batal",
+    "cancelConfirmMessage": "Batalkan target aktif ini?",
+    "processing": "Memproses..."
   },
   "ChangePassword": {
     "backLink": "Profil",
@@ -589,10 +622,14 @@
     "description": "Perbarui password login akun Anda.",
     "currentPassword": "Password saat ini",
     "newPassword": "Password baru",
-    "minChars": "Minimal 4 karakter.",
+    "minChars": "Minimal 8 karakter.",
     "confirmPassword": "Konfirmasi password baru",
     "saving": "Menyimpan...",
-    "submit": "Simpan Password Baru"
+    "submit": "Simpan Password Baru",
+    "passwordRuleMin": "Minimal {min} karakter",
+    "passwordRuleLetter": "Mengandung huruf",
+    "passwordRuleNumber": "Mengandung angka",
+    "passwordRuleMatch": "Sama dengan konfirmasi password"
   },
   "ChangeEmail": {
     "backLink": "Profil",
@@ -608,7 +645,7 @@
   "AdminFormPage": {
     "addTeacher": "Tambah Guru",
     "addTeacherDescription": "Buat akun guru baru untuk mencatat hafalan dan murojaah.",
-    "addTeacherPasswordDescription": "Minimal 4 karakter. Guru dapat mengubah password nanti.",
+    "addTeacherPasswordDescription": "Minimal 8 karakter dengan huruf dan angka. Guru dapat mengubah password nanti.",
     "backTeacherDirectory": "Direktori Guru",
     "saveTeacher": "Simpan Guru",
     "editTeacher": "Edit Guru",
@@ -649,7 +686,10 @@
     "accountActiveDescription": "Nonaktifkan untuk menangguhkan akses tanpa menghapus data.",
     "adminNotes": "Catatan Admin",
     "adminNotesDescription": "Data ini dikelola oleh admin. Perubahan akan langsung berlaku.",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "passwordRuleMin": "Minimal {min} karakter",
+    "passwordRuleLetter": "Mengandung huruf",
+    "passwordRuleNumber": "Mengandung angka"
   },
   "AdminClassForm": {
     "classDetails": "Detail Kelas",
@@ -742,7 +782,8 @@
     "delete": "Hapus",
     "deleting": "Menghapus...",
     "confirmDelete": "Ya, hapus",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "confirmMessage": "Hapus catatan ini secara permanen?"
   },
   "SurahInput": {
     "placeholder": "Cari nama surah atau nomor surah",
@@ -874,7 +915,10 @@
     "summativeSemesterInvalid": "Semester penilaian sumatif tidak valid.",
     "summativeSurahNotFound": "Surah sumatif tidak ditemukan. Pilih surah dari daftar yang tersedia.",
     "summativeDuplicate": "Nilai sumatif untuk surah dan semester ini sudah ada. Silakan edit data yang sudah ada.",
-    "unauthorized": "Anda tidak memiliki akses untuk data ini."
+    "unauthorized": "Anda tidak memiliki akses untuk data ini.",
+    "passwordLetterNumber": "Password harus mengandung minimal satu huruf dan satu angka.",
+    "targetCancelled": "Target aktif berhasil dibatalkan.",
+    "targetCompleted": "Target aktif berhasil diselesaikan."
   },
   "Offline": {
     "banner": "Anda sedang offline. Beberapa fitur tidak tersedia."
@@ -937,15 +981,15 @@
     "semesterLabel": "Semester",
     "grade7": "Kelas 7",
     "grade8": "Kelas 8",
-      "grade9": "Kelas 9",
-      "ganjil": "Ganjil",
-      "genap": "Genap",
-      "targetCount": "{count} surah acuan kelas",
-      "studentCountLabel": "Jumlah santri",
-      "assessmentCountLabel": "Jumlah penilaian",
-      "classAverageLabel": "Rata-rata kelas",
-      "averageLabel": "Rata-rata",
-      "studentAverageLabel": "Rata-rata santri",
+    "grade9": "Kelas 9",
+    "ganjil": "Ganjil",
+    "genap": "Genap",
+    "targetCount": "{count} surah acuan kelas",
+    "studentCountLabel": "Jumlah santri",
+    "assessmentCountLabel": "Jumlah penilaian",
+    "classAverageLabel": "Rata-rata kelas",
+    "averageLabel": "Rata-rata",
+    "studentAverageLabel": "Rata-rata santri",
     "studentListHeading": "Daftar penilaian santri",
     "studentListDescription": "Masuk ke detail santri untuk menambah atau mengubah penilaian per surah.",
     "emptyStudentsHeading": "Belum ada santri aktif untuk kelas ini.",
@@ -975,9 +1019,9 @@
     "savedSuccess": "Nilai sumatif berhasil disimpan.",
     "deletedSuccess": "Penilaian sumatif berhasil dihapus.",
     "deleteFailed": "Penilaian sumatif tidak ditemukan atau sudah berubah. Muat ulang lalu coba lagi.",
-      "recommendationLabel": "Surah acuan kelas",
-      "recommendationSubtext": "Untuk monitoring target, bukan batas penilaian.",
-      "colSurah": "Surah",
+    "recommendationLabel": "Surah acuan kelas",
+    "recommendationSubtext": "Untuk monitoring target, bukan batas penilaian.",
+    "colSurah": "Surah",
     "colScore": "Nilai",
     "colNotes": "Catatan",
     "colRecordedAt": "Dicatat pada",
