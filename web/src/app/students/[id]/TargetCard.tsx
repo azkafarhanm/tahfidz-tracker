@@ -1,0 +1,95 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { CalendarDays, PencilLine } from "lucide-react";
+import TargetActions from "@/components/TargetActions";
+
+type TargetItem = {
+  id: string;
+  type: string;
+  range: string;
+  startDate: string;
+  endDate: string;
+  notes: string | null;
+  timeProgress: number;
+  isOverdue: boolean;
+};
+
+export default function TargetCard({
+  target,
+  studentId,
+}: {
+  target: TargetItem;
+  studentId: string;
+}) {
+  const t = useTranslations("StudentDetail");
+  const [hidden, setHidden] = useState(false);
+
+  if (hidden) return null;
+
+  return (
+    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{target.type}</p>
+          <p className="mt-1 truncate font-semibold text-slate-950 dark:text-white">
+            {target.range}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+            href={`/students/${studentId}/targets/${target.id}/edit`}
+            title={t("editTargetTitle")}
+          >
+            <PencilLine aria-hidden="true" size={13} strokeWidth={2.2} />
+            {t("editButton")}
+          </Link>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              target.isOverdue
+                ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+                : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+            }`}
+          >
+            {target.isOverdue ? t("targetBadgeOverdue") : t("targetBadgeAktif")}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1">
+            <CalendarDays aria-hidden="true" size={13} strokeWidth={2.2} />
+            {target.startDate} - {target.endDate}
+          </span>
+          <span className="font-medium">
+            {target.timeProgress}% {t("targetTimeProgress")}
+          </span>
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              target.isOverdue
+                ? "bg-red-400"
+                : target.timeProgress > 75
+                  ? "bg-amber-400"
+                  : "bg-emerald-400"
+            }`}
+            style={{ width: `${target.timeProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {target.notes ? (
+        <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+          {target.notes}
+        </p>
+      ) : null}
+
+      <TargetActions targetId={target.id} onActionSuccess={() => setHidden(true)} />
+    </article>
+  );
+}

@@ -14,7 +14,6 @@ import { recordStatusOptions } from "@/lib/format";
 import { getStudentFormContext } from "@/lib/students";
 import { getRecordData } from "@/lib/records";
 import { updateRecord } from "@/lib/record-actions";
-import DeleteRecordButton from "@/components/DeleteRecordButton";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
@@ -260,23 +259,6 @@ export default async function EditRecordPage({
             </button>
           </div>
         </form>
-
-        <section className="mt-6 rounded-2xl border border-red-200 bg-white p-4 shadow-sm dark:border-red-900/70 dark:bg-slate-900 dark:shadow-none">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-slate-950 dark:text-white">{t("sectionDelete")}</p>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {t("deleteConfirm", { surah: record.surah, from: record.fromAyah, to: record.toAyah })}
-              </p>
-            </div>
-            <DeleteRecordButton
-              studentId={student.id}
-              recordType={recordType}
-              recordId={recordId}
-              returnTo={returnTo}
-            />
-          </div>
-        </section>
       </section>
     </main>
   );

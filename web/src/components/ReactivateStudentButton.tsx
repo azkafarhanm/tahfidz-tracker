@@ -22,10 +22,10 @@ export default function ReactivateStudentButton({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{error}</p> : null}
       <button
         aria-busy={isPending}
-        className="rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:opacity-60 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950"
+        className="rounded-lg border border-emerald-200/80 bg-white px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50/80 hover:border-emerald-300 disabled:opacity-60 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
         disabled={isPending}
         onClick={() => {
           setError(null);

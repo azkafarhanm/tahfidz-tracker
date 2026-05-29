@@ -332,28 +332,25 @@ export async function deleteClassGroup(classGroupId: string) {
     );
   } catch (error) {
     if (isDeleteRaceError(error)) {
-      redirectAdminHalaqahWithMessage("error", t("deleteRaceDetected"));
+      return { ok: false as const, error: t("deleteRaceDetected") };
     }
     throw error;
   }
 
   if (result.status === "notFound") {
-    redirectAdminHalaqahWithMessage("error", t("halaqahNotFound"));
+    return { ok: false as const, error: t("halaqahNotFound") };
   }
 
   if (result.status === "blocked") {
-    redirectAdminHalaqahWithMessage(
-      "error",
-      t("halaqahHasAnyStudents", {
+    return {
+      ok: false as const,
+      error: t("halaqahHasAnyStudents", {
         name: result.classGroup.name,
         count: result.studentCount,
       }),
-    );
+    };
   }
 
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage(
-    "success",
-    t("halaqahDeleted", { name: result.classGroup.name }),
-  );
+  return { ok: true as const, success: t("halaqahDeleted", { name: result.classGroup.name }) };
 }

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
-  CalendarDays,
   CheckCircle2,
   ClipboardList,
   Download,
@@ -19,19 +18,20 @@ import { getStudentDetailData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import DeactivateButton from "./DeactivateButton";
-import TargetActions from "@/components/TargetActions";
+import ActivityRow from "./ActivityRow";
+import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type StudentDetail = Extract<
   NonNullable<Awaited<ReturnType<typeof getStudentDetailData>>>,
   { recentActivity: unknown }
 >;
 type RecordItem = StudentDetail["recentActivity"][number];
-type TargetItem = StudentDetail["activeTargets"][number];
 
 type StudentDetailPageProps = {
   params: Promise<{
@@ -78,116 +78,6 @@ function LatestRecordCard({
                 {record.status}
               </span>
             </div>
-          ) : null}
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function TargetCard({ target, studentId, t }: { target: TargetItem; studentId: string; t: (key: string) => string }) {
-  return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{target.type}</p>
-          <p className="mt-1 truncate font-semibold text-slate-950 dark:text-white">
-            {target.range}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            className="grid h-7 w-7 place-items-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700"
-            href={`/students/${studentId}/targets/${target.id}/edit`}
-            title={t("editTargetTitle")}
-          >
-            <PencilLine aria-hidden="true" size={13} strokeWidth={2.2} />
-          </Link>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${target.isOverdue ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400" : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"}`}>
-            {target.isOverdue ? t("targetBadgeOverdue") : t("targetBadgeAktif")}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span className="inline-flex items-center gap-1">
-            <CalendarDays aria-hidden="true" size={13} strokeWidth={2.2} />
-            {target.startDate} - {target.endDate}
-          </span>
-          <span className="font-medium">{target.timeProgress}% {t("targetTimeProgress")}</span>
-        </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${target.isOverdue ? "bg-red-400" : target.timeProgress > 75 ? "bg-amber-400" : "bg-emerald-400"}`}
-            style={{ width: `${target.timeProgress}%` }}
-          />
-        </div>
-      </div>
-
-      {target.notes ? (
-        <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-          {target.notes}
-        </p>
-      ) : null}
-
-      <TargetActions targetId={target.id} />
-    </article>
-  );
-}
-
-function ActivityRow({
-  record,
-  studentId,
-  t,
-}: {
-  record: RecordItem;
-  studentId: string;
-  t: (key: string) => string;
-}) {
-  const Icon = record.type === "Hafalan" ? BookOpen : RotateCcw;
-  const recordType = record.type === "Hafalan" ? "hafalan" : "murojaah";
-
-  return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-      <div className="flex items-start gap-3">
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-50 text-emerald-800 dark:bg-slate-800 dark:text-emerald-400">
-          <Icon aria-hidden="true" size={17} strokeWidth={2.2} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-semibold text-slate-950 dark:text-white">{record.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}</p>
-              <p className="mt-1 truncate text-sm text-slate-600 dark:text-slate-400">
-                {record.range}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Link
-                className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-emerald-800 dark:hover:bg-slate-800"
-                href={`/students/${studentId}/records/${recordType}/${record.id}/edit`}
-              >
-                <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
-              </Link>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {record.date}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium ${recordStatusClass(record)}`}
-            >
-              {record.status}
-            </span>
-            {record.score !== null ? (
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                {t("scoreLabel")} {record.score}
-              </span>
-            ) : null}
-          </div>
-          {record.notes ? (
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{record.notes}</p>
           ) : null}
         </div>
       </div>
@@ -438,11 +328,23 @@ export default async function StudentDetailPage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {student.activeTargets.length > 0 ? (
               student.activeTargets.map((target) => (
-                <TargetCard key={target.id} target={target} studentId={student.id} t={t} />
+                <TargetCard key={target.id} target={target} studentId={student.id} />
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-                {t("emptyTargets")}
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70">
+                <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <Target aria-hidden="true" size={20} strokeWidth={2.2} />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {t("emptyTargets")}
+                </p>
+                <Link
+                  className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
+                  href={`/students/${student.id}/targets/new`}
+                >
+                  <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
+                  {t("addTargetButton")}
+                </Link>
               </div>
             )}
           </div>
@@ -479,12 +381,32 @@ export default async function StudentDetailPage({
                   key={`${record.type}-${record.id}`}
                   record={record}
                   studentId={student.id}
-                  t={t}
                 />
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-                {t("emptyActivity")}
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center dark:border-slate-700 dark:bg-slate-900/70">
+                <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {t("emptyActivity")}
+                </p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
+                    href={`/students/${student.id}/hafalan/new`}
+                  >
+                    <BookOpen aria-hidden="true" size={14} strokeWidth={2.2} />
+                    {t("hafalanButton")}
+                  </Link>
+                  <Link
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                    href={`/students/${student.id}/murojaah/new`}
+                  >
+                    <RotateCcw aria-hidden="true" size={14} strokeWidth={2.2} />
+                    {t("murojaahButton")}
+                  </Link>
+                </div>
               </div>
             )}
           </div>
@@ -558,11 +480,11 @@ export default async function StudentDetailPage({
         ) : null}
 
         {!isAdmin ? (
-          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+          <section className="mt-6 rounded-2xl border border-amber-200/60 bg-white p-4 shadow-sm dark:border-amber-900/40 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-slate-950 dark:text-white">{t("deactivateHeading")}</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
                   {t("deactivateDescription")}
                 </p>
               </div>

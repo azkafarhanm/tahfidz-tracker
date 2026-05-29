@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
-        <div className="animate-pulse space-y-6">
+        <div className="space-y-6 motion-safe:animate-pulse">
           <div className="flex items-center justify-between gap-4">
             <div className="space-y-3">
               <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />

@@ -8,7 +8,13 @@ import { cancelTarget, completeTarget } from "@/lib/target-actions";
 import { playNotificationSound } from "@/lib/feedback";
 import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
-export default function TargetActions({ targetId }: { targetId: string }) {
+export default function TargetActions({
+  targetId,
+  onActionSuccess,
+}: {
+  targetId: string;
+  onActionSuccess?: () => void;
+}) {
   const t = useTranslations("TargetActions");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,6 +37,7 @@ export default function TargetActions({ targetId }: { targetId: string }) {
                   toast.success(result.message);
                   playNotificationSound("success");
                 }
+                onActionSuccess?.();
                 router.refresh();
               } else {
                 setError(result.error ?? "Error");
@@ -52,6 +59,7 @@ export default function TargetActions({ targetId }: { targetId: string }) {
             setError(null);
             const result = await cancelTarget(targetId);
             if (result.ok) {
+              onActionSuccess?.();
               router.refresh();
             } else {
               setError(result.error ?? "Error");

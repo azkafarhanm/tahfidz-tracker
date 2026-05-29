@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Trash2 } from "lucide-react";
 import { deleteRecord } from "@/lib/record-actions";
 import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
@@ -38,6 +39,7 @@ export default function DeleteRecordButton({
       cancelLabel={t("cancel")}
       confirmLabel={t("confirmDelete")}
       confirmMessage={t("confirmMessage")}
+      icon={<Trash2 aria-hidden="true" size={14} strokeWidth={2.2} />}
       label={t("delete")}
       onAction={async () => {
         onDeleteStart?.();
@@ -47,7 +49,7 @@ export default function DeleteRecordButton({
           onDeleteSuccess?.();
 
           if (navigateOnSuccess) {
-            router.replace(result.redirectTo ?? fallbackRedirectTo);
+            setTimeout(() => router.replace(result.redirectTo ?? fallbackRedirectTo), 400);
           } else {
             router.refresh();
           }

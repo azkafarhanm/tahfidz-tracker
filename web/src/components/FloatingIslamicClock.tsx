@@ -35,12 +35,13 @@ export default function FloatingIslamicClock() {
   const [pos, setPos] = useState({ x: DEFAULT_X, y: DEFAULT_Y });
   const [mounted, setMounted] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    setPos(loadPos());
-  }, []);
+  const dragRef = useRef<{
+    origX: number;
+    origY: number;
+    pointerId: number;
+    startX: number;
+    startY: number;
+  } | null>(null);
 
   const clampToBounds = useCallback((x: number, y: number) => {
     const vw = window.innerWidth;
@@ -52,18 +53,15 @@ export default function FloatingIslamicClock() {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
+    const saved = loadPos();
+    setPos(clampToBounds(saved.x, saved.y));
+  }, [clampToBounds]);
+
+  useEffect(() => {
     if (!mounted) return;
 
-    function onMove(e: MouseEvent) {
-      if (!dragRef.current) return;
-      e.preventDefault();
-      const dx = e.clientX - dragRef.current.startX;
-      const dy = e.clientY - dragRef.current.startY;
-      const next = clampToBounds(dragRef.current.origX + dx, dragRef.current.origY + dy);
-      setPos(next);
-    }
-
-    function onUp() {
+    function endDrag() {
       if (!dragRef.current) return;
       dragRef.current = null;
       setDragging(false);
@@ -75,11 +73,31 @@ export default function FloatingIslamicClock() {
       });
     }
 
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    function onMove(e: PointerEvent) {
+      if (!dragRef.current || e.pointerId !== dragRef.current.pointerId) return;
+      e.preventDefault();
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      const next = clampToBounds(dragRef.current.origX + dx, dragRef.current.origY + dy);
+      setPos(next);
+    }
+
+    function onUp(e: PointerEvent) {
+      if (!dragRef.current || e.pointerId !== dragRef.current.pointerId) return;
+      endDrag();
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("blur", endDrag);
     return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", endDrag);
+      document.body.style.userSelect = "";
+      document.body.style.webkitUserSelect = "";
     };
   }, [mounted, clampToBounds]);
 
@@ -100,10 +118,12 @@ export default function FloatingIslamicClock() {
     };
   }, [mounted, clampToBounds]);
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
     e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = {
+      pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       origX: pos.x,
@@ -114,7 +134,7 @@ export default function FloatingIslamicClock() {
     document.body.style.webkitUserSelect = "none";
   }, [pos]);
 
-  const onDoubleClick = useCallback(() => {
+  const resetPosition = useCallback(() => {
     const next = clampToBounds(DEFAULT_X, DEFAULT_Y);
     setPos(next);
     savePos(next.x, next.y);
@@ -128,11 +148,17 @@ export default function FloatingIslamicClock() {
       style={{ top: pos.y, insetInlineStart: pos.x }}
     >
       <div
-        className={`w-36 ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
-        onMouseDown={onMouseDown}
-        onDoubleClick={onDoubleClick}
+        className={`w-36 touch-none select-none rounded-2xl transition-shadow ${dragging ? "cursor-grabbing shadow-lg shadow-slate-900/10" : "cursor-grab"}`}
+        onDoubleClick={resetPosition}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            resetPosition();
+          }
+        }}
+        onPointerDown={onPointerDown}
         role="button"
-        tabIndex={-1}
+        tabIndex={0}
         aria-label="Draggable Islamic clock"
       >
         <SidebarIslamicClock />

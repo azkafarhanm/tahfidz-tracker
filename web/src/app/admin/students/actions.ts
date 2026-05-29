@@ -362,28 +362,25 @@ export async function deleteStudent(studentId: string) {
     );
   } catch (error) {
     if (isDeleteRaceError(error)) {
-      redirectAdminStudentsWithMessage("error", t("deleteRaceDetected"));
+      return { ok: false as const, error: t("deleteRaceDetected") };
     }
     throw error;
   }
 
   if (result.status === "notFound") {
-    redirectAdminStudentsWithMessage("error", t("studentNotFound"));
+    return { ok: false as const, error: t("studentNotFound") };
   }
 
   if (result.status === "blocked") {
-    redirectAdminStudentsWithMessage(
-      "error",
-      t("adminStudentHasRelatedData", {
+    return {
+      ok: false as const,
+      error: t("adminStudentHasRelatedData", {
         name: result.student.fullName,
         items: result.blockerItems.join(", "),
       }),
-    );
+    };
   }
 
   revalidateAdminStudentPaths(result.student.id);
-  redirectAdminStudentsWithMessage(
-    "success",
-    t("adminStudentDeleted", { name: result.student.fullName }),
-  );
+  return { ok: true as const, success: t("adminStudentDeleted", { name: result.student.fullName }) };
 }

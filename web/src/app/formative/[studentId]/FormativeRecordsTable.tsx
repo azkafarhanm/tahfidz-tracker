@@ -43,9 +43,9 @@ export default function FormativeRecordsTable({
 
   if (visibleRecords.length === 0) {
     return (
-      <div className="p-8 text-center text-sm text-slate-600 dark:text-slate-400">
-        <p className="font-medium">{emptyHeading}</p>
-        <p className="mt-1">{emptyDescription}</p>
+      <div className="m-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-8 text-center dark:border-slate-700 dark:bg-slate-900/60">
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{emptyHeading}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">{emptyDescription}</p>
       </div>
     );
   }

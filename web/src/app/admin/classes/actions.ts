@@ -265,31 +265,31 @@ export async function deleteAcademicClass(academicClassId: string) {
     );
   } catch (error) {
     if (isDeleteRaceError(error)) {
-      redirectAdminClassesWithMessage("error", t("deleteRaceDetected"));
+      return { ok: false as const, error: t("deleteRaceDetected") };
     }
     throw error;
   }
 
   if (result.status === "notFound") {
-    redirectAdminClassesWithMessage("error", t("classNotFound"));
+    return { ok: false as const, error: t("classNotFound") };
   }
 
   if (result.status === "blocked") {
-    redirectAdminClassesWithMessage(
-      "error",
-      t("classHasAnyStudents", {
+    return {
+      ok: false as const,
+      error: t("classHasAnyStudents", {
         name: result.academicClass.name,
         count: result.studentCount,
       }),
-    );
+    };
   }
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage(
-    "success",
-    t("classDeleted", {
+  return {
+    ok: true as const,
+    success: t("classDeleted", {
       name: result.academicClass.name,
       year: result.academicClass.academicYear,
     }),
-  );
+  };
 }

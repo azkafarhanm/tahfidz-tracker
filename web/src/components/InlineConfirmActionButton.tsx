@@ -31,20 +31,20 @@ type InlineConfirmActionButtonProps = {
 
 const idleClasses = {
   danger:
-    "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950",
+    "border-rose-200/70 text-rose-500 hover:bg-rose-50/60 hover:border-rose-300/80 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40",
   warning:
-    "border-amber-200 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-400 dark:hover:bg-amber-950",
+    "border-amber-200/70 text-amber-600 hover:bg-amber-50/60 hover:border-amber-300/80 dark:border-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-950/40",
   success:
-    "border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950",
+    "border-emerald-200/70 text-emerald-600 hover:bg-emerald-50/60 hover:border-emerald-300/80 dark:border-emerald-900/50 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
 } as const;
 
 const confirmWrapClasses = {
   danger:
-    "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/40",
+    "border-rose-200/80 bg-rose-50/70 dark:border-rose-900/50 dark:bg-rose-950/30",
   warning:
-    "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40",
+    "border-amber-200/80 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/30",
   success:
-    "border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40",
+    "border-emerald-200/80 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/30",
 } as const;
 
 export default function InlineConfirmActionButton({
@@ -73,7 +73,7 @@ export default function InlineConfirmActionButton({
         <button
           aria-describedby={disabledReason ? reasonId : undefined}
           aria-disabled="true"
-          className={`inline-flex min-h-10 cursor-not-allowed items-center justify-center gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-semibold opacity-70 ${idleClasses[tone]}`}
+          className={`inline-flex min-h-10 cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-xs font-semibold opacity-70 dark:bg-slate-900 ${idleClasses[tone]}`}
           onClick={(event) => event.preventDefault()}
           type="button"
         >
@@ -96,12 +96,12 @@ export default function InlineConfirmActionButton({
     return (
       <div className="flex min-w-0 flex-col gap-1">
         {inlineError ? (
-          <p className="text-xs font-medium text-red-700 dark:text-red-300">
+          <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
             {inlineError}
           </p>
         ) : null}
         <button
-          className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-semibold transition ${idleClasses[tone]}`}
+          className={`inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:focus-visible:ring-offset-slate-900 ${idleClasses[tone]}`}
           onClick={() => {
             setInlineError(null);
             setConfirmed(true);
@@ -116,14 +116,14 @@ export default function InlineConfirmActionButton({
   }
 
   return (
-    <div className={`flex max-w-full flex-wrap items-center gap-2 rounded-2xl border p-2 ${confirmWrapClasses[tone]}`}>
+    <div className={`flex max-w-full flex-wrap items-center gap-1.5 rounded-xl border p-1.5 ${confirmWrapClasses[tone]}`}>
       {confirmMessage ? (
-        <span className="px-2 text-xs font-medium text-slate-700 dark:text-slate-200">
+        <span className="px-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
           {confirmMessage}
         </span>
       ) : null}
       <button
-        className="inline-flex min-h-9 items-center justify-center rounded-xl bg-slate-950 px-3 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+        className="inline-flex min-h-7 items-center justify-center rounded-lg bg-slate-950 px-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-900"
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
@@ -159,7 +159,7 @@ export default function InlineConfirmActionButton({
         {isPending ? pendingLabel : confirmLabel}
       </button>
       <button
-        className="inline-flex min-h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="inline-flex min-h-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900"
         disabled={isPending}
         onClick={() => setConfirmed(false)}
         type="button"

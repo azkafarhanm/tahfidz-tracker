@@ -93,7 +93,7 @@ export default function ConfirmActionDialogButton({
         <button
           aria-describedby={disabledReason ? reasonId : undefined}
           aria-disabled="true"
-          className={`inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-sm font-semibold opacity-70 ${triggerClasses[tone]}`}
+          className={`inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-xs font-semibold opacity-70 dark:bg-slate-900 ${triggerClasses[tone]}`}
           onClick={(event) => event.preventDefault()}
           type="button"
         >
@@ -121,7 +121,7 @@ export default function ConfirmActionDialogButton({
           </p>
         ) : null}
         <button
-          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-sm font-semibold transition ${triggerClasses[tone]}`}
+          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-xs font-semibold transition dark:bg-slate-900 ${triggerClasses[tone]}`}
           onClick={() => {
             setInlineError(null);
             setOpen(true);
@@ -172,7 +172,7 @@ export default function ConfirmActionDialogButton({
 
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
-                className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                 disabled={isPending}
                 onClick={() => setOpen(false)}
                 ref={cancelButtonRef}

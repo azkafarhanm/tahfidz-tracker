@@ -40,16 +40,16 @@ export default async function Sidebar({
               <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
             )}
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-slate-950 dark:text-white">{t("appName")}</h1>
-            <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold leading-6 text-slate-950 dark:text-white">{t("appName")}</h1>
+            <p className="text-[11px] font-semibold uppercase leading-4 tracking-wide text-slate-500 dark:text-slate-400">
               {isAdmin ? t("roleAdmin") : t("roleTeacher")}
             </p>
           </div>
         </Link>
       </div>
 
-      <nav className="shrink-0 p-3 space-y-1">
+      <nav className="shrink-0 space-y-1.5 p-3">
         <NavigationLinks
           items={navKeys}
           labels={Object.fromEntries(navKeys.map(({ key }) => [key, t(key)]))}
@@ -68,7 +68,7 @@ export default async function Sidebar({
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
           <div className="flex items-center justify-between gap-3">
-            <p className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
+            <p className="truncate text-sm font-semibold leading-5 text-slate-800 dark:text-slate-200">
               {userName}
             </p>
             <ThemeToggle

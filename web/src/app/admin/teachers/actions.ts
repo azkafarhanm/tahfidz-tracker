@@ -313,29 +313,29 @@ export async function deleteTeacher(teacherId: string) {
       error instanceof Prisma.PrismaClientKnownRequestError &&
       (error.code === "P2025" || error.code === "P2014")
     ) {
-      redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
+      return { ok: false as const, error: t("teacherNotFound") };
     }
     throw error;
   }
 
   if (result.status === "notFound") {
-    redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
+    return { ok: false as const, error: t("teacherNotFound") };
   }
 
   if (result.status === "hasStudents") {
-    redirectAdminTeachersWithMessage(
-      "error",
-      t("teacherHasStudents", { name: result.teacher.fullName, count: result.studentCount }),
-    );
+    return {
+      ok: false as const,
+      error: t("teacherHasStudents", { name: result.teacher.fullName, count: result.studentCount }),
+    };
   }
 
   if (result.status === "hasClassGroups") {
-    redirectAdminTeachersWithMessage(
-      "error",
-      t("teacherHasClassGroups", { name: result.teacher.fullName, count: result.classGroupCount }),
-    );
+    return {
+      ok: false as const,
+      error: t("teacherHasClassGroups", { name: result.teacher.fullName, count: result.classGroupCount }),
+    };
   }
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", t("teacherDeleted", { name: result.teacher.fullName }));
+  return { ok: true as const, success: t("teacherDeleted", { name: result.teacher.fullName }) };
 }

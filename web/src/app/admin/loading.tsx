@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="animate-pulse space-y-6">
+    <div className="space-y-6 motion-safe:animate-pulse">
       <div className="flex items-center justify-between">
         <div className="h-7 w-40 rounded bg-slate-200 dark:bg-slate-800" />
         <div className="h-10 w-28 rounded-xl bg-slate-200 dark:bg-slate-800" />

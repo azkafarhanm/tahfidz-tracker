@@ -1,10 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
+type ActionResult =
+  | void
+  | {
+      ok?: boolean;
+      error?: string | null;
+      message?: string | null;
+      success?: string | null;
+    };
+
 type AdminDeleteButtonProps = {
-  action: () => Promise<void>;
+  action: () => Promise<ActionResult>;
   label: string;
   confirmLabel: string;
   cancelLabel: string;
@@ -26,6 +36,8 @@ export default function AdminDeleteButton({
   disabled = false,
   disabledReason,
 }: AdminDeleteButtonProps) {
+  const router = useRouter();
+
   return (
     <ConfirmActionDialogButton
       cancelLabel={cancelLabel}
@@ -37,8 +49,8 @@ export default function AdminDeleteButton({
       icon={<Trash2 aria-hidden="true" size={16} strokeWidth={2.2} />}
       label={label}
       onAction={action}
+      onSuccess={() => router.refresh()}
       pendingLabel={deletingLabel}
-      showSuccessToast={false}
       tone="danger"
     />
   );

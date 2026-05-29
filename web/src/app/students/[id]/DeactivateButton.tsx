@@ -13,7 +13,7 @@ export default function DeactivateButton({ studentId }: { studentId: string }) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{error}</p> : null}
       <InlineConfirmActionButton
         cancelLabel={t("buttonCancel")}
         confirmLabel={t("buttonConfirm")}

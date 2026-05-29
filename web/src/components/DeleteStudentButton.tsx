@@ -29,7 +29,7 @@ export default function DeleteStudentButton({
       confirmMessage={t("confirmMessage")}
       disabled={Boolean(disabledReason)}
       disabledReason={disabledReason}
-      icon={<Trash2 aria-hidden="true" size={14} strokeWidth={2.2} />}
+      icon={<Trash2 aria-hidden="true" size={12} strokeWidth={2.2} />}
       label={t("buttonDelete")}
       onAction={async () => {
         onDeleteStart?.();

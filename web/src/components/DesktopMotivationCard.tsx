@@ -5,7 +5,7 @@ import { useMediaQuery } from "@/components/useMediaQuery";
 
 function MotivationCardSkeleton() {
   return (
-    <div className="h-32 rounded-2xl border border-slate-100 bg-slate-50 animate-pulse dark:border-slate-800 dark:bg-slate-800" />
+    <div className="h-32 rounded-2xl border border-slate-100 bg-slate-50 motion-safe:animate-pulse dark:border-slate-800 dark:bg-slate-800" />
   );
 }
 

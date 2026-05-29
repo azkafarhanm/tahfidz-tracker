@@ -14,6 +14,7 @@ export default function StudentsLayout({
         "DeleteStudent",
         "Error",
         "ReactivateStudent",
+        "StudentDetail",
         "StudentForm",
         "Students",
         "SurahInput",
