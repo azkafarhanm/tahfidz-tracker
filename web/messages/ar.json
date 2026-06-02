@@ -81,7 +81,10 @@
     "searchButton": "بحث",
     "listHeading": "قائمة الطلاب",
     "addButton": "إضافة",
+    "activeTab": "الطلاب النشطون",
+    "inactiveTab": "الطلاب غير النشطين",
     "activeCountBadge": "نشط",
+    "inactiveCountBadge": "غير نشط",
     "badgeNeedsReview": "مراجعة",
     "badgeAktif": "نشط",
     "latestHafalanLabel": "آخر حفظ",
@@ -89,8 +92,14 @@
     "noRecordYet": "لا توجد تسجيلات بعد",
     "targetCountLabel": "أهداف نشطة",
     "detailLink": "التفاصيل",
+    "actionsLabel": "إجراءات {name}",
+    "editStudent": "تعديل الطالب",
+    "deactivateStudent": "تعطيل الطالب",
+    "reactivateStudent": "إعادة تفعيل الطالب",
     "emptySearch": "لا يوجد طالب مطابق لهذا البحث. جرّب اسمًا أقصر.",
     "emptyNoStudents": "لا يوجد طلاب نشطون بعد. أضف طالبًا لبدء متابعة التقدم.",
+    "emptyInactiveSearch": "لا يوجد طلاب غير نشطين مطابقون لهذا البحث.",
+    "emptyInactiveStudents": "لا يوجد طلاب غير نشطين بعد.",
     "inactiveHeading": "الطلاب غير النشطين",
     "inactiveDescription": "الطلاب الذين تم تعطيلهم. يمكنك إعادة تفعيلهم عند الحاجة.",
     "deleteBlockedReason": "لا يمكن الحذف بعد: {items}. أزل السجلات أو الدرجات أو أكمل/ألغِ الأهداف النشطة أولًا.",
@@ -515,6 +524,7 @@
   },
   "DeactivateStudent": {
     "buttonDeactivate": "تعطيل",
+    "buttonDeactivated": "غير نشط",
     "buttonProcessing": "جارٍ المعالجة...",
     "buttonConfirm": "نعم، تعطيل",
     "buttonCancel": "إلغاء",
@@ -1021,5 +1031,8 @@
     "deleteDescription": "سيتم حذف تقييم {surah} نهائيًا من هذا الفصل.",
     "deleteButton": "حذف التقييم",
     "exportExcel": "تحميل إكسل"
+  },
+  "CharacterCounter": {
+    "maxReached": "تم بلوغ الحد الأقصى للأحرف"
   }
 }

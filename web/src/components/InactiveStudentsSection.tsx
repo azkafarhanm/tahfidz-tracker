@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import InactiveStudentRow from "@/components/InactiveStudentRow";
 
 type InactiveStudent = {
@@ -14,32 +15,54 @@ type InactiveStudent = {
 };
 
 type InactiveStudentsSectionProps = {
+  emptyMessage?: string;
+  showHeading?: boolean;
   students: InactiveStudent[];
 };
 
 export default function InactiveStudentsSection({
+  emptyMessage,
+  showHeading = true,
   students,
 }: InactiveStudentsSectionProps) {
   const t = useTranslations("Students");
+  const router = useRouter();
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const refreshInactiveStudents = () => router.refresh();
+
+    refreshInactiveStudents();
+    window.addEventListener("focus", refreshInactiveStudents);
+    window.addEventListener("pageshow", refreshInactiveStudents);
+
+    return () => {
+      window.removeEventListener("focus", refreshInactiveStudents);
+      window.removeEventListener("pageshow", refreshInactiveStudents);
+    };
+  }, [router]);
 
   const visibleStudents = useMemo(
     () => students.filter((student) => !hiddenIds.has(student.id)),
     [hiddenIds, students],
   );
 
-  if (visibleStudents.length === 0) {
+  if (visibleStudents.length === 0 && !emptyMessage) {
     return null;
   }
 
   return (
-    <section className="mt-6">
-      <h2 className="text-lg font-semibold">{t("inactiveHeading")}</h2>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        {t("inactiveDescription")}
-      </p>
-      <div className="mt-3 space-y-3">
+    <section className={showHeading ? "mt-6" : "mt-3"}>
+      {showHeading ? (
+        <>
+          <h2 className="text-lg font-semibold">{t("inactiveHeading")}</h2>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            {t("inactiveDescription")}
+          </p>
+        </>
+      ) : null}
+      <div className={showHeading ? "mt-3 space-y-3" : "space-y-3"}>
         {visibleStudents.map((student) => (
           <InactiveStudentRow
             activeTargetCount={student.activeTargetCount}
@@ -64,10 +87,18 @@ export default function InactiveStudentsSection({
               });
               setHiddenIds((current) => new Set(current).add(student.id));
             }}
+            onReactivateSuccess={() => {
+              setHiddenIds((current) => new Set(current).add(student.id));
+            }}
             summativeScoreCount={student.summativeScoreCount}
             totalRecordCount={student.totalRecordCount}
           />
         ))}
+        {visibleStudents.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
+            {emptyMessage}
+          </div>
+        ) : null}
       </div>
     </section>
   );

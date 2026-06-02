@@ -19,6 +19,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
+import CharacterCounter from "@/components/CharacterCounter";
 
 const iconMap: Record<string, LucideIcon> = {
   UserPlus,
@@ -90,6 +91,7 @@ export default function StudentForm({
   values,
 }: StudentFormProps) {
   const t = useTranslations("AdminStudentForm");
+  const tc = useTranslations("CharacterCounter");
   const [selectedTeacherId, setSelectedTeacherId] = useState(values.teacherId);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(
     values.academicYear,
@@ -98,6 +100,8 @@ export default function StudentForm({
     values.academicClassId,
   );
   const [isPending, startTransition] = useTransition();
+  const [nameLength, setNameLength] = useState(values.fullName.length);
+  const [notesLength, setNotesLength] = useState(values.notes.length);
 
   const genderOptions = [
     { value: "MALE", label: t("male") },
@@ -212,10 +216,12 @@ export default function StudentForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
+                onChange={(e) => setNameLength(e.target.value.length)}
                 placeholder={t("fullNamePlaceholder")}
                 required
                 type="text"
               />
+              <CharacterCounter current={nameLength} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -399,8 +405,10 @@ export default function StudentForm({
               defaultValue={values.notes}
               maxLength={1500}
               name="notes"
+              onChange={(e) => setNotesLength(e.target.value.length)}
               placeholder={t("notesPlaceholder")}
             />
+            <CharacterCounter current={notesLength} max={1500} maxReachedLabel={tc("maxReached")} />
 
             <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
               <input

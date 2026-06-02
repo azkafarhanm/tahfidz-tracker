@@ -1,20 +1,21 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   PlusCircle,
-  RotateCcw,
   ShieldCheck,
-  Target,
   Users,
 } from "lucide-react";
-import { getStudentsPageData, getInactiveStudentsData } from "@/lib/students";
+import {
+  getLiveInactiveStudentsData,
+  getLiveStudentsPageData,
+} from "@/lib/students-page-live";
+import ActiveStudentCard from "@/components/ActiveStudentCard";
 import AppShell from "@/components/AppShell";
 import InactiveStudentsSection from "@/components/InactiveStudentsSection";
-import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -31,6 +32,7 @@ type StudentsPageProps = {
     success?: string;
     error?: string;
     page?: string;
+    status?: string;
   }>;
 };
 
@@ -47,8 +49,19 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const page = parsePage(params?.page);
   const locale = await getLocale();
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const studentPage = await getStudentsPageData(query, teacherId, locale, page, PAGE_SIZE);
-  const inactiveStudents = !isAdmin ? await getInactiveStudentsData(teacherId) : [];
+  const status = params?.status === "inactive" && !isAdmin ? "inactive" : "active";
+  const isInactiveView = status === "inactive";
+  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE);
+  const inactiveStudents = !isAdmin ? await getLiveInactiveStudentsData(teacherId) : [];
+  const filteredInactiveStudents = query
+    ? inactiveStudents.filter((student) => {
+        const normalizedQuery = query.toLowerCase();
+        return (
+          student.fullName.toLowerCase().includes(normalizedQuery) ||
+          student.classSummary.toLowerCase().includes(normalizedQuery)
+        );
+      })
+    : inactiveStudents;
   const t = await getTranslations("Students");
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
@@ -57,11 +70,20 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
   };
+  const buildStatusHref = (nextStatus: "active" | "inactive") => {
+    const nextParams = new URLSearchParams();
+    if (nextStatus === "inactive") nextParams.set("status", "inactive");
+    if (query) nextParams.set("q", query);
+    const search = nextParams.toString();
+    return search ? `/students?${search}` : "/students";
+  };
   const hasPreviousPage = studentPage.page > 1;
   const hasNextPage = studentPage.page < studentPage.totalPages;
+  const searchAction = isInactiveView ? "/students?status=inactive" : "/students";
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
+        <StudentsPageAutoRefresh />
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -97,23 +119,56 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">{t("activeStudentsLabel")}</p>
-              <p className="mt-3 text-4xl font-semibold">{studentPage.totalCount}</p>
+              <p className="text-sm text-emerald-100">
+                {isInactiveView ? t("inactiveHeading") : t("activeStudentsLabel")}
+              </p>
+              <p className="mt-3 text-4xl font-semibold">
+                {isInactiveView ? inactiveStudents.length : studentPage.totalCount}
+              </p>
               <p className="mt-1 text-sm text-slate-300">
-                {t("activeStudentsSubtext")}
+                {isInactiveView ? t("inactiveDescription") : t("activeStudentsSubtext")}
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
+              <p className="text-xs text-slate-300">
+                {isInactiveView ? t("activeStudentsLabel") : t("needsReviewLabel")}
+              </p>
               <p className="mt-1 text-xl font-semibold">
-                {studentPage.students.filter((student) => student.needsReview).length}
+                {isInactiveView
+                  ? studentPage.totalCount
+                  : studentPage.students.filter((student) => student.needsReview).length}
               </p>
             </div>
           </div>
         </section>
 
+        {!isAdmin ? (
+          <div className="mt-5 inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <Link
+              className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition ${
+                !isInactiveView
+                  ? "bg-emerald-900 text-white"
+                  : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+              }`}
+              href={buildStatusHref("active")}
+            >
+              {t("activeTab")}
+            </Link>
+            <Link
+              className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition ${
+                isInactiveView
+                  ? "bg-emerald-900 text-white"
+                  : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+              }`}
+              href={buildStatusHref("inactive")}
+            >
+              {t("inactiveTab")}
+            </Link>
+          </div>
+        ) : null}
+
         <LiveSearchForm
-          action="/students"
+          action={searchAction}
           buttonLabel={t("searchButton")}
           className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-900"
           defaultValue={query}
@@ -123,9 +178,11 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
 
         <section className="mt-5 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
+            <h2 className="text-lg font-semibold">
+              {isInactiveView ? t("inactiveHeading") : t("listHeading")}
+            </h2>
             <div className="flex items-center gap-2">
-              {!isAdmin ? (
+              {!isAdmin && !isInactiveView ? (
                 <Link
                   className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
                   href="/students/new"
@@ -135,116 +192,44 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                 </Link>
               ) : null}
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {studentPage.students.length}/{studentPage.totalCount} {t("activeCountBadge")}
+                {isInactiveView
+                  ? `${filteredInactiveStudents.length}/${inactiveStudents.length} ${t("inactiveCountBadge")}`
+                  : `${studentPage.students.length}/${studentPage.totalCount} ${t("activeCountBadge")}`}
               </span>
             </div>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {studentPage.students.length > 0 ? (
-              studentPage.students.map((student) => (
-                <Link
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md active:scale-[0.99] dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
-                  href={`/students/${student.id}`}
-                  key={student.id}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <InitialsAvatar name={student.fullName} />
-                      <div className="min-w-0">
-                        <p className="truncate font-semibold text-slate-950 dark:text-white">
-                          {student.fullName}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                          {student.classSummary}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={
-                        student.needsReview
-                          ? "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800"
-                          : "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                      }
-                    >
-                      {student.needsReview ? t("badgeNeedsReview") : t("badgeAktif")}
-                    </span>
-                  </div>
+          {!isInactiveView ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {studentPage.students.length > 0 ? (
+                studentPage.students.map((student) => (
+                  <ActiveStudentCard
+                    activeTargetCount={student.activeTargetCount}
+                    canManage={!isAdmin}
+                    classSummary={student.classSummary}
+                    fullName={student.fullName}
+                    id={student.id}
+                    key={student.id}
+                    latestHafalan={student.latestHafalan}
+                    latestMurojaah={student.latestMurojaah}
+                    needsReview={student.needsReview}
+                  />
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
+                  {query ? t("emptySearch") : t("emptyNoStudents")}
+                </div>
+              )}
+            </div>
+          ) : (
+            <InactiveStudentsSection
+              emptyMessage={query ? t("emptyInactiveSearch") : t("emptyInactiveStudents")}
+              showHeading={false}
+              students={filteredInactiveStudents}
+            />
+          )}
 
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
-                      <BookOpen
-                        aria-hidden="true"
-                        className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"
-                        size={17}
-                        strokeWidth={2.2}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          {t("latestHafalanLabel")}
-                        </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {student.latestHafalan?.range ?? t("noRecordYet")}
-                        </p>
-                        {student.latestHafalan ? (
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {student.latestHafalan.date} -{" "}
-                            {student.latestHafalan.status}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
-                      <RotateCcw
-                        aria-hidden="true"
-                        className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"
-                        size={17}
-                        strokeWidth={2.2}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          {t("latestMurojaahLabel")}
-                        </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {student.latestMurojaah?.range ??
-                            t("noRecordYet")}
-                        </p>
-                        {student.latestMurojaah ? (
-                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                            {student.latestMurojaah.date} -{" "}
-                            {student.latestMurojaah.status}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
-                    <span className="inline-flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
-                      <Target
-                        aria-hidden="true"
-                        size={16}
-                        strokeWidth={2.2}
-                      />
-                      {student.activeTargetCount} {t("targetCountLabel")}
-                    </span>
-                    <span className="font-semibold text-emerald-800 dark:text-emerald-400">
-                      {t("detailLink")}
-                    </span>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-                {query
-                  ? t("emptySearch")
-                  : t("emptyNoStudents")}
-              </div>
-            )}
-          </div>
-
-          {studentPage.totalPages > 1 ? (
+          {!isInactiveView && studentPage.totalPages > 1 ? (
             <div className="mt-4 flex items-center justify-between gap-3">
               {hasPreviousPage ? (
                 <Link
@@ -272,10 +257,6 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             </div>
           ) : null}
         </section>
-
-        {!isAdmin && inactiveStudents.length > 0 ? (
-          <InactiveStudentsSection students={inactiveStudents} />
-        ) : null}
 
       </AppShell>
   );

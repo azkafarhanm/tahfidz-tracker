@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteRecordButton from "@/components/DeleteRecordButton";
+import { actionButtonClass } from "@/components/action-button-styles";
 
 type FormativeRecord = {
   id: string;
@@ -115,7 +116,7 @@ export default function FormativeRecordsTable({
                 <td className="px-5 py-4">
                   <div className="flex items-center justify-end gap-2">
                     <Link
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className={actionButtonClass("neutral")}
                       href={editHref}
                     >
                       <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />

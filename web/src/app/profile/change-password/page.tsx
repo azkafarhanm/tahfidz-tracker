@@ -6,12 +6,16 @@ import Link from "next/link";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
 import PasswordRequirements from "@/components/PasswordRequirements";
+import CharacterCounter from "@/components/CharacterCounter";
 
 export default function ChangePasswordPage() {
   const t = useTranslations("ChangePassword");
+  const tc = useTranslations("CharacterCounter");
   const [isPending, startTransition] = useTransition();
   const [newPassword, setNewPassword] = useState("");
+  const [newPasswordLen, setNewPasswordLen] = useState(0);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordLen, setConfirmPasswordLen] = useState(0);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -69,7 +73,10 @@ export default function ChangePasswordPage() {
               maxLength={72}
               minLength={8}
               name="newPassword"
-              onChange={(event) => setNewPassword(event.target.value)}
+              onChange={(event) => {
+                setNewPassword(event.target.value);
+                setNewPasswordLen(event.target.value.length);
+              }}
               required
               type="password"
             />
@@ -83,6 +90,7 @@ export default function ChangePasswordPage() {
               }}
               password={newPassword}
             />
+            <CharacterCounter current={newPasswordLen} max={72} maxReachedLabel={tc("maxReached")} />
           </div>
 
           <div>
@@ -96,10 +104,14 @@ export default function ChangePasswordPage() {
               maxLength={72}
               minLength={8}
               name="confirmPassword"
-              onChange={(event) => setConfirmPassword(event.target.value)}
+              onChange={(event) => {
+                setConfirmPassword(event.target.value);
+                setConfirmPasswordLen(event.target.value.length);
+              }}
               required
               type="password"
             />
+            <CharacterCounter current={confirmPasswordLen} max={72} maxReachedLabel={tc("maxReached")} />
           </div>
 
           <button

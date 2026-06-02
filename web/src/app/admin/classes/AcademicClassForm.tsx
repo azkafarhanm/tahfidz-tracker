@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
+import CharacterCounter from "@/components/CharacterCounter";
 
 const iconMap = {
   PlusCircle,
@@ -54,7 +56,9 @@ export default function AcademicClassForm({
   values,
 }: AcademicClassFormProps) {
   const t = useTranslations("AdminClassForm");
+  const tc = useTranslations("CharacterCounter");
   const Icon = iconMap[iconName];
+  const [sectionLength, setSectionLength] = useState(values.section.length);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -117,10 +121,12 @@ export default function AcademicClassForm({
                 defaultValue={values.section}
                 maxLength={5}
                 name="section"
+                onChange={(e) => setSectionLength(e.target.value.length)}
                 placeholder={t("sectionPlaceholder")}
                 required
                 type="text"
               />
+              <CharacterCounter current={sectionLength} max={5} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 block">

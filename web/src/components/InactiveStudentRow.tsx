@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import DeleteStudentButton from "@/components/DeleteStudentButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import ReactivateStudentButton from "@/components/ReactivateStudentButton";
+import StudentCardActions from "@/components/StudentCardActions";
 
 type InactiveStudentRowProps = {
   activeTargetCount: number;
@@ -13,6 +13,7 @@ type InactiveStudentRowProps = {
   id: string;
   onDeleteError: (error: string) => void;
   onDeleteStart: () => void;
+  onReactivateSuccess: () => void;
   summativeScoreCount: number;
   totalRecordCount: number;
 };
@@ -25,6 +26,7 @@ export default function InactiveStudentRow({
   id,
   onDeleteError,
   onDeleteStart,
+  onReactivateSuccess,
   summativeScoreCount,
   totalRecordCount,
 }: InactiveStudentRowProps) {
@@ -54,7 +56,7 @@ export default function InactiveStudentRow({
         </p>
       ) : null}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <InitialsAvatar name={fullName} />
           <div className="min-w-0">
@@ -66,8 +68,14 @@ export default function InactiveStudentRow({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <ReactivateStudentButton studentId={id} studentName={fullName} />
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+          <StudentCardActions
+            canManage
+            isActive={false}
+            onStatusChanged={onReactivateSuccess}
+            studentId={id}
+            studentName={fullName}
+          />
           <DeleteStudentButton
             disabledReason={deleteDisabledReason}
             onDeleteError={onDeleteError}

@@ -18,6 +18,7 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import { actionButtonClass } from "@/components/action-button-styles";
 
 export const runtime = "nodejs";
 
@@ -270,7 +271,7 @@ export default async function AdminTeachersPage({
 
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link
-                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+                      className={actionButtonClass("neutral")}
                       href={`/admin/teachers/${teacher.id}/edit`}
                     >
                       <PencilLine
@@ -296,7 +297,7 @@ export default async function AdminTeachersPage({
                     ) : (
                       <form action={toggleTeacherActive.bind(null, teacher.id, true)}>
                         <button
-                          className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-emerald-100 px-4 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-200 dark:bg-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-800"
+                          className={actionButtonClass("success")}
                           type="submit"
                         >
                           {t("activateButton")}

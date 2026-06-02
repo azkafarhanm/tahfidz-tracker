@@ -17,7 +17,6 @@ import {
 import { getStudentDetailData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import DeactivateButton from "./DeactivateButton";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
@@ -475,20 +474,6 @@ export default async function StudentDetailPage({
                   ))}
                 </tbody>
               </table>
-            </div>
-          </section>
-        ) : null}
-
-        {!isAdmin ? (
-          <section className="mt-6 rounded-2xl border border-amber-200/60 bg-white p-4 shadow-sm dark:border-amber-900/40 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-950 dark:text-white">{t("deactivateHeading")}</p>
-                <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">
-                  {t("deactivateDescription")}
-                </p>
-              </div>
-              <DeactivateButton studentId={student.id} />
             </div>
           </section>
         ) : null}

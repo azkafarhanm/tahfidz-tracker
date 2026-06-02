@@ -1,16 +1,19 @@
 "use client";
 
-import { useTransition, useState } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { reactivateTeacherStudent } from "@/app/students/[id]/edit/actions";
+import { actionButtonClass } from "@/components/action-button-styles";
 import { playNotificationSound } from "@/lib/feedback";
 
 export default function ReactivateStudentButton({
+  onReactivateSuccess,
   studentId,
   studentName: _studentName,
 }: {
+  onReactivateSuccess?: () => void;
   studentId: string;
   studentName: string;
 }) {
@@ -25,7 +28,7 @@ export default function ReactivateStudentButton({
       {error ? <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{error}</p> : null}
       <button
         aria-busy={isPending}
-        className="rounded-lg border border-emerald-200/80 bg-white px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-50/80 hover:border-emerald-300 disabled:opacity-60 dark:border-emerald-900/60 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+        className={actionButtonClass("success")}
         disabled={isPending}
         onClick={() => {
           setError(null);
@@ -36,6 +39,7 @@ export default function ReactivateStudentButton({
                 toast.success(result.message);
                 playNotificationSound("success");
               }
+              onReactivateSuccess?.();
               router.refresh();
             } else {
               setError(result.error);

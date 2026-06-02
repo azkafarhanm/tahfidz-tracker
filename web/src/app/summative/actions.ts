@@ -60,6 +60,10 @@ export async function createSummativeAssessmentAction(formData: FormData) {
     throw error;
   }
 
+  revalidatePath("/");
+  revalidatePath("/students");
+  revalidatePath(`/students/${payload.studentId}`);
+  revalidatePath("/admin/students");
   revalidatePath(`/summative/${payload.studentId}`);
   revalidatePath("/summative");
   revalidatePath(`/formative/${payload.studentId}`);
@@ -102,6 +106,10 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
     throw error;
   }
 
+  revalidatePath("/");
+  revalidatePath("/students");
+  revalidatePath(`/students/${payload.studentId}`);
+  revalidatePath("/admin/students");
   revalidatePath(`/summative/${payload.studentId}`);
   revalidatePath("/summative");
   revalidatePath(`/formative/${payload.studentId}`);
@@ -146,6 +154,10 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
 
   await deleteSummativeAssessment(assessmentId);
 
+  revalidatePath("/");
+  revalidatePath("/students");
+  revalidatePath(`/students/${studentId}`);
+  revalidatePath("/admin/students");
   revalidatePath(`/summative/${studentId}`);
   revalidatePath("/summative");
   revalidatePath(`/formative/${studentId}`);

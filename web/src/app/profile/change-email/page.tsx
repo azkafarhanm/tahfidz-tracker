@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
 import { changeEmail } from "./actions";
+import CharacterCounter from "@/components/CharacterCounter";
 
 export default function ChangeEmailPage() {
   const t = useTranslations("ChangeEmail");
+  const tc = useTranslations("CharacterCounter");
   const [isPending, startTransition] = useTransition();
+  const [newEmailLen, setNewEmailLen] = useState(0);
+  const [confirmEmailLen, setConfirmEmailLen] = useState(0);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -69,10 +73,12 @@ export default function ChangeEmailPage() {
                 id="newEmail"
                 maxLength={120}
                 name="newEmail"
+                onChange={(e) => setNewEmailLen(e.target.value.length)}
                 placeholder="guru@tahfidzflow.local"
                 required
                 type="email"
               />
+              <CharacterCounter current={newEmailLen} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 block">
@@ -85,14 +91,16 @@ export default function ChangeEmailPage() {
                 id="confirmEmail"
                 maxLength={120}
                 name="confirmEmail"
+                onChange={(e) => setConfirmEmailLen(e.target.value.length)}
                 placeholder="guru@tahfidzflow.local"
                 required
                 type="email"
               />
+              <CharacterCounter current={confirmEmailLen} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+          <section className="rounded-2xl border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-start gap-3">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <ShieldCheck aria-hidden="true" size={18} strokeWidth={2.2} />

@@ -81,7 +81,10 @@
     "searchButton": "Cari",
     "listHeading": "Daftar santri",
     "addButton": "Tambah",
+    "activeTab": "Santri Aktif",
+    "inactiveTab": "Santri Nonaktif",
     "activeCountBadge": "aktif",
+    "inactiveCountBadge": "nonaktif",
     "badgeNeedsReview": "Cek",
     "badgeAktif": "Aktif",
     "latestHafalanLabel": "Hafalan terakhir",
@@ -89,8 +92,14 @@
     "noRecordYet": "Belum ada catatan",
     "targetCountLabel": "target aktif",
     "detailLink": "Detail",
+    "actionsLabel": "Aksi untuk {name}",
+    "editStudent": "Edit Santri",
+    "deactivateStudent": "Nonaktifkan Santri",
+    "reactivateStudent": "Aktifkan Santri",
     "emptySearch": "Tidak ada santri yang cocok. Coba gunakan nama yang lebih singkat.",
     "emptyNoStudents": "Belum ada santri aktif. Tambahkan santri agar pencatatan bisa dimulai.",
+    "emptyInactiveSearch": "Tidak ada santri nonaktif yang cocok dengan pencarian ini.",
+    "emptyInactiveStudents": "Belum ada santri nonaktif.",
     "inactiveHeading": "Santri Nonaktif",
     "inactiveDescription": "Santri yang sudah dinonaktifkan. Aktifkan kembali jika diperlukan.",
     "deleteBlockedReason": "Belum bisa hapus: {items}. Aktifkan kembali jika perlu, lalu hapus catatan/nilai sumatif atau selesaikan/batalkan target aktif. Jika ingin menyimpan riwayat, biarkan santri nonaktif.",
@@ -524,6 +533,7 @@
   },
   "DeactivateStudent": {
     "buttonDeactivate": "Nonaktifkan",
+    "buttonDeactivated": "Sudah nonaktif",
     "buttonProcessing": "Memproses...",
     "buttonConfirm": "Ya, nonaktifkan",
     "buttonCancel": "Batal",
@@ -1030,5 +1040,8 @@
     "deleteDescription": "Penilaian untuk {surah} akan dihapus permanen dari semester ini.",
     "deleteButton": "Hapus Penilaian",
     "exportExcel": "Unduh Excel"
+  },
+  "CharacterCounter": {
+    "maxReached": "Batas karakter tercapai"
   }
 }

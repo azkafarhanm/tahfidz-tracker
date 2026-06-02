@@ -117,7 +117,7 @@ export async function updateTeacherStudent(
   }
 
   const student = await prisma.student.findFirst({
-    where: { id: studentId, teacherId, isActive: true },
+    where: { id: studentId, teacherId },
     select: { id: true },
   });
 
@@ -154,31 +154,31 @@ export async function updateTeacherStudent(
     resolvedClassGroupId = selectedClassGroup.id;
   } else {
     const level = halaqahLevel as HalaqahLevel;
-    const existing = await prisma.classGroup.findFirst({
-      where: { teacherId, grade, level, isActive: true },
+    const academicYear = getCurrentAcademicYear();
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: teacherId },
+      select: { fullName: true },
     });
 
-    if (existing) {
-      resolvedClassGroupId = existing.id;
-    } else {
-      const teacher = await prisma.teacher.findUnique({
-        where: { id: teacherId },
-        select: { fullName: true },
-      });
+    const classGroup = await prisma.classGroup.upsert({
+      where: {
+        teacherId_academicYear_grade: { teacherId, academicYear, grade },
+      },
+      update: {
+        level,
+        isActive: true,
+      },
+      create: {
+        teacherId,
+        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
+        level,
+        grade,
+        academicYear,
+        isActive: true,
+      },
+    });
 
-      const newClassGroup = await prisma.classGroup.create({
-        data: {
-          teacherId,
-          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${grade}`,
-          level,
-          grade,
-          academicYear: getCurrentAcademicYear(),
-          isActive: true,
-        },
-      });
-
-      resolvedClassGroupId = newClassGroup.id;
-    }
+    resolvedClassGroupId = classGroup.id;
   }
 
   await prisma.student.update({
@@ -209,12 +209,20 @@ export async function deactivateTeacherStudent(studentId: string) {
   }
 
   const student = await prisma.student.findFirst({
-    where: { id: studentId, teacherId, isActive: true },
-    select: { id: true },
+    where: { id: studentId, teacherId },
+    select: { id: true, isActive: true },
   });
 
   if (!student) {
     return { ok: false as const, error: t("studentNotFound") };
+  }
+
+  if (!student.isActive) {
+    revalidatePath("/");
+    revalidatePath("/students");
+    revalidatePath(`/students/${studentId}`);
+    invalidateStudentRelatedCaches(studentId);
+    return { ok: true as const, message: t("studentDeactivated") };
   }
 
   await prisma.student.update({
@@ -224,6 +232,7 @@ export async function deactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
+  revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
   return { ok: true as const, message: t("studentDeactivated") };
 }
@@ -252,6 +261,7 @@ export async function reactivateTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
+  revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
   return { ok: true as const, message: t("studentReactivated") };
 }

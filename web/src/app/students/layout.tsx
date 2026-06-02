@@ -9,6 +9,7 @@ export default function StudentsLayout({
   return (
     <ScopedIntlProvider
       namespaces={[
+        "CharacterCounter",
         "DeactivateStudent",
         "DeleteRecord",
         "DeleteStudent",

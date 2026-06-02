@@ -105,7 +105,7 @@ export async function createTeacherStudent(formData: FormData) {
       select: { fullName: true },
     });
 
-    // Unique constraint is (teacherId, academicYear, grade, level) — one group per teacher per grade per level.
+    // Unique constraint is (teacherId, academicYear, grade) — one group per teacher per grade.
     const classGroup = await prisma.classGroup.upsert({
       where: { teacherId_academicYear_grade: { teacherId, academicYear, grade: resolvedGrade } },
       update: {

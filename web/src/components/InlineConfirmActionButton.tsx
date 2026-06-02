@@ -2,6 +2,11 @@
 
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  actionButtonClass,
+  compactActionButtonClass,
+  type ActionButtonTone,
+} from "@/components/action-button-styles";
 import { playNotificationSound } from "@/lib/feedback";
 
 type ActionResult =
@@ -26,17 +31,8 @@ type InlineConfirmActionButtonProps = {
   onError?: (message: string) => void;
   onSuccess?: (result: Exclude<ActionResult, void>) => void;
   showSuccessToast?: boolean;
-  tone?: "danger" | "warning" | "success";
+  tone?: Extract<ActionButtonTone, "danger" | "warning" | "success">;
 };
-
-const idleClasses = {
-  danger:
-    "border-rose-200/70 text-rose-500 hover:bg-rose-50/60 hover:border-rose-300/80 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40",
-  warning:
-    "border-amber-200/70 text-amber-600 hover:bg-amber-50/60 hover:border-amber-300/80 dark:border-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-950/40",
-  success:
-    "border-emerald-200/70 text-emerald-600 hover:bg-emerald-50/60 hover:border-emerald-300/80 dark:border-emerald-900/50 dark:text-emerald-400 dark:hover:bg-emerald-950/40",
-} as const;
 
 const confirmWrapClasses = {
   danger:
@@ -73,7 +69,7 @@ export default function InlineConfirmActionButton({
         <button
           aria-describedby={disabledReason ? reasonId : undefined}
           aria-disabled="true"
-          className={`inline-flex min-h-10 cursor-not-allowed items-center justify-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-xs font-semibold opacity-70 dark:bg-slate-900 ${idleClasses[tone]}`}
+          className={actionButtonClass(tone, "cursor-not-allowed opacity-70")}
           onClick={(event) => event.preventDefault()}
           type="button"
         >
@@ -101,7 +97,7 @@ export default function InlineConfirmActionButton({
           </p>
         ) : null}
         <button
-          className={`inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border bg-white px-2.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:bg-slate-900 dark:focus-visible:ring-offset-slate-900 ${idleClasses[tone]}`}
+          className={actionButtonClass(tone)}
           onClick={() => {
             setInlineError(null);
             setConfirmed(true);
@@ -123,7 +119,7 @@ export default function InlineConfirmActionButton({
         </span>
       ) : null}
       <button
-        className="inline-flex min-h-7 items-center justify-center rounded-lg bg-slate-950 px-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:focus-visible:ring-offset-slate-900"
+        className={compactActionButtonClass(tone)}
         disabled={isPending}
         onClick={() => {
           startTransition(async () => {
@@ -159,7 +155,7 @@ export default function InlineConfirmActionButton({
         {isPending ? pendingLabel : confirmLabel}
       </button>
       <button
-        className="inline-flex min-h-7 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900"
+        className={compactActionButtonClass("neutral")}
         disabled={isPending}
         onClick={() => setConfirmed(false)}
         type="button"

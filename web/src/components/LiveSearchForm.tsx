@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +27,17 @@ export default function LiveSearchForm({
   const [query, setQuery] = useState(defaultValue);
   const [isPending, startTransition] = useTransition();
 
+  const buildHref = useCallback((nextQuery: string) => {
+    const url = new URL(action, window.location.origin);
+    if (nextQuery) {
+      url.searchParams.set("q", nextQuery);
+    } else {
+      url.searchParams.delete("q");
+    }
+    const search = url.searchParams.toString();
+    return search ? `${url.pathname}?${search}` : url.pathname;
+  }, [action]);
+
   useEffect(() => {
     setQuery(defaultValue);
   }, [defaultValue]);
@@ -39,25 +50,21 @@ export default function LiveSearchForm({
       return;
     }
 
-    if (nextQuery.length === 1) {
-      return;
-    }
-
     const timeoutId = window.setTimeout(() => {
-      const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
+      const nextHref = buildHref(nextQuery);
       startTransition(() => {
         router.replace(nextHref, { scroll: false });
       });
     }, debounceMs);
 
     return () => window.clearTimeout(timeoutId);
-  }, [action, debounceMs, defaultValue, query, router]);
+  }, [buildHref, debounceMs, defaultValue, query, router]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextQuery = query.trim();
-    const nextHref = nextQuery ? `${action}?q=${encodeURIComponent(nextQuery)}` : action;
+    const nextHref = buildHref(nextQuery);
     startTransition(() => {
       router.replace(nextHref, { scroll: false });
     });

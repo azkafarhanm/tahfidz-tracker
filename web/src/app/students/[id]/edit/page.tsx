@@ -37,7 +37,7 @@ export default async function EditStudentPage({
   }
 
   const [context, options, pageParams] = await Promise.all([
-    getStudentFormContext(id, teacherId),
+    getStudentFormContext(id, teacherId, "id", { includeInactive: true }),
     getTeacherStudentFormOptions(teacherId),
     searchParams,
   ]);

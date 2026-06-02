@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteSummativeButton from "@/components/DeleteSummativeButton";
+import { actionButtonClass } from "@/components/action-button-styles";
 
 type SummativeAssessment = {
   id: string;
@@ -107,7 +108,7 @@ export default function SummativeAssessmentsTable({
               <td className="px-5 py-4 text-right">
                 <div className="flex justify-end gap-2">
                   <Link
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+                    className={actionButtonClass("neutral")}
                     href={`/summative/${studentId}/${assessment.id}/edit?semester=${semesterValue}`}
                   >
                     <PencilLine aria-hidden="true" size={16} strokeWidth={2.2} />

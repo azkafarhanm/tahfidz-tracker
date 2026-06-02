@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cancelTarget, completeTarget } from "@/lib/target-actions";
 import { playNotificationSound } from "@/lib/feedback";
+import { actionButtonClass } from "@/components/action-button-styles";
 import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
 export default function TargetActions({
@@ -26,7 +27,7 @@ export default function TargetActions({
       <div className="flex items-center gap-2">
         <button
           aria-busy={isPending}
-          className="rounded-xl border-2 border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+          className={actionButtonClass("neutral")}
           disabled={isPending}
           onClick={() => {
             setError(null);

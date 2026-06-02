@@ -2,6 +2,11 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+import {
+  actionButtonClass,
+  compactActionButtonClass,
+  type ActionButtonTone,
+} from "@/components/action-button-styles";
 import { playNotificationSound } from "@/lib/feedback";
 
 type ActionResult =
@@ -27,17 +32,8 @@ type ConfirmActionDialogButtonProps = {
   onError?: (message: string) => void;
   onSuccess?: (result: Exclude<ActionResult, void>) => void;
   showSuccessToast?: boolean;
-  tone?: "danger" | "warning" | "success";
+  tone?: Extract<ActionButtonTone, "danger" | "warning" | "success">;
 };
-
-const triggerClasses = {
-  danger:
-    "border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-slate-900 dark:text-red-400 dark:hover:bg-red-950",
-  warning:
-    "border-amber-200 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-400 dark:hover:bg-amber-950",
-  success:
-    "border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-400 dark:hover:bg-emerald-950",
-} as const;
 
 const iconWrapClasses = {
   danger:
@@ -93,7 +89,7 @@ export default function ConfirmActionDialogButton({
         <button
           aria-describedby={disabledReason ? reasonId : undefined}
           aria-disabled="true"
-          className={`inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-xs font-semibold opacity-70 dark:bg-slate-900 ${triggerClasses[tone]}`}
+          className={actionButtonClass(tone, "cursor-not-allowed opacity-70")}
           onClick={(event) => event.preventDefault()}
           type="button"
         >
@@ -121,7 +117,7 @@ export default function ConfirmActionDialogButton({
           </p>
         ) : null}
         <button
-          className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border bg-white px-4 text-xs font-semibold transition dark:bg-slate-900 ${triggerClasses[tone]}`}
+          className={actionButtonClass(tone)}
           onClick={() => {
             setInlineError(null);
             setOpen(true);
@@ -172,7 +168,7 @@ export default function ConfirmActionDialogButton({
 
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
-                className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                className={actionButtonClass("neutral")}
                 disabled={isPending}
                 onClick={() => setOpen(false)}
                 ref={cancelButtonRef}
@@ -181,7 +177,7 @@ export default function ConfirmActionDialogButton({
                 {cancelLabel}
               </button>
               <button
-                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800 disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600"
+                className={compactActionButtonClass(tone, "min-h-10 min-w-[5.5rem] rounded-xl text-sm")}
                 disabled={isPending}
                 onClick={() => {
                   startTransition(async () => {

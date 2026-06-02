@@ -16,6 +16,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
+import CharacterCounter from "@/components/CharacterCounter";
 
 const iconMap = {
   PlusCircle,
@@ -70,9 +71,12 @@ export default function ClassGroupForm({
   values,
 }: ClassGroupFormProps) {
   const t = useTranslations("AdminHalaqahForm");
+  const tc = useTranslations("CharacterCounter");
   const [selectedAcademicYear, setSelectedAcademicYear] = useState(
     values.academicYear,
   );
+  const [nameLength, setNameLength] = useState(values.name.length);
+  const [descLength, setDescLength] = useState(values.description.length);
 
   const Icon = iconMap[iconName];
 
@@ -134,10 +138,12 @@ export default function ClassGroupForm({
                 defaultValue={values.name}
                 maxLength={120}
                 name="name"
+                onChange={(e) => setNameLength(e.target.value.length)}
                 placeholder={t("halaqahNamePlaceholder")}
                 required
                 type="text"
               />
+              <CharacterCounter current={nameLength} max={120} maxReachedLabel={tc("maxReached")} />
               <p
                 className="mt-2 text-xs text-slate-500 dark:text-slate-400"
                 id="halaqah-name-help"
@@ -276,9 +282,11 @@ export default function ClassGroupForm({
                 defaultValue={values.description}
                 maxLength={500}
                 name="description"
+                onChange={(e) => setDescLength(e.target.value.length)}
                 placeholder={t("descriptionPlaceholder")}
                 rows={3}
               />
+              <CharacterCounter current={descLength} max={500} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">

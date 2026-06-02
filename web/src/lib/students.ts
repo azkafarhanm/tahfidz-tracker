@@ -176,52 +176,50 @@ async function getStudentsDataInner(
   };
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [totalCount, students] = await Promise.all([
-    prisma.student.count({ where }),
-    prisma.student.findMany({
-      where,
-      include: {
-        classGroup: {
-          select: { name: true, level: true },
+  const totalCount = await prisma.student.count({ where });
+  const students = await prisma.student.findMany({
+    where,
+    include: {
+      classGroup: {
+        select: { name: true, level: true },
+      },
+      academicClass: {
+        select: { name: true },
+      },
+      memorizationRecords: {
+        orderBy: { date: "desc" },
+        take: 1,
+        select: {
+          surah: true,
+          fromAyah: true,
+          toAyah: true,
+          date: true,
+          status: true,
         },
-        academicClass: {
-          select: { name: true },
+      },
+      revisionRecords: {
+        orderBy: { date: "desc" },
+        take: 1,
+        select: {
+          surah: true,
+          fromAyah: true,
+          toAyah: true,
+          date: true,
+          status: true,
         },
-        memorizationRecords: {
-          orderBy: { date: "desc" },
-          take: 1,
-          select: {
-            surah: true,
-            fromAyah: true,
-            toAyah: true,
-            date: true,
-            status: true,
-          },
-        },
-        revisionRecords: {
-          orderBy: { date: "desc" },
-          take: 1,
-          select: {
-            surah: true,
-            fromAyah: true,
-            toAyah: true,
-            date: true,
-            status: true,
-          },
-        },
-        _count: {
-          select: {
-            targets: {
-              where: { status: TargetStatus.ACTIVE },
-            },
+      },
+      _count: {
+        select: {
+          targets: {
+            where: { status: TargetStatus.ACTIVE },
           },
         },
       },
-      orderBy: { fullName: "asc" },
-      skip: (safePage - 1) * safePageSize,
-      take: safePageSize,
-    }),
-  ]);
+    },
+    orderBy: { fullName: "asc" },
+    skip: (safePage - 1) * safePageSize,
+    take: safePageSize,
+  });
 
   return {
     totalCount,
@@ -470,12 +468,17 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
   };
 }
 
-export async function getStudentFormContext(studentId: string, teacherId?: string | null, locale = "id") {
+export async function getStudentFormContext(
+  studentId: string,
+  teacherId?: string | null,
+  locale = "id",
+  options?: { includeInactive?: boolean },
+) {
   const dateFormatter = getDateFormatter(locale);
   const student = await prisma.student.findFirst({
     where: {
       id: studentId,
-      isActive: true,
+      ...(options?.includeInactive ? {} : { isActive: true }),
       ...(teacherId ? { teacherId } : {}),
     },
     select: {

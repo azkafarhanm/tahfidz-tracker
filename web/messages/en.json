@@ -81,7 +81,10 @@
     "searchButton": "Search",
     "listHeading": "Santri list",
     "addButton": "Add",
+    "activeTab": "Active Students",
+    "inactiveTab": "Inactive Students",
     "activeCountBadge": "active",
+    "inactiveCountBadge": "inactive",
     "badgeNeedsReview": "Review",
     "badgeAktif": "Active",
     "latestHafalanLabel": "Latest hafalan",
@@ -89,8 +92,14 @@
     "noRecordYet": "No records yet",
     "targetCountLabel": "active targets",
     "detailLink": "Detail",
+    "actionsLabel": "Actions for {name}",
+    "editStudent": "Edit Student",
+    "deactivateStudent": "Deactivate Student",
+    "reactivateStudent": "Reactivate Student",
     "emptySearch": "No santri match this search. Try a shorter name.",
     "emptyNoStudents": "No active santri yet. Add a santri to begin logging progress.",
+    "emptyInactiveSearch": "No inactive students match this search.",
+    "emptyInactiveStudents": "No inactive students yet.",
     "inactiveHeading": "Inactive Santri",
     "inactiveDescription": "Deactivated santri. Reactivate if needed.",
     "deleteBlockedReason": "Cannot delete yet: {items}. Remove records/summative scores or complete/cancel active targets first. To keep history, leave the student inactive.",
@@ -524,6 +533,7 @@
   },
   "DeactivateStudent": {
     "buttonDeactivate": "Deactivate",
+    "buttonDeactivated": "Already inactive",
     "buttonProcessing": "Processing...",
     "buttonConfirm": "Yes, deactivate",
     "buttonCancel": "Cancel",
@@ -1030,5 +1040,8 @@
     "deleteDescription": "The assessment for {surah} will be permanently removed from this semester.",
     "deleteButton": "Delete Assessment",
     "exportExcel": "Download Excel"
+  },
+  "CharacterCounter": {
+    "maxReached": "Maximum characters reached"
   }
 }

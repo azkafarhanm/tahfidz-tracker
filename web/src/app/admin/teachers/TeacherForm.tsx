@@ -17,6 +17,7 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import PasswordRequirements from "@/components/PasswordRequirements";
+import CharacterCounter from "@/components/CharacterCounter";
 
 const iconMap = {
   UserPlus,
@@ -60,8 +61,13 @@ export default function TeacherForm({
   values,
 }: TeacherFormProps) {
   const t = useTranslations("AdminTeacherForm");
+  const tc = useTranslations("CharacterCounter");
   const Icon = iconMap[iconName];
   const [password, setPassword] = useState("");
+  const [passwordLength, setPasswordLength] = useState(0);
+  const [fullNameLength, setFullNameLength] = useState(values.fullName.length);
+  const [emailLength, setEmailLength] = useState(values.email.length);
+  const [phoneLength, setPhoneLength] = useState(values.phoneNumber.length);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -109,10 +115,12 @@ export default function TeacherForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
+                onChange={(e) => setFullNameLength(e.target.value.length)}
                 placeholder={t("fullNamePlaceholder")}
                 required
                 type="text"
               />
+              <CharacterCounter current={fullNameLength} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 block">
@@ -130,11 +138,13 @@ export default function TeacherForm({
                   defaultValue={values.email}
                   maxLength={120}
                   name="email"
+                  onChange={(e) => setEmailLength(e.target.value.length)}
                   placeholder="guru@tahfidzflow.local"
                   required
                   type="email"
                 />
               </div>
+              <CharacterCounter current={emailLength} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 block">
@@ -154,10 +164,12 @@ export default function TeacherForm({
                   defaultValue={values.phoneNumber}
                   maxLength={30}
                   name="phoneNumber"
+                  onChange={(e) => setPhoneLength(e.target.value.length)}
                   placeholder={t("optional")}
                   type="tel"
                 />
               </div>
+              <CharacterCounter current={phoneLength} max={30} maxReachedLabel={tc("maxReached")} />
             </label>
           </section>
 
@@ -182,7 +194,10 @@ export default function TeacherForm({
                 maxLength={72}
                 minLength={8}
                 name="password"
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setPasswordLength(event.target.value.length);
+                }}
                 placeholder={
                   passwordRequired
                     ? t("passwordPlaceholderNew")
@@ -194,6 +209,7 @@ export default function TeacherForm({
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                 {passwordDescription}
               </p>
+              <CharacterCounter current={passwordLength} max={72} maxReachedLabel={tc("maxReached")} />
               {passwordRequired || password.length > 0 ? (
                 <PasswordRequirements
                   labels={{

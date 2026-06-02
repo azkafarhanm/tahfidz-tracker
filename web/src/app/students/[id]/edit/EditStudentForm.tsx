@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
+import CharacterCounter from "@/components/CharacterCounter";
 
 type ClassGroupOption = {
   id: string;
@@ -55,9 +56,12 @@ export default function EditStudentForm({
   values,
 }: EditStudentFormProps) {
   const t = useTranslations("StudentForm");
+  const tc = useTranslations("CharacterCounter");
   const [isPending, startTransition] = useTransition();
   const [selectedLevel, setSelectedLevel] = useState(values.classGroupLevel);
   const [selectedGrade, setSelectedGrade] = useState(values.classGroupGrade);
+  const [nameLength, setNameLength] = useState(values.fullName.length);
+  const [notesLength, setNotesLength] = useState(values.notes.length);
 
   const genderOptions = [
     { value: "MALE", label: t("genderMale") },
@@ -142,10 +146,12 @@ export default function EditStudentForm({
                 defaultValue={values.fullName}
                 maxLength={120}
                 name="fullName"
+                onChange={(e) => setNameLength(e.target.value.length)}
                 placeholder={t("placeholderName")}
                 required
                 type="text"
               />
+              <CharacterCounter current={nameLength} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -307,9 +313,11 @@ isSelected
                 defaultValue={values.notes}
                 maxLength={1500}
                 name="notes"
+                onChange={(e) => setNotesLength(e.target.value.length)}
                 placeholder={t("placeholderNotes")}
                 rows={3}
               />
+              <CharacterCounter current={notesLength} max={1500} maxReachedLabel={tc("maxReached")} />
             </label>
           </section>
 

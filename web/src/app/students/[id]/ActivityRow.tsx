@@ -6,6 +6,7 @@ import { BookOpen, PencilLine, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
+import { actionButtonClass } from "@/components/action-button-styles";
 import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
 
 type RecordItem = {
@@ -77,7 +78,7 @@ export default function ActivityRow({
             </div>
             <div className="flex items-center gap-1.5">
               <Link
-                className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+                className={actionButtonClass("neutral")}
                 href={editHref}
               >
                 <PencilLine aria-hidden="true" size={12} strokeWidth={2.2} />
