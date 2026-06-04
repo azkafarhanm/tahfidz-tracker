@@ -57,6 +57,8 @@ export default function DeleteSummativeButton({
           }
         } else if (navigateOnSuccess) {
           router.replace(result.redirectTo ?? fallbackRedirectTo);
+        } else {
+          router.refresh();
         }
 
         return {

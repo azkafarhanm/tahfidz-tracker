@@ -59,6 +59,7 @@
     "appName": "TahfidzFlow",
     "subtitle": "Sign in to your account",
     "errorWrongCredentials": "Incorrect login or password",
+    "errorRateLimited": "Too many failed login attempts. Try again in 15 minutes.",
     "errorGeneric": "An error occurred. Please try again.",
     "labelLogin": "Login",
     "placeholderUsername": "Username",

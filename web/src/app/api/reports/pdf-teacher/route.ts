@@ -6,6 +6,8 @@ import { createPdfStreamResponse } from "@/lib/pdf";
 import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
 import { semesterLabel } from "@/lib/summative";
+import { locales, defaultLocale } from "@/i18n/request";
+import type { Locale } from "@/i18n/request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +30,8 @@ export async function GET(request: Request) {
     } else {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const locale = "id";
+    const localeCookie = request.headers.get("cookie")?.match(/(?:^|;\s*)locale=([^;]+)/)?.[1];
+    const locale: Locale = locales.includes(localeCookie as Locale) ? (localeCookie as Locale) : defaultLocale;
     const academicYear = getCurrentAcademicYear();
 
     const teacherBundle = await getTeacherExportBundle(
@@ -49,7 +52,7 @@ export async function GET(request: Request) {
           { label: "SANTRI", value: summary.studentCount },
           { label: "HAFALAN", value: summary.totalHafalan },
           { label: "MUROJAAH", value: summary.totalMurojaah },
-          { label: "SKOR", value: summary.avgScore || "-" },
+          { label: "SKOR", value: summary.avgScore ?? "-" },
           { label: "PERLU CEK", value: summary.needsReviewCount },
           { label: "TARGET", value: summary.activeTargetCount },
         ],
@@ -63,7 +66,7 @@ export async function GET(request: Request) {
           `${student.halaqahName} (${student.halaqahLevel})`,
           String(student.hafalanCount),
           String(student.murojaahCount),
-          String(student.avgScore || "-"),
+          String(student.avgScore ?? "-"),
           student.needsReview ? "Perlu Cek" : student.lastStatus,
         ]),
       },

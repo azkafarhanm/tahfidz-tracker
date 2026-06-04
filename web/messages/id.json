@@ -59,6 +59,7 @@
     "appName": "TahfidzFlow",
     "subtitle": "Masuk ke akun Anda",
     "errorWrongCredentials": "Login atau password salah",
+    "errorRateLimited": "Terlalu banyak percobaan login gagal. Coba lagi dalam 15 menit.",
     "errorGeneric": "Terjadi kesalahan. Silakan coba lagi.",
     "labelLogin": "Login",
     "placeholderUsername": "Username",

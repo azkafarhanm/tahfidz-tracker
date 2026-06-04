@@ -100,7 +100,7 @@ export default async function ReportsPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("avgScoreLabel")}</p>
-              <p className="mt-3 text-4xl font-semibold">{data.avgScore || "-"}</p>
+              <p className="mt-3 text-4xl font-semibold">{data.avgScore ?? "-"}</p>
               <p className="mt-1 text-sm text-slate-300">
                 {t("fromRecordsCount", { count: data.totalHafalan + data.totalMurojaah })}
               </p>
@@ -247,7 +247,7 @@ export default async function ReportsPage() {
                                 : "text-slate-400"
                         }
                       >
-                        {s.avgScore || "-"}
+                        {s.avgScore ?? "-"}
                       </span>
                     </td>
                     <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>

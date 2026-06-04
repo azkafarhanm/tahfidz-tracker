@@ -145,6 +145,10 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
   );
 
   if (!current) {
+    revalidatePath(`/summative/${studentId}`);
+    revalidatePath("/summative");
+    invalidateStudentRelatedCaches(studentId);
+
     return {
       ok: false,
       error: t("deleteFailed"),
@@ -152,7 +156,19 @@ export async function deleteSummativeAssessmentAction(formData: FormData) {
     };
   }
 
-  await deleteSummativeAssessment(assessmentId);
+  const deleteResult = await deleteSummativeAssessment(assessmentId, studentId);
+
+  if (!deleteResult.deleted) {
+    revalidatePath(`/summative/${studentId}`);
+    revalidatePath("/summative");
+    invalidateStudentRelatedCaches(studentId);
+
+    return {
+      ok: false,
+      error: t("deleteFailed"),
+      redirectTo: buildSummativeRedirectPath(studentId, semester, { error: t("deleteFailed") }),
+    };
+  }
 
   revalidatePath("/");
   revalidatePath("/students");

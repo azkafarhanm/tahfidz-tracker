@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +11,10 @@ import {
   getClientAddress,
   registerRateLimitFailure,
 } from "@/lib/rate-limit";
+
+class RateLimitedSignin extends CredentialsSignin {
+  code = "rate_limited";
+}
 
 declare module "next-auth" {
   interface Session {
@@ -67,14 +71,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = credentials.password as string;
         const clientAddress = getClientAddress(request);
         const rateLimitKey = `login:${email}:${clientAddress}`;
-        const rateLimit = checkRateLimit(rateLimitKey, {
+        const rateLimit = await checkRateLimit(rateLimitKey, {
           limit: 5,
           windowMs: 10 * 60_000,
           blockMs: 15 * 60_000,
         });
 
         if (!rateLimit.allowed) {
-          return null;
+          throw new RateLimitedSignin();
         }
 
         const user = await prisma.user.findUnique({
@@ -83,7 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user || !user.passwordHash || !user.isActive) {
-          registerRateLimitFailure(rateLimitKey, {
+          await registerRateLimitFailure(rateLimitKey, {
             limit: 5,
             windowMs: 10 * 60_000,
             blockMs: 15 * 60_000,
@@ -92,7 +96,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (user.role === "TEACHER" && (!user.teacher || !user.teacher.isActive)) {
-          registerRateLimitFailure(rateLimitKey, {
+          await registerRateLimitFailure(rateLimitKey, {
             limit: 5,
             windowMs: 10 * 60_000,
             blockMs: 15 * 60_000,
@@ -103,7 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isValid) {
-          registerRateLimitFailure(rateLimitKey, {
+          await registerRateLimitFailure(rateLimitKey, {
             limit: 5,
             windowMs: 10 * 60_000,
             blockMs: 15 * 60_000,
@@ -111,7 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        clearRateLimit(rateLimitKey);
+        await clearRateLimit(rateLimitKey);
 
         return {
           id: user.id,

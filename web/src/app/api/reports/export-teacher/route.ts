@@ -7,6 +7,8 @@ import { statusLabels, formatRange } from "@/lib/format";
 import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
 import { semesterLabel } from "@/lib/summative";
+import { locales, defaultLocale } from "@/i18n/request";
+import type { Locale } from "@/i18n/request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,7 +38,8 @@ export async function GET(request: Request) {
     } else {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
-    const locale = "id";
+    const localeCookie = request.headers.get("cookie")?.match(/(?:^|;\s*)locale=([^;]+)/)?.[1];
+    const locale: Locale = locales.includes(localeCookie as Locale) ? (localeCookie as Locale) : defaultLocale;
     const academicYear = getCurrentAcademicYear();
 
     const teacherBundle = await getTeacherExportBundle(
@@ -60,7 +63,7 @@ export async function GET(request: Request) {
       { metric: "Jumlah Santri Aktif", value: summary.studentCount },
       { metric: "Total Hafalan", value: summary.totalHafalan },
       { metric: "Total Murojaah", value: summary.totalMurojaah },
-      { metric: "Rata-rata Skor Harian", value: summary.avgScore || "-" },
+      { metric: "Rata-rata Skor Harian", value: summary.avgScore ?? "-" },
       { metric: "Perlu Cek / Murojaah", value: summary.needsReviewCount },
       { metric: "Target Aktif", value: summary.activeTargetCount },
     ].forEach((row) => summarySheet.addRow(row));
@@ -87,7 +90,7 @@ export async function GET(request: Request) {
         className: student.academicClassName,
         hafalanCount: student.hafalanCount,
         murojaahCount: student.murojaahCount,
-        avgScore: student.avgScore || "-",
+        avgScore: student.avgScore ?? "-",
         lastRange: student.lastRange,
         lastActivity: student.lastActivity,
         lastStatus: student.needsReview ? "Perlu Cek" : student.lastStatus,

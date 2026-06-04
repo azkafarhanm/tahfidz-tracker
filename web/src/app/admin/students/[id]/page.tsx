@@ -93,7 +93,7 @@ export default async function AdminStudentDetailPage({
             <div>
               <p className="text-sm text-emerald-100">{t("avgScore")}</p>
               <p className="mt-3 text-4xl font-semibold">
-                {data.avgScore || "-"}
+                {data.avgScore ?? "-"}
               </p>
               <p className="mt-1 text-sm text-slate-300">
                 {t("totalRecordsCount", { count: data.records.length })}

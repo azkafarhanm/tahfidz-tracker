@@ -1,3 +1,4 @@
+import Link from "next/link";
 import EditStudentForm from "./EditStudentForm";
 import { updateTeacherStudent } from "./actions";
 import { getStudentFormContext } from "@/lib/students";
@@ -28,10 +29,16 @@ export default async function EditStudentPage({
 
   if (!teacherId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f7f4ee] dark:bg-[#0c0f1a]">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#f7f4ee] dark:bg-[#0c0f1a]">
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {t("teacherOnlyEdit")}
         </p>
+        <Link
+          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+          href="/"
+        >
+          &larr; TahfidzFlow
+        </Link>
       </div>
     );
   }

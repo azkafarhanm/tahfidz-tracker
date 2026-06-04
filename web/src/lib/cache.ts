@@ -74,8 +74,11 @@ export function cached<T>(key: string, ttlMs: number, factory: () => Promise<T>)
   }
 
   const promise = factory().then((data) => {
-    store.set(key, { data, expiresAt: Date.now() + ttlMs });
-    evictOldestEntries();
+    const current = store.get(key);
+    if (current?.promise === promise) {
+      store.set(key, { data, expiresAt: Date.now() + ttlMs });
+      evictOldestEntries();
+    }
     return data;
   }).catch((error) => {
     const current = store.get(key);
@@ -130,9 +133,11 @@ export function invalidateStudentRelatedCaches(studentId?: string) {
   invalidateCache("report-teacher");
   if (studentId) {
     invalidateCache(`report-student:${studentId}`);
+    invalidateCache(`summative-detail:${studentId}:`);
     invalidateCache(`summative-history:${studentId}`);
   } else {
     invalidateCache("report-student");
+    invalidateCache("summative-detail:");
     invalidateCache("summative-history:");
   }
 }

@@ -1,5 +1,4 @@
 import { RecordStatus, Semester } from "@/generated/prisma-next/enums";
-import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
   getDateFormatter,
@@ -67,17 +66,14 @@ export async function getTeacherFormativeOverview(
   page?: number,
   pageSize?: number,
 ) {
-  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? "all"}:${pageSize ?? "all"}`;
-  return cached(cacheKey, 30_000, () =>
-    getTeacherFormativeOverviewInner(
-      teacherId,
-      semester,
-      academicYear,
-      classLevel,
-      locale,
-      page,
-      pageSize,
-    ),
+  return getTeacherFormativeOverviewInner(
+    teacherId,
+    semester,
+    academicYear,
+    classLevel,
+    locale,
+    page,
+    pageSize,
   );
 }
 
@@ -267,15 +263,12 @@ export async function getStudentFormativeDetail(
   academicYear: string,
   locale = "id",
 ) {
-  const cacheKey = `formative-detail:${studentId}:${teacherId ?? "admin"}:${semester}:${academicYear}:${locale}`;
-  return cached(cacheKey, 30_000, () =>
-    getStudentFormativeDetailInner(
-      studentId,
-      teacherId,
-      semester,
-      academicYear,
-      locale,
-    ),
+  return getStudentFormativeDetailInner(
+    studentId,
+    teacherId,
+    semester,
+    academicYear,
+    locale,
   );
 }
 
@@ -372,14 +365,11 @@ export async function getTeacherFormativeExportData(
   academicYear: string,
   classLevel?: number,
 ) {
-  const cacheKey = `formative-export:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}`;
-  return cached(cacheKey, 30_000, () =>
-    getTeacherFormativeExportDataInner(
-      teacherId,
-      semester,
-      academicYear,
-      classLevel,
-    ),
+  return getTeacherFormativeExportDataInner(
+    teacherId,
+    semester,
+    academicYear,
+    classLevel,
   );
 }
 

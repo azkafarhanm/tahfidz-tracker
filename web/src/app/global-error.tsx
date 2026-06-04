@@ -15,6 +15,9 @@ export default function GlobalError({
 
   return (
     <html>
+      <head>
+        <title>Error - TahfidzFlow</title>
+      </head>
       <body>
         <main style={{
           minHeight: "100vh",
@@ -40,10 +43,10 @@ export default function GlobalError({
               </svg>
             </div>
             <h1 style={{ marginTop: 24, fontSize: 24, fontWeight: 600, color: "#0f172a" }}>
-              Terjadi Kesalahan
+              Something went wrong
             </h1>
             <p style={{ marginTop: 8, color: "#64748b", fontSize: 14 }}>
-              Sistem mengalami gangguan. Silakan coba lagi.
+              An unexpected error occurred. Please try again.
             </p>
             <button
               onClick={reset}
@@ -60,7 +63,7 @@ export default function GlobalError({
                 cursor: "pointer",
               }}
             >
-              Coba Lagi
+              Try Again
             </button>
           </div>
         </main>

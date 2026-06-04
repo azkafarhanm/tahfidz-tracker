@@ -2,36 +2,38 @@
 
 TahfidzFlow is a mobile-first tahfidz tracking system for SMP grades 7-9. It helps teachers record hafalan and murojaah, review formative progress, manage flexible summative assessments, and export reports. Admins can manage teachers, halaqah, classes, students, and system-wide reports.
 
-Status: production-ready core, with CI verification and strong teacher/admin workflows.
-
 ## Main Features
 
 ### Teacher workflow
 - Dashboard with daily stats, weekly target progress, and recent activity
-- Student list with search, latest records, and review indicators
+- Student list with search, pagination, latest records, and review indicators
 - Quick Log guided record entry
-- Hafalan and murojaah create/edit/delete
-- Formative recap generated automatically from daily records
+- Hafalan and murojaah create/edit/delete with surah + ayah range input
+- Formative recap generated automatically from daily records, per semester
 - Flexible summative assessment per student and per surah
-- Student detail with history, targets, and exports
+- Active targets with cancel/complete actions
+- Student detail with history, targets, and exports (Excel + PDF)
 - Teacher reports with Excel and PDF export
 
 ### Admin workflow
 - Admin dashboard with system-wide statistics
-- Teacher CRUD with safety guards
+- Teacher CRUD with activate/deactivate/delete safety guards
 - Academic class CRUD
-- Halaqah CRUD with teacher assignment
-- Student CRUD across teachers
+- Halaqah CRUD with teacher assignment and level
+- Student CRUD across teachers with admin detail view
 - Admin reports with Excel and PDF export
 
 ### Platform
-- Next.js App Router with Server Components and Server Actions
-- Prisma 7 + PostgreSQL
-- NextAuth 5 role-based auth
+- Next.js 15 App Router with Server Components and Server Actions
+- Prisma 7 + PostgreSQL (Neon)
+- NextAuth 5 (beta) role-based auth with JWT sessions
+- Rate-limited login with Upstash Redis persistence
 - Full i18n: Indonesian, English, Arabic with RTL support
-- PWA install prompt, service worker, offline banner
-- Dark mode and responsive desktop/mobile layout
-- GitHub Actions CI for schema validation, lint, typecheck, and build
+- PWA: install prompt, service worker, offline banner
+- Dark mode (system/light/dark/auto with 6am/6pm schedule)
+- Responsive desktop/mobile layout with sidebar navigation
+- Security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, COOP
+- GitHub Actions CI: schema validation, lint, typecheck, unit tests, build
 
 ## Demo Accounts
 
@@ -43,161 +45,138 @@ Status: production-ready core, with CI verification and strong teacher/admin wor
 
 ## Tech Stack
 
-- Next.js 15.5.15
-- React 19
-- TypeScript 5
-- Tailwind CSS 4
-- Prisma 7
-- PostgreSQL / Neon
-- next-intl
-- next-auth
-- exceljs
-- pdfkit
-- lucide-react
-- sonner
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15.5 (App Router) |
+| UI | React 19, TypeScript 5, Tailwind CSS 4 |
+| Database | PostgreSQL (Neon), Prisma 7 |
+| Auth | NextAuth 5 beta, bcryptjs |
+| Rate Limiting | Upstash Redis |
+| i18n | next-intl (id, en, ar) |
+| Exports | exceljs (Excel), pdfkit (PDF) |
+| Icons | lucide-react |
+| Toasts | sonner |
+| PWA | Custom service worker, Web App Manifest |
+| CI | GitHub Actions |
 
 ## Project Layout
 
 ```text
 tahfidz-tracker/
-  AI_CONTEXT.md
-  README.md
-  package.json
   .github/workflows/verify.yml
+  docs/
+  rules.md
   web/
-    package.json
     prisma/
       schema.prisma
       seed.ts
       seed-summative.ts
+      migrations/
     messages/
-      id.json
-      en.json
-      ar.json
+      id.json, en.json, ar.json
+    public/
+      manifest.json, sw.js
     src/
-      app/
-      components/
-      i18n/
-      lib/
-      generated/
+      app/          -- Next.js App Router pages and layouts
+      components/   -- Shared React components
+      i18n/         -- Locale config, actions, request handler
+      lib/          -- Server utilities (prisma, session, rate-limit, etc.)
+      generated/    -- Prisma generated client
 ```
 
-Important:
-- Repository root is `D:\tahfidz-tracker`
-- The real Next.js app lives in `web/`
-- Vercel Root Directory must be `web`
+The Next.js app lives in `web/`. Vercel Root Directory must be set to `web`.
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | PostgreSQL connection string (e.g., `postgresql://user:pass@host/db?sslmode=require`) |
+| `AUTH_SECRET` | Yes | Random secret for NextAuth JWT signing. Generate with `openssl rand -base64 32` |
+| `AUTH_URL` | Yes | Production URL (e.g., `https://your-domain.com`). Omit for local dev (defaults to `http://localhost:3000`) |
+| `KV_REST_API_URL` | Recommended | Upstash Redis REST URL. Rate limiting falls back to in-memory without it |
+| `KV_REST_API_TOKEN` | Recommended | Upstash Redis REST token |
+| `APP_DEFAULT_LOCALE` | No | Default locale. Defaults to `id` |
 
 ## Local Setup
 
 ### Prerequisites
 - Node.js 20+
-- PostgreSQL database
+- PostgreSQL database (local or Neon)
 
-### Run locally
+### Steps
 
 ```bash
+cd web
 npm install
-cp web/.env.example web/.env
-# Fill DATABASE_URL and AUTH_SECRET
+cp .env.example .env
+# Edit .env: set DATABASE_URL and AUTH_SECRET
 
 npm run db:generate
+npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Open:
+Open `http://localhost:3000/login`.
 
-```text
-http://localhost:3000/login
-```
-
-## Commands
-
-From repo root:
+### Commands (from `web/`)
 
 | Command | Description |
 |---|---|
 | `npm run dev` | Start dev server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript |
-| `npm run verify:fast` | Fast local check |
-| `npm run verify` | Full validation pipeline |
+| `npm run typecheck` | TypeScript check |
+| `npm run test` | Vitest unit tests |
+| `npm run verify:fast` | generate + validate + lint + typecheck |
+| `npm run verify` | Full pipeline including tests and build |
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:validate` | Validate Prisma schema |
-| `npm run db:seed` | Seed demo data |
-| `npm run db:deploy` | Deploy Prisma migrations |
+| `npm run db:migrate` | Create and apply migration |
+| `npm run db:seed` | Seed demo + surah data |
+| `npm run db:studio` | Open Prisma Studio |
 
-## Verification Workflow
-
-Recommended local workflow before pushing:
+### Pre-push verification
 
 ```bash
-npm run verify:fast
-npm run build
+npm run verify:fast && npm run build
 ```
 
-CI runs automatically on every push to `main` and every pull request.
+CI runs on every push to `main` and every PR.
 
-Current CI checks:
-- Prisma client generation
-- Prisma schema validation
-- ESLint
-- TypeScript
-- Next.js production build
+## Data Model
 
-## Deployment
+- `User` -- auth account (`ADMIN` or `TEACHER` role)
+- `Teacher` -- profile linked to User
+- `AcademicClass` -- school class (7A, 8B, 9C) scoped by academic year
+- `ClassGroup` -- halaqah, owned by a teacher, scoped by grade + academic year
+- `Student` -- linked to teacher, class group, and optional academic class
+- `MemorizationRecord` -- daily hafalan record (formative source)
+- `RevisionRecord` -- daily murojaah record (formative source)
+- `Target` -- progress target with date range and status lifecycle
+- `SummativeScore` -- per-surah assessment per semester
+- `Account`, `Session` -- NextAuth persistent sessions
 
-### Vercel
-1. Connect the repository
-2. Set Root Directory to `web`
-3. Framework Preset: `Next.js`
-4. Add environment variables:
-   - `DATABASE_URL`
-   - `AUTH_SECRET`
-   - `NEXTAUTH_URL`
-5. Deploy
-
-## Data Model Summary
-
-- `User`: auth account with `ADMIN` or `TEACHER`
-- `Teacher`: linked to a user
-- `AcademicClass`: school class such as `7A`, `8B`, `9C`
-- `ClassGroup`: halaqah owned by a teacher, scoped by grade and academic year
-- `Student`: linked to teacher, halaqah, and optional academic class
-- `MemorizationRecord`: daily hafalan record, also formative source
-- `RevisionRecord`: daily murojaah record, also formative source
-- `Target`: progress target with date range
-- `SummativeScore`: flexible per-surah assessment per semester
-- `Surah` and `TargetSurah`: surah master data and target recommendations
-
-Business rule:
-- Formative scores come from real daily hafalan and murojaah records
+Business rules:
+- Formative scores derive from real daily hafalan and murojaah records
 - Summative scores are flexible per student and per surah
-- Class targets are for monitoring and recommendation, not rigid grading limits
+- Targets track status lifecycle: ACTIVE -> COMPLETED / CANCELLED / MISSED
 
-## Security and Reliability
+## Security
 
-- Role-based auth
-- Teacher-scoped data isolation
-- IDOR protection in record flows
-- Delete/deactivate guards for related data
-- Build-green verification path
-- 30-second in-memory cache with explicit invalidation
+- Role-based auth (ADMIN / TEACHER) enforced at layout and server action level
+- Teacher-scoped data isolation via `teacherId` on all user-data models
+- IDOR protection in record and student flows
+- Login rate limiting: 5 attempts / 10 min window / 15 min block (Upstash Redis)
+- Delete/deactivate guards for entities with dependent records
+- Security headers on all routes (X-Frame-Options DENY, nosniff, etc.)
+- Locale cookie validation prevents injection attacks
 
-## Current Gaps
+## Documentation
 
-- No automated unit test suite yet
-- No automated browser/e2e tests yet
-- Cache is in-memory only, not shared across instances
-- Large export jobs are still synchronous request-time generation
-- Some accessibility polish remains on icon-only controls
-
-## Practical Status
-
-The app is very close to complete for real daily use. The biggest remaining work is not missing core features anymore. The next best improvements are:
-
-1. Add a real automated test layer
-2. Add browser/e2e workflow coverage
-3. Improve export scalability for larger datasets
-4. Continue polish and accessibility cleanup
+| File | Purpose |
+|---|---|
+| `docs/DEPLOYMENT.md` | Vercel deployment, migrations, KV setup, post-deploy checklist |
+| `docs/ROLLBACK.md` | Rollback procedures for Vercel and database |
+| `docs/KNOWN_ISSUES.md` | Known outstanding issues |
+| `docs/TEST_RESULTS.md` | Full UAT audit results (192 items) |

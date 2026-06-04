@@ -170,18 +170,14 @@ export async function getTeacherSummativeOverview(
   page?: number,
   pageSize?: number,
 ) {
-  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? "all"}:${pageSize ?? "all"}`;
-
-  return cached(cacheKey, 30_000, () =>
-    getTeacherSummativeOverviewInner(
-      teacherId,
-      semester,
-      academicYear,
-      classLevel,
-      locale,
-      page,
-      pageSize,
-    ),
+  return getTeacherSummativeOverviewInner(
+    teacherId,
+    semester,
+    academicYear,
+    classLevel,
+    locale,
+    page,
+    pageSize,
   );
 }
 
@@ -360,16 +356,12 @@ export async function getStudentSummativeDetail(
   academicYear: string,
   locale = "id",
 ) {
-  const cacheKey = `summative-detail:${studentId}:${teacherId ?? "admin"}:${semester}:${academicYear}:${locale}`;
-
-  return cached(cacheKey, 30_000, () =>
-    getStudentSummativeDetailInner(
-      studentId,
-      teacherId,
-      semester,
-      academicYear,
-      locale,
-    ),
+  return getStudentSummativeDetailInner(
+    studentId,
+    teacherId,
+    semester,
+    academicYear,
+    locale,
   );
 }
 
@@ -501,15 +493,11 @@ export async function getTeacherSummativeExportData(
   academicYear: string,
   classLevel?: number,
 ) {
-  const cacheKey = `summative-export:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}`;
-
-  return cached(cacheKey, 30_000, () =>
-    getTeacherSummativeExportDataInner(
-      teacherId,
-      semester,
-      academicYear,
-      classLevel,
-    ),
+  return getTeacherSummativeExportDataInner(
+    teacherId,
+    semester,
+    academicYear,
+    classLevel,
   );
 }
 
@@ -758,15 +746,25 @@ export async function updateSummativeAssessment(
   return record;
 }
 
-export async function deleteSummativeAssessment(assessmentId: string) {
-  const record = await prisma.summativeScore.delete({
-    where: {
-      id: assessmentId,
-    },
-  });
+export async function deleteSummativeAssessment(
+  assessmentId: string,
+  studentId: string,
+) {
+  const result = await prisma.$transaction(async (tx) =>
+    tx.summativeScore.deleteMany({
+      where: {
+        id: assessmentId,
+        studentId,
+      },
+    }),
+  );
 
-  invalidateSummativeCache(record.studentId);
-  return record;
+  if (result.count !== 1) {
+    return { deleted: false as const, count: result.count };
+  }
+
+  invalidateSummativeCache(studentId);
+  return { deleted: true as const, count: result.count };
 }
 
 export async function getStudentSummativeHistory(
@@ -786,11 +784,7 @@ export async function getStudentSummativeHistory(
   }
 
   const year = academicYear ?? getCurrentAcademicYear();
-  const cacheKey = `summative-history:${studentId}:${year}`;
-
-  return cached(cacheKey, 30_000, () =>
-    getStudentSummativeHistoryInner(studentId, year),
-  );
+  return getStudentSummativeHistoryInner(studentId, year);
 }
 
 async function getStudentSummativeHistoryInner(
@@ -839,8 +833,11 @@ async function getStudentSummativeHistoryInner(
 
 export function invalidateSummativeCache(studentId?: string) {
   if (studentId) {
+    invalidateCache(`summative-detail:${studentId}:`);
     invalidateCache(`summative-history:${studentId}`);
     invalidateCache(`report-student:${studentId}`);
+  } else {
+    invalidateCache("summative-detail:");
   }
   invalidateCache("summative-");
   invalidateCache("report-teacher:");

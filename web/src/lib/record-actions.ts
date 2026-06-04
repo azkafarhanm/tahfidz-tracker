@@ -42,6 +42,39 @@ function resolveReturnPath(
   return query ? `${pathname}?${query}` : pathname;
 }
 
+function revalidateRecordPaths(studentId: string) {
+  revalidatePath("/");
+  revalidatePath("/students");
+  revalidatePath(`/students/${studentId}`);
+  revalidatePath("/formative");
+  revalidatePath(`/formative/${studentId}`);
+  invalidateStudentRelatedCaches(studentId);
+}
+
+async function deleteRecordByType(
+  studentId: string,
+  recordType: "hafalan" | "murojaah",
+  recordId: string,
+) {
+  return prisma.$transaction(async (tx) => {
+    if (recordType === "murojaah") {
+      return tx.revisionRecord.deleteMany({
+        where: {
+          id: recordId,
+          studentId,
+        },
+      });
+    }
+
+    return tx.memorizationRecord.deleteMany({
+      where: {
+        id: recordId,
+        studentId,
+      },
+    });
+  });
+}
+
 export async function updateRecord(
   studentId: string,
   recordType: "hafalan" | "murojaah",
@@ -114,12 +147,7 @@ export async function updateRecord(
     await prisma.memorizationRecord.update({ where: { id: recordId }, data });
   }
 
-  revalidatePath("/");
-  revalidatePath("/students");
-  revalidatePath(`/students/${studentId}`);
-  revalidatePath("/formative");
-  revalidatePath(`/formative/${studentId}`);
-  invalidateStudentRelatedCaches(studentId);
+  revalidateRecordPaths(studentId);
   redirect(resolveReturnPath(successPath, `/students/${studentId}`, { success: t("recordUpdated") }));
 }
 
@@ -156,40 +184,18 @@ export async function deleteRecord(
     };
   }
 
-  if (recordType === "murojaah") {
-    const existing = await prisma.revisionRecord.findFirst({
-      where: { id: recordId, studentId },
-      select: { id: true },
-    });
-    if (!existing) {
-      return {
-        ok: false,
-        error: t("recordNotFound"),
-        redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("recordNotFound") }),
-      };
-    }
-    await prisma.revisionRecord.delete({ where: { id: recordId } });
-  } else {
-    const existing = await prisma.memorizationRecord.findFirst({
-      where: { id: recordId, studentId },
-      select: { id: true },
-    });
-    if (!existing) {
-      return {
-        ok: false,
-        error: t("recordNotFound"),
-        redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("recordNotFound") }),
-      };
-    }
-    await prisma.memorizationRecord.delete({ where: { id: recordId } });
+  const result = await deleteRecordByType(studentId, recordType, recordId);
+
+  if (result.count !== 1) {
+    revalidateRecordPaths(studentId);
+    return {
+      ok: false,
+      error: t("recordNotFound"),
+      redirectTo: resolveReturnPath(redirectPath, fallbackPath, { error: t("recordNotFound") }),
+    };
   }
 
-  revalidatePath("/");
-  revalidatePath("/students");
-  revalidatePath(`/students/${studentId}`);
-  revalidatePath("/formative");
-  revalidatePath(`/formative/${studentId}`);
-  invalidateStudentRelatedCaches(studentId);
+  revalidateRecordPaths(studentId);
   return {
     ok: true,
     success: t("recordDeleted"),

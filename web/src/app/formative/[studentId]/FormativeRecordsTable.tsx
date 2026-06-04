@@ -132,7 +132,7 @@ export default function FormativeRecordsTable({
                           return next;
                         });
                       }}
-                      onDeleteStart={() => {
+                      onDeleteSuccess={() => {
                         setHiddenRecordIds((current) => new Set(current).add(record.id));
                       }}
                       recordId={record.id}

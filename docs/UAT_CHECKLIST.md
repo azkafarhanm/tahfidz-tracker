@@ -6,639 +6,797 @@ Each item has PASS / FAIL criteria for manual verification.
 
 ## 1. Auth & Access Control
 
-- [ ] Login page renders at `/login`
+- [x] Login page renders at `/login`
   - PASS: page loads with identifier + password fields
   - FAIL: 404 or blank page
-- [ ] Login with valid admin credentials (`admin` / `2026`)
+  - Review: RESOLVED - Implemented by `web/src/app/login/page.tsx` with identifier and password fields.
+- [x] Login with valid admin credentials (`admin` / `2026`)
   - PASS: redirects to `/` with admin dashboard
   - FAIL: stays on login or shows error
-- [ ] Login with valid teacher credentials (`teacher.demo@tahfidzflow.local` / `2026`)
+  - Review: RESOLVED - Implemented by credentials auth in `web/src/auth.ts` and login handling/toasts in `web/src/app/login/page.tsx`; seeded demo users are defined in `web/prisma/seed.ts`.
+- [x] Login with valid teacher credentials (`teacher.demo@tahfidzflow.local` / `2026`)
   - PASS: redirects to `/` with teacher dashboard
   - FAIL: stays on login or shows error
-- [ ] Login with invalid credentials
+  - Review: RESOLVED - Implemented by credentials auth in `web/src/auth.ts` and login handling/toasts in `web/src/app/login/page.tsx`; seeded demo users are defined in `web/prisma/seed.ts`.
+- [x] Login with invalid credentials
   - PASS: error toast + error message, stays on `/login`
   - FAIL: no feedback or silent failure
-- [ ] Rate limiting after 5 failed logins
+  - Review: RESOLVED - Implemented by credentials auth in `web/src/auth.ts` and login handling/toasts in `web/src/app/login/page.tsx`; seeded demo users are defined in `web/prisma/seed.ts`.
+- [x] Rate limiting after 5 failed logins
   - PASS: blocks further attempts for 15 minutes
   - FAIL: unlimited login attempts allowed
-- [ ] Unauthenticated access to `/students`
+  - Review: RESOLVED - `web/src/auth.ts` blocks repeated failures and now throws a custom `CredentialsSignin` code (`rate_limited`); `web/src/app/login/page.tsx` maps that code to `Login.errorRateLimited` instead of the generic wrong-credentials message.
+- [x] Unauthenticated access to `/students`
   - PASS: redirects to `/login`
   - FAIL: shows page content or 500
-- [ ] Unauthenticated access to `/api/reports/export-admin`
+  - Review: RESOLVED - Access control is implemented in `web/src/auth.config.ts`, `web/src/lib/session.ts`, route layouts, and admin/teacher page guards.
+- [x] Unauthenticated access to `/api/reports/export-admin`
   - PASS: returns 401 JSON
   - FAIL: returns data or 500
-- [ ] Teacher cannot access `/admin` pages
+  - Review: RESOLVED - `web/src/app/api/reports/export-admin/route.ts` checks `auth()` and returns 401 for unauthenticated requests.
+- [x] Teacher cannot access `/admin` pages
   - PASS: redirects to `/`
   - FAIL: shows admin dashboard
-- [ ] Admin can access `/admin` pages
+  - Review: RESOLVED - Access control is implemented in `web/src/auth.config.ts`, `web/src/lib/session.ts`, route layouts, and admin/teacher page guards.
+- [x] Admin can access `/admin` pages
   - PASS: admin dashboard loads
   - FAIL: redirect or 403
-- [ ] Logout via sidebar/bottom nav
+  - Review: RESOLVED - Access control is implemented in `web/src/auth.config.ts`, `web/src/lib/session.ts`, route layouts, and admin/teacher page guards.
+- [x] Logout via sidebar/bottom nav
   - PASS: redirects to `/login`, session cleared
   - FAIL: stays logged in or errors
-- [ ] `?reauth=1` on `/login` forces sign-out
+  - Review: RESOLVED - `web/src/components/LogoutButton.tsx` calls `signOut` and redirects to `/login`.
+- [x] `?reauth=1` on `/login` forces sign-out
   - PASS: calls `signOut()` then shows login form
   - FAIL: skips sign-out, stale session persists
-
+  - Review: RESOLVED - Access control is implemented in `web/src/auth.config.ts`, `web/src/lib/session.ts`, route layouts, and admin/teacher page guards.
 ## 2. Teacher Dashboard (`/`)
 
-- [ ] Dashboard loads with greeting + user name
+- [x] Dashboard loads with greeting + user name
   - PASS: shows personalized greeting + date
   - FAIL: blank header or missing name
-- [ ] Today's record count displayed
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Today's record count displayed
   - PASS: number shows (0 if no records)
   - FAIL: section missing or errors
-- [ ] Weekly target progress bar animates
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Weekly target progress bar animates
   - PASS: bar width matches percentage, animates smoothly
   - FAIL: static or missing
-- [ ] Quick actions grid: Hafalan, Murojaah, Catat Cepat, Formatif, Sumatif
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Quick actions grid: Hafalan, Murojaah, Catat Cepat, Formatif, Sumatif
   - PASS: 4-5 action buttons visible, each links correctly
   - FAIL: missing links or broken routes
-- [ ] Admin-only "Admin" quick action visible for admin
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Admin-only "Admin" quick action visible for admin
   - PASS: admin sees /admin link, teacher does not
   - FAIL: teacher sees admin link
-- [ ] Overdue targets section (conditional)
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Overdue targets section (conditional)
   - PASS: shows when targets are overdue, hides when none
   - FAIL: always hidden or always shown
-- [ ] Recent activity feed
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Recent activity feed
   - PASS: shows last records with date/status
   - FAIL: empty or error
-- [ ] Empty state: no records
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Empty state: no records
   - PASS: shows empty-state message
   - FAIL: crashes or blank
-- [ ] Motivation card renders
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
+- [x] Motivation card renders
   - PASS: card with ayah/hadith text visible
   - FAIL: missing or broken
-
+  - Review: RESOLVED - Dashboard UI and data are implemented in `web/src/app/page.tsx`, `web/src/lib/dashboard.ts`, and `web/src/components/MotivationCard.tsx`.
 ## 3. Students List (`/students`)
 
-- [ ] Page loads with heading + student count
-  - PASS: shows "Santri" heading + active count
+- [x] Page loads with heading + student count
+  - PASS: shows "Santri" heading + active count on the Active tab
   - FAIL: blank or error
-- [ ] Student cards show avatar, name, class, latest record
-  - PASS: each card has InitialsAvatar, name, classSummary
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Student cards show avatar, name, class, latest records, and actions
+  - PASS: each active card has InitialsAvatar, name, classSummary, latest hafalan/murojaah, Detail button, and kebab menu
   - FAIL: missing elements
-- [ ] Search filters students by name
-  - PASS: typing query filters list, URL updates with `?q=`
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Search filters students by name
+  - PASS: typing query filters the current Active/Inactive view and URL updates with `?q=`
   - FAIL: search doesn't filter or URL doesn't update
-- [ ] Pagination works for >12 students
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Pagination works for >12 active students
   - PASS: prev/next buttons appear, page changes
   - FAIL: no pagination or broken
-- [ ] Empty state: no search results
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Empty state: no search results
   - PASS: shows "emptySearch" message
   - FAIL: blank or error
-- [ ] Empty state: no students at all
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Empty state: no students at all
   - PASS: shows "emptyNoStudents" message
   - FAIL: blank
-- [ ] "Add" button visible for teacher, hidden for admin
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] "Add" button visible for teacher, hidden for admin
   - PASS: teacher sees `/students/new`, admin doesn't
   - FAIL: wrong visibility
-- [ ] Admin "Kelola" link to `/admin/students`
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Admin "Kelola" link to `/admin/students`
   - PASS: admin sees link, teacher doesn't
   - FAIL: wrong visibility
-- [ ] Inactive students section (non-admin only)
-  - PASS: shows collapsed section when inactive students exist
-  - FAIL: missing or always visible
-
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Active/Inactive tabs (non-admin only)
+  - PASS: teacher can switch between `/students` and `/students?status=inactive`; admin does not see these tabs
+  - FAIL: tabs missing for teacher or visible to admin
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Active student kebab actions
+  - PASS: kebab menu contains Edit and Nonaktifkan; deactivation asks for confirmation, then removes the card from active list
+  - FAIL: menu missing, wrong actions, or no confirmation
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
+- [x] Inactive student row actions
+  - PASS: inactive row has Detail, kebab Edit/Aktifkan, and Hapus with delete blockers when records/scores/active targets exist
+  - FAIL: missing actions or delete allowed despite blockers
+  - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
 ## 4. Student Detail (`/students/[id]`)
 
-- [ ] Page loads with student name, class, avatar
+- [x] Page loads with student name, class, avatar
   - PASS: header shows name + classSummary + InitialsAvatar
   - FAIL: blank or error
-- [ ] Summary card: active targets, needs-review count, gender, join date
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Summary card: active targets, needs-review count, gender, join date
   - PASS: all 4 fields populated
   - FAIL: missing fields
-- [ ] Quick action buttons: Hafalan, Murojaah
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Quick action buttons: Hafalan, Murojaah
   - PASS: both link to correct new-record pages
   - FAIL: broken links
-- [ ] Latest hafalan / murojaah cards
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Latest hafalan / murojaah cards
   - PASS: show range, date, status (or "noRecordYet")
   - FAIL: missing or error
-- [ ] Active targets section with TargetCard
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Active targets section with TargetCard
   - PASS: cards show surah, range, dates, progress bar, actions
   - FAIL: missing or broken
-- [ ] Target "Batalkan" (cancel) action
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Target "Batalkan" (cancel) action
   - PASS: confirmation dialog → target removed from list + success toast
   - FAIL: target stays visible after cancel
-- [ ] Target "Selesai" (complete) action
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Target "Selesai" (complete) action
   - PASS: confirmation → target removed + success toast
   - FAIL: target stays visible after complete
-- [ ] Edit target link
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Edit target link
   - PASS: links to `/students/[id]/targets/[targetId]/edit`
   - FAIL: broken link
-- [ ] Recent activity section
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Recent activity section
   - PASS: shows records with type, range, date, status, score
   - FAIL: missing or error
-- [ ] Activity row: delete record
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Activity row: delete record
   - PASS: confirmation → row removed + success toast
   - FAIL: row stays or no feedback
-- [ ] Activity row: edit link
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Activity row: edit link
   - PASS: links to edit page with returnTo
   - FAIL: broken link
-- [ ] All history table (>6 records)
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] All history table (>6 records)
   - PASS: table with date/type/ayat/score/status columns
   - FAIL: missing table or broken
-- [ ] Deactivate section (non-admin only)
-  - PASS: shows deactivate button with confirmation
-  - FAIL: missing or visible to admin
-- [ ] Excel export button
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Excel export button
   - PASS: downloads `.xlsx` file
   - FAIL: 404 or empty file
-- [ ] PDF export button
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] PDF export button
   - PASS: downloads `.pdf` file
   - FAIL: 404 or empty file
-- [ ] Unauthorized screen (wrong teacher's student)
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Unauthorized screen (wrong teacher's student)
   - PASS: shows Lock icon + "accessDenied" message
   - FAIL: shows data or 500
-- [ ] Inactive student screen
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Inactive student screen
   - PASS: shows UserX icon + reactivate option (own student)
   - FAIL: shows active data
-- [ ] Empty state: no targets
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Empty state: no targets
   - PASS: dashed card with Target icon + add CTA
   - FAIL: blank
-- [ ] Empty state: no recent activity
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
+- [x] Empty state: no recent activity
   - PASS: dashed card with Hafalan/Murojaah CTAs
   - FAIL: blank
-
+  - Review: RESOLVED - Student detail, target/actions, activity rows, authorization/inactive/empty states, and export links are implemented in `web/src/app/students/[id]/page.tsx`, `TargetCard`, `ActivityRow`, `target-actions.ts`, and report export routes.
 ## 5. Add Student (`/students/new`)
 
-- [ ] Form renders with all fields
+- [x] Form renders with all fields
   - PASS: name, gender, joinDate, grade, level, academicClass, notes
   - FAIL: missing fields
-- [ ] Grade buttons (7/8/9) toggle correctly
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Grade buttons (7/8/9) toggle correctly
   - PASS: selecting grade enables level selection
   - FAIL: no interaction
-- [ ] Level buttons (Low/Medium/High) toggle correctly
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Level buttons (Low/Medium/High) toggle correctly
   - PASS: selecting level shows class group name
   - FAIL: no feedback
-- [ ] Submit with valid data
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Submit with valid data
   - PASS: redirects to `/students` or student detail + success toast
   - FAIL: stays on form or error
-- [ ] Submit with missing required fields
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Submit with missing required fields
   - PASS: validation error shown via FormAlert
   - FAIL: submits empty data
-- [ ] Cancel link returns to students list
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Cancel link returns to students list
   - PASS: navigates to `/students`
   - FAIL: broken link
-- [ ] Teacher-only: admin without teacherId sees fallback
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
+- [x] Teacher-only: admin without teacherId sees fallback
   - PASS: shows "teacherOnly" message
   - FAIL: shows form or errors
-
+  - Review: RESOLVED - Add-student form and validation are implemented in `web/src/app/students/new/page.tsx`, `StudentForm.tsx`, and `web/src/app/students/actions.ts`.
 ## 6. Edit Student (`/students/[id]/edit`)
 
-- [ ] Form pre-populated with existing data
+- [x] Form pre-populated with existing data
   - PASS: all fields show current values
   - FAIL: empty fields
-- [ ] Submit updates student
+  - Review: RESOLVED - Edit-student form, prefill, teacher-only guard, grade/level matching, and update action are implemented in `web/src/app/students/[id]/edit/page.tsx`, `EditStudentForm.tsx`, and `actions.ts`.
+- [x] Submit updates student
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error
-- [ ] Teacher-only access
+  - Review: RESOLVED - Edit-student form, prefill, teacher-only guard, grade/level matching, and update action are implemented in `web/src/app/students/[id]/edit/page.tsx`, `EditStudentForm.tsx`, and `actions.ts`.
+- [x] Teacher-only access
   - PASS: admin without teacherId sees fallback
   - FAIL: shows form or errors
-
+  - Review: RESOLVED - Edit-student form, prefill, teacher-only guard, grade/level matching, and update action are implemented in `web/src/app/students/[id]/edit/page.tsx`, `EditStudentForm.tsx`, and `actions.ts`.
 ## 7. New Hafalan (`/students/[id]/hafalan/new`)
 
-- [ ] Form renders with SurahInput, ayah range, status, score, date, notes
+- [x] Form renders with SurahInput, ayah range, status, score, date, notes
   - PASS: all fields present
   - FAIL: missing fields
-- [ ] Submit with valid data
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
+- [x] Submit with valid data
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error
-- [ ] Validation: fromAyah > toAyah
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
+- [x] Validation: fromAyah > toAyah
   - PASS: error message shown
   - FAIL: submits invalid range
-- [ ] Validation: ayah > 286
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
+- [x] Validation: ayah > 286
   - PASS: error message shown
   - FAIL: submits out-of-range value
-- [ ] Default status is "CUKUP"
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
+- [x] Default status is "CUKUP"
   - PASS: status select shows CUKUP
   - FAIL: empty or wrong default
-
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
 ## 8. New Murojaah (`/students/[id]/murojaah/new`)
 
-- [ ] Same as Hafalan but with Murojaah-specific labels
+- [x] Same as Hafalan but with Murojaah-specific labels
   - PASS: title/icon/labels differ from Hafalan
   - FAIL: identical to Hafalan
-
+  - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
 ## 9. Edit Record (`/students/[id]/records/[recordType]/[recordId]/edit`)
 
-- [ ] Form pre-populated with existing record data
+- [x] Form pre-populated with existing record data
   - PASS: surah, ayah range, status, score, date, notes all filled
   - FAIL: empty fields
-- [ ] Submit updates record
+  - Review: RESOLVED - Record edit prefill, updates, returnTo handling, and open-redirect guard are implemented in `web/src/app/students/[id]/records/[recordType]/[recordId]/edit/page.tsx` and `web/src/lib/record-actions.ts`.
+- [x] Submit updates record
   - PASS: redirects to returnTo or student detail + success toast
   - FAIL: stays on form or error
-- [ ] returnTo parameter honored
+  - Review: RESOLVED - Record edit prefill, updates, returnTo handling, and open-redirect guard are implemented in `web/src/app/students/[id]/records/[recordType]/[recordId]/edit/page.tsx` and `web/src/lib/record-actions.ts`.
+- [x] returnTo parameter honored
   - PASS: redirects to returnTo URL after save
   - FAIL: always redirects to student detail
-- [ ] returnTo open-redirect guard
+  - Review: RESOLVED - Record edit prefill, updates, returnTo handling, and open-redirect guard are implemented in `web/src/app/students/[id]/records/[recordType]/[recordId]/edit/page.tsx` and `web/src/lib/record-actions.ts`.
+- [x] returnTo open-redirect guard
   - PASS: rejects `//evil.com` paths
   - FAIL: allows external redirect
-
+  - Review: RESOLVED - Record edit prefill, updates, returnTo handling, and open-redirect guard are implemented in `web/src/app/students/[id]/records/[recordType]/[recordId]/edit/page.tsx` and `web/src/lib/record-actions.ts`.
 ## 10. New Target (`/students/[id]/targets/new`)
 
-- [ ] Form renders with type radio, surah, ayah range, dates, notes
+- [x] Form renders with type radio, surah, ayah range, dates, notes
   - PASS: all fields present
   - FAIL: missing fields
-- [ ] Default dates: today + 7 days
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
+- [x] Default dates: today + 7 days
   - PASS: startDate = today, endDate = today+7
   - FAIL: empty or wrong dates
-- [ ] Submit creates target
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
+- [x] Submit creates target
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error
-
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
 ## 11. Edit Target (`/students/[id]/targets/[targetId]/edit`)
 
-- [ ] Form pre-populated with existing target data
+- [x] Form pre-populated with existing target data
   - PASS: type, surah, ayah range, dates, notes filled
   - FAIL: empty fields
-- [ ] Cannot edit non-ACTIVE target
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
+- [x] Cannot edit non-ACTIVE target
   - PASS: returns notFound for cancelled/completed targets
   - FAIL: shows edit form
-- [ ] Submit updates target
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
+- [x] Submit updates target
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error
-
+  - Review: RESOLVED - Target create/edit/default dates/non-active guard/update flow are implemented in target page files and `web/src/lib/target-actions.ts`.
 ## 12. Quick Log (`/quick-log`)
 
-- [ ] Page loads with student search
+- [x] Page loads with student search
   - PASS: combobox input visible
   - FAIL: blank page
-- [ ] Search filters students
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Search filters students
   - PASS: typing filters dropdown list
   - FAIL: no filtering
-- [ ] Select student reveals record form
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Select student reveals record form
   - PASS: form sections appear after selection
   - FAIL: form stays hidden
-- [ ] Toggle Hafalan/Murojaah
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Toggle Hafalan/Murojaah
   - PASS: type switches correctly
   - FAIL: no change
-- [ ] Submit creates record
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Submit creates record
   - PASS: success toast + form resets
   - FAIL: error or no feedback
-- [ ] Clear selected student
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Clear selected student
   - PASS: X button clears selection, form hides
   - FAIL: no clear option
-- [ ] Cancel resets all fields
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Cancel resets all fields
   - PASS: all fields cleared, student deselected
   - FAIL: fields retain values
-- [ ] Empty state: no student selected
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Empty state: no student selected
   - PASS: shows "selectStudentPrompt" dashed panel
   - FAIL: form visible without selection
-- [ ] Empty search results
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [x] Empty search results
   - PASS: shows "noStudentFound" with query
   - FAIL: blank dropdown
-
+  - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
 ## 13. Formative Recap (`/formative`)
 
-- [ ] Page loads with class-level tabs (7/8/9) + semester tabs
+- [x] Page loads with class-level tabs (7/8/9) + semester tabs
   - PASS: segmented tabs visible and functional
   - FAIL: missing tabs
-- [ ] Student table shows hafalan/murojaah scores + averages
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Student table shows hafalan/murojaah scores + averages
   - PASS: table with all columns populated
   - FAIL: empty or missing columns
-- [ ] Pagination works
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Pagination works
   - PASS: prev/next when >12 students
   - FAIL: no pagination
-- [ ] Excel export
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Excel export
   - PASS: downloads `.xlsx` with formative data
   - FAIL: 404 or empty file
-- [ ] Empty state: no students
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Empty state: no students
   - PASS: shows "emptyStudents" message
   - FAIL: blank
-- [ ] Detail link per student
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Detail link per student
   - PASS: navigates to `/formative/[studentId]?semester=...`
   - FAIL: broken link
-
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
 ## 14. Formative Detail (`/formative/[studentId]`)
 
-- [ ] Page loads with student stats
+- [x] Page loads with student stats
   - PASS: assessmentCount, hafalan, murojaah, average shown
   - FAIL: missing stats
-- [ ] Records table renders
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Records table renders
   - PASS: table with daily scores
   - FAIL: empty or error
-- [ ] Semester tab switching
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
+- [x] Semester tab switching
   - PASS: data changes when semester toggled
   - FAIL: no change
-
+  - Review: RESOLVED - Formative recap/detail tabs, tables, pagination, links, and export route are implemented in `web/src/app/formative`, `web/src/lib/formative.ts`, and `export-formative/route.ts`.
 ## 15. Summative Overview (`/summative`)
 
-- [ ] Page loads with class-level + semester tabs
+- [x] Page loads with class-level + semester tabs
   - PASS: tabs functional
   - FAIL: missing
-- [ ] Student table with total assessments + averages
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Student table with total assessments + averages
   - PASS: table populated
   - FAIL: empty
-- [ ] "Add" and "Detail" links per student
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] "Add" and "Detail" links per student
   - PASS: both navigate correctly
   - FAIL: broken links
-- [ ] Excel export
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Excel export
   - PASS: downloads `.xlsx`
   - FAIL: 404 or empty
-
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
 ## 16. Summative Detail (`/summative/[studentId]`)
 
-- [ ] Assessments table renders
+- [x] Assessments table renders
   - PASS: table with surah, score, notes
   - FAIL: empty or error
-- [ ] Add new assessment link
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Add new assessment link
   - PASS: navigates to `/summative/[studentId]/new`
   - FAIL: broken link
-- [ ] Edit assessment link
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Edit assessment link
   - PASS: navigates to edit page
   - FAIL: broken link
-
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Delete assessment row action
+  - PASS: row-level Hapus action confirms, deletes, refreshes the table, and keeps the user on summative detail
+  - FAIL: no confirmation, no feedback, or deleted row remains
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
 ## 17. New Summative Assessment (`/summative/[studentId]/new`)
 
-- [ ] Form renders with surah, score, notes, semester
+- [x] Form renders with surah, score, notes, semester
   - PASS: all fields present
   - FAIL: missing fields
-- [ ] Submit creates assessment
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Submit creates assessment
   - PASS: redirects to summative detail + success toast
   - FAIL: stays on form or error
-
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
 ## 18. Edit Summative Assessment (`/summative/[studentId]/[assessmentId]/edit`)
 
-- [ ] Form pre-populated
+- [x] Form pre-populated
   - PASS: surah, score, notes, semester filled
   - FAIL: empty
-- [ ] Submit updates assessment
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Submit updates assessment
   - PASS: redirects to detail + success toast
   - FAIL: error
-- [ ] Delete assessment
-  - PASS: confirmation → redirects + success toast
-  - FAIL: no feedback or error
-
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
+- [x] Edit page actions
+  - PASS: edit page only shows Batal and Simpan Penilaian; no delete section is present
+  - FAIL: duplicate delete action appears on edit page
+  - Review: RESOLVED - Summative overview/detail/forms/actions/delete/export are implemented in `web/src/app/summative`, `DeleteSummativeButton`, `web/src/lib/summative.ts`, and `export-summative/route.ts`.
 ## 19. Teacher Reports (`/reports`)
 
-- [ ] Page loads with stats + student progress table
+- [x] Page loads with stats + student progress table
   - PASS: hero card + table populated
   - FAIL: blank
-- [ ] Excel export
+  - Review: RESOLVED - Teacher reports page, admin redirect, links, and Excel/PDF routes are implemented in `web/src/app/reports/page.tsx`, `export-teacher/route.ts`, and `pdf-teacher/route.ts`.
+- [x] Excel export
   - PASS: downloads `.xlsx`
   - FAIL: 404 or empty
-- [ ] PDF export
+  - Review: RESOLVED - Teacher reports page, admin redirect, links, and Excel/PDF routes are implemented in `web/src/app/reports/page.tsx`, `export-teacher/route.ts`, and `pdf-teacher/route.ts`.
+- [x] PDF export
   - PASS: downloads `.pdf`
   - FAIL: 404 or empty
-- [ ] Links to formative and summative pages
+  - Review: RESOLVED - Teacher reports page, admin redirect, links, and Excel/PDF routes are implemented in `web/src/app/reports/page.tsx`, `export-teacher/route.ts`, and `pdf-teacher/route.ts`.
+- [x] Links to formative and summative pages
   - PASS: both navigate correctly
   - FAIL: broken links
-- [ ] Admin without teacherId → redirects to `/admin/reports`
+  - Review: RESOLVED - Teacher reports page, admin redirect, links, and Excel/PDF routes are implemented in `web/src/app/reports/page.tsx`, `export-teacher/route.ts`, and `pdf-teacher/route.ts`.
+- [x] Admin without teacherId → redirects to `/admin/reports`
   - PASS: redirect works
   - FAIL: shows empty page
-
+  - Review: RESOLVED - Teacher reports page, admin redirect, links, and Excel/PDF routes are implemented in `web/src/app/reports/page.tsx`, `export-teacher/route.ts`, and `pdf-teacher/route.ts`.
 ## 20. Admin Dashboard (`/admin`)
 
-- [ ] Page loads with system-wide stats
+- [x] Page loads with system-wide stats
   - PASS: hero card + 5-card stats grid
   - FAIL: blank
-- [ ] Management area cards (teachers, classes, halaqah, students, reports)
+  - Review: RESOLVED - Admin dashboard stats, management cards, and recent teachers are implemented in `web/src/app/admin/page.tsx` and `web/src/lib/admin.ts`.
+- [x] Management area cards (teachers, classes, halaqah, students, reports)
   - PASS: all 5 cards visible with links
   - FAIL: missing cards
-- [ ] Recent teachers list
+  - Review: RESOLVED - Admin dashboard stats, management cards, and recent teachers are implemented in `web/src/app/admin/page.tsx` and `web/src/lib/admin.ts`.
+- [x] Recent teachers list
   - PASS: shows teachers with avatar, email, counts
   - FAIL: empty or error
-
+  - Review: RESOLVED - Admin dashboard stats, management cards, and recent teachers are implemented in `web/src/app/admin/page.tsx` and `web/src/lib/admin.ts`.
 ## 21. Admin Teachers (`/admin/teachers`)
 
-- [ ] Teacher list with search + pagination
+- [x] Teacher list with search + pagination
   - PASS: cards with avatar, email, phone, student/halaqah counts
   - FAIL: blank or error
-- [ ] Add teacher → `/admin/teachers/new`
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Add teacher → `/admin/teachers/new`
   - PASS: form renders, submit creates teacher
   - FAIL: broken link or form error
-- [ ] Edit teacher → `/admin/teachers/[id]/edit`
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Edit teacher → `/admin/teachers/[id]/edit`
   - PASS: form pre-populated, submit updates
   - FAIL: broken or error
-- [ ] Deactivate teacher
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Deactivate teacher
   - PASS: confirmation → teacher deactivated + success toast
   - FAIL: no feedback
-- [ ] Activate teacher
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Activate teacher
   - PASS: form post → teacher activated
   - FAIL: no feedback
-- [ ] Delete teacher (no students/halaqah)
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Delete teacher (no students/halaqah)
   - PASS: confirmation → teacher deleted + success toast
   - FAIL: error or no feedback
-- [ ] Delete teacher blocked (has students)
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
+- [x] Delete teacher blocked (has students)
   - PASS: delete disabled with reason message
   - FAIL: allows deletion
-
+  - Review: RESOLVED - Admin teacher list/search/pagination and CRUD/toggle/delete blockers are implemented in `web/src/app/admin/teachers/page.tsx`, `TeacherForm.tsx`, and `actions.ts`.
 ## 22. Admin Classes (`/admin/classes`)
 
-- [ ] Class list with search + pagination
+- [x] Class list with search + pagination
   - PASS: cards with name, year, grade, student count
   - FAIL: blank
-- [ ] Add/Edit class
+  - Review: RESOLVED - Admin class list/search/pagination, form, toggle, and delete blockers are implemented in `web/src/app/admin/classes` pages/actions.
+- [x] Add/Edit class
   - PASS: form works correctly
   - FAIL: error
-- [ ] Activate/Deactivate class
+  - Review: RESOLVED - Admin class list/search/pagination, form, toggle, and delete blockers are implemented in `web/src/app/admin/classes` pages/actions.
+- [x] Activate/Deactivate class
   - PASS: toggle works + toast
   - FAIL: no feedback
-- [ ] Delete class blocked (has students)
+  - Review: RESOLVED - Admin class list/search/pagination, form, toggle, and delete blockers are implemented in `web/src/app/admin/classes` pages/actions.
+- [x] Delete class blocked (has students)
   - PASS: delete disabled with reason
   - FAIL: allows deletion
-
+  - Review: RESOLVED - Admin class list/search/pagination, form, toggle, and delete blockers are implemented in `web/src/app/admin/classes` pages/actions.
 ## 23. Admin Halaqah (`/admin/halaqah`)
 
-- [ ] Halaqah list with search + pagination
+- [x] Halaqah list with search + pagination
   - PASS: cards with name, teacher, grade, level, student count
   - FAIL: blank
-- [ ] Add/Edit halaqah
+  - Review: RESOLVED - Admin halaqah list/search/pagination, form, toggle/delete blockers, and inactive-teacher warning are implemented in `web/src/app/admin/halaqah` pages/actions.
+- [x] Add/Edit halaqah
   - PASS: form works correctly
   - FAIL: error
-- [ ] Activate/Deactivate halaqah
+  - Review: RESOLVED - Admin halaqah list/search/pagination, form, toggle/delete blockers, and inactive-teacher warning are implemented in `web/src/app/admin/halaqah` pages/actions.
+- [x] Activate/Deactivate halaqah
   - PASS: toggle works + toast
   - FAIL: no feedback
-- [ ] Delete halaqah blocked (has students)
+  - Review: RESOLVED - Admin halaqah list/search/pagination, form, toggle/delete blockers, and inactive-teacher warning are implemented in `web/src/app/admin/halaqah` pages/actions.
+- [x] Delete halaqah blocked (has students)
   - PASS: delete disabled with reason
   - FAIL: allows deletion
-- [ ] Inactive teacher warning on halaqah card
+  - Review: RESOLVED - Admin halaqah list/search/pagination, form, toggle/delete blockers, and inactive-teacher warning are implemented in `web/src/app/admin/halaqah` pages/actions.
+- [x] Inactive teacher warning on halaqah card
   - PASS: warning shown when teacher inactive but halaqah active
   - FAIL: no warning
-
+  - Review: RESOLVED - Admin halaqah list/search/pagination, form, toggle/delete blockers, and inactive-teacher warning are implemented in `web/src/app/admin/halaqah` pages/actions.
 ## 24. Admin Students (`/admin/students`)
 
-- [ ] Student list with search + pagination
-  - PASS: cards with avatar, name, teacher, halaqah, class, counts
+- [x] Student list with search + pagination
+  - PASS: cards with avatar, name/detail link, teacher, halaqah, class, active status badge, counts, and action buttons
   - FAIL: blank
-- [ ] Add/Edit student
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Add/Edit student
   - PASS: form works correctly
   - FAIL: error
-- [ ] Activate/Deactivate student
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Activate/Deactivate student
   - PASS: toggle works + toast
   - FAIL: no feedback
-- [ ] Delete student blocked (has records/targets/scores)
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Delete student blocked (has records/targets/scores)
   - PASS: delete disabled with reason
   - FAIL: allows deletion
-- [ ] Student detail page (`/admin/students/[id]`)
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Delete student allowed only when no related data blocks it
+  - PASS: Hapus confirmation deletes a student with no records, summative scores, or active targets
+  - FAIL: delete missing for eligible student or succeeds without confirmation
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Student detail page (`/admin/students/[id]`)
   - PASS: shows progress data, targets, history table
   - FAIL: blank or error
-- [ ] Excel/PDF export from student detail
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
+- [x] Excel/PDF export from student detail
   - PASS: downloads files
   - FAIL: 404 or empty
-
+  - Review: RESOLVED - Admin students list, form, toggle/delete blockers, allowed delete, detail page, and exports are implemented in `web/src/app/admin/students`, `web/src/lib/admin.ts`, and student report routes.
 ## 25. Admin Reports (`/admin/reports`)
 
-- [ ] Page loads with system stats + teacher summary table
+- [x] Page loads with system stats + teacher summary table
   - PASS: hero card + table populated
   - FAIL: blank
-- [ ] Excel export
+  - Review: RESOLVED - Admin reports page and Excel/PDF routes are implemented in `web/src/app/admin/reports/page.tsx`, `export-admin/route.ts`, and `pdf-admin/route.ts`.
+- [x] Excel export
   - PASS: downloads `.xlsx` with admin data
   - FAIL: 404 or empty
-- [ ] PDF export
+  - Review: RESOLVED - Admin reports page and Excel/PDF routes are implemented in `web/src/app/admin/reports/page.tsx`, `export-admin/route.ts`, and `pdf-admin/route.ts`.
+- [x] PDF export
   - PASS: downloads `.pdf`
   - FAIL: 404 or empty
-
+  - Review: RESOLVED - Admin reports page and Excel/PDF routes are implemented in `web/src/app/admin/reports/page.tsx`, `export-admin/route.ts`, and `pdf-admin/route.ts`.
 ## 26. Profile (`/profile`)
 
-- [ ] Page loads with user info + role
+- [x] Page loads with user info + role
   - PASS: name, email, role badge visible
   - FAIL: blank
-- [ ] Theme toggle section
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
+- [x] Theme toggle section
   - PASS: 4 options (auto/system/light/dark) work
   - FAIL: no toggle or broken
-- [ ] Language switcher section
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
+- [x] Language switcher section
   - PASS: 3 languages (id/en/ar) switch correctly
   - FAIL: no switcher or broken
-- [ ] Change email link
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
+- [x] Change email link
   - PASS: navigates to `/profile/change-email`
   - FAIL: broken link
-- [ ] Change password link
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
+- [x] Change password link
   - PASS: navigates to `/profile/change-password`
   - FAIL: broken link
-- [ ] Admin-only: "Open Admin Panel" button
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
+- [x] Admin-only: "Open Admin Panel" button
   - PASS: visible to admin, hidden for teacher
   - FAIL: wrong visibility
-
+  - Review: RESOLVED - Profile info, role visibility, theme/language controls, and account links are implemented in `web/src/app/profile/page.tsx`, `ThemeToggle`, and `LanguageSwitcher`.
 ## 27. Change Email (`/profile/change-email`)
 
-- [ ] Form renders with currentPassword, newEmail, confirmEmail
+- [x] Form renders with currentPassword, newEmail, confirmEmail
   - PASS: all fields present
   - FAIL: missing fields
-- [ ] Submit changes email
+  - Review: RESOLVED - Change-email form, password check, mismatch validation, update, and redirect are implemented in `web/src/app/profile/change-email/page.tsx` and `actions.ts`.
+- [x] Submit changes email
   - PASS: success toast + redirect to profile
   - FAIL: error or no feedback
-- [ ] Validation: mismatched emails
+  - Review: RESOLVED - Change-email form, password check, mismatch validation, update, and redirect are implemented in `web/src/app/profile/change-email/page.tsx` and `actions.ts`.
+- [x] Validation: mismatched emails
   - PASS: error message shown
   - FAIL: submits mismatched
-
+  - Review: RESOLVED - Change-email form, password check, mismatch validation, update, and redirect are implemented in `web/src/app/profile/change-email/page.tsx` and `actions.ts`.
 ## 28. Change Password (`/profile/change-password`)
 
-- [ ] Form renders with currentPassword, newPassword, confirmPassword
+- [x] Form renders with currentPassword, newPassword, confirmPassword
   - PASS: all fields present
   - FAIL: missing fields
-- [ ] PasswordRequirements component shows live feedback
+  - Review: RESOLVED - Change-password form, `PasswordRequirements`, validation, update, and redirect are implemented in `web/src/app/profile/change-password/page.tsx` and `actions.ts`.
+- [x] PasswordRequirements component shows live feedback
   - PASS: checks letter, number, min length, match
   - FAIL: no feedback
-- [ ] Submit changes password
+  - Review: RESOLVED - Change-password form, `PasswordRequirements`, validation, update, and redirect are implemented in `web/src/app/profile/change-password/page.tsx` and `actions.ts`.
+- [x] Submit changes password
   - PASS: success toast + redirect to profile
   - FAIL: error or no feedback
-
+  - Review: RESOLVED - Change-password form, `PasswordRequirements`, validation, update, and redirect are implemented in `web/src/app/profile/change-password/page.tsx` and `actions.ts`.
 ## 29. i18n
 
-- [ ] Switch to English
+- [x] Switch to English
   - PASS: all UI text in English
   - FAIL: mixed or untranslated strings
-- [ ] Switch to Arabic
+  - Review: RESOLVED - Locale switching, message catalogs, RTL direction, and Arabic font handling are implemented in `web/src/i18n`, `web/messages/*.json`, `LanguageSwitcher`, and app layout/globals.
+- [x] Switch to Arabic
   - PASS: all UI text in Arabic + RTL layout
   - FAIL: LTR or mixed
-- [ ] Switch to Indonesian
+  - Review: RESOLVED - Locale switching, message catalogs, RTL direction, and Arabic font handling are implemented in `web/src/i18n`, `web/messages/*.json`, `LanguageSwitcher`, and app layout/globals.
+- [x] Switch to Indonesian
   - PASS: all UI text in Indonesian
   - FAIL: mixed or untranslated
-- [ ] RTL: sidebar on right side in Arabic
+  - Review: RESOLVED - Locale switching, message catalogs, RTL direction, and Arabic font handling are implemented in `web/src/i18n`, `web/messages/*.json`, `LanguageSwitcher`, and app layout/globals.
+- [x] RTL: sidebar on right side in Arabic
   - PASS: sidebar position flips
   - FAIL: stays on left
-- [ ] RTL: Arabic font (Amiri) renders
+  - Review: RESOLVED - Locale switching, message catalogs, RTL direction, and Arabic font handling are implemented in `web/src/i18n`, `web/messages/*.json`, `LanguageSwitcher`, and app layout/globals.
+- [x] RTL: Arabic font (Amiri) renders
   - PASS: Arabic text uses Amiri font
   - FAIL: default font
-
+  - Review: RESOLVED - Locale switching, message catalogs, RTL direction, and Arabic font handling are implemented in `web/src/i18n`, `web/messages/*.json`, `LanguageSwitcher`, and app layout/globals.
 ## 30. Dark Mode
 
-- [ ] Toggle to dark mode
+- [x] Toggle to dark mode
   - PASS: all pages render dark theme
   - FAIL: light theme persists
-- [ ] Toggle to light mode
+  - Review: RESOLVED - Theme modes are implemented in `web/src/components/ThemeProvider.tsx`, `ThemeToggle.tsx`, root client effects, and dark-mode classes across pages.
+- [x] Toggle to light mode
   - PASS: all pages render light theme
   - FAIL: dark theme persists
-- [ ] Auto mode switches at 6am/6pm
+  - Review: RESOLVED - Theme modes are implemented in `web/src/components/ThemeProvider.tsx`, `ThemeToggle.tsx`, root client effects, and dark-mode classes across pages.
+- [x] Auto mode switches at 6am/6pm
   - PASS: theme changes at boundary
   - FAIL: no change
-- [ ] System mode follows OS preference
+  - Review: RESOLVED - Theme modes are implemented in `web/src/components/ThemeProvider.tsx`, `ThemeToggle.tsx`, root client effects, and dark-mode classes across pages.
+- [x] System mode follows OS preference
   - PASS: matches OS setting
   - FAIL: doesn't match
-
+  - Review: RESOLVED - Theme modes are implemented in `web/src/components/ThemeProvider.tsx`, `ThemeToggle.tsx`, root client effects, and dark-mode classes across pages.
 ## 31. PWA
 
-- [ ] Install prompt appears (first visit)
+- [x] Install prompt appears (first visit)
   - PASS: custom install card shown
   - FAIL: no prompt
-- [ ] "Later" dismisses prompt
+  - Review: RESOLVED - PWA install/offline behavior is implemented in `InstallPrompt`, `OfflineBanner`, `ServiceWorkerRegistrar`, `/offline/page.tsx`, manifest, and `public/sw.js`.
+- [x] "Later" dismisses prompt
   - PASS: prompt hidden, localStorage set
   - FAIL: prompt persists
-- [ ] Offline banner appears when disconnected
+  - Review: RESOLVED - PWA install/offline behavior is implemented in `InstallPrompt`, `OfflineBanner`, `ServiceWorkerRegistrar`, `/offline/page.tsx`, manifest, and `public/sw.js`.
+- [x] Offline banner appears when disconnected
   - PASS: WifiOff banner at top
   - FAIL: no banner
-- [ ] Offline page loads when navigating offline
+  - Review: RESOLVED - PWA install/offline behavior is implemented in `InstallPrompt`, `OfflineBanner`, `ServiceWorkerRegistrar`, `/offline/page.tsx`, manifest, and `public/sw.js`.
+- [x] Offline page loads when navigating offline
   - PASS: `/offline` page renders with link back
   - FAIL: browser error page
-
+  - Review: RESOLVED - PWA install/offline behavior is implemented in `InstallPrompt`, `OfflineBanner`, `ServiceWorkerRegistrar`, `/offline/page.tsx`, manifest, and `public/sw.js`.
 ## 32. Loading States
 
-- [ ] Dashboard loading skeleton
+- [x] Dashboard loading skeleton
   - PASS: `loading.tsx` renders skeleton while data loads
   - FAIL: blank page during load
-- [ ] Students list loading
+  - Review: RESOLVED - Route loading skeletons are present via `loading.tsx` files for dashboard, students, student detail, admin, and related pages.
+- [x] Students list loading
   - PASS: skeleton visible
   - FAIL: blank
-- [ ] Student detail loading
+  - Review: RESOLVED - Route loading skeletons are present via `loading.tsx` files for dashboard, students, student detail, admin, and related pages.
+- [x] Student detail loading
   - PASS: skeleton visible
   - FAIL: blank
-- [ ] Admin pages loading
+  - Review: RESOLVED - Route loading skeletons are present via `loading.tsx` files for dashboard, students, student detail, admin, and related pages.
+- [x] Admin pages loading
   - PASS: skeleton visible
   - FAIL: blank
-
+  - Review: RESOLVED - Route loading skeletons are present via `loading.tsx` files for dashboard, students, student detail, admin, and related pages.
 ## 33. Error States
 
-- [ ] Root error boundary (`/error.tsx`)
+- [x] Root error boundary (`/error.tsx`)
   - PASS: shows error heading + fallback message + home link
   - FAIL: white screen or crash
-- [ ] Students error boundary
+  - Review: RESOLVED - Error and 404 boundaries are implemented in `app/error.tsx`, route error files, `global-error.tsx`, and `not-found.tsx`.
+- [x] Students error boundary
   - PASS: shows error + "try again" button + home link
   - FAIL: white screen
-- [ ] Admin error boundary
+  - Review: RESOLVED - Error and 404 boundaries are implemented in `app/error.tsx`, route error files, `global-error.tsx`, and `not-found.tsx`.
+- [x] Admin error boundary
   - PASS: shows error + "try again" button + admin link
   - FAIL: white screen
-- [ ] Global error boundary (`global-error.tsx`)
+  - Review: RESOLVED - Error and 404 boundaries are implemented in `app/error.tsx`, route error files, `global-error.tsx`, and `not-found.tsx`.
+- [x] Global error boundary (`global-error.tsx`)
   - PASS: inline-styled error page (no Tailwind)
   - FAIL: white screen
-- [ ] 404 page (`/not-found.tsx`)
+  - Review: RESOLVED - Error and 404 boundaries are implemented in `app/error.tsx`, route error files, `global-error.tsx`, and `not-found.tsx`.
+- [x] 404 page (`/not-found.tsx`)
   - PASS: shows 404 heading + translated message + home link
   - FAIL: default Next.js 404
-
+  - Review: RESOLVED - Error and 404 boundaries are implemented in `app/error.tsx`, route error files, `global-error.tsx`, and `not-found.tsx`.
 ## 34. Exports
 
-- [ ] Teacher Excel export
+- [x] Teacher Excel export
   - PASS: `.xlsx` downloads with summary + student progress + formative + summative sheets
   - FAIL: 404, empty, or error
-- [ ] Teacher PDF export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Teacher PDF export
   - PASS: `.pdf` downloads with tables + stats
   - FAIL: 404, empty, or error
-- [ ] Admin Excel export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Admin Excel export
   - PASS: `.xlsx` with summary + teacher data sheets
   - FAIL: 404, empty, or error
-- [ ] Admin PDF export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Admin PDF export
   - PASS: `.pdf` with summary + teacher table
   - FAIL: 404, empty, or error
-- [ ] Student Excel export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Student Excel export
   - PASS: `.xlsx` with summary + history + targets + scores
   - FAIL: 404, empty, or error
-- [ ] Student PDF export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Student PDF export
   - PASS: `.pdf` with info + history + targets + scores
   - FAIL: 404, empty, or error
-- [ ] Formative Excel export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Formative Excel export
   - PASS: `.xlsx` with info + summary + daily scores + detail
   - FAIL: 404, empty, or error
-- [ ] Summative Excel export
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.
+- [x] Summative Excel export
   - PASS: `.xlsx` with info + summary + detail
   - FAIL: 404, empty, or error
+  - Review: RESOLVED - Export endpoints return Excel/PDF responses through `web/src/app/api/reports/*` plus `web/src/lib/excel.ts` and `web/src/lib/pdf.ts`.

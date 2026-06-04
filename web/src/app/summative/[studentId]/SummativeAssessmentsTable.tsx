@@ -125,7 +125,7 @@ export default function SummativeAssessmentsTable({
                         return next;
                       });
                     }}
-                    onDeleteStart={() => {
+                    onDeleteSuccess={() => {
                       setHiddenAssessmentIds((current) => new Set(current).add(assessment.id));
                     }}
                     semester={semesterValue}

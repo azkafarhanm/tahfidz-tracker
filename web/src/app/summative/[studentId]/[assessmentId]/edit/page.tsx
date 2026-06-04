@@ -3,7 +3,6 @@ import { ArrowLeft, PencilLine } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import DeleteSummativeButton from "@/components/DeleteSummativeButton";
 import { requireSessionScope } from "@/lib/session";
 import {
   getStudentSummativeAssessmentForEdit,
@@ -89,24 +88,6 @@ export default async function SummativeEditPage({
           studentId={studentId}
         />
       </div>
-
-      <section className="mt-6 rounded-[1.75rem] border border-rose-200 bg-rose-50 p-5 shadow-sm dark:border-rose-900 dark:bg-rose-950/40 dark:shadow-none">
-        <h2 className="text-lg font-semibold text-rose-900 dark:text-rose-300">
-          {t("deleteHeading")}
-        </h2>
-        <p className="mt-2 text-sm text-rose-800 dark:text-rose-400">
-          {t("deleteDescription", {
-            surah: `${assessment.surah.number}. ${assessment.surah.name}`,
-          })}
-        </p>
-        <div className="mt-4">
-          <DeleteSummativeButton
-            assessmentId={assessment.id}
-            semester={assessment.semester}
-            studentId={studentId}
-          />
-        </div>
-      </section>
     </AppShell>
   );
 }

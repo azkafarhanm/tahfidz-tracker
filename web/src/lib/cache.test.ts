@@ -80,9 +80,35 @@ test("cached evicts oldest entries when the cache reaches its limit", async () =
   assert.equal(getCacheSize(), 2);
 });
 
+test("cached does not restore stale data after an invalidated pending fill resolves", async () => {
+  let resolvePending!: (value: number) => void;
+  const pending = cached(
+    "formative-detail:student-1:teacher:GANJIL:2025/2026:id",
+    1_000,
+    () => new Promise<number>((resolve) => {
+      resolvePending = resolve;
+    }),
+  );
+
+  invalidateStudentRelatedCaches("student-1");
+  resolvePending(1);
+
+  assert.equal(await pending, 1);
+  assert.equal(getCacheSize(), 0);
+
+  const fresh = await cached(
+    "formative-detail:student-1:teacher:GANJIL:2025/2026:id",
+    1_000,
+    async () => 2,
+  );
+
+  assert.equal(fresh, 2);
+});
+
 test("invalidateStudentRelatedCaches clears student and quick-log caches", async () => {
   await cached("students:list:teacher:id::1:12", 1_000, async () => 1);
   await cached("quick-log-students:teacher", 1_000, async () => 2);
+  await cached("summative-detail:student-1:teacher:GENAP:2025/2026:id", 1_000, async () => 3);
   await cached("unrelated", 1_000, async () => 3);
 
   invalidateStudentRelatedCaches("student-1");

@@ -45,7 +45,10 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        const message = t("errorWrongCredentials");
+        const message =
+          result.code === "rate_limited"
+            ? t("errorRateLimited")
+            : t("errorWrongCredentials");
         setError(message);
         toast.error(message);
         playNotificationSound("error");

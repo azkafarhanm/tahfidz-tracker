@@ -24,12 +24,12 @@ export async function GET(request: Request) {
   try {
     const scope = await getRequestSessionScope();
     if (!scope) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const teacherId = scope.isAdmin ? null : scope.teacherId;
     if (!scope.isAdmin && !teacherId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
