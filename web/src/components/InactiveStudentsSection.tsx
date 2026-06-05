@@ -10,8 +10,6 @@ type InactiveStudent = {
   classSummary: string;
   fullName: string;
   id: string;
-  summativeScoreCount: number;
-  totalRecordCount: number;
 };
 
 type InactiveStudentsSectionProps = {
@@ -90,8 +88,6 @@ export default function InactiveStudentsSection({
             onReactivateSuccess={() => {
               setHiddenIds((current) => new Set(current).add(student.id));
             }}
-            summativeScoreCount={student.summativeScoreCount}
-            totalRecordCount={student.totalRecordCount}
           />
         ))}
         {visibleStudents.length === 0 ? (

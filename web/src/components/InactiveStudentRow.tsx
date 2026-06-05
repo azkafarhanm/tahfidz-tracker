@@ -14,8 +14,6 @@ type InactiveStudentRowProps = {
   onDeleteError: (error: string) => void;
   onDeleteStart: () => void;
   onReactivateSuccess: () => void;
-  summativeScoreCount: number;
-  totalRecordCount: number;
 };
 
 export default function InactiveStudentRow({
@@ -27,25 +25,14 @@ export default function InactiveStudentRow({
   onDeleteError,
   onDeleteStart,
   onReactivateSuccess,
-  summativeScoreCount,
-  totalRecordCount,
 }: InactiveStudentRowProps) {
   const t = useTranslations("Students");
 
-  const deleteBlockers = [
-    totalRecordCount > 0
-      ? t("deleteBlockedRecordItem", { count: totalRecordCount })
-      : null,
-    summativeScoreCount > 0
-      ? t("deleteBlockedSummativeItem", { count: summativeScoreCount })
-      : null,
-    activeTargetCount > 0
-      ? t("deleteBlockedTargetItem", { count: activeTargetCount })
-      : null,
-  ].filter(Boolean);
   const deleteDisabledReason =
-    deleteBlockers.length > 0
-      ? t("deleteBlockedReason", { items: deleteBlockers.join(", ") })
+    activeTargetCount > 0
+      ? t("deleteBlockedReason", {
+          items: t("deleteBlockedTargetItem", { count: activeTargetCount }),
+        })
       : undefined;
 
   return (

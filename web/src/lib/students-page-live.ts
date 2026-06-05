@@ -149,9 +149,6 @@ export async function getLiveInactiveStudentsData(teacherId?: string | null) {
       academicClass: { select: { name: true } },
       _count: {
         select: {
-          memorizationRecords: true,
-          revisionRecords: true,
-          summativeScores: true,
           targets: {
             where: { status: TargetStatus.ACTIVE },
           },
@@ -162,16 +159,9 @@ export async function getLiveInactiveStudentsData(teacherId?: string | null) {
 
   return students.map((student) => ({
     activeTargetCount: student._count.targets,
-    deleteBlockingDataCount:
-      student._count.memorizationRecords +
-      student._count.revisionRecords +
-      student._count.summativeScores +
-      student._count.targets,
+    deleteBlockingDataCount: student._count.targets,
     id: student.id,
     fullName: student.fullName,
     ...formatClassSummary(student),
-    summativeScoreCount: student._count.summativeScores,
-    totalRecordCount:
-      student._count.memorizationRecords + student._count.revisionRecords,
   }));
 }

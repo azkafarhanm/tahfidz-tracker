@@ -179,27 +179,12 @@ export default async function AdminStudentsPage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {students.length > 0 ? (
               students.map((student) => {
-                const deleteBlockers = [
-                  student.totalRecordCount > 0
-                    ? t("deleteBlockedRecordItem", {
-                        count: student.totalRecordCount,
-                      })
-                    : null,
-                  student.summativeScoreCount > 0
-                    ? t("deleteBlockedSummativeItem", {
-                        count: student.summativeScoreCount,
-                      })
-                    : null,
-                  student.activeTargetCount > 0
-                    ? t("deleteBlockedTargetItem", {
-                        count: student.activeTargetCount,
-                      })
-                    : null,
-                ].filter(Boolean);
                 const deleteDisabledReason =
-                  deleteBlockers.length > 0
+                  student.activeTargetCount > 0
                     ? t("deleteBlockedReason", {
-                        items: deleteBlockers.join(", "),
+                        items: t("deleteBlockedTargetItem", {
+                          count: student.activeTargetCount,
+                        }),
                       })
                     : undefined;
 

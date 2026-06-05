@@ -268,9 +268,6 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
       academicClass: { select: { name: true } },
       _count: {
         select: {
-          memorizationRecords: true,
-          revisionRecords: true,
-          summativeScores: true,
           targets: {
             where: { status: TargetStatus.ACTIVE },
           },
@@ -281,17 +278,10 @@ async function getInactiveStudentsDataInner(teacherId?: string | null) {
 
   return students.map((s) => ({
     activeTargetCount: s._count.targets,
-    deleteBlockingDataCount:
-      s._count.memorizationRecords +
-      s._count.revisionRecords +
-      s._count.summativeScores +
-      s._count.targets,
+    deleteBlockingDataCount: s._count.targets,
     id: s.id,
     fullName: s.fullName,
     ...formatClassSummary(s),
-    summativeScoreCount: s._count.summativeScores,
-    totalRecordCount:
-      s._count.memorizationRecords + s._count.revisionRecords,
   }));
 }
 

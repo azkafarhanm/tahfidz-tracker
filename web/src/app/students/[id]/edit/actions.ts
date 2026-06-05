@@ -22,23 +22,10 @@ const validLevels = new Set<string>(Object.values(HalaqahLevel));
 function buildDeleteBlockerItems(
   counts: {
     activeTargets: number;
-    memorizationRecords: number;
-    revisionRecords: number;
-    summativeScores: number;
   },
   t: Awaited<ReturnType<typeof getTranslations>>,
 ) {
-  const recordCount = counts.memorizationRecords + counts.revisionRecords;
-
   return [
-    recordCount > 0
-      ? t("teacherStudentDeleteBlockedRecords", { count: recordCount })
-      : null,
-    counts.summativeScores > 0
-      ? t("teacherStudentDeleteBlockedSummative", {
-          count: counts.summativeScores,
-        })
-      : null,
     counts.activeTargets > 0
       ? t("teacherStudentDeleteBlockedTargets", {
           count: counts.activeTargets,
@@ -286,9 +273,6 @@ export async function deleteTeacherStudent(studentId: string) {
             _count: {
               select: {
                 targets: { where: { status: TargetStatus.ACTIVE } },
-                memorizationRecords: true,
-                revisionRecords: true,
-                summativeScores: true,
               },
             },
           },
@@ -301,9 +285,6 @@ export async function deleteTeacherStudent(studentId: string) {
         const blockerItems = buildDeleteBlockerItems(
           {
             activeTargets: student._count.targets,
-            memorizationRecords: student._count.memorizationRecords,
-            revisionRecords: student._count.revisionRecords,
-            summativeScores: student._count.summativeScores,
           },
           t,
         );
