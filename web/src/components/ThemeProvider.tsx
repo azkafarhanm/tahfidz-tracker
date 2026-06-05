@@ -1,7 +1,7 @@
 "use client";
 
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
-import { useEffect } from "react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { useCallback, useEffect, useState } from "react";
 
 const AUTO_THEME = "auto";
 const DAY_START_HOUR = 6;
@@ -30,45 +30,35 @@ function getNextThemeBoundaryDelay(date = new Date()) {
   return Math.max(nextBoundary.getTime() - date.getTime(), 1_000);
 }
 
-function AutoThemeController() {
-  const { theme } = useTheme();
-
-  useEffect(() => {
-    if (theme !== AUTO_THEME) {
-      return;
+function AutoThemeBoundaryTimer({
+  onBoundary,
+}: {
+  onBoundary: (theme: "light" | "dark") => void;
+}) {
+  const scheduleBoundary = useCallback(() => {
+    function tick() {
+      onBoundary(getTimeBasedTheme());
+      timeoutId = window.setTimeout(tick, getNextThemeBoundaryDelay());
     }
 
-    let timeoutId: number | undefined;
+    let timeoutId = window.setTimeout(tick, getNextThemeBoundaryDelay());
 
-    function applyAutoTheme() {
-      const nextTheme = getTimeBasedTheme();
-      const root = document.documentElement;
-
-      root.classList.remove("light", "dark");
-      root.classList.add(nextTheme);
-      root.style.colorScheme = nextTheme;
-
-      window.clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(
-        applyAutoTheme,
-        getNextThemeBoundaryDelay(),
-      );
-    }
-
-    function handleVisibilityChange() {
+    function handleVisibility() {
       if (!document.hidden) {
-        applyAutoTheme();
+        window.clearTimeout(timeoutId);
+        tick();
       }
     }
 
-    applyAutoTheme();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.clearTimeout(timeoutId);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [theme]);
+  }, [onBoundary]);
+
+  useEffect(scheduleBoundary, [scheduleBoundary]);
 
   return null;
 }
@@ -78,14 +68,19 @@ export default function ThemeProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const [autoResolved, setAutoResolved] = useState<"light" | "dark">(() =>
+    getTimeBasedTheme(),
+  );
+
   return (
     <NextThemesProvider
       attribute="class"
       defaultTheme={AUTO_THEME}
       enableSystem
       themes={["light", "dark", "system", AUTO_THEME]}
+      value={{ auto: autoResolved }}
     >
-      <AutoThemeController />
+      <AutoThemeBoundaryTimer onBoundary={setAutoResolved} />
       {children}
     </NextThemesProvider>
   );
