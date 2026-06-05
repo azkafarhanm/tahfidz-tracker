@@ -78,7 +78,7 @@ export default function ThemeProvider({
       defaultTheme={AUTO_THEME}
       enableSystem
       themes={["light", "dark", "system", AUTO_THEME]}
-      value={{ auto: autoResolved }}
+      value={{ auto: autoResolved, light: "light", dark: "dark" }}
     >
       <AutoThemeBoundaryTimer onBoundary={setAutoResolved} />
       {children}
