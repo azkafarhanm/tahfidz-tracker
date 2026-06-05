@@ -73,7 +73,7 @@ export default function ThemeProvider({
   );
 
   if (typeof window !== "undefined") {
-    (window as any).__autoResolved = autoResolved;
+    (window as Window & { __autoResolved?: string }).__autoResolved = autoResolved;
   }
 
   return (

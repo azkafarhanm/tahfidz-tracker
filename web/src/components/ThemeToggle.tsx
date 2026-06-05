@@ -36,7 +36,7 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
       systemTheme,
       prefersDark,
       htmlClass,
-      autoResolved: (window as any).__autoResolved,
+      autoResolved: (window as Window & { __autoResolved?: string }).__autoResolved,
     };
     console.log("[ThemeDebug]", JSON.stringify(debug, null, 2));
   }, [mounted, theme, resolvedTheme, systemTheme]);
@@ -84,7 +84,7 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
         })}
       </div>
       <pre className="rounded bg-yellow-100 p-2 text-[10px] text-black whitespace-pre-wrap break-all">
-{JSON.stringify({ theme, resolvedTheme, systemTheme, prefersDark, htmlClass, autoResolved: (window as any).__autoResolved }, null, 2)}
+{JSON.stringify({ theme, resolvedTheme, systemTheme, prefersDark, htmlClass, autoResolved: (window as Window & { __autoResolved?: string }).__autoResolved }, null, 2)}
       </pre>
     </div>
   );
