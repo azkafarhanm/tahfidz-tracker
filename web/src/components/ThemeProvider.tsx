@@ -72,6 +72,10 @@ export default function ThemeProvider({
     getTimeBasedTheme(),
   );
 
+  if (typeof window !== "undefined") {
+    (window as any).__autoResolved = autoResolved;
+  }
+
   return (
     <NextThemesProvider
       attribute="class"
