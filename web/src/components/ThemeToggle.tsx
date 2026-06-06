@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Clock3, Moon, Sun, Monitor } from "lucide-react";
 
 type ThemeToggleProps = {
@@ -13,8 +13,82 @@ type ThemeToggleProps = {
   };
 };
 
+type DebugSnapshot = {
+  ts: string;
+  theme: string | undefined;
+  resolvedTheme: string | undefined;
+  systemTheme: string | undefined;
+  prefersDark: boolean | undefined;
+  htmlClass: string;
+  colorScheme: string;
+  localStorageTheme: string | null;
+  autoResolved: string | undefined;
+  userAgent: string;
+};
+
+function useDebugSnapshot(enabled: boolean) {
+  const { theme, resolvedTheme, systemTheme } = useTheme();
+  const [snapshot, setSnapshot] = useState<DebugSnapshot | null>(null);
+
+  const capture = useCallback(() => {
+    if (!enabled) return;
+    const now = new Date();
+    const ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
+      .map((n) => String(n).padStart(2, "0"))
+      .join(":");
+    const prefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    const htmlClass = document.documentElement.className;
+    const colorScheme =
+      getComputedStyle(document.documentElement).colorScheme;
+    const localStorageTheme = localStorage.getItem("theme");
+    const autoResolved = (
+      window as Window & { __autoResolved?: string }
+    ).__autoResolved;
+    const userAgent = navigator.userAgent;
+    setSnapshot({
+      ts,
+      theme,
+      resolvedTheme,
+      systemTheme,
+      prefersDark,
+      htmlClass,
+      colorScheme,
+      localStorageTheme,
+      autoResolved,
+      userAgent,
+    });
+  }, [enabled, theme, resolvedTheme, systemTheme]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    capture();
+  }, [enabled, capture]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const onVis = () => {
+      if (!document.hidden) capture();
+    };
+    const onFocus = () => capture();
+    const onMedia = () => capture();
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onFocus);
+    mq.addEventListener("change", onMedia);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onFocus);
+      mq.removeEventListener("change", onMedia);
+    };
+  }, [enabled, capture]);
+
+  return snapshot;
+}
+
 export default function ThemeToggle({ labels }: ThemeToggleProps) {
-  const { theme, setTheme, resolvedTheme, systemTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   const themes = [
@@ -26,20 +100,25 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
 
   useEffect(() => setMounted(true), []);
 
+  const snapshot = useDebugSnapshot(mounted);
+  const panelRef = useRef<HTMLPreElement>(null);
+
   useEffect(() => {
-    if (!mounted) return;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const htmlClass = document.documentElement.className;
-    const debug = {
-      theme,
-      resolvedTheme,
-      systemTheme,
-      prefersDark,
-      htmlClass,
-      autoResolved: (window as Window & { __autoResolved?: string }).__autoResolved,
-    };
-    console.log("[ThemeDebug]", JSON.stringify(debug, null, 2));
-  }, [mounted, theme, resolvedTheme, systemTheme]);
+    if (!snapshot || !panelRef.current) return;
+    const lines = [
+      snapshot.ts,
+      `theme:            ${snapshot.theme}`,
+      `resolvedTheme:    ${snapshot.resolvedTheme}`,
+      `systemTheme:      ${snapshot.systemTheme}`,
+      `prefersDark:      ${snapshot.prefersDark}`,
+      `htmlClass:        ${snapshot.htmlClass}`,
+      `colorScheme:      ${snapshot.colorScheme}`,
+      `localStorage:     ${snapshot.localStorageTheme}`,
+      `autoResolved:     ${snapshot.autoResolved}`,
+      `userAgent:        ${snapshot.userAgent}`,
+    ];
+    panelRef.current.textContent = lines.join("\n");
+  }, [snapshot]);
 
   if (!mounted) {
     return (
@@ -55,9 +134,6 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
       </div>
     );
   }
-
-  const prefersDark = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : null;
-  const htmlClass = typeof document !== "undefined" ? document.documentElement.className : null;
 
   return (
     <div className="space-y-2">
@@ -83,9 +159,10 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
           );
         })}
       </div>
-      <pre className="rounded bg-yellow-100 p-2 text-[10px] text-black whitespace-pre-wrap break-all">
-{JSON.stringify({ theme, resolvedTheme, systemTheme, prefersDark, htmlClass, autoResolved: (window as Window & { __autoResolved?: string }).__autoResolved }, null, 2)}
-      </pre>
+      <pre
+        ref={panelRef}
+        className="rounded bg-yellow-100 p-2 text-[10px] text-black whitespace-pre-wrap break-all"
+      />
     </div>
   );
 }
