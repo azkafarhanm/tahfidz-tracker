@@ -125,7 +125,7 @@ export async function createTeacherStudent(formData: FormData) {
     resolvedClassGroupId = classGroup.id;
   }
 
-  await prisma.student.create({
+  const newStudent = await prisma.student.create({
     data: {
       teacherId,
       classGroupId: resolvedClassGroupId,
@@ -141,5 +141,5 @@ export async function createTeacherStudent(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/students");
   invalidateStudentRelatedCaches();
-  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}`);
+  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}&highlight=${newStudent.id}`);
 }

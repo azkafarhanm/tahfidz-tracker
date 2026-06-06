@@ -56,8 +56,7 @@ export async function createMurojaahRecord(
     surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
-  await prisma.revisionRecord.create({
-    data: {
+  const record = await prisma.revisionRecord.create({ data: {
       studentId: student.id,
       teacherId: student.teacherId,
       surah,
@@ -76,5 +75,5 @@ export async function createMurojaahRecord(
   revalidatePath("/formative");
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
-  redirect(`/students/${student.id}?success=${encodeURIComponent(t("murojaahCreated"))}`);
+  redirect(`/students/${student.id}?success=${encodeURIComponent(t("murojaahCreated"))}&highlight=${record.id}`);
 }

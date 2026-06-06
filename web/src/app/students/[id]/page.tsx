@@ -17,6 +17,7 @@ import {
 import { getStudentDetailData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
@@ -192,6 +193,7 @@ export default async function StudentDetailPage({
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
+         <ScrollToHighlightedItem />
          <header className="flex items-center justify-between gap-4">
            <div className="flex items-start gap-3 min-w-0">
              <InitialsAvatar name={student.fullName} size="lg" />

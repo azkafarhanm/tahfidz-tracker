@@ -108,7 +108,7 @@ export async function createTarget(studentId: string, formData: FormData) {
   const { data } = result;
 
   // Always store the student's actual teacher on the target record
-  await prisma.target.create({
+  const target = await prisma.target.create({
     data: {
       studentId,
       teacherId: student.teacherId,
@@ -125,7 +125,7 @@ export async function createTarget(studentId: string, formData: FormData) {
   const t = await getTranslations("Validation");
   revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("targetCreated"))}`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("targetCreated"))}&highlight=${target.id}`);
 }
 
 export async function updateTarget(targetId: string, formData: FormData) {

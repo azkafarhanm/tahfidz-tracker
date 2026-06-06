@@ -15,6 +15,7 @@ import ActiveStudentCard from "@/components/ActiveStudentCard";
 import AppShell from "@/components/AppShell";
 import InactiveStudentsSection from "@/components/InactiveStudentsSection";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -84,6 +85,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
         <StudentsPageAutoRefresh />
+        <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link

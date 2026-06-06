@@ -56,8 +56,7 @@ export async function createHafalanRecord(
     surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
-  await prisma.memorizationRecord.create({
-    data: {
+  const record = await prisma.memorizationRecord.create({ data: {
       studentId: student.id,
       teacherId: student.teacherId,
       surah,
@@ -76,5 +75,5 @@ export async function createHafalanRecord(
   revalidatePath("/formative");
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
-  redirect(`/students/${student.id}?success=${encodeURIComponent(t("hafalanCreated"))}`);
+  redirect(`/students/${student.id}?success=${encodeURIComponent(t("hafalanCreated"))}&highlight=${record.id}`);
 }
