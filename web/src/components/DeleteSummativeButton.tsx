@@ -51,12 +51,12 @@ export default function DeleteSummativeButton({
           onDeleteSuccess?.();
 
           if (navigateOnSuccess) {
-            setTimeout(() => router.replace(result.redirectTo ?? fallbackRedirectTo), 400);
+            setTimeout(() => router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false }), 400);
           } else {
             router.refresh();
           }
         } else if (navigateOnSuccess) {
-          router.replace(result.redirectTo ?? fallbackRedirectTo);
+          router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false });
         } else {
           router.refresh();
         }

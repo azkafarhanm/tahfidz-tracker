@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import {
   type NavigationItem,
   navigationIcons,
@@ -20,6 +21,24 @@ export default function NavigationLinks({
   variant,
 }: NavigationLinksProps) {
   const pathname = usePathname();
+  const activeRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (variant !== "bottom") return;
+    const el = activeRef.current;
+    if (!el) return;
+    const scroller = el.closest("[data-bottom-scroll]");
+    if (!scroller) return;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const overflowLeft = elRect.left - scrollerRect.left;
+    const overflowRight = elRect.right - scrollerRect.right;
+    if (overflowLeft < 0) {
+      scroller.scrollBy({ left: overflowLeft - 12, behavior: "smooth" });
+    } else if (overflowRight > 0) {
+      scroller.scrollBy({ left: overflowRight + 12, behavior: "smooth" });
+    }
+  }, [pathname, variant]);
 
   return items.map(({ key, href, iconKey }) => {
     const Icon = navigationIcons[iconKey];
@@ -28,6 +47,7 @@ export default function NavigationLinks({
     if (variant === "bottom") {
       return (
         <Link
+          ref={active ? activeRef : undefined}
           aria-current={active ? "page" : undefined}
           className={
             active

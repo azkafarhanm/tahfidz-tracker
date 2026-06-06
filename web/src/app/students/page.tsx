@@ -151,6 +151,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
               }`}
               href={buildStatusHref("active")}
+              scroll={false}
             >
               {t("activeTab")}
             </Link>
@@ -161,6 +162,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
               }`}
               href={buildStatusHref("inactive")}
+              scroll={false}
             >
               {t("inactiveTab")}
             </Link>
