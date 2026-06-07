@@ -30,8 +30,8 @@ export default async function Sidebar({
   const navKeys = isAdmin ? adminNavigationItems : teacherNavigationItems;
 
   return (
-    <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-[100dvh] sm:w-64 sm:flex-col sm:overflow-y-auto">
-      <div className="shrink-0 p-5 border-b border-slate-100 dark:border-slate-800">
+    <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-[100dvh] sm:w-64 sm:flex-col sm:overflow-hidden">
+      <div className="shrink-0 border-b border-slate-100 p-5 dark:border-slate-800">
         <Link className="flex items-center gap-3" href="/">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             {isAdmin ? (
@@ -49,15 +49,15 @@ export default async function Sidebar({
         </Link>
       </div>
 
-      <nav className="shrink-0 space-y-1.5 p-3">
-        <NavigationLinks
-          items={navKeys}
-          labels={Object.fromEntries(navKeys.map(({ key }) => [key, t(key)]))}
-          variant="sidebar"
-        />
+      <nav className="flex-1 overflow-y-auto [scrollbar-width:thin] p-3">
+        <div className="space-y-1.5">
+          <NavigationLinks
+            items={navKeys}
+            labels={Object.fromEntries(navKeys.map(({ key }) => [key, t(key)]))}
+            variant="sidebar"
+          />
+        </div>
       </nav>
-
-      <div className="flex-1" />
 
       <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
         <div className="mb-3">

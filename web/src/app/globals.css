@@ -116,3 +116,20 @@ option {
   outline-offset: 2px;
   border-radius: inherit;
 }
+
+aside nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+aside nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+aside nav::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225 / 0.5);
+  border-radius: 2px;
+}
+
+.dark aside nav::-webkit-scrollbar-thumb {
+  background: rgb(51 65 85 / 0.5);
+}
