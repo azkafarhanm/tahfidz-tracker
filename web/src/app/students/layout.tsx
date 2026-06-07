@@ -14,6 +14,7 @@ export default function StudentsLayout({
         "DeleteRecord",
         "DeleteStudent",
         "Error",
+        "LogoutButton",
         "ReactivateStudent",
         "StudentDetail",
         "StudentForm",

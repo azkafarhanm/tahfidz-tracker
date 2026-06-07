@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { deleteSummativeAssessmentAction } from "@/app/summative/actions";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
 type DeleteSummativeButtonProps = {
   assessmentId: string;
@@ -33,7 +33,7 @@ export default function DeleteSummativeButton({
   const fallbackRedirectTo = `/summative/${studentId}?semester=${semester}`;
 
   return (
-    <InlineConfirmActionButton
+    <ConfirmActionDialogButton
       cancelLabel={t("cancel")}
       confirmLabel={t("confirmDelete")}
       confirmMessage={t("confirmMessage")}

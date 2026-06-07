@@ -7,7 +7,7 @@ export default function ProfileLayout({
   children: ReactNode;
 }) {
   return (
-    <ScopedIntlProvider namespaces={["ChangeEmail", "ChangePassword", "CharacterCounter"]}>
+    <ScopedIntlProvider namespaces={["ChangeEmail", "ChangePassword", "CharacterCounter", "LogoutButton"]}>
       {children}
     </ScopedIntlProvider>
   );

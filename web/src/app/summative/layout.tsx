@@ -7,7 +7,7 @@ export default function SummativeLayout({
   children: ReactNode;
 }) {
   return (
-    <ScopedIntlProvider namespaces={["DeleteRecord", "Summative", "SurahInput"]}>
+    <ScopedIntlProvider namespaces={["DeleteRecord", "LogoutButton", "Summative", "SurahInput"]}>
       {children}
     </ScopedIntlProvider>
   );

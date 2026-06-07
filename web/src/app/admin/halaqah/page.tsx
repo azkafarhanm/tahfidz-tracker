@@ -13,7 +13,8 @@ import { deleteClassGroup, toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import { UserX, RotateCcw } from "lucide-react";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
 
 
@@ -250,12 +251,14 @@ export default async function AdminHalaqahPage({
                       {t("editButton")}
                     </Link>
                     {classGroup.isActive ? (
-                      <InlineConfirmActionButton
+                      <ConfirmActionDialogButton
                         cancelLabel={t("cancelDeleteButton")}
                         confirmLabel={t("confirmDeactivateButton")}
                         confirmMessage={t("confirmDeactivateMessage", {
                           name: classGroup.name,
                         })}
+                        dialogTitle={t("deactivateButton")}
+                        icon={<UserX aria-hidden="true" size={16} strokeWidth={2.2} />}
                         label={t("deactivateButton")}
                         onAction={toggleClassGroupActive.bind(null, classGroup.id, false)}
                         pendingLabel={t("deactivatingButton")}
@@ -263,14 +266,20 @@ export default async function AdminHalaqahPage({
                         tone="warning"
                       />
                     ) : (
-                      <form action={toggleClassGroupActive.bind(null, classGroup.id, true)}>
-                        <button
-                          className={actionButtonClass("success")}
-                          type="submit"
-                        >
-                          {t("activateButton")}
-                        </button>
-                      </form>
+                      <ConfirmActionDialogButton
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmActivateButton")}
+                        confirmMessage={t("confirmActivateMessage", {
+                          name: classGroup.name,
+                        })}
+                        dialogTitle={t("activateButton")}
+                        icon={<RotateCcw aria-hidden="true" size={16} strokeWidth={2.2} />}
+                        label={t("activateButton")}
+                        onAction={toggleClassGroupActive.bind(null, classGroup.id, true)}
+                        pendingLabel={t("activatingButton")}
+                        showSuccessToast={false}
+                        tone="success"
+                      />
                     )}
                     <AdminDeleteButton
                       action={deleteClassGroup.bind(null, classGroup.id)}

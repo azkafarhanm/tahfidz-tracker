@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { deleteRecord } from "@/lib/record-actions";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
 type DeleteRecordButtonProps = {
   studentId: string;
@@ -35,7 +35,7 @@ export default function DeleteRecordButton({
   const fallbackRedirectTo = returnTo ?? `/students/${studentId}`;
 
   return (
-    <InlineConfirmActionButton
+    <ConfirmActionDialogButton
       cancelLabel={t("cancel")}
       confirmLabel={t("confirmDelete")}
       confirmMessage={t("confirmMessage")}

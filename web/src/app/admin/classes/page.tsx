@@ -13,7 +13,8 @@ import { deleteAcademicClass, toggleAcademicClassActive } from "./actions";
 import { getAdminAcademicClassesData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import { UserX, RotateCcw } from "lucide-react";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
 
 
@@ -235,12 +236,14 @@ export default async function AdminClassesPage({
                       {t("editButton")}
                     </Link>
                     {academicClass.isActive ? (
-                      <InlineConfirmActionButton
+                      <ConfirmActionDialogButton
                         cancelLabel={t("cancelDeleteButton")}
                         confirmLabel={t("confirmDeactivateButton")}
                         confirmMessage={t("confirmDeactivateMessage", {
                           name: academicClass.name,
                         })}
+                        dialogTitle={t("deactivateButton")}
+                        icon={<UserX aria-hidden="true" size={16} strokeWidth={2.2} />}
                         label={t("deactivateButton")}
                         onAction={toggleAcademicClassActive.bind(null, academicClass.id, false)}
                         pendingLabel={t("deactivatingButton")}
@@ -248,14 +251,20 @@ export default async function AdminClassesPage({
                         tone="warning"
                       />
                     ) : (
-                      <form action={toggleAcademicClassActive.bind(null, academicClass.id, true)}>
-                        <button
-                          className={actionButtonClass("success")}
-                          type="submit"
-                        >
-                          {t("activateButton")}
-                        </button>
-                      </form>
+                      <ConfirmActionDialogButton
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmActivateButton")}
+                        confirmMessage={t("confirmActivateMessage", {
+                          name: academicClass.name,
+                        })}
+                        dialogTitle={t("activateButton")}
+                        icon={<RotateCcw aria-hidden="true" size={16} strokeWidth={2.2} />}
+                        label={t("activateButton")}
+                        onAction={toggleAcademicClassActive.bind(null, academicClass.id, true)}
+                        pendingLabel={t("activatingButton")}
+                        showSuccessToast={false}
+                        tone="success"
+                      />
                     )}
                     <AdminDeleteButton
                       action={deleteAcademicClass.bind(null, academicClass.id)}

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
 import { actionButtonClass } from "@/components/action-button-styles";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
 type RecordItem = {
   id: string;
@@ -84,10 +84,11 @@ export default function ActivityRow({
                 <PencilLine aria-hidden="true" size={12} strokeWidth={2.2} />
                 {t("editButton")}
               </Link>
-              <InlineConfirmActionButton
+              <ConfirmActionDialogButton
                 cancelLabel={tDel("cancel")}
                 confirmLabel={tDel("confirmDelete")}
                 confirmMessage={tDel("confirmMessage")}
+                dialogTitle={tDel("delete")}
                 icon={<Trash2 aria-hidden="true" size={12} strokeWidth={2.2} />}
                 label={tDel("delete")}
                 onAction={async () => {

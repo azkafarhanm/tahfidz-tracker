@@ -25,7 +25,11 @@
     "navProfil": "الملف الشخصي"
   },
   "LogoutButton": {
-    "label": "تسجيل الخروج"
+    "label": "تسجيل الخروج",
+    "confirmMessage": "إنهاء الجلسة الحالية؟",
+    "confirmLabel": "نعم، تسجيل الخروج",
+    "cancelLabel": "إلغاء",
+    "pendingLabel": "جارٍ تسجيل الخروج..."
   },
   "InstallPrompt": {
     "title": "تثبيت TahfidzFlow",
@@ -329,7 +333,10 @@
     "confirmDeleteMessage": "\u062d\u0630\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0639\u0644\u0645 {name} \u0628\u0634\u0643\u0644 \u0646\u0647\u0627\u0626\u064a\u061f \u0644\u0627 \u064a\u0645\u0643\u0646 \u0627\u0644\u062a\u0631\u0627\u062c\u0639 \u0639\u0646 \u0647\u0630\u0627 \u0627\u0644\u0625\u062c\u0631\u0627\u0621.",
     "deletingButton": "\u062c\u0627\u0631\u064d \u0627\u0644\u062d\u0630\u0641...",
     "deleteDialogTitle": "\u062d\u0630\u0641 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0639\u0644\u0645",
-    "cancelDeleteButton": "?????"
+    "cancelDeleteButton": "?????",
+    "confirmActivateButton": "نعم، تنشيط",
+    "confirmActivateMessage": "تنشيط حساب {name}؟",
+    "activatingButton": "جارٍ المعالجة..."
   },
   "AdminClasses": {
     "backLink": "لوحة الإدارة",
@@ -369,7 +376,10 @@
     "emptyNoData": "لا توجد بيانات فصول للعرض بعد.",
     "confirmDeactivateButton": "???? ????",
     "confirmDeactivateMessage": "????? ???? {name}?",
-    "deactivatingButton": "???? ????????..."
+    "deactivatingButton": "???? ????????...",
+    "confirmActivateButton": "نعم، تنشيط",
+    "confirmActivateMessage": "تنشيط الفصل {name}؟",
+    "activatingButton": "جارٍ المعالجة..."
   },
   "AdminHalaqah": {
     "backLink": "لوحة الإدارة",
@@ -410,7 +420,10 @@
     "emptyNoData": "لا توجد بيانات حلقات للعرض بعد.",
     "confirmDeactivateButton": "???? ????",
     "confirmDeactivateMessage": "????? ?????? {name}?",
-    "deactivatingButton": "???? ????????..."
+    "deactivatingButton": "???? ????????...",
+    "confirmActivateButton": "نعم، تنشيط",
+    "confirmActivateMessage": "تنشيط الحلقة {name}؟",
+    "activatingButton": "جارٍ المعالجة..."
   },
   "AdminStudents": {
     "backLink": "لوحة الإدارة",
@@ -454,7 +467,10 @@
     "emptyNoData": "لا توجد بيانات طلاب للعرض بعد.",
     "confirmDeactivateButton": "???? ????",
     "confirmDeactivateMessage": "????? ?????? {name}?",
-    "deactivatingButton": "???? ????????..."
+    "deactivatingButton": "???? ????????...",
+    "confirmActivateButton": "نعم، تنشيط",
+    "confirmActivateMessage": "تنشيط الطالب {name}؟",
+    "activatingButton": "جارٍ المعالجة..."
   },
   "AdminReports": {
     "backLink": "لوحة الإدارة",
@@ -538,7 +554,8 @@
     "buttonProcessing": "جارٍ المعالجة...",
     "buttonConfirm": "نعم، تعطيل",
     "buttonCancel": "إلغاء",
-    "confirmMessage": "????? ??? ?????? ?? ??????? ???????"
+    "confirmMessage": "????? ??? ?????? ?? ??????? ???????",
+    "dialogTitle": "إلغاء تنشيط الطالب"
   },
   "StudentFormPage": {
     "teacherOnly": "فقط المعلّمون يمكنهم إضافة الطلاب.",
@@ -610,7 +627,10 @@
   },
   "ReactivateStudent": {
     "processing": "جاري المعالجة...",
-    "activate": "تفعيل"
+    "activate": "تفعيل",
+    "confirmMessage": "تنشيط هذا الطالب مرة أخرى إلى القائمة النشطة؟",
+    "confirmLabel": "نعم، تنشيط",
+    "cancelLabel": "إلغاء"
   },
   "DeleteStudent": {
     "buttonDelete": "حذف",
@@ -625,7 +645,10 @@
     "confirmCancel": "???? ???? ?????",
     "cancelDelete": "?????",
     "cancelConfirmMessage": "????? ??? ????? ??????",
-    "processing": "???? ????????..."
+    "processing": "???? ????????...",
+    "confirmComplete": "نعم، إكمال",
+    "confirmCompleteMessage": "وضع علامة على هذا الهدف كمكتمل؟",
+    "completing": "جارٍ الإكمال..."
   },
   "ChangePassword": {
     "backLink": "الملف الشخصي",

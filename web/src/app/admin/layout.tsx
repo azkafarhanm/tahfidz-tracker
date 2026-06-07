@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         "CharacterCounter",
         "DeleteTeacher",
         "Error",
+        "LogoutButton",
       ]}
     >
       <AdminShell userName={userName}>{children}</AdminShell>

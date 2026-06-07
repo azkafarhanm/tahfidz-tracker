@@ -25,7 +25,11 @@
     "navProfil": "Profil"
   },
   "LogoutButton": {
-    "label": "Keluar"
+    "label": "Keluar",
+    "confirmMessage": "Akhiri sesi ini?",
+    "confirmLabel": "Ya, keluar",
+    "cancelLabel": "Batal",
+    "pendingLabel": "Keluar..."
   },
   "InstallPrompt": {
     "title": "Install TahfidzFlow",
@@ -329,7 +333,10 @@
     "confirmDeleteMessage": "Hapus akun guru {name} secara permanen? Tindakan ini tidak bisa dibatalkan.",
     "deletingButton": "Menghapus...",
     "deleteDialogTitle": "Hapus akun guru",
-    "cancelDeleteButton": "Batal"
+    "cancelDeleteButton": "Batal",
+    "confirmActivateButton": "Ya, aktifkan",
+    "confirmActivateMessage": "Aktifkan akun {name}?",
+    "activatingButton": "Memproses..."
   },
   "AdminClasses": {
     "backLink": "Panel Admin",
@@ -369,7 +376,10 @@
     "emptyNoData": "Belum ada data kelas untuk ditampilkan.",
     "confirmDeactivateButton": "Ya, nonaktifkan",
     "confirmDeactivateMessage": "Nonaktifkan kelas {name}?",
-    "deactivatingButton": "Memproses..."
+    "deactivatingButton": "Memproses...",
+    "confirmActivateButton": "Ya, aktifkan",
+    "confirmActivateMessage": "Aktifkan kelas {name}?",
+    "activatingButton": "Memproses..."
   },
   "AdminHalaqah": {
     "backLink": "Panel Admin",
@@ -410,7 +420,10 @@
     "emptyNoData": "Belum ada data halaqah untuk ditampilkan.",
     "confirmDeactivateButton": "Ya, nonaktifkan",
     "confirmDeactivateMessage": "Nonaktifkan halaqah {name}?",
-    "deactivatingButton": "Memproses..."
+    "deactivatingButton": "Memproses...",
+    "confirmActivateButton": "Ya, aktifkan",
+    "confirmActivateMessage": "Aktifkan halaqah {name}?",
+    "activatingButton": "Memproses..."
   },
   "AdminStudents": {
     "backLink": "Panel Admin",
@@ -454,7 +467,10 @@
     "emptyNoData": "Belum ada data santri untuk ditampilkan.",
     "confirmDeactivateButton": "Ya, nonaktifkan",
     "confirmDeactivateMessage": "Nonaktifkan santri {name}?",
-    "deactivatingButton": "Memproses..."
+    "deactivatingButton": "Memproses...",
+    "confirmActivateButton": "Ya, aktifkan",
+    "confirmActivateMessage": "Aktifkan santri {name}?",
+    "activatingButton": "Memproses..."
   },
   "AdminReports": {
     "backLink": "Panel Admin",
@@ -538,7 +554,8 @@
     "buttonProcessing": "Memproses...",
     "buttonConfirm": "Ya, nonaktifkan",
     "buttonCancel": "Batal",
-    "confirmMessage": "Nonaktifkan santri ini dari daftar aktif?"
+    "confirmMessage": "Nonaktifkan santri ini dari daftar aktif?",
+    "dialogTitle": "Nonaktifkan Santri"
   },
   "StudentFormPage": {
     "teacherOnly": "Hanya guru yang dapat menambah santri.",
@@ -610,7 +627,10 @@
   },
   "ReactivateStudent": {
     "processing": "Memproses...",
-    "activate": "Aktifkan"
+    "activate": "Aktifkan",
+    "confirmMessage": "Aktifkan kembali santri ini ke daftar aktif?",
+    "confirmLabel": "Ya, aktifkan",
+    "cancelLabel": "Batal"
   },
   "DeleteStudent": {
     "buttonDelete": "Hapus",
@@ -625,7 +645,10 @@
     "confirmCancel": "Ya, batalkan",
     "cancelDelete": "Batal",
     "cancelConfirmMessage": "Batalkan target aktif ini?",
-    "processing": "Memproses..."
+    "processing": "Memproses...",
+    "confirmComplete": "Ya, selesaikan",
+    "confirmCompleteMessage": "Tandai target ini sebagai selesai?",
+    "completing": "Menyelesaikan..."
   },
   "ChangePassword": {
     "backLink": "Profil",

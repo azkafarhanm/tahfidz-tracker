@@ -25,7 +25,11 @@
     "navProfil": "Profile"
   },
   "LogoutButton": {
-    "label": "Logout"
+    "label": "Logout",
+    "confirmMessage": "End your current session?",
+    "confirmLabel": "Yes, logout",
+    "cancelLabel": "Cancel",
+    "pendingLabel": "Signing out..."
   },
   "InstallPrompt": {
     "title": "Install TahfidzFlow",
@@ -329,7 +333,10 @@
     "confirmDeleteMessage": "Delete teacher account {name} permanently? This action cannot be undone.",
     "deletingButton": "Deleting...",
     "deleteDialogTitle": "Delete teacher account",
-    "cancelDeleteButton": "Cancel"
+    "cancelDeleteButton": "Cancel",
+    "confirmActivateButton": "Yes, activate",
+    "confirmActivateMessage": "Activate account {name}?",
+    "activatingButton": "Processing..."
   },
   "AdminClasses": {
     "backLink": "Admin Panel",
@@ -369,7 +376,10 @@
     "emptyNoData": "No class data to display yet.",
     "confirmDeactivateButton": "Yes, deactivate",
     "confirmDeactivateMessage": "Deactivate class {name}?",
-    "deactivatingButton": "Processing..."
+    "deactivatingButton": "Processing...",
+    "confirmActivateButton": "Yes, activate",
+    "confirmActivateMessage": "Activate class {name}?",
+    "activatingButton": "Processing..."
   },
   "AdminHalaqah": {
     "backLink": "Admin Panel",
@@ -410,7 +420,10 @@
     "emptyNoData": "No halaqah data to display yet.",
     "confirmDeactivateButton": "Yes, deactivate",
     "confirmDeactivateMessage": "Deactivate halaqah {name}?",
-    "deactivatingButton": "Processing..."
+    "deactivatingButton": "Processing...",
+    "confirmActivateButton": "Yes, activate",
+    "confirmActivateMessage": "Activate halaqah {name}?",
+    "activatingButton": "Processing..."
   },
   "AdminStudents": {
     "backLink": "Admin Panel",
@@ -454,7 +467,10 @@
     "emptyNoData": "No student data to display yet.",
     "confirmDeactivateButton": "Yes, deactivate",
     "confirmDeactivateMessage": "Deactivate student {name}?",
-    "deactivatingButton": "Processing..."
+    "deactivatingButton": "Processing...",
+    "confirmActivateButton": "Yes, activate",
+    "confirmActivateMessage": "Activate student {name}?",
+    "activatingButton": "Processing..."
   },
   "AdminReports": {
     "backLink": "Admin Panel",
@@ -538,7 +554,8 @@
     "buttonProcessing": "Processing...",
     "buttonConfirm": "Yes, deactivate",
     "buttonCancel": "Cancel",
-    "confirmMessage": "Deactivate this student from the active list?"
+    "confirmMessage": "Deactivate this student from the active list?",
+    "dialogTitle": "Deactivate Student"
   },
   "StudentFormPage": {
     "teacherOnly": "Only teachers can add students.",
@@ -610,7 +627,10 @@
   },
   "ReactivateStudent": {
     "processing": "Processing...",
-    "activate": "Activate"
+    "activate": "Activate",
+    "confirmMessage": "Activate this student back to the active list?",
+    "confirmLabel": "Yes, activate",
+    "cancelLabel": "Cancel"
   },
   "DeleteStudent": {
     "buttonDelete": "Delete",
@@ -625,7 +645,10 @@
     "confirmCancel": "Yes, cancel",
     "cancelDelete": "Back",
     "cancelConfirmMessage": "Cancel this active target?",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "confirmComplete": "Yes, complete",
+    "confirmCompleteMessage": "Mark this target as completed?",
+    "completing": "Completing..."
   },
   "ChangePassword": {
     "backLink": "Profile",

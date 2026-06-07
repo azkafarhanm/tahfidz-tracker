@@ -58,7 +58,7 @@ export default async function RootLayout({
     <html lang={locale} dir={dir} className={`${geistSans.variable} ${amiri.variable}`} suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <ScopedIntlProvider namespaces={["Error"]}>
+          <ScopedIntlProvider namespaces={["Error", "LogoutButton"]}>
             {children}
             <RootClientEffects
               installPromptLabels={{

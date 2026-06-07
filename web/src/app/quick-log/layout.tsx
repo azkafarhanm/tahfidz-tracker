@@ -7,7 +7,7 @@ export default function QuickLogLayout({
   children: ReactNode;
 }) {
   return (
-    <ScopedIntlProvider namespaces={["QuickLog", "SurahInput"]}>
+    <ScopedIntlProvider namespaces={["LogoutButton", "QuickLog", "SurahInput"]}>
       {children}
     </ScopedIntlProvider>
   );

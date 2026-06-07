@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { deleteTeacherStudent } from "@/app/students/[id]/edit/actions";
-import InlineConfirmActionButton from "@/components/InlineConfirmActionButton";
+import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
 type DeleteStudentButtonProps = {
   disabledReason?: string;
@@ -23,7 +23,7 @@ export default function DeleteStudentButton({
   const router = useRouter();
 
   return (
-    <InlineConfirmActionButton
+    <ConfirmActionDialogButton
       cancelLabel={t("buttonCancel")}
       confirmLabel={t("buttonConfirm")}
       confirmMessage={t("confirmMessage")}
