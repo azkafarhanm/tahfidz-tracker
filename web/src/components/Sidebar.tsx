@@ -30,7 +30,7 @@ export default async function Sidebar({
   const navKeys = isAdmin ? adminNavigationItems : teacherNavigationItems;
 
   return (
-    <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-[100dvh] sm:w-64 sm:flex-col sm:overflow-hidden">
+    <aside className="hidden border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 sm:fixed sm:inset-y-0 sm:left-0 rtl:sm:left-auto rtl:sm:right-0 sm:z-40 sm:flex sm:h-[100dvh] sm:w-64 sm:flex-col sm:overflow-y-auto sm:[scrollbar-width:thin] lg:overflow-hidden">
       <div className="shrink-0 border-b border-slate-100 p-5 dark:border-slate-800">
         <Link className="flex items-center gap-3" href="/">
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -49,7 +49,7 @@ export default async function Sidebar({
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto [scrollbar-width:thin] p-3">
+      <nav className="p-3 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:[scrollbar-width:thin]">
         <div className="space-y-1.5">
           <NavigationLinks
             items={navKeys}
@@ -59,7 +59,7 @@ export default async function Sidebar({
         </div>
       </nav>
 
-      <div className="shrink-0 border-t border-slate-100 p-4 dark:border-slate-800">
+      <div className="border-t border-slate-100 p-4 dark:border-slate-800 lg:shrink-0">
         <div className="mb-3">
           <DesktopMotivationCard />
         </div>

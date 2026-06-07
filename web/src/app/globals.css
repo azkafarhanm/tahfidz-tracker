@@ -117,19 +117,23 @@ option {
   border-radius: inherit;
 }
 
+aside::-webkit-scrollbar,
 aside nav::-webkit-scrollbar {
   width: 4px;
 }
 
+aside::-webkit-scrollbar-track,
 aside nav::-webkit-scrollbar-track {
   background: transparent;
 }
 
+aside::-webkit-scrollbar-thumb,
 aside nav::-webkit-scrollbar-thumb {
   background: rgb(203 213 225 / 0.5);
   border-radius: 2px;
 }
 
+.dark aside::-webkit-scrollbar-thumb,
 .dark aside nav::-webkit-scrollbar-thumb {
   background: rgb(51 65 85 / 0.5);
 }
