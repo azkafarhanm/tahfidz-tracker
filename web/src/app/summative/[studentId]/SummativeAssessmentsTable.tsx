@@ -106,7 +106,7 @@ export default function SummativeAssessmentsTable({
                 {assessment.recordedAt}
               </td>
               <td className="px-5 py-4 text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <Link
                     className={actionButtonClass("neutral")}
                     href={`/summative/${studentId}/${assessment.id}/edit?semester=${semesterValue}`}

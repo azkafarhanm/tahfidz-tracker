@@ -19,7 +19,7 @@ export default async function AdminReportsPage() {
 
   return (
     <>
-        <header className="flex items-center justify-between gap-4">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
@@ -33,7 +33,7 @@ export default async function AdminReportsPage() {
               {t("description")}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <a
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
               href="/api/reports/export-admin"
@@ -65,7 +65,7 @@ export default async function AdminReportsPage() {
                 {t("recordsSplit", { hafalan: data.totalHafalan, murojaah: data.totalMurojaah })}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
                 <p className="text-xs text-slate-300">{t("teacherLabel")}</p>
                 <p className="mt-1 text-xl font-semibold">{data.totalTeachers}</p>
