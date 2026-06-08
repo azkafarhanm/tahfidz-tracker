@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useOptimistic, useTransition } from "react";
+import { useId, useOptimistic, useRef, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -75,13 +75,19 @@ type LanguageSwitcherProps = {
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
+  const inFlightRef = useRef(false);
 
   function handleChange(code: string) {
-    if (code === optimisticLocale || pending) return;
+    if (code === optimisticLocale || inFlightRef.current) return;
+    inFlightRef.current = true;
 
     startTransition(async () => {
       setOptimisticLocale(code);
-      await setLocale(code);
+      try {
+        await setLocale(code);
+      } finally {
+        inFlightRef.current = false;
+      }
     });
   }
 
