@@ -77,16 +77,57 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
 
+  console.log("[LocaleDiag] RENDER", {
+    currentLocale,
+    optimisticLocale,
+    pending,
+    inFlight: inFlightRef.current,
+    cookie: typeof document !== "undefined" ? document.cookie.match(/locale=(\w+)/)?.[1] : undefined,
+    activeBtn: optimisticLocale,
+    diverged: currentLocale !== optimisticLocale,
+  });
+
   function handleChange(code: string) {
-    if (code === optimisticLocale || inFlightRef.current) return;
+    console.log("[LocaleDiag] handleChange CALLED", {
+      target: code,
+      optimisticLocale,
+      inFlight: inFlightRef.current,
+      pending,
+    });
+
+    if (code === optimisticLocale || inFlightRef.current) {
+      console.log("[LocaleDiag] handleChange BLOCKED", {
+        reason: code === optimisticLocale ? "same-as-optimistic" : "in-flight",
+      });
+      return;
+    }
+
+    console.log("[LocaleDiog] setLocale START", code);
     inFlightRef.current = true;
 
     startTransition(async () => {
       setOptimisticLocale(code);
+      console.log("[LocaleDiag] optimistic set", {
+        to: code,
+        inFlight: inFlightRef.current,
+      });
+
       try {
+        console.log("[LocaleDiag] await setLocale", code);
         await setLocale(code);
+        console.log("[LocaleDiag] setLocale RESOLVED", {
+          code,
+          cookie: document.cookie.match(/locale=(\w+)/)?.[1],
+          inFlight: inFlightRef.current,
+        });
+      } catch (err) {
+        console.log("[LocaleDiag] setLocale ERROR", { code, error: err });
       } finally {
         inFlightRef.current = false;
+        console.log("[LocaleDiag] inFlight CLEARED", {
+          inFlight: inFlightRef.current,
+          cookie: document.cookie.match(/locale=(\w+)/)?.[1],
+        });
       }
     });
   }

@@ -10,6 +10,8 @@ export default getRequestConfig(async () => {
   const raw = store.get("locale")?.value;
   const locale = raw && locales.includes(raw as Locale) ? (raw as Locale) : defaultLocale;
 
+  console.log("[LocaleDiag] getRequestConfig", { raw, resolved: locale });
+
   return {
     locale,
     messages: (await import(`../../messages/${locale}.json`)).default,

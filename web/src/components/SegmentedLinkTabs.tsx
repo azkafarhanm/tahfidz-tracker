@@ -52,7 +52,7 @@ export default function SegmentedLinkTabs({
         return (
           <button
             key={option.value}
-            className={`px-4 py-2 text-sm font-medium transition first:rounded-l-2xl last:rounded-r-2xl ${
+            className={`px-4 py-2 text-sm font-medium transition first:rounded-s-2xl last:rounded-e-2xl ${
               isActive
                 ? "bg-emerald-900 text-white"
                 : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
