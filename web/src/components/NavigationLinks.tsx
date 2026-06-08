@@ -24,9 +24,22 @@ export default function NavigationLinks({
   const activeRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (variant !== "bottom") return;
     const el = activeRef.current;
     if (!el) return;
+
+    if (variant === "sidebar") {
+      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+
+      const nav = el.closest("nav");
+      if (!nav) return;
+
+      const observer = new ResizeObserver(() => {
+        el.scrollIntoView({ block: "nearest" });
+      });
+      observer.observe(nav);
+      return () => observer.disconnect();
+    }
+
     const scroller = el.closest("[data-bottom-scroll]");
     if (!scroller) return;
     const scrollerRect = scroller.getBoundingClientRect();
@@ -67,6 +80,7 @@ export default function NavigationLinks({
 
     return (
       <Link
+        ref={active ? activeRef : undefined}
         aria-current={active ? "page" : undefined}
         className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition ${
           active
