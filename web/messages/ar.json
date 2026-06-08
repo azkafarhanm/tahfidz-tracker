@@ -214,6 +214,16 @@
     "changeEmailButton": "تغيير البريد الإلكتروني",
     "changePasswordButton": "تغيير كلمة المرور"
   },
+  "InstallApp": {
+    "buttonLabel": "تثبيت التطبيق",
+    "installing": "جارٍ التثبيت\u2026",
+    "dialogTitle": "تثبيت التطبيق",
+    "dialogClose": "إغلاق",
+    "dialogGotIt": "فهمت",
+    "manualAndroid": "اضغط على قائمة المتصفح (\u22EE) ثم اختر \u201Cإضافة إلى الشاشة الرئيسية\u201D أو \u201Cتثبيت التطبيق\u201D.",
+    "manualDesktop": "انقر على أيقونة التثبيت (\u2193) في شريط العنوان، ثم انقر على تثبيت.",
+    "manualIos": "اضغط على زر المشاركة، ثم مرر لأسفل واختر \u201Cإضافة إلى الشاشة الرئيسية\u201D."
+  },
   "Reports": {
     "backLink": "الرئيسية",
     "adminPanelLink": "لوحة الإدارة",

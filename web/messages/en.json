@@ -214,6 +214,16 @@
     "changeEmailButton": "Change Email",
     "changePasswordButton": "Change Password"
   },
+  "InstallApp": {
+    "buttonLabel": "Install App",
+    "installing": "Installing\u2026",
+    "dialogTitle": "Install App",
+    "dialogClose": "Close",
+    "dialogGotIt": "Got it",
+    "manualAndroid": "Tap the browser menu (\u22EE) then select \u201CAdd to Home Screen\u201D or \u201CInstall App\u201D.",
+    "manualDesktop": "Click the install icon (\u2193) in the browser address bar, then click Install.",
+    "manualIos": "Tap the Share button, then scroll down and select \u201CAdd to Home Screen\u201D."
+  },
   "Reports": {
     "backLink": "Dashboard",
     "adminPanelLink": "Admin Panel",

@@ -214,6 +214,16 @@
     "changeEmailButton": "Ubah Email",
     "changePasswordButton": "Ubah Password"
   },
+  "InstallApp": {
+    "buttonLabel": "Pasang Aplikasi",
+    "installing": "Memasang\u2026",
+    "dialogTitle": "Pasang Aplikasi",
+    "dialogClose": "Tutup",
+    "dialogGotIt": "Mengerti",
+    "manualAndroid": "Buka menu browser (\u22EE) lalu pilih \u201CTambahkan ke Layar Utama\u201D atau \u201CPasang Aplikasi\u201D.",
+    "manualDesktop": "Klik ikon pasang (\u2193) di address bar browser, lalu klik Pasang.",
+    "manualIos": "Ketuk tombol Share, lalu gulir ke bawah dan pilih \u201CTambahkan ke Layar Utama\u201D."
+  },
   "Reports": {
     "backLink": "Dashboard",
     "adminPanelLink": "Panel Admin",

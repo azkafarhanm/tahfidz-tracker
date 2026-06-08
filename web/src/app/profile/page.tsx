@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
+import InstallAppButton from "@/components/InstallAppButton";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -168,6 +169,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <KeyRound aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changePasswordButton")}
             </Link>
+            <InstallAppButton />
             <LogoutButton label={logoutT("label")} />
           </div>
         </section>

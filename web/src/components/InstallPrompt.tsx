@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Download } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+import {
+  type BeforeInstallPromptEvent,
+  getDeferredPrompt,
+  setDeferredPrompt,
+} from "@/lib/pwa-install";
 
 type InstallPromptProps = {
   labels: {
@@ -18,13 +18,14 @@ type InstallPromptProps = {
 };
 
 export default function InstallPrompt({ labels }: InstallPromptProps) {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [hasPrompt, setHasPrompt] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setHasPrompt(true);
       const dismissed = localStorage.getItem("pwa-dismissed");
       if (!dismissed) {
         setShowPrompt(true);
@@ -35,7 +36,7 @@ export default function InstallPrompt({ labels }: InstallPromptProps) {
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
-  if (!showPrompt || !deferredPrompt) return null;
+  if (!showPrompt || !hasPrompt) return null;
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl dark:border-emerald-800 dark:bg-slate-900 sm:left-auto sm:right-8">
@@ -54,9 +55,12 @@ export default function InstallPrompt({ labels }: InstallPromptProps) {
         <button
           className="flex-1 rounded-xl bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-950"
           onClick={async () => {
-            await deferredPrompt.prompt();
+            const prompt = getDeferredPrompt();
+            if (prompt) {
+              await prompt.prompt();
+              setDeferredPrompt(null);
+            }
             setShowPrompt(false);
-            setDeferredPrompt(null);
           }}
           type="button"
         >
