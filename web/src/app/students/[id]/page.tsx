@@ -21,6 +21,7 @@ import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
+import PdfExportLink from "@/components/PdfExportLink";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -228,13 +229,14 @@ export default async function StudentDetailPage({
                <Download aria-hidden="true" size={14} strokeWidth={2.2} />
                {t("excelButton")}
              </a>
-             <a
-               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-               href={`/api/reports/pdf-student?studentId=${student.id}`}
-             >
-               <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
-               {t("pdfButton")}
-             </a>
+              <PdfExportLink
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                href={`/api/reports/pdf-student?studentId=${student.id}`}
+                toastMessage={t("pdfToast")}
+              >
+                <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
+                {t("pdfButton")}
+              </PdfExportLink>
             </div>
          </header>
 

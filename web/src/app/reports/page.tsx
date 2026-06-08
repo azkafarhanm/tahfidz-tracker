@@ -12,6 +12,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getTeacherReportData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
+import PdfExportLink from "@/components/PdfExportLink";
 import { requireSessionScope } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -83,13 +84,14 @@ export default async function ReportsPage() {
               <Download aria-hidden="true" size={16} strokeWidth={2.2} />
               {t("excelButton")}
             </a>
-            <a
+            <PdfExportLink
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href="/api/reports/pdf-teacher"
+              toastMessage={t("pdfToast")}
             >
               <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
               {t("pdfButton")}
-            </a>
+            </PdfExportLink>
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <BarChart3 aria-hidden="true" size={22} strokeWidth={2.3} />
             </div>

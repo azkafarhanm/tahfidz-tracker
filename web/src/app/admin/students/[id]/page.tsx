@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
+import PdfExportLink from "@/components/PdfExportLink";
 
 export const runtime = "nodejs";
 
@@ -78,13 +79,14 @@ export default async function AdminStudentDetailPage({
               <Download aria-hidden="true" size={14} strokeWidth={2.2} />
               {t("excelButton")}
             </a>
-            <a
+            <PdfExportLink
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               href={`/api/reports/pdf-student?studentId=${id}`}
+              toastMessage={t("pdfToast")}
             >
               <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
               {t("pdfButton")}
-            </a>
+            </PdfExportLink>
           </div>
         </header>
 
