@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useOptimistic, useRef, useTransition } from "react";
+import { useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -74,19 +74,45 @@ type LanguageSwitcherProps = {
   currentLocale: string;
 };
 
+type TelemetryEntry = {
+  target: string;
+  start: number;
+  end: number | null;
+  ms: number | null;
+  status: "pending" | "ok" | "error";
+};
+
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
+  const [telemetry, setTelemetry] = useState<TelemetryEntry[]>([]);
 
   function handleChange(code: string) {
     if (code === optimisticLocale || inFlightRef.current) return;
     inFlightRef.current = true;
 
+    const start = Date.now();
+    const entry: TelemetryEntry = { target: code, start, end: null, ms: null, status: "pending" };
+    setTelemetry((prev) => [...prev.slice(-9), entry]);
+
     startTransition(async () => {
       setOptimisticLocale(code);
       try {
         await setLocale(code);
+        const end = Date.now();
+        setTelemetry((prev) =>
+          prev.map((e, i) =>
+            i === prev.length - 1 ? { ...e, end, ms: end - e.start, status: "ok" as const } : e,
+          ),
+        );
+      } catch {
+        const end = Date.now();
+        setTelemetry((prev) =>
+          prev.map((e, i) =>
+            i === prev.length - 1 ? { ...e, end, ms: end - e.start, status: "error" as const } : e,
+          ),
+        );
       } finally {
         inFlightRef.current = false;
       }
@@ -129,7 +155,7 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
       </div>
       {FORCE_LOCALE_DEBUG ? (
         <div
-          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[200px] rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
+          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[220px] rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
           aria-hidden="true"
         >
           <div className="mb-0.5 font-bold text-white">LOCALE DEBUG</div>
@@ -140,6 +166,16 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
           <div>inFlight: <b className="text-white">{String(inFlightRef.current)}</b></div>
           {diverged ? (
             <div className="mt-0.5 font-bold text-red-400">DIVERGED</div>
+          ) : null}
+          {telemetry.length > 0 ? (
+            <div className="mt-1 border-t border-white/20 pt-1">
+              <div className="font-bold text-white">TELEMETRY (last {telemetry.length})</div>
+              {telemetry.map((t, i) => (
+                <div key={i} className={t.status === "error" ? "text-red-400" : t.status === "pending" ? "text-yellow-400" : ""}>
+                  {t.target} {t.status === "pending" ? "…" : t.ms + "ms"} <span className="text-white/50">{t.status}</span>
+                </div>
+              ))}
+            </div>
           ) : null}
         </div>
       ) : null}
