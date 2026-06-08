@@ -1,24 +1,16 @@
 "use client";
 
-import { useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { useId, useOptimistic, useRef, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
+
+const FORCE_LOCALE_DEBUG = true;
 
 const languages = [
   { code: "id", label: "Indonesia" },
   { code: "en", label: "English" },
   { code: "ar", label: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629" },
 ] as const;
-
-function useDebugFlag() {
-  const [show, setShow] = useState(false);
-  if (typeof window !== "undefined" && !show) {
-    try {
-      if (localStorage.getItem("locale_debug") === "1") setShow(true);
-    } catch {}
-  }
-  return show;
-}
 
 function FlagIcon({ code }: { code: (typeof languages)[number]["code"] }) {
   const clipId = useId();
@@ -86,7 +78,6 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
-  const debug = useDebugFlag();
 
   function handleChange(code: string) {
     if (code === optimisticLocale || inFlightRef.current) return;
@@ -136,19 +127,19 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
           </button>
         ))}
       </div>
-      {debug ? (
+      {FORCE_LOCALE_DEBUG ? (
         <div
-          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[200px] rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber-900 shadow-lg dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[200px] rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
           aria-hidden="true"
         >
-          <div className="mb-1 font-bold">LOCALE DEBUG</div>
-          <div>prop: <b>{currentLocale}</b></div>
-          <div>optimistic: <b>{optimisticLocale}</b></div>
-          <div>cookie: <b>{cookieLocale}</b></div>
-          <div>pending: <b>{String(pending)}</b></div>
-          <div>inFlight: <b>{String(inFlightRef.current)}</b></div>
+          <div className="mb-0.5 font-bold text-white">LOCALE DEBUG</div>
+          <div>prop: <b className="text-white">{currentLocale}</b></div>
+          <div>optim: <b className="text-white">{optimisticLocale}</b></div>
+          <div>cookie: <b className="text-white">{cookieLocale}</b></div>
+          <div>pending: <b className="text-white">{String(pending)}</b></div>
+          <div>inFlight: <b className="text-white">{String(inFlightRef.current)}</b></div>
           {diverged ? (
-            <div className="mt-1 font-bold text-red-600 dark:text-red-400">DIVERGED</div>
+            <div className="mt-0.5 font-bold text-red-400">DIVERGED</div>
           ) : null}
         </div>
       ) : null}
