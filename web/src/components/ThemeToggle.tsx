@@ -28,13 +28,13 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
 
   if (!mounted) {
     return (
-      <div className="flex gap-2 rounded-2xl bg-slate-100 p-1">
+      <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
         {themes.map((t) => (
           <div
             key={t.value}
             className="flex h-10 w-10 items-center justify-center rounded-xl"
           >
-            <t.icon size={18} className="text-slate-300" />
+            <t.icon size={18} className="text-slate-300 dark:text-slate-500" />
           </div>
         ))}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useTransition } from "react";
+import { useId, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
@@ -76,11 +76,13 @@ type LanguageSwitcherProps = {
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
 
   function handleChange(code: string) {
-    if (code === currentLocale) return;
+    if (code === optimisticLocale || pending) return;
 
     startTransition(async () => {
+      setOptimisticLocale(code);
       await setLocale(code);
       router.refresh();
     });
@@ -97,9 +99,9 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
         {languages.map(({ code, label }) => (
           <button
             aria-label={label}
-            aria-pressed={currentLocale === code}
+            aria-pressed={optimisticLocale === code}
             className={`inline-flex min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[11px] font-medium transition ${
-              currentLocale === code
+              optimisticLocale === code
                 ? "bg-emerald-50 text-emerald-900 shadow-sm dark:bg-emerald-950 dark:text-emerald-400"
                 : "text-slate-500 active:bg-black/5 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:active:bg-white/10 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
