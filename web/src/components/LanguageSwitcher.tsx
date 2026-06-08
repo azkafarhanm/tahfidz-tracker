@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useOptimistic, useRef, useTransition } from "react";
+import { useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -9,6 +9,16 @@ const languages = [
   { code: "en", label: "English" },
   { code: "ar", label: "\u0627\u0644\u0639\u0631\u0628\u064a\u0629" },
 ] as const;
+
+function useDebugFlag() {
+  const [show, setShow] = useState(false);
+  if (typeof window !== "undefined" && !show) {
+    try {
+      if (localStorage.getItem("locale_debug") === "1") setShow(true);
+    } catch {}
+  }
+  return show;
+}
 
 function FlagIcon({ code }: { code: (typeof languages)[number]["code"] }) {
   const clipId = useId();
@@ -76,61 +86,28 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
-
-  console.log("[LocaleDiag] RENDER", {
-    currentLocale,
-    optimisticLocale,
-    pending,
-    inFlight: inFlightRef.current,
-    cookie: typeof document !== "undefined" ? document.cookie.match(/locale=(\w+)/)?.[1] : undefined,
-    activeBtn: optimisticLocale,
-    diverged: currentLocale !== optimisticLocale,
-  });
+  const debug = useDebugFlag();
 
   function handleChange(code: string) {
-    console.log("[LocaleDiag] handleChange CALLED", {
-      target: code,
-      optimisticLocale,
-      inFlight: inFlightRef.current,
-      pending,
-    });
-
-    if (code === optimisticLocale || inFlightRef.current) {
-      console.log("[LocaleDiag] handleChange BLOCKED", {
-        reason: code === optimisticLocale ? "same-as-optimistic" : "in-flight",
-      });
-      return;
-    }
-
-    console.log("[LocaleDiog] setLocale START", code);
+    if (code === optimisticLocale || inFlightRef.current) return;
     inFlightRef.current = true;
 
     startTransition(async () => {
       setOptimisticLocale(code);
-      console.log("[LocaleDiag] optimistic set", {
-        to: code,
-        inFlight: inFlightRef.current,
-      });
-
       try {
-        console.log("[LocaleDiag] await setLocale", code);
         await setLocale(code);
-        console.log("[LocaleDiag] setLocale RESOLVED", {
-          code,
-          cookie: document.cookie.match(/locale=(\w+)/)?.[1],
-          inFlight: inFlightRef.current,
-        });
-      } catch (err) {
-        console.log("[LocaleDiag] setLocale ERROR", { code, error: err });
       } finally {
         inFlightRef.current = false;
-        console.log("[LocaleDiag] inFlight CLEARED", {
-          inFlight: inFlightRef.current,
-          cookie: document.cookie.match(/locale=(\w+)/)?.[1],
-        });
       }
     });
   }
+
+  const cookieLocale =
+    typeof document !== "undefined"
+      ? document.cookie.match(/locale=(\w+)/)?.[1] ?? "—"
+      : "—";
+
+  const diverged = currentLocale !== optimisticLocale;
 
   return (
     <div className="flex items-start gap-2">
@@ -159,6 +136,22 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
           </button>
         ))}
       </div>
+      {debug ? (
+        <div
+          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[200px] rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 font-mono text-[10px] leading-relaxed text-amber-900 shadow-lg dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+          aria-hidden="true"
+        >
+          <div className="mb-1 font-bold">LOCALE DEBUG</div>
+          <div>prop: <b>{currentLocale}</b></div>
+          <div>optimistic: <b>{optimisticLocale}</b></div>
+          <div>cookie: <b>{cookieLocale}</b></div>
+          <div>pending: <b>{String(pending)}</b></div>
+          <div>inFlight: <b>{String(inFlightRef.current)}</b></div>
+          {diverged ? (
+            <div className="mt-1 font-bold text-red-600 dark:text-red-400">DIVERGED</div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
