@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useOptimistic, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -74,7 +73,6 @@ type LanguageSwitcherProps = {
 };
 
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
 
@@ -84,7 +82,6 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
     startTransition(async () => {
       setOptimisticLocale(code);
       await setLocale(code);
-      router.refresh();
     });
   }
 
