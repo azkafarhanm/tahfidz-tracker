@@ -54,7 +54,7 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
             className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
               active
                 ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-700 dark:text-emerald-400"
-                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                : "text-slate-400 active:bg-black/5 hover:text-slate-600 dark:active:bg-white/10 dark:hover:text-slate-300"
             }`}
             type="button"
             title={t.label}

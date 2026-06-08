@@ -18,7 +18,7 @@ export default function PdfExportLink({
 }: PdfExportLinkProps) {
   return (
     <a
-      className={className}
+      className={`${className} duration-100 active:bg-black/5 dark:active:bg-white/10`}
       href={href}
       onClick={() => {
         toast(toastMessage, { duration: 2000 });
