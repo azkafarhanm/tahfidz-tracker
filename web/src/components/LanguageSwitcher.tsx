@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { useId, useRef, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
-
-const FORCE_LOCALE_DEBUG = true;
 
 const languages = [
   { code: "id", label: "Indonesia" },
@@ -74,118 +72,22 @@ type LanguageSwitcherProps = {
   currentLocale: string;
 };
 
-type Phase =
-  | "click"
-  | "optimistic"
-  | "serverStart"
-  | "cookie"
-  | "serverEnd"
-  | "propUpdated"
-  | "langUpdated"
-  | "dirUpdated";
-
-type TraceEvent = { phase: Phase; ts: number; detail?: string };
-
-type RequestTrace = {
-  id: number;
-  target: string;
-  events: TraceEvent[];
-};
-
-let nextRequestId = 1;
-
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const [pending, startTransition] = useTransition();
-  const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
-  const activeIdRef = useRef<number | null>(null);
-  const [traces, setTraces] = useState<RequestTrace[]>([]);
-  const prevPropRef = useRef(currentLocale);
-  const prevLangRef = useRef<string | null>(null);
-  const prevDirRef = useRef<string | null>(null);
-
-  if (typeof document !== "undefined") {
-    if (prevLangRef.current === null) prevLangRef.current = document.documentElement.lang;
-    if (prevDirRef.current === null) prevDirRef.current = document.documentElement.dir;
-  }
-
-  function addEvent(id: number, phase: Phase, detail?: string) {
-    setTraces((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, events: [...t.events, { phase, ts: performance.now(), detail }] }
-          : t,
-      ),
-    );
-  }
-
-  const activeId = activeIdRef.current;
-  if (activeId !== null) {
-    const trace = traces.find((t) => t.id === activeId);
-    if (trace) {
-      if (!trace.events.some((e) => e.phase === "propUpdated") && currentLocale === trace.target && prevPropRef.current !== currentLocale) {
-        addEvent(activeId, "propUpdated");
-      }
-      if (typeof document !== "undefined") {
-        const curLang = document.documentElement.lang;
-        const curDir = document.documentElement.dir;
-        if (!trace.events.some((e) => e.phase === "langUpdated") && curLang === trace.target && prevLangRef.current !== curLang) {
-          addEvent(activeId, "langUpdated");
-        }
-        if (!trace.events.some((e) => e.phase === "dirUpdated") && curDir === (trace.target === "ar" ? "rtl" : "ltr") && prevDirRef.current !== curDir) {
-          addEvent(activeId, "dirUpdated");
-        }
-        prevLangRef.current = curLang;
-        prevDirRef.current = curDir;
-      }
-    }
-  }
-  prevPropRef.current = currentLocale;
-
-  useEffect(() => {
-    if (activeIdRef.current === null) return;
-    const trace = traces.find((t) => t.id === activeIdRef.current);
-    if (!trace) return;
-    const hasEnd = trace.events.some((e) => e.phase === "serverEnd");
-    const hasProp = trace.events.some((e) => e.phase === "propUpdated");
-    if (hasEnd && hasProp) {
-      activeIdRef.current = null;
-    }
-  });
 
   function handleChange(code: string) {
-    if (code === optimisticLocale || inFlightRef.current) return;
+    if (code === currentLocale || inFlightRef.current) return;
     inFlightRef.current = true;
 
-    const id = nextRequestId++;
-    activeIdRef.current = id;
-    const trace: RequestTrace = { id, target: code, events: [{ phase: "click", ts: performance.now() }] };
-    setTraces((prev) => [...prev.slice(-19), trace]);
-
     startTransition(async () => {
-      addEvent(id, "optimistic");
-      setOptimisticLocale(code);
-      addEvent(id, "serverStart");
       try {
         await setLocale(code);
-        const cookieVal = typeof document !== "undefined" ? document.cookie.match(/locale=(\w+)/)?.[1] ?? "?" : "?";
-        addEvent(id, "cookie", cookieVal);
-      } catch {
-        addEvent(id, "serverEnd", "error");
       } finally {
-        addEvent(id, "serverEnd");
         inFlightRef.current = false;
       }
     });
   }
-
-  const cookieLocale =
-    typeof document !== "undefined"
-      ? document.cookie.match(/locale=(\w+)/)?.[1] ?? "—"
-      : "—";
-  const htmlLang = typeof document !== "undefined" ? document.documentElement.lang : "—";
-  const htmlDir = typeof document !== "undefined" ? document.documentElement.dir : "—";
-  const diverged = currentLocale !== optimisticLocale;
 
   return (
     <div className="flex items-start gap-2">
@@ -198,9 +100,9 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
         {languages.map(({ code, label }) => (
           <button
             aria-label={label}
-            aria-pressed={optimisticLocale === code}
+            aria-pressed={currentLocale === code}
             className={`inline-flex min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[11px] font-medium transition ${
-              optimisticLocale === code
+              currentLocale === code
                 ? "bg-emerald-50 text-emerald-900 shadow-sm dark:bg-emerald-950 dark:text-emerald-400"
                 : "text-slate-500 active:bg-black/5 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:active:bg-white/10 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
@@ -214,44 +116,6 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
           </button>
         ))}
       </div>
-      {FORCE_LOCALE_DEBUG ? (
-        <div
-          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[280px] max-h-[60vh] overflow-y-auto rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
-          aria-hidden="true"
-        >
-          <div className="mb-0.5 font-bold text-white">LOCALE DEBUG</div>
-          <div>prop: <b className="text-white">{currentLocale}</b> | optim: <b className="text-white">{optimisticLocale}</b></div>
-          <div>cookie: <b className="text-white">{cookieLocale}</b> | lang: <b className="text-white">{htmlLang}</b> | dir: <b className="text-white">{htmlDir}</b></div>
-          <div>pending: <b className="text-white">{String(pending)}</b> | inFlight: <b className="text-white">{String(inFlightRef.current)}</b></div>
-          {diverged ? <div className="font-bold text-red-400">DIVERGED</div> : null}
-          <div className="mt-1 border-t border-white/20 pt-1">
-            <div className="font-bold text-white">REQUEST TRACES ({traces.length})</div>
-            {traces.map((tr) => {
-              const hasEnd = tr.events.some((e) => e.phase === "serverEnd");
-              const hasProp = tr.events.some((e) => e.phase === "propUpdated");
-              const firstTs = tr.events[0]?.ts ?? 0;
-              const isOrphan = hasEnd && !hasProp;
-              return (
-                <div key={tr.id} className={isOrphan ? "text-red-400" : !hasEnd ? "text-yellow-400" : ""}>
-                  {tr.events.map((ev, j) => {
-                    const dt = j === 0 ? "" : ` +${Math.round(ev.ts - firstTs)}ms`;
-                    return (
-                      <div key={j}>
-                        <span className="text-white">#{tr.id}</span>{" "}
-                        <span className="text-cyan-400">{ev.phase}</span>{" "}
-                        <span className="text-white">{tr.target}</span>
-                        {dt ? <span className="text-white/50">{dt}</span> : null}
-                        {ev.detail ? <span className="text-white/40"> [{ev.detail}]</span> : null}
-                      </div>
-                    );
-                  })}
-                  {isOrphan ? <div className="text-red-500 font-bold">serverEnd but NO propUpdated</div> : null}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
