@@ -24,25 +24,37 @@ export function useScrollToHighlightedItem() {
 
     appliedRef.current = highlightId;
 
+    console.log("[highlight-debug] 1) effect start, scrollY:", window.scrollY);
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.setAttribute(ACTIVE_ATTR, "");
-
-    console.log("[highlight-debug] scrollIntoView fired, scrollY:", window.scrollY);
+    console.log("[highlight-debug] 2) scrollIntoView + setAttribute done, scrollY:", window.scrollY);
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete(HIGHLIGHT_PARAM);
     const query = params.toString();
 
     setTimeout(() => {
-      console.log("[highlight-debug] router.replace about to fire, scrollY before:", window.scrollY);
+      console.log("[highlight-debug] 3) router.replace about to fire, scrollY:", window.scrollY);
       router.replace(query ? `${pathname}?${query}` : pathname, {
         scroll: false,
       });
-      console.log("[highlight-debug] router.replace called, scrollY after:", window.scrollY);
+      console.log("[highlight-debug] 4) router.replace called, scrollY:", window.scrollY);
     }, 1000);
 
     setTimeout(() => {
-      el.removeAttribute(ACTIVE_ATTR);
+      console.log("[highlight-debug] 5) BEFORE removeAttribute, scrollY:", window.scrollY);
+      const beforeRect = el.getBoundingClientRect();
+      console.log("[highlight-debug] 5a) element rect before remove:", { top: beforeRect.top, height: beforeRect.height });
+      // TEMPORARILY DISABLED: el.removeAttribute(ACTIVE_ATTR);
+      const afterRect = el.getBoundingClientRect();
+      console.log("[highlight-debug] 5b) element rect after remove:", { top: afterRect.top, height: afterRect.height });
+      console.log("[highlight-debug] 5c) AFTER removeAttribute, scrollY:", window.scrollY);
     }, HIGHLIGHT_DURATION_MS);
+
+    const scrollMonitor = setInterval(() => {
+      console.log("[highlight-debug] scrollY:", window.scrollY);
+    }, 200);
+
+    return () => clearInterval(scrollMonitor);
   }, [highlightId, searchParams, router, pathname]);
 }
