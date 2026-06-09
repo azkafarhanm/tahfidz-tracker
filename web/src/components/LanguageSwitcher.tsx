@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -82,15 +82,54 @@ type TelemetryEntry = {
   status: "pending" | "ok" | "error";
 };
 
+type DivergenceEvent = {
+  at: number;
+  what: string;
+  from: string;
+  to: string;
+};
+
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const [pending, startTransition] = useTransition();
   const [optimisticLocale, setOptimisticLocale] = useOptimistic(currentLocale);
   const inFlightRef = useRef(false);
   const [telemetry, setTelemetry] = useState<TelemetryEntry[]>([]);
+  const lastRequestedRef = useRef<string | null>(null);
+  const [divLog, setDivLog] = useState<DivergenceEvent[]>([]);
+
+  function logDiv(what: string, from: string, to: string) {
+    const entry: DivergenceEvent = { at: Date.now(), what, from, to };
+    setDivLog((prev) => [...prev.slice(-19), entry]);
+  }
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const prevLang = document.documentElement.lang;
+    const prevDir = document.documentElement.dir;
+    const prevCookie = document.cookie.match(/locale=(\w+)/)?.[1] ?? "";
+    if (prevLang !== currentLocale && currentLocale) {
+      logDiv("prop→render", prevLang, currentLocale);
+    }
+    if (prevCookie && prevCookie !== currentLocale) {
+      logDiv("cookie≠prop", prevCookie, currentLocale);
+    }
+    if (prevLang !== currentLocale) {
+      logDiv("html.lang≠prop", prevLang, currentLocale);
+    }
+    if (prevDir !== (currentLocale === "ar" ? "rtl" : "ltr")) {
+      logDiv("html.dir≠expected", prevDir, currentLocale === "ar" ? "rtl" : "ltr");
+    }
+  }, [currentLocale]);
+
+  const htmlLang = typeof document !== "undefined" ? document.documentElement.lang : "—";
+  const htmlDir = typeof document !== "undefined" ? document.documentElement.dir : "—";
 
   function handleChange(code: string) {
     if (code === optimisticLocale || inFlightRef.current) return;
     inFlightRef.current = true;
+    lastRequestedRef.current = code;
+
+    logDiv("click", optimisticLocale, code);
 
     const start = Date.now();
     const entry: TelemetryEntry = { target: code, start, end: null, ms: null, status: "pending" };
@@ -98,9 +137,12 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
 
     startTransition(async () => {
       setOptimisticLocale(code);
+      logDiv("optimistic", optimisticLocale, code);
       try {
         await setLocale(code);
         const end = Date.now();
+        const afterCookie = document.cookie.match(/locale=(\w+)/)?.[1] ?? "?";
+        logDiv("cookie", afterCookie !== code ? afterCookie : code, afterCookie);
         setTelemetry((prev) =>
           prev.map((e, i) =>
             i === prev.length - 1 ? { ...e, end, ms: end - e.start, status: "ok" as const } : e,
@@ -108,6 +150,7 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
         );
       } catch {
         const end = Date.now();
+        logDiv("error", code, "fail");
         setTelemetry((prev) =>
           prev.map((e, i) =>
             i === prev.length - 1 ? { ...e, end, ms: end - e.start, status: "error" as const } : e,
@@ -155,26 +198,43 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
       </div>
       {FORCE_LOCALE_DEBUG ? (
         <div
-          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[220px] rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
+          className="pointer-events-none fixed bottom-20 left-2 z-[9999] min-w-[240px] max-h-[60vh] overflow-y-auto rounded-lg bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-relaxed text-green-400 dark:bg-black/80"
           aria-hidden="true"
         >
           <div className="mb-0.5 font-bold text-white">LOCALE DEBUG</div>
           <div>prop: <b className="text-white">{currentLocale}</b></div>
           <div>optim: <b className="text-white">{optimisticLocale}</b></div>
           <div>cookie: <b className="text-white">{cookieLocale}</b></div>
+          <div>lang: <b className="text-white">{htmlLang}</b></div>
+          <div>dir: <b className="text-white">{htmlDir}</b></div>
+          <div>lastReq: <b className="text-white">{lastRequestedRef.current ?? "—"}</b></div>
           <div>pending: <b className="text-white">{String(pending)}</b></div>
           <div>inFlight: <b className="text-white">{String(inFlightRef.current)}</b></div>
           {diverged ? (
-            <div className="mt-0.5 font-bold text-red-400">DIVERGED</div>
+            <div className="font-bold text-red-400">DIVERGED</div>
           ) : null}
           {telemetry.length > 0 ? (
             <div className="mt-1 border-t border-white/20 pt-1">
-              <div className="font-bold text-white">TELEMETRY (last {telemetry.length})</div>
+              <div className="font-bold text-white">TELEMETRY ({telemetry.length})</div>
               {telemetry.map((t, i) => (
                 <div key={i} className={t.status === "error" ? "text-red-400" : t.status === "pending" ? "text-yellow-400" : ""}>
                   {t.target} {t.status === "pending" ? "…" : t.ms + "ms"} <span className="text-white/50">{t.status}</span>
                 </div>
               ))}
+            </div>
+          ) : null}
+          {divLog.length > 0 ? (
+            <div className="mt-1 border-t border-white/20 pt-1">
+              <div className="font-bold text-white">DIVERGENCE LOG ({divLog.length})</div>
+              <div className="max-h-24 overflow-y-auto">
+                {divLog.map((d, i) => (
+                  <div key={i}>
+                    <span className="text-white/50">{new Date(d.at).toISOString().slice(17, 23)}</span>{" "}
+                    <span className="text-cyan-400">{d.what}</span>{" "}
+                    <span className="text-white/60">{d.from}→{d.to}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : null}
         </div>
