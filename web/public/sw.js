@@ -44,6 +44,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (request.headers.get("RSC") === "1") {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
+
   if (request.mode === "navigate") {
     event.respondWith(
       caches.open(CACHE_NAME).then(async (cache) => {
