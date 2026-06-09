@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -62,6 +62,32 @@ export default function EditStudentForm({
   const [selectedGrade, setSelectedGrade] = useState(values.classGroupGrade);
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
+
+  const gradeHasExistingCg = selectedGrade
+    ? options.classGroups.find((g) => g.grade === Number(selectedGrade)) ?? null
+    : null;
+
+  const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
+
+  useEffect(() => {
+    if (lockedLevel && selectedLevel !== lockedLevel) {
+      setSelectedLevel(lockedLevel);
+    }
+  }, [lockedLevel, selectedLevel]);
+
+  function handleGradeChange(grade: string) {
+    setSelectedGrade(grade);
+    const cg = options.classGroups.find((g) => g.grade === Number(grade));
+    if (cg) {
+      setSelectedLevel(cg.levelKey);
+    }
+  }
+
+  function handleLevelClick(levelKey: string) {
+    if (!lockedLevel) {
+      setSelectedLevel(levelKey);
+    }
+  }
 
   const genderOptions = [
     { value: "MALE", label: t("genderMale") },
@@ -218,7 +244,7 @@ isSelected
   : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
                     }`}
                     key={g.value}
-                    onClick={() => setSelectedGrade(g.value)}
+                    onClick={() => handleGradeChange(g.value)}
                     type="button"
                   >
                     <span
@@ -255,16 +281,20 @@ isSelected
                     ) ?? null
                   : null;
                 const isSelected = selectedLevel === lv.key;
+                const isLocked = lockedLevel && lockedLevel !== lv.key;
                 return (
                   <button
                     aria-pressed={isSelected}
-                    className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
-isSelected
-  ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:shadow-none dark:ring-emerald-800"
-  : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
+                    aria-disabled={isLocked || undefined}
+                    className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition ${
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:shadow-none dark:ring-emerald-800"
+                        : isLocked
+                          ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-40 dark:border-slate-800 dark:bg-slate-900"
+                          : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
                     }`}
                     key={lv.key}
-                    onClick={() => setSelectedLevel(lv.key)}
+                    onClick={() => handleLevelClick(lv.key)}
                     type="button"
                   >
                     <span
@@ -281,6 +311,11 @@ isSelected
                 );
               })}
             </div>
+            {lockedLevel ? (
+              <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                {t("levelLockedHint")}
+              </p>
+            ) : null}
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
@@ -292,8 +327,9 @@ isSelected
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-400"
                 defaultValue={values.academicClassId}
                 name="academicClassId"
+                required
               >
-                <option value="">{t("genderNotSelected")}</option>
+                <option value="">{t("academicClassPlaceholder")}</option>
                 {options.academicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}

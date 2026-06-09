@@ -15,6 +15,82 @@ export type QuickLogStudent = {
   classSummary: string;
 };
 
+export type RecentActivityItem = {
+  recordId: string;
+  studentId: string;
+  studentName: string;
+  type: "HAFALAN" | "MUROJAAH";
+  surah: string;
+  fromAyah: number;
+  toAyah: number;
+  status: string;
+  date: Date;
+};
+
+export async function getQuickLogRecentActivity(teacherId?: string | null): Promise<RecentActivityItem[]> {
+  const filter = teacherId ? { teacherId } : {};
+  const [memRecords, revRecords] = await Promise.all([
+    prisma.memorizationRecord.findMany({
+      where: filter,
+      select: {
+        id: true,
+        studentId: true,
+        surah: true,
+        fromAyah: true,
+        toAyah: true,
+        status: true,
+        date: true,
+        student: { select: { fullName: true } },
+      },
+      orderBy: { date: "desc" },
+      take: 5,
+    }),
+    prisma.revisionRecord.findMany({
+      where: filter,
+      select: {
+        id: true,
+        studentId: true,
+        surah: true,
+        fromAyah: true,
+        toAyah: true,
+        status: true,
+        date: true,
+        student: { select: { fullName: true } },
+      },
+      orderBy: { date: "desc" },
+      take: 5,
+    }),
+  ]);
+
+  const items: RecentActivityItem[] = [
+    ...memRecords.map((r) => ({
+      recordId: r.id,
+      studentId: r.studentId,
+      studentName: r.student.fullName,
+      type: "HAFALAN" as const,
+      surah: r.surah,
+      fromAyah: r.fromAyah,
+      toAyah: r.toAyah,
+      status: statusLabels[r.status],
+      date: r.date,
+    })),
+    ...revRecords.map((r) => ({
+      recordId: r.id,
+      studentId: r.studentId,
+      studentName: r.student.fullName,
+      type: "MUROJAAH" as const,
+      surah: r.surah,
+      fromAyah: r.fromAyah,
+      toAyah: r.toAyah,
+      status: statusLabels[r.status],
+      date: r.date,
+    })),
+  ];
+
+  items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  return items.slice(0, 5);
+}
+
 export type ParsedQuickLogRecord = {
   student: QuickLogStudent;
   type: QuickLogRecordType;

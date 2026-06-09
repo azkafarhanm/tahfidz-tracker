@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import {
@@ -16,13 +15,17 @@ import {
   readString,
   readOptionalString,
   readInt,
-  createFailFn,
   parseRecordDateTime,
 } from "@/lib/form-helpers";
 
 const validStatuses = new Set<string>(Object.values(RecordStatus));
 const validTypes = new Set<string>(Object.keys(quickLogTypeLabels));
-const fail = createFailFn("/quick-log");
+
+class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
 
 export async function createGuidedRecord(formData: FormData) {
   const { session } = await requireSessionScope();
@@ -43,7 +46,7 @@ export async function createGuidedRecord(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
 
   if (!studentId) {
-    return fail(t("selectStudent"));
+    return { ok: false as const, error: t("selectStudent") };
   }
 
   const student = await prisma.student.findFirst({
@@ -52,20 +55,29 @@ export async function createGuidedRecord(formData: FormData) {
   });
 
   if (!student) {
-    return fail(t("studentInactive"));
+    return { ok: false as const, error: t("studentInactive") };
   }
 
   if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
-    return fail(t("noPermissionStudent"));
+    return { ok: false as const, error: t("noPermissionStudent") };
   }
 
   if (!validTypes.has(typeValue)) {
-    return fail(t("recordTypeInvalid"));
+    return { ok: false as const, error: t("recordTypeInvalid") };
   }
 
-  await validateRecordFields({
-    surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
-  });
+  try {
+    await validateRecordFields({
+      surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses,
+      fail: (message: string) => { throw new ValidationError(message); },
+      t,
+    });
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return { ok: false as const, error: e.message };
+    }
+    throw e;
+  }
 
   const data = {
     studentId: student.id,
@@ -79,13 +91,10 @@ export async function createGuidedRecord(formData: FormData) {
     notes,
   };
 
-  let recordId: string;
   if ((typeValue as QuickLogRecordType) === "MUROJAAH") {
-    const r = await prisma.revisionRecord.create({ data });
-    recordId = r.id;
+    await prisma.revisionRecord.create({ data });
   } else {
-    const r = await prisma.memorizationRecord.create({ data });
-    recordId = r.id;
+    await prisma.memorizationRecord.create({ data });
   }
 
   revalidatePath("/");
@@ -95,5 +104,5 @@ export async function createGuidedRecord(formData: FormData) {
   revalidatePath("/formative");
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
-  redirect(`/students/${student.id}?success=${encodeURIComponent(t("recordSaved"))}&highlight=${recordId}`);
+  return { ok: true as const, success: t("recordSaved") };
 }

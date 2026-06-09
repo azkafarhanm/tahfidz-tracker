@@ -1,4 +1,4 @@
-import { getQuickLogStudents } from "@/lib/quick-log";
+import { getQuickLogStudents, getQuickLogRecentActivity } from "@/lib/quick-log";
 import { createGuidedRecord } from "./actions";
 import GuidedQuickLog from "./GuidedQuickLog";
 import AppShell from "@/components/AppShell";
@@ -20,7 +20,10 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
   const t = await getTranslations("QuickLog");
   await searchParams;
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const students = await getQuickLogStudents(teacherId);
+  const [students, recentItems] = await Promise.all([
+    getQuickLogStudents(teacherId),
+    getQuickLogRecentActivity(teacherId),
+  ]);
   const userName = session?.user?.name ?? t("defaultUserName");
 
   return (
@@ -28,6 +31,7 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
       <GuidedQuickLog
         action={createGuidedRecord}
         students={students}
+        recentItems={recentItems}
       />
     </AppShell>
   );

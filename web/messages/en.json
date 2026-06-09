@@ -185,7 +185,12 @@
     "saveButton": "Save",
     "savingButton": "Saving...",
     "selectStudentPrompt": "Select a santri first to start logging.",
-    "defaultUserName": "Ustadz"
+    "defaultUserName": "Ustadz",
+    "recentActivityTitle": "Recent Activity",
+    "relativeJustNow": "Just now",
+    "relativeMinutesAgo": "{count} min ago",
+    "relativeHoursAgo": "{count}h ago",
+    "relativeDaysAgo": "{count}d ago"
   },
   "Profile": {
     "backLink": "Dashboard",
@@ -548,6 +553,7 @@
     "sectionClass": "Class",
     "sectionLevel": "Halaqah Level",
     "labelAcademicClass": "Academic Class",
+    "academicClassPlaceholder": "Select academic class",
     "labelNotes": "Notes",
     "placeholderNotes": "Optional, additional notes about the student.",
     "buttonCancel": "Cancel",
@@ -557,6 +563,7 @@
     "levelBeginner": "Beginner",
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
+    "levelLockedHint": "Level is determined by your existing halaqah for this grade.",
     "grade7": "Grade 7",
     "grade8": "Grade 8",
     "grade9": "Grade 9"
@@ -862,6 +869,8 @@
     "gradeRequired": "Grade is required.",
     "genderInvalid": "Invalid gender.",
     "halaqahMismatch": "Selected halaqah does not match the selected grade.",
+    "halaqahLevelLocked": "Your Grade {grade} halaqah is already set to {level}. Contact admin to change it.",
+    "academicClassRequired": "Academic class is required.",
     "studentAdded": "Student {name} has been added.",
     "studentNotFound": "Student not found.",
     "studentUpdated": "Student data has been updated.",

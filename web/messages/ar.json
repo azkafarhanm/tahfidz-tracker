@@ -185,7 +185,12 @@
     "saveButton": "حفظ",
     "savingButton": "جارٍ الحفظ...",
     "selectStudentPrompt": "اختر طالبًا أولًا لبدء التسجيل.",
-    "defaultUserName": "أستاذ"
+    "defaultUserName": "أستاذ",
+    "recentActivityTitle": "النشاط الأخير",
+    "relativeJustNow": "الآن",
+    "relativeMinutesAgo": "منذ {count} دقيقة",
+    "relativeHoursAgo": "منذ {count} ساعة",
+    "relativeDaysAgo": "منذ {count} يوم"
   },
   "Profile": {
     "backLink": "الرئيسية",
@@ -548,6 +553,7 @@
     "sectionClass": "الفصل",
     "sectionLevel": "مستوى الحلقة",
     "labelAcademicClass": "الفصل الأكاديمي",
+    "academicClassPlaceholder": "اختر الفصل",
     "labelNotes": "ملاحظات",
     "placeholderNotes": "اختياري، ملاحظات إضافية عن الطالب.",
     "buttonCancel": "إلغاء",
@@ -557,6 +563,7 @@
     "levelBeginner": "مبتدئ",
     "levelIntermediate": "متوسط",
     "levelAdvanced": "متقدم",
+    "levelLockedHint": "تم تحديد المستوى من قبل الحلقة الحالية لهذا الصف.",
     "grade7": "الصف 7",
     "grade8": "الصف 8",
     "grade9": "الصف 9"
@@ -862,6 +869,8 @@
     "gradeRequired": "الصف مطلوب.",
     "genderInvalid": "الجنس غير صالح.",
     "halaqahMismatch": "الحلقة المختارة لا تتوافق مع الصف المختار.",
+    "halaqahLevelLocked": "حلقة الصف {grade} محددة بالفعل على المستوى {level}. اتصل بالمسؤول لتغييرها.",
+    "academicClassRequired": "الصف الدراسي مطلوب.",
     "studentAdded": "تمت إضافة الطالب {name}.",
     "studentNotFound": "الطالب غير موجود.",
     "studentUpdated": "تم تحديث بيانات الطالب.",

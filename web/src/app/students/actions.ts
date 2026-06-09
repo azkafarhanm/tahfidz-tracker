@@ -14,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { halaqahLevelLabels } from "@/lib/format";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
@@ -33,7 +34,7 @@ export async function createTeacherStudent(formData: FormData) {
   const halaqahLevel = readOptionalString(formData, "halaqahLevel");
   const gradeRaw = readString(formData, "grade");
   const submittedGrade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
-  const academicClassId = readOptionalString(formData, "academicClassId");
+  const academicClassId = readString(formData, "academicClassId");
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
   const parsedJoinDate = joinDate ? parseDateInput(joinDate) : new Date();
@@ -59,6 +60,10 @@ export async function createTeacherStudent(formData: FormData) {
 
   if (!parsedJoinDate) {
     return fail(t("dateInvalid"), failValues);
+  }
+
+  if (!academicClassId) {
+    return fail(t("academicClassRequired"), failValues);
   }
 
   let resolvedClassGroupId = classGroupId;
@@ -100,36 +105,45 @@ export async function createTeacherStudent(formData: FormData) {
     const level = resolvedLevel as HalaqahLevel;
     const academicYear = getCurrentAcademicYear();
 
-    const teacher = await prisma.teacher.findUnique({
-      where: { id: teacherId },
-      select: { fullName: true },
-    });
-
-    // Unique constraint is (teacherId, academicYear, grade) — one group per teacher per grade.
-    const classGroup = await prisma.classGroup.upsert({
+    const existingCg = await prisma.classGroup.findUnique({
       where: { teacherId_academicYear_grade: { teacherId, academicYear, grade: resolvedGrade } },
-      update: {
-        level,
-        isActive: true,
-      },
-      create: {
-        teacherId,
-        name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
-        level,
-        grade: resolvedGrade,
-        academicYear,
-        isActive: true,
-      },
+      select: { id: true, level: true },
     });
 
-    resolvedClassGroupId = classGroup.id;
+    if (existingCg) {
+      if (existingCg.level !== level) {
+        return fail(
+          t("halaqahLevelLocked", { grade: resolvedGrade, level: halaqahLevelLabels[existingCg.level] }),
+          failValues,
+        );
+      }
+      resolvedClassGroupId = existingCg.id;
+    } else {
+      const teacher = await prisma.teacher.findUnique({
+        where: { id: teacherId },
+        select: { fullName: true },
+      });
+
+      const classGroup = await prisma.classGroup.create({
+        data: {
+          teacherId,
+          name: `${teacher?.fullName ?? "Halaqah"} - Kelas ${resolvedGrade}`,
+          level,
+          grade: resolvedGrade,
+          academicYear,
+          isActive: true,
+        },
+      });
+
+      resolvedClassGroupId = classGroup.id;
+    }
   }
 
   const newStudent = await prisma.student.create({
     data: {
       teacherId,
       classGroupId: resolvedClassGroupId,
-      academicClassId: academicClassId || null,
+      academicClassId,
       fullName,
       gender: (gender as Gender) || null,
       joinDate: parsedJoinDate,

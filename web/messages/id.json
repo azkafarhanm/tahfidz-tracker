@@ -185,7 +185,12 @@
     "saveButton": "Simpan",
     "savingButton": "Menyimpan...",
     "selectStudentPrompt": "Pilih santri terlebih dahulu untuk mulai mencatat.",
-    "defaultUserName": "Ustadz"
+    "defaultUserName": "Ustadz",
+    "recentActivityTitle": "Aktivitas Terbaru",
+    "relativeJustNow": "Baru saja",
+    "relativeMinutesAgo": "{count} menit lalu",
+    "relativeHoursAgo": "{count} jam lalu",
+    "relativeDaysAgo": "{count} hari lalu"
   },
   "Profile": {
     "backLink": "Dashboard",
@@ -548,6 +553,7 @@
     "sectionClass": "Kelas",
     "sectionLevel": "Level Halaqah",
     "labelAcademicClass": "Kelas akademik",
+    "academicClassPlaceholder": "Pilih kelas",
     "labelNotes": "Catatan",
     "placeholderNotes": "Opsional, catatan tambahan tentang santri.",
     "buttonCancel": "Batal",
@@ -557,6 +563,7 @@
     "levelBeginner": "Pemula",
     "levelIntermediate": "Menengah",
     "levelAdvanced": "Lanjutan",
+    "levelLockedHint": "Level ditentukan oleh halaqah yang sudah ada untuk kelas ini.",
     "grade7": "Kelas 7",
     "grade8": "Kelas 8",
     "grade9": "Kelas 9"
@@ -862,6 +869,8 @@
     "gradeRequired": "Kelas wajib dipilih.",
     "genderInvalid": "Jenis kelamin tidak valid.",
     "halaqahMismatch": "Halaqah yang dipilih tidak cocok dengan kelas yang dipilih.",
+    "halaqahLevelLocked": "Halaqah Kelas {grade} Anda sudah ditetapkan ke {level}. Hubungi admin untuk mengubahnya.",
+    "academicClassRequired": "Kelas wajib dipilih.",
     "studentAdded": "Santri {name} berhasil ditambahkan.",
     "studentNotFound": "Santri tidak ditemukan.",
     "studentUpdated": "Data santri berhasil diperbarui.",
