@@ -27,12 +27,19 @@ export function useScrollToHighlightedItem() {
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.setAttribute(ACTIVE_ATTR, "");
 
+    console.log("[highlight-debug] scrollIntoView fired, scrollY:", window.scrollY);
+
     const params = new URLSearchParams(searchParams.toString());
     params.delete(HIGHLIGHT_PARAM);
     const query = params.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, {
-      scroll: false,
-    });
+
+    setTimeout(() => {
+      console.log("[highlight-debug] router.replace about to fire, scrollY before:", window.scrollY);
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+      console.log("[highlight-debug] router.replace called, scrollY after:", window.scrollY);
+    }, 1000);
 
     setTimeout(() => {
       el.removeAttribute(ACTIVE_ATTR);
