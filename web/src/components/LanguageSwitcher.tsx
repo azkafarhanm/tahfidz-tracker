@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef, useTransition } from "react";
+import { useId, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
-import { setLocale } from "@/i18n/actions";
 
 const languages = [
   { code: "id", label: "Indonesia" },
@@ -73,48 +73,15 @@ type LanguageSwitcherProps = {
 };
 
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
-  const [pending, startTransition] = useTransition();
-  const inFlightRef = useRef(false);
-  const targetLocaleRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    console.log({
-      pending,
-      currentLocale,
-      targetLocale: targetLocaleRef.current,
-      timestamp: Date.now(),
-    });
-  }, [currentLocale, pending]);
+  const router = useRouter();
+  const [, startTransition] = useTransition();
 
   function handleChange(code: string) {
-    console.log({
-      pending,
-      currentLocale,
-      targetLocale: code,
-      timestamp: Date.now(),
-    });
-    if (code === currentLocale || inFlightRef.current) return;
-    inFlightRef.current = true;
-    targetLocaleRef.current = code;
+    if (code === currentLocale) return;
 
-    startTransition(async () => {
-      try {
-        console.log({
-          pending,
-          currentLocale,
-          targetLocale: code,
-          timestamp: Date.now(),
-        });
-        await setLocale(code);
-      } finally {
-        inFlightRef.current = false;
-        console.log({
-          pending,
-          currentLocale,
-          targetLocale: code,
-          timestamp: Date.now(),
-        });
-      }
+    document.cookie = `locale=${code}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    startTransition(() => {
+      router.refresh();
     });
   }
 
@@ -135,7 +102,6 @@ export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProp
                 ? "bg-emerald-50 text-emerald-900 shadow-sm dark:bg-emerald-950 dark:text-emerald-400"
                 : "text-slate-500 active:bg-black/5 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:active:bg-white/10 dark:hover:bg-slate-800 dark:hover:text-slate-200"
             }`}
-            disabled={pending}
             key={code}
             onClick={() => handleChange(code)}
             type="button"
