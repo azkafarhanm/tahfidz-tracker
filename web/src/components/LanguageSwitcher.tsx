@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useTransition } from "react";
+import { useEffect, useId, useRef, useTransition } from "react";
 import { Globe } from "lucide-react";
 import { setLocale } from "@/i18n/actions";
 
@@ -75,16 +75,45 @@ type LanguageSwitcherProps = {
 export default function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   const [pending, startTransition] = useTransition();
   const inFlightRef = useRef(false);
+  const targetLocaleRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    console.log({
+      pending,
+      currentLocale,
+      targetLocale: targetLocaleRef.current,
+      timestamp: Date.now(),
+    });
+  }, [currentLocale, pending]);
 
   function handleChange(code: string) {
+    console.log({
+      pending,
+      currentLocale,
+      targetLocale: code,
+      timestamp: Date.now(),
+    });
     if (code === currentLocale || inFlightRef.current) return;
     inFlightRef.current = true;
+    targetLocaleRef.current = code;
 
     startTransition(async () => {
       try {
+        console.log({
+          pending,
+          currentLocale,
+          targetLocale: code,
+          timestamp: Date.now(),
+        });
         await setLocale(code);
       } finally {
         inFlightRef.current = false;
+        console.log({
+          pending,
+          currentLocale,
+          targetLocale: code,
+          timestamp: Date.now(),
+        });
       }
     });
   }
