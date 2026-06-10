@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 import { cancelTarget, completeTarget } from "@/lib/target-actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
@@ -15,7 +15,7 @@ export default function TargetActions({
   onActionSuccess?: () => void;
 }) {
   const t = useTranslations("TargetActions");
-  const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -34,7 +34,7 @@ export default function TargetActions({
             const result = await completeTarget(targetId);
             if (result.ok) {
               onActionSuccess?.();
-              router.refresh();
+              refresh();
             } else {
               setError(result.error ?? "Error");
             }
@@ -55,7 +55,7 @@ export default function TargetActions({
             const result = await cancelTarget(targetId);
             if (result.ok) {
               onActionSuccess?.();
-              router.refresh();
+              refresh();
             } else {
               setError(result.error ?? "Error");
             }

@@ -343,6 +343,7 @@ export async function deleteTeacherStudent(studentId: string) {
 
   revalidatePath("/");
   revalidatePath("/students");
+  revalidatePath("/quick-log");
   invalidateStudentRelatedCaches(studentId);
   return { ok: true as const, message: t("teacherStudentDeleted", { name: result.student.fullName }) };
 }

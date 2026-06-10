@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 import { deleteSummativeAssessmentAction } from "@/app/summative/actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
@@ -29,6 +30,7 @@ export default function DeleteSummativeButton({
 }: DeleteSummativeButtonProps) {
   const t = useTranslations("DeleteRecord");
   const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
   void compact;
   const fallbackRedirectTo = `/summative/${studentId}?semester=${semester}`;
 
@@ -53,12 +55,12 @@ export default function DeleteSummativeButton({
           if (navigateOnSuccess) {
             setTimeout(() => router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false }), 400);
           } else {
-            router.refresh();
+            refresh();
           }
         } else if (navigateOnSuccess) {
           router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false });
         } else {
-          router.refresh();
+          refresh();
         }
 
         return {

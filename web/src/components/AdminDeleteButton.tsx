@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 
 type ActionResult =
   | void
@@ -36,7 +36,7 @@ export default function AdminDeleteButton({
   disabled = false,
   disabledReason,
 }: AdminDeleteButtonProps) {
-  const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
 
   return (
     <ConfirmActionDialogButton
@@ -49,7 +49,7 @@ export default function AdminDeleteButton({
       icon={<Trash2 aria-hidden="true" size={16} strokeWidth={2.2} />}
       label={label}
       onAction={action}
-      onSuccess={() => router.refresh()}
+      onSuccess={() => refresh()}
       pendingLabel={deletingLabel}
       tone="danger"
     />

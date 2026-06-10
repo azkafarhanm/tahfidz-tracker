@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 import { deleteRecord } from "@/lib/record-actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 
@@ -31,6 +32,7 @@ export default function DeleteRecordButton({
 }: DeleteRecordButtonProps) {
   const t = useTranslations("DeleteRecord");
   const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
   void compact;
   const fallbackRedirectTo = returnTo ?? `/students/${studentId}`;
 
@@ -51,7 +53,7 @@ export default function DeleteRecordButton({
           if (navigateOnSuccess) {
             setTimeout(() => router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false }), 400);
           } else {
-            router.refresh();
+            refresh();
           }
         } else if (navigateOnSuccess) {
           router.replace(result.redirectTo ?? fallbackRedirectTo, { scroll: false });

@@ -1,10 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { deleteTeacherStudent } from "@/app/students/[id]/edit/actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 
 type DeleteStudentButtonProps = {
   disabledReason?: string;
@@ -20,7 +20,7 @@ export default function DeleteStudentButton({
   studentId,
 }: DeleteStudentButtonProps) {
   const t = useTranslations("DeleteStudent");
-  const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
 
   return (
     <ConfirmActionDialogButton
@@ -34,7 +34,7 @@ export default function DeleteStudentButton({
       onAction={async () => {
         onDeleteStart?.();
         const result = await deleteTeacherStudent(studentId);
-        router.refresh();
+        refresh();
         return result;
       }}
       onError={(message) => onDeleteError?.(message)}

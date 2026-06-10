@@ -127,6 +127,7 @@ function revalidateAdminStudentPaths(studentId?: string) {
   revalidatePath("/students");
   revalidatePath("/formative");
   revalidatePath("/summative");
+  revalidatePath("/quick-log");
   revalidatePath("/admin");
   revalidatePath("/admin/students");
   invalidateStudentRelatedCaches(studentId);

@@ -6,6 +6,7 @@ import { requireSessionScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type QuickLogPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

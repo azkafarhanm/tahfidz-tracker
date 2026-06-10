@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, PencilLine, RotateCcw, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
 import { actionButtonClass } from "@/components/action-button-styles";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
+import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 
 type RecordItem = {
   id: string;
@@ -35,7 +35,7 @@ export default function ActivityRow({
 }) {
   const t = useTranslations("StudentDetail");
   const tDel = useTranslations("DeleteRecord");
-  const router = useRouter();
+  const refresh = useScrollPreservingRefresh();
   const [deleted, setDeleted] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -96,7 +96,7 @@ export default function ActivityRow({
                   const result = await deleteRecord(studentId, recordType, record.id, `/students/${studentId}`);
                   if (result.ok) {
                     setDeleted(true);
-                    router.refresh();
+                    refresh();
                   }
                   return { ok: result.ok, error: result.error, success: result.success };
                 }}
