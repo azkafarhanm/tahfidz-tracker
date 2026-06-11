@@ -52,7 +52,6 @@ type AcademicClassOption = StudentOption & {
 export type StudentFormValues = {
   fullName: string;
   teacherId: string;
-  academicYear: string;
   academicClassId: string;
   gender: string;
   joinDate: string;
@@ -67,11 +66,11 @@ type StudentFormProps = {
   description: string;
   error?: string;
   icon: string;
+  activeAcademicYear: string;
   options: {
     teachers: StudentOption[];
     classGroups: ClassGroupOption[];
     academicClasses: AcademicClassOption[];
-    academicYears: string[];
   };
   submitLabel: string;
   title: string;
@@ -85,6 +84,7 @@ export default function StudentForm({
   description,
   error,
   icon: iconName,
+  activeAcademicYear,
   options,
   submitLabel,
   title,
@@ -93,9 +93,6 @@ export default function StudentForm({
   const t = useTranslations("AdminStudentForm");
   const tc = useTranslations("CharacterCounter");
   const [selectedTeacherId, setSelectedTeacherId] = useState(values.teacherId);
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState(
-    values.academicYear,
-  );
   const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(
     values.academicClassId,
   );
@@ -111,9 +108,9 @@ export default function StudentForm({
   const filteredAcademicClasses = useMemo(
     () =>
       options.academicClasses.filter(
-        (academicClass) => academicClass.academicYear === selectedAcademicYear,
+        (academicClass) => academicClass.academicYear === activeAcademicYear,
       ),
-    [options.academicClasses, selectedAcademicYear],
+    [options.academicClasses, activeAcademicYear],
   );
 
   const selectedAcademicClass = useMemo(
@@ -147,20 +144,6 @@ export default function StudentForm({
       ) ?? null
     );
   }, [selectedAcademicClass, selectedTeacherId, teacherClassGroups]);
-
-  function handleAcademicYearChange(newAcademicYear: string) {
-    setSelectedAcademicYear(newAcademicYear);
-
-    const stillMatches = options.academicClasses.some(
-      (academicClass) =>
-        academicClass.id === selectedAcademicClassId &&
-        academicClass.academicYear === newAcademicYear,
-    );
-
-    if (!stillMatches) {
-      setSelectedAcademicClassId("");
-    }
-  }
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
@@ -278,21 +261,17 @@ export default function StudentForm({
             </div>
 
             <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                  {t("academicYear")}
                </span>
-              <select
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                name="academicYear"
-                onChange={(event) => handleAcademicYearChange(event.target.value)}
-                value={selectedAcademicYear}
-              >
-                {options.academicYears.map((academicYear) => (
-                  <option key={academicYear} value={academicYear}>
-                    {academicYear}
-                  </option>
-                ))}
-              </select>
+              <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t("activeAcademicYear")}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
+                  {activeAcademicYear}
+                </p>
+              </div>
             </label>
 
             <label className="mt-4 block">
@@ -351,7 +330,7 @@ export default function StudentForm({
             {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
               <p className="mt-4 text-sm text-amber-600">
                 {t("noHalaqahWarning", {
-                  year: selectedAcademicYear,
+                  year: activeAcademicYear,
                   grade: selectedAcademicClass.grade,
                 })}
               </p>

@@ -1,6 +1,6 @@
 import AcademicClassForm from "../AcademicClassForm";
 import { createAcademicClass } from "../actions";
-import { getAdminAcademicClassFormOptions } from "@/lib/admin";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
@@ -19,7 +19,6 @@ type NewAcademicClassPageProps = {
     error?: string;
     grade?: string;
     section?: string;
-    academicYear?: string;
     isActive?: string;
   }>;
 };
@@ -29,16 +28,16 @@ export default async function NewAcademicClassPage({
 }: NewAcademicClassPageProps) {
   await requireAdminScope();
 
-  const [params, options] = await Promise.all([
+  const [params, activeAcademicYear] = await Promise.all([
     searchParams,
-    getAdminAcademicClassFormOptions(),
+    getActiveAcademicYear(),
   ]);
   const t = await getTranslations("AdminFormPage");
 
   return (
     <AcademicClassForm
       action={createAcademicClass}
-      academicYears={options.academicYears}
+      activeAcademicYear={activeAcademicYear}
       backHref="/admin/classes"
       backLabel={t("backAcademicClasses")}
       description={t("addAcademicClassDescription")}
@@ -49,7 +48,6 @@ export default async function NewAcademicClassPage({
       values={{
         grade: params?.grade ?? "",
         section: params?.section ?? "",
-        academicYear: params?.academicYear ?? options.academicYears[0] ?? "2025/2026",
         isActive: params?.isActive ? params.isActive === "true" : true,
       }}
     />

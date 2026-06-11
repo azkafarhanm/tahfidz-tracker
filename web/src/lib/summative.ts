@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated/prisma-next/client";
 import { Semester } from "@/generated/prisma-next/enums";
 import { cached, invalidateCache } from "@/lib/cache";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -112,7 +112,7 @@ export async function getClassTargets(
   semester: Semester,
   academicYear?: string,
 ): Promise<ClassTargetSurah[]> {
-  const year = academicYear ?? getCurrentAcademicYear();
+  const year = academicYear ?? await getActiveAcademicYear();
   const cacheKey = `summative-targets:${classLevel}:${semester}:${year}`;
 
   return cached(cacheKey, 30_000, () =>
@@ -783,7 +783,7 @@ export async function getStudentSummativeHistory(
     if (!student) return [];
   }
 
-  const year = academicYear ?? getCurrentAcademicYear();
+  const year = academicYear ?? await getActiveAcademicYear();
   return getStudentSummativeHistoryInner(studentId, year);
 }
 

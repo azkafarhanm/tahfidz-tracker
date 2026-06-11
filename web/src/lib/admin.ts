@@ -10,7 +10,7 @@ import {
 } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { cached, invalidateCache } from "@/lib/cache";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 
 export { invalidateCache };
 
@@ -19,19 +19,25 @@ const genderLabels: Record<Gender, string> = {
   [Gender.FEMALE]: "Perempuan",
 };
 
-function buildAcademicYearOptions(existingAcademicYears: string[]) {
-  const startYear = 2025;
-  const currentYear = new Date().getFullYear();
-  const latestExistingStartYear = existingAcademicYears.reduce((latest, value) => {
-    const parsed = Number.parseInt(value.slice(0, 4), 10);
-    return Number.isFinite(parsed) ? Math.max(latest, parsed) : latest;
-  }, startYear);
-  const endYear = Math.max(currentYear, latestExistingStartYear) + 5;
-
-  return Array.from({ length: endYear - startYear + 1 }, (_, index) => {
-    const year = startYear + index;
-    return `${year}/${year + 1}`;
+export async function buildAcademicYearOptions(existingAcademicYears: string[]) {
+  // Get years from AcademicYear table
+  const dbYears = await prisma.academicYear.findMany({
+    select: { year: true },
+    orderBy: { year: "asc" },
   });
+
+  const dbYearStrings = dbYears.map((ay) => ay.year);
+
+  // Merge with existing years from data, deduplicate and sort
+  const allYears = new Set([...dbYearStrings, ...existingAcademicYears]);
+
+  // If no years exist at all, generate from current year
+  if (allYears.size === 0) {
+    const currentYear = new Date().getFullYear();
+    return [`${currentYear}/${currentYear + 1}`];
+  }
+
+  return Array.from(allYears).sort();
 }
 
 function formatHalaqahGradeLabel(grade: number) {
@@ -472,7 +478,7 @@ export async function getAdminStudentFormOptions() {
     }),
   ]);
 
-  const academicYears = buildAcademicYearOptions(
+  const academicYears = await buildAcademicYearOptions(
     academicClasses.map((academicClass) => academicClass.academicYear),
   );
 
@@ -622,7 +628,7 @@ export async function getAdminAcademicClassFormOptions() {
     },
   });
 
-  const academicYears = buildAcademicYearOptions(
+  const academicYears = await buildAcademicYearOptions(
     academicClasses.map((academicClass) => academicClass.academicYear),
   );
 
@@ -805,7 +811,7 @@ export async function getAdminClassGroupFormOptions() {
     }),
   ]);
 
-  const academicYears = buildAcademicYearOptions(
+  const academicYears = await buildAcademicYearOptions(
     academicClasses.map((academicClass) => academicClass.academicYear),
   );
 
@@ -857,7 +863,7 @@ export async function getAdminStudentFormData(studentId: string) {
       academicYear:
         student.academicClass?.academicYear ??
         options.academicYears[0] ??
-        getCurrentAcademicYear(),
+        await getActiveAcademicYear(),
       gender: student.gender ?? "",
       joinDate: student.joinDate.toISOString().slice(0, 10),
       isActive: student.isActive,

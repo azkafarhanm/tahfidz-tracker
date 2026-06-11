@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import StudentForm from "../../StudentForm";
 import { updateStudent } from "../../actions";
 import { getAdminStudentFormData } from "@/lib/admin";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
@@ -21,7 +22,6 @@ type EditStudentPageProps = {
     error?: string;
     fullName?: string;
     teacherId?: string;
-    academicYear?: string;
     academicClassId?: string;
     gender?: string;
     joinDate?: string;
@@ -37,8 +37,9 @@ export default async function EditStudentPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [data, query] = await Promise.all([
+  const [data, activeAcademicYear, query] = await Promise.all([
     getAdminStudentFormData(id),
+    getActiveAcademicYear(),
     searchParams,
   ]);
   const t = await getTranslations("AdminFormPage");
@@ -57,13 +58,13 @@ export default async function EditStudentPage({
       description={t("editStudentDescription", { name: data.student.fullName })}
       error={query?.error}
       icon="PencilLine"
+      activeAcademicYear={activeAcademicYear}
       options={data.options}
       submitLabel={t("saveChanges")}
       title={t("editStudent")}
       values={{
         fullName: query?.fullName ?? data.student.fullName,
         teacherId: query?.teacherId ?? data.student.teacherId,
-        academicYear: query?.academicYear ?? data.student.academicYear,
         academicClassId:
           query?.academicClassId ?? data.student.academicClassId,
         gender: query?.gender ?? data.student.gender,

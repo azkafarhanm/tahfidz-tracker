@@ -3,7 +3,7 @@ import { ArrowLeft, FilePlus2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { createSummativeAssessmentAction } from "@/app/summative/actions";
@@ -66,7 +66,7 @@ export default async function SummativeNewPage({
     query?.semester && isSemesterValue(query.semester)
       ? query.semester
       : getSemesterForDate(new Date());
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = await getActiveAcademicYear();
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>

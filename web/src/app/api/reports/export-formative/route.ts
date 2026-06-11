@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
-import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     }
 
     const semester = parseSemester(semesterValue);
-    const academicYear = getCurrentAcademicYear();
+    const academicYear = await getActiveAcademicYear();
     const exportData = await getTeacherFormativeExportData(
       teacherId,
       semester,

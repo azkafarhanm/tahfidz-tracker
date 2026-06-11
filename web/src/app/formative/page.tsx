@@ -6,7 +6,7 @@ import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { getTeacherFormativeOverview } from "@/lib/formative";
 import {
   FORMATIVE_VIEW_COOKIE,
@@ -63,7 +63,7 @@ export default async function FormativePage({
   const classLevelValue = String(classLevel);
   const page = parsePage(params?.page);
 
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = await getActiveAcademicYear();
   const overview = await getTeacherFormativeOverview(
     teacherId,
     parseSemester(semesterValue),

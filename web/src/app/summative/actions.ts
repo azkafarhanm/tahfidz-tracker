@@ -14,7 +14,7 @@ import {
   saveSummativeAssessment,
   updateSummativeAssessment,
 } from "@/lib/summative";
-import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 
@@ -195,7 +195,7 @@ async function parseSummativePayload(formData: FormData) {
   const surahQuery = String(formData.get("surah") ?? "").trim();
   const semesterValue = String(formData.get("semester") ?? "").trim();
   const academicYear =
-    String(formData.get("academicYear") ?? "").trim() || getCurrentAcademicYear();
+    String(formData.get("academicYear") ?? "").trim() || await getActiveAcademicYear();
   const scoreValue = String(formData.get("score") ?? "").trim();
   const notesValue = String(formData.get("notes") ?? "").trim();
 

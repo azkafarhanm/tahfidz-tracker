@@ -1,6 +1,7 @@
 import StudentForm from "../StudentForm";
 import { createStudent } from "../actions";
 import { getAdminStudentFormOptions } from "@/lib/admin";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { todayInputValue } from "@/lib/format";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
@@ -18,7 +19,6 @@ type NewStudentPageProps = {
     error?: string;
     fullName?: string;
     teacherId?: string;
-    academicYear?: string;
     academicClassId?: string;
     gender?: string;
     joinDate?: string;
@@ -32,8 +32,9 @@ export default async function NewStudentPage({
 }: NewStudentPageProps) {
   await requireAdminScope();
 
-  const [options, params] = await Promise.all([
+  const [options, activeAcademicYear, params] = await Promise.all([
     getAdminStudentFormOptions(),
+    getActiveAcademicYear(),
     searchParams,
   ]);
   const t = await getTranslations("AdminFormPage");
@@ -46,16 +47,13 @@ export default async function NewStudentPage({
       description={t("addStudentDescription")}
       error={params?.error}
       icon="UserPlus"
+      activeAcademicYear={activeAcademicYear}
       options={options}
       submitLabel={t("saveStudent")}
       title={t("addStudent")}
       values={{
         fullName: params?.fullName ?? "",
         teacherId: params?.teacherId ?? "",
-        academicYear:
-          params?.academicYear ??
-          options.academicYears[0] ??
-          "2025/2026",
         academicClassId: params?.academicClassId ?? "",
         gender: params?.gender ?? "",
         joinDate: params?.joinDate ?? todayInputValue(),

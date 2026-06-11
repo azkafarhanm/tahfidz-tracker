@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { statusLabels, formatRange } from "@/lib/format";
 import { getTeacherExportBundle } from "@/lib/reports";
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     }
     const localeCookie = request.headers.get("cookie")?.match(/(?:^|;\s*)locale=([^;]+)/)?.[1];
     const locale: Locale = locales.includes(localeCookie as Locale) ? (localeCookie as Locale) : defaultLocale;
-    const academicYear = getCurrentAcademicYear();
+    const academicYear = await getActiveAcademicYear();
 
     const teacherBundle = await getTeacherExportBundle(
       teacherId,

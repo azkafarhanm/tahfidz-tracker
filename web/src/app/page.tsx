@@ -85,17 +85,18 @@ export default async function DashboardPreview() {
               <p className="mt-1 text-sm text-slate-300">{t("summaryTodaySubtext")}</p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">{t("weeklyTargetLabel")}</p>
+              <p className="text-xs text-slate-300">{t("weeklyActivityLabel")}</p>
               <p className="mt-1 text-xl font-semibold">
-                {dashboard.targetProgress}%
+                {dashboard.weeklyMemorizationCount + dashboard.weeklyRevisionCount}
               </p>
             </div>
           </div>
-          <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-emerald-400 motion-safe:animate-progress origin-left"
-              style={{ width: `${dashboard.targetProgress}%` }}
-            />
+          <div className="mt-4 flex items-center gap-4 text-sm text-slate-300">
+            <span>{t("weeklyHafalanCount", { count: dashboard.weeklyMemorizationCount })}</span>
+            <span className="text-white/30">·</span>
+            <span>{t("weeklyMurojaahCount", { count: dashboard.weeklyRevisionCount })}</span>
+            <span className="text-white/30">·</span>
+            <span>{t("weeklyTargetsCompleted", { count: dashboard.weeklyCompletedTargets })}</span>
           </div>
         </section>
 

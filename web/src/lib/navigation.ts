@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   BookText,
+  Calendar,
   ClipboardList,
   GraduationCap,
   Home,
@@ -24,6 +25,7 @@ export const navigationIcons = {
   BookOpen,
   UserRound,
   BarChart3,
+  Calendar,
 } as const;
 
 export const teacherNavigationItems = [
@@ -40,6 +42,7 @@ export const adminNavigationItems = [
   { key: "roleAdmin", href: "/admin", iconKey: "ShieldCheck" },
   { key: "navGuru", href: "/admin/teachers", iconKey: "Users" },
   { key: "navKelas", href: "/admin/classes", iconKey: "GraduationCap" },
+  { key: "navTahunAjaran", href: "/admin/academic-years", iconKey: "Calendar" },
   { key: "navHalaqah", href: "/admin/halaqah", iconKey: "BookOpen" },
   { key: "navSantri", href: "/admin/students", iconKey: "UserRound" },
   { key: "navFormatif", href: "/formative", iconKey: "BookText" },

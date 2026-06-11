@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import ClassGroupForm from "../../ClassGroupForm";
 import { updateClassGroup } from "../../actions";
-import {
-  getAdminClassGroupFormData,
-  getAdminClassGroupFormOptions,
-} from "@/lib/admin";
+import { getAdminClassGroupFormData, getAdminClassGroupFormOptions } from "@/lib/admin";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
@@ -22,11 +20,9 @@ type EditClassGroupPageProps = {
   }>;
   searchParams?: Promise<{
     error?: string;
-    name?: string;
     description?: string;
     level?: string;
     teacherId?: string;
-    academicYear?: string;
     grade?: string;
     isActive?: string;
   }>;
@@ -39,9 +35,10 @@ export default async function EditClassGroupPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [classGroup, options, query] = await Promise.all([
+  const [classGroup, options, activeAcademicYear, query] = await Promise.all([
     getAdminClassGroupFormData(id),
     getAdminClassGroupFormOptions(),
+    getActiveAcademicYear(),
     searchParams,
   ]);
   const t = await getTranslations("AdminFormPage");
@@ -61,15 +58,13 @@ export default async function EditClassGroupPage({
       error={query?.error}
       icon="PencilLine"
       submitLabel={t("saveChanges")}
-      academicYears={options.academicYears}
+      activeAcademicYear={activeAcademicYear}
       teachers={options.teachers}
       title={t("editHalaqah")}
       values={{
-        name: query?.name ?? classGroup.name,
         description: query?.description ?? classGroup.description,
         level: query?.level ?? classGroup.level,
         teacherId: query?.teacherId ?? classGroup.teacherId,
-        academicYear: query?.academicYear ?? classGroup.academicYear,
         grade: query?.grade ?? classGroup.grade,
         isActive: query?.isActive
           ? query.isActive === "true"

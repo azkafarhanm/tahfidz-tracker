@@ -20,7 +20,6 @@ const validGenders = new Set<string>(Object.values(Gender));
 type StudentFormInput = {
   fullName: string;
   teacherId: string;
-  academicYear: string;
   academicClassId: string;
   gender: Gender | null;
   joinDate: Date | null;
@@ -51,7 +50,6 @@ function readStudentFormInput(formData: FormData): StudentFormInput {
   return {
     fullName: readString(formData, "fullName"),
     teacherId: readString(formData, "teacherId"),
-    academicYear: readString(formData, "academicYear"),
     academicClassId: readString(formData, "academicClassId"),
     gender: genderValue ? (genderValue as Gender) : null,
     joinDate: parseDateInput(joinDateValue),
@@ -65,7 +63,6 @@ function getStudentFormExtras(input: StudentFormInput) {
   return {
     fullName: input.fullName,
     teacherId: input.teacherId,
-    academicYear: input.academicYear,
     academicClassId: input.academicClassId,
     gender: input.gender ?? "",
     joinDate: input.joinDateValue,
@@ -91,13 +88,6 @@ async function validateStudentInput(
 
   if (!input.academicClassId) {
     fail(t("adminAcademicClassRequired"), extras);
-  }
-
-  if (
-    input.academicYear &&
-    !/^\d{4}\/\d{4}$/.test(input.academicYear)
-  ) {
-    fail(t("adminAcademicYearInvalid"), extras);
   }
 
   if (!input.joinDate) {
@@ -168,10 +158,6 @@ async function resolveStudentRelations(
 
   if (!academicClass) {
     fail(t("adminAcademicClassNotFound"), extras);
-  }
-
-  if (input.academicYear && academicClass!.academicYear !== input.academicYear) {
-    fail(t("adminAcademicClassYearMismatch"), extras);
   }
 
   const classGroup = await prisma.classGroup.findFirst({

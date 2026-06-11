@@ -439,32 +439,35 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
 }
 
 export async function getTeacherStudentFormOptions(teacherId: string) {
-  const [classGroups, academicClasses] = await Promise.all([
-    prisma.classGroup.findMany({
-      where: {
-        teacherId,
-        isActive: true,
+  const classGroups = await prisma.classGroup.findMany({
+    where: {
+      teacherId,
+      isActive: true,
+    },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      level: true,
+      grade: true,
+      teacher: {
+        select: { fullName: true },
       },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        level: true,
-        grade: true,
-        teacher: {
-          select: { fullName: true },
+    },
+  });
+
+  const assignedGrades = [...new Set(classGroups.map((cg) => cg.grade))];
+
+  const academicClasses = assignedGrades.length > 0
+    ? await prisma.academicClass.findMany({
+        where: { isActive: true, grade: { in: assignedGrades } },
+        orderBy: [{ grade: "asc" }, { section: "asc" }],
+        select: {
+          id: true,
+          name: true,
         },
-      },
-    }),
-    prisma.academicClass.findMany({
-      where: { isActive: true },
-      orderBy: [{ grade: "asc" }, { section: "asc" }],
-      select: {
-        id: true,
-        name: true,
-      },
-    }),
-  ]);
+      })
+    : [];
 
   return {
     classGroups: classGroups.map((cg) => ({

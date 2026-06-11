@@ -1,5 +1,5 @@
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import {
   formatClassSummary,
   formatRange,
@@ -71,46 +71,48 @@ export async function getLiveStudentsPageData(
       : {}),
   };
 
-  const totalCount = await prisma.student.count({ where });
-  const students = await prisma.student.findMany({
-    where,
-    include: {
-      classGroup: { select: { name: true, level: true } },
-      academicClass: { select: { name: true } },
-      memorizationRecords: {
-        orderBy: { date: "desc" },
-        take: 1,
-        select: {
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
+  const totalCount = await withRetry(() => prisma.student.count({ where }));
+  const students = await withRetry(() =>
+    prisma.student.findMany({
+      where,
+      include: {
+        classGroup: { select: { name: true, level: true } },
+        academicClass: { select: { name: true } },
+        memorizationRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
         },
-      },
-      revisionRecords: {
-        orderBy: { date: "desc" },
-        take: 1,
-        select: {
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
+        revisionRecords: {
+          orderBy: { date: "desc" },
+          take: 1,
+          select: {
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+          },
         },
-      },
-      _count: {
-        select: {
-          targets: {
-            where: { status: TargetStatus.ACTIVE },
+        _count: {
+          select: {
+            targets: {
+              where: { status: TargetStatus.ACTIVE },
+            },
           },
         },
       },
-    },
-    orderBy: { fullName: "asc" },
-    skip: (safePage - 1) * safePageSize,
-    take: safePageSize,
-  });
+      orderBy: { fullName: "asc" },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
+    }),
+  );
 
   return {
     totalCount,
@@ -138,24 +140,26 @@ export async function getLiveStudentsPageData(
 }
 
 export async function getLiveInactiveStudentsData(teacherId?: string | null) {
-  const students = await prisma.student.findMany({
-    where: {
-      isActive: false,
-      ...scopeWhere(teacherId),
-    },
-    orderBy: { fullName: "asc" },
-    include: {
-      classGroup: { select: { name: true, level: true } },
-      academicClass: { select: { name: true } },
-      _count: {
-        select: {
-          targets: {
-            where: { status: TargetStatus.ACTIVE },
+  const students = await withRetry(() =>
+    prisma.student.findMany({
+      where: {
+        isActive: false,
+        ...scopeWhere(teacherId),
+      },
+      orderBy: { fullName: "asc" },
+      include: {
+        classGroup: { select: { name: true, level: true } },
+        academicClass: { select: { name: true } },
+        _count: {
+          select: {
+            targets: {
+              where: { status: TargetStatus.ACTIVE },
+            },
           },
         },
       },
-    },
-  });
+    }),
+  );
 
   return students.map((student) => ({
     activeTargetCount: student._count.targets,

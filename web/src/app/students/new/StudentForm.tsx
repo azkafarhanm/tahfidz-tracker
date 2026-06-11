@@ -102,7 +102,7 @@ export default function TeacherStudentForm({
   ];
 
   const levelBaseSubtitle = gradeHasExistingCg
-    ? `${gradeHasExistingCg.teacherName} - Kelas ${gradeHasExistingCg.grade}`
+    ? gradeHasExistingCg.teacherName
     : null;
 
   const levels = [

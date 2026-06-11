@@ -1,7 +1,7 @@
 import { RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
-import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { computeTargetCoverage } from "@/lib/target-progress";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
@@ -453,23 +453,24 @@ type TeacherSummativeExportBundle = Awaited<
 export async function getTeacherExportBundle(
   teacherId: string,
   locale = "id",
-  academicYear = getCurrentAcademicYear(),
+  academicYear?: string,
 ) {
+  const year = academicYear ?? await getActiveAcademicYear();
   return cached(
-    `export-bundle:teacher:${teacherId}:${locale}:${academicYear}`,
+    `export-bundle:teacher:${teacherId}:${locale}:${year}`,
     30_000,
     async () => {
       const [summary, formativeGanjil, formativeGenap, summativeGanjil, summativeGenap] =
         await Promise.all([
           getTeacherReportData(teacherId, locale),
-          getTeacherFormativeExportData(teacherId, Semester.GANJIL, academicYear),
-          getTeacherFormativeExportData(teacherId, Semester.GENAP, academicYear),
-          getTeacherSummativeExportData(teacherId, Semester.GANJIL, academicYear),
-          getTeacherSummativeExportData(teacherId, Semester.GENAP, academicYear),
+          getTeacherFormativeExportData(teacherId, Semester.GANJIL, year),
+          getTeacherFormativeExportData(teacherId, Semester.GENAP, year),
+          getTeacherSummativeExportData(teacherId, Semester.GANJIL, year),
+          getTeacherSummativeExportData(teacherId, Semester.GENAP, year),
         ]);
 
       return {
-        academicYear,
+        academicYear: year,
         summary,
         formative: {
           [Semester.GANJIL]: {

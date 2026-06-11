@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { Prisma } from "@/generated/prisma-next/client";
 import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
@@ -40,55 +39,8 @@ function getWeekStart(today: Date, timezoneOffsetMinutes: number | null): Date {
   return new Date(ms - diff * 86_400_000);
 }
 
-type AyahTotalRow = {
-  total: bigint | number | string | null;
-};
-
-function teacherFilterSql(teacherId?: string | null) {
-  return teacherId ? Prisma.sql`AND "teacherId" = ${teacherId}` : Prisma.empty;
-}
-
-function toNumberTotal(value: AyahTotalRow["total"]) {
-  if (typeof value === "bigint") return Number(value);
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-}
-
-async function sumWeeklyMemorizationAyahs(teacherId: string | null | undefined, weekStart: Date) {
-  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
-    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
-    FROM "MemorizationRecord"
-    WHERE "date" >= ${weekStart}
-    ${teacherFilterSql(teacherId)}
-  `);
-
-  return toNumberTotal(rows[0]?.total);
-}
-
-async function sumWeeklyRevisionAyahs(teacherId: string | null | undefined, weekStart: Date) {
-  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
-    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
-    FROM "RevisionRecord"
-    WHERE "date" >= ${weekStart}
-    ${teacherFilterSql(teacherId)}
-  `);
-
-  return toNumberTotal(rows[0]?.total);
-}
-
-async function sumActiveTargetAyahs(teacherId: string | null | undefined) {
-  const rows = await prisma.$queryRaw<AyahTotalRow[]>(Prisma.sql`
-    SELECT COALESCE(SUM(GREATEST("toAyah" - "fromAyah" + 1, 0)), 0) AS total
-    FROM "Target"
-    WHERE "status" = ${TargetStatus.ACTIVE}::"TargetStatus"
-    ${teacherFilterSql(teacherId)}
-  `);
-
-  return toNumberTotal(rows[0]?.total);
+function teacherFilter(teacherId?: string | null) {
+  return teacherId ? { teacherId } : {};
 }
 
 async function readTimezoneOffset(): Promise<number | null> {
@@ -112,7 +64,7 @@ export async function getDashboardData(teacherId?: string | null, locale = "id")
 async function getDashboardDataInner(teacherId?: string | null, locale = "id", tzOffset: number | null = null) {
   const today = getUserToday(tzOffset);
   const weekStart = getWeekStart(today, tzOffset);
-  const teacherFilter = teacherId ? { teacherId } : {};
+  const filter = teacherFilter(teacherId);
   const dateFormatter = getDateFormatter(locale);
   const timeFormatter = getTimeFormatter(locale);
 
@@ -121,51 +73,57 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     revisionRecords,
     todayMemorizationCount,
     todayRevisionCount,
-    weeklyMemorizationAyahs,
-    weeklyRevisionAyahs,
-    weeklyTargetAyahs,
-    completedTargets,
+    weeklyMemorizationCount,
+    weeklyRevisionCount,
+    weeklyCompletedTargets,
     needsReviewCount,
     overdueTargets,
   ] = await Promise.all([
     prisma.memorizationRecord.findMany({
-      where: teacherFilter,
+      where: filter,
       include: { student: { select: { id: true, fullName: true } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
     prisma.revisionRecord.findMany({
-      where: teacherFilter,
+      where: filter,
       include: { student: { select: { id: true, fullName: true } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
     prisma.memorizationRecord.count({
-      where: { ...teacherFilter, date: { gte: today } },
+      where: { ...filter, date: { gte: today } },
     }),
     prisma.revisionRecord.count({
-      where: { ...teacherFilter, date: { gte: today } },
+      where: { ...filter, date: { gte: today } },
     }),
-    sumWeeklyMemorizationAyahs(teacherId, weekStart),
-    sumWeeklyRevisionAyahs(teacherId, weekStart),
-    sumActiveTargetAyahs(teacherId),
+    prisma.memorizationRecord.count({
+      where: { ...filter, date: { gte: weekStart } },
+    }),
+    prisma.revisionRecord.count({
+      where: { ...filter, date: { gte: weekStart } },
+    }),
     prisma.target.count({
-      where: { ...teacherFilter, status: TargetStatus.COMPLETED },
+      where: {
+        ...filter,
+        status: TargetStatus.COMPLETED,
+        updatedAt: { gte: weekStart },
+      },
     }),
     (async () => {
       const [mem, rev] = await Promise.all([
         prisma.memorizationRecord.count({
-          where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+          where: { ...filter, status: RecordStatus.PERLU_MUROJAAH },
         }),
         prisma.revisionRecord.count({
-          where: { ...teacherFilter, status: RecordStatus.PERLU_MUROJAAH },
+          where: { ...filter, status: RecordStatus.PERLU_MUROJAAH },
         }),
       ]);
       return mem + rev;
     })(),
     prisma.target.findMany({
       where: {
-        ...teacherFilter,
+        ...filter,
         status: TargetStatus.ACTIVE,
         endDate: { lt: new Date() },
       },
@@ -212,17 +170,11 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     .sort((a, b) => b.timestamp - a.timestamp)
     .slice(0, 5);
 
-  const weeklyRecordedAyahs = weeklyMemorizationAyahs + weeklyRevisionAyahs;
-  const targetProgress =
-    weeklyTargetAyahs > 0
-      ? Math.min(Math.round((weeklyRecordedAyahs / weeklyTargetAyahs) * 100), 100)
-      : completedTargets > 0
-        ? 100
-        : 0;
-
   return {
     todayRecordCount: todayMemorizationCount + todayRevisionCount,
-    targetProgress,
+    weeklyMemorizationCount,
+    weeklyRevisionCount,
+    weeklyCompletedTargets,
     needsReviewCount,
     recentRecords,
     overdueTargets: overdueTargets.map((t) => ({

@@ -78,6 +78,22 @@ function createDnsFallbackStream() {
   };
 }
 
+const TRANSIENT_ERROR_PATTERNS = [
+  "Connection terminated unexpectedly",
+  "connection was terminated",
+  "ECONNRESET",
+  "EPIPE",
+  "ETIMEDOUT",
+  "connect ECONNREFUSED",
+  "Server has closed the connection",
+];
+
+function isTransientConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message;
+  return TRANSIENT_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
 function createPrismaClient() {
   const connectionString = getDatabaseUrl();
   const ssl = !connectionString.includes("localhost") && !connectionString.includes("127.0.0.1");
@@ -102,4 +118,26 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+}
+
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 2,
+  baseDelayMs = 200,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries && isTransientConnectionError(error)) {
+        const delay = baseDelayMs * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
 }

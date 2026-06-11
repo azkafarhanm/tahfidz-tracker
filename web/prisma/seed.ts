@@ -24,7 +24,30 @@ function atTime(daysOffset: number, hour: number, minute: number) {
 }
 
 async function main() {
-  const academicYear = "2025/2026";
+  const academicYear = "2026/2027";
+
+  // Seed AcademicYear
+  await prisma.academicYear.upsert({
+    where: { year: academicYear },
+    update: {
+      startDate: new Date(2026, 6, 1),
+      endDate: new Date(2027, 5, 30),
+      isActive: true,
+    },
+    create: {
+      year: academicYear,
+      startDate: new Date(2026, 6, 1),
+      endDate: new Date(2027, 5, 30),
+      isActive: true,
+    },
+  });
+
+  // Deactivate any other academic years
+  await prisma.academicYear.updateMany({
+    where: { year: { not: academicYear }, isActive: true },
+    data: { isActive: false },
+  });
+
   const academicClassSeeds = [
     { grade: 7, section: "A" },
     { grade: 7, section: "B" },

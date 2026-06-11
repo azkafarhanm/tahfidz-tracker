@@ -26,13 +26,12 @@ type AcademicClassFormIcon = keyof typeof iconMap;
 export type AcademicClassFormValues = {
   grade: string;
   section: string;
-  academicYear: string;
   isActive: boolean;
 };
 
 type AcademicClassFormProps = {
   action: (formData: FormData) => Promise<void>;
-  academicYears: string[];
+  activeAcademicYear: string;
   backHref: string;
   backLabel: string;
   description: string;
@@ -45,7 +44,7 @@ type AcademicClassFormProps = {
 
 export default function AcademicClassForm({
   action,
-  academicYears,
+  activeAcademicYear,
   backHref,
   backLabel,
   description,
@@ -150,23 +149,14 @@ export default function AcademicClassForm({
               <h2 className="font-semibold">{t("academicYear")}</h2>
             </div>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("academicYear")}
-              </span>
-              <select
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                defaultValue={values.academicYear}
-                name="academicYear"
-                required
-              >
-                {academicYears.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("activeAcademicYear")}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
+                {activeAcademicYear}
+              </p>
+            </div>
 
             <label className="mt-4 flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
               <input

@@ -12,6 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <ScopedIntlProvider
       namespaces={[
+        "AdminAcademicYear",
         "AdminClassForm",
         "AdminHalaqahForm",
         "AdminStudentForm",

@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import AcademicClassForm from "../../AcademicClassForm";
 import { updateAcademicClass } from "../../actions";
-import {
-  getAdminAcademicClassFormData,
-  getAdminAcademicClassFormOptions,
-} from "@/lib/admin";
+import { getAdminAcademicClassFormData } from "@/lib/admin";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
@@ -26,7 +24,6 @@ type EditAcademicClassPageProps = {
     error?: string;
     grade?: string;
     section?: string;
-    academicYear?: string;
     isActive?: string;
   }>;
 };
@@ -38,9 +35,9 @@ export default async function EditAcademicClassPage({
   await requireAdminScope();
 
   const { id } = await params;
-  const [academicClass, options, query] = await Promise.all([
+  const [academicClass, activeAcademicYear, query] = await Promise.all([
     getAdminAcademicClassFormData(id),
-    getAdminAcademicClassFormOptions(),
+    getActiveAcademicYear(),
     searchParams,
   ]);
   const t = await getTranslations("AdminFormPage");
@@ -54,7 +51,7 @@ export default async function EditAcademicClassPage({
   return (
     <AcademicClassForm
       action={action}
-      academicYears={options.academicYears}
+      activeAcademicYear={activeAcademicYear}
       backHref="/admin/classes"
       backLabel={t("backAcademicClasses")}
       description={t("editAcademicClassDescription", {
@@ -69,7 +66,6 @@ export default async function EditAcademicClassPage({
       values={{
         grade: query?.grade ?? academicClass.grade,
         section: query?.section ?? academicClass.section,
-        academicYear: query?.academicYear ?? academicClass.academicYear,
         isActive: query?.isActive
           ? query.isActive === "true"
           : academicClass.isActive,

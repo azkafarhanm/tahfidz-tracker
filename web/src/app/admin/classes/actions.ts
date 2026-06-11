@@ -11,11 +11,11 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 
 type AcademicClassFormInput = {
   grade: string;
   section: string;
-  academicYear: string;
   isActive: boolean;
 };
 
@@ -23,7 +23,6 @@ function readAcademicClassFormInput(formData: FormData): AcademicClassFormInput 
   return {
     grade: readString(formData, "grade"),
     section: readString(formData, "section"),
-    academicYear: readString(formData, "academicYear"),
     isActive: formData.get("isActive") === "on",
   };
 }
@@ -32,7 +31,6 @@ function getAcademicClassFormExtras(input: AcademicClassFormInput) {
   return {
     grade: input.grade,
     section: input.section,
-    academicYear: input.academicYear,
     isActive: input.isActive ? "true" : "false",
   };
 }
@@ -51,10 +49,6 @@ async function validateAcademicClassInput(
 
   if (!input.section || input.section.length > 5) {
     fail(t("classSectionRequired"), extras);
-  }
-
-  if (!input.academicYear || !/^\d{4}\/\d{4}$/.test(input.academicYear)) {
-    fail(t("classAcademicYearFormat"), extras);
   }
 }
 
@@ -89,6 +83,7 @@ export async function createAcademicClass(formData: FormData) {
   const input = readAcademicClassFormInput(formData);
   const fail = createFailFn("/admin/classes/new");
   const t = await getTranslations("Validation");
+  const academicYear = await getActiveAcademicYear();
 
   await validateAcademicClassInput(input, fail);
 
@@ -99,7 +94,7 @@ export async function createAcademicClass(formData: FormData) {
     where: {
       name_academicYear: {
         name,
-        academicYear: input.academicYear,
+        academicYear,
       },
     },
     select: { id: true },
@@ -107,7 +102,7 @@ export async function createAcademicClass(formData: FormData) {
 
   if (existing) {
     fail(
-      t("classDuplicate", { name, year: input.academicYear }),
+      t("classDuplicate", { name, year: academicYear }),
       getAcademicClassFormExtras(input),
     );
   }
@@ -117,7 +112,7 @@ export async function createAcademicClass(formData: FormData) {
       grade,
       section: input.section,
       name,
-      academicYear: input.academicYear,
+      academicYear,
       isActive: input.isActive,
     },
   });
@@ -134,6 +129,7 @@ export async function updateAcademicClass(
 
   const input = readAcademicClassFormInput(formData);
   const fail = createFailFn(`/admin/classes/${academicClassId}/edit`);
+  const academicYear = await getActiveAcademicYear();
 
   await validateAcademicClassInput(input, fail);
 
@@ -155,7 +151,7 @@ export async function updateAcademicClass(
     where: {
       name_academicYear: {
         name,
-        academicYear: input.academicYear,
+        academicYear,
       },
     },
     select: { id: true },
@@ -163,7 +159,7 @@ export async function updateAcademicClass(
 
   if (existing && existing.id !== academicClass.id) {
     fail(
-      t("classDuplicate", { name, year: input.academicYear }),
+      t("classDuplicate", { name, year: academicYear }),
       getAcademicClassFormExtras(input),
     );
   }
@@ -174,7 +170,7 @@ export async function updateAcademicClass(
       grade,
       section: input.section,
       name,
-      academicYear: input.academicYear,
+      academicYear,
       isActive: input.isActive,
     },
   });

@@ -1,4 +1,9 @@
 import { Semester } from "@/generated/prisma-next/enums";
+import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
+
+const ACADEMIC_YEAR_CACHE_TTL_MS = 60_000; // 60 seconds
+const ACADEMIC_YEAR_CACHE_KEY = "academic-year:active";
 
 export function getAcademicYearForDate(date: Date): string {
   const year = date.getFullYear();
@@ -7,8 +12,20 @@ export function getAcademicYearForDate(date: Date): string {
   return `${startYear}/${startYear + 1}`;
 }
 
-export function getCurrentAcademicYear(): string {
-  return getAcademicYearForDate(new Date());
+export async function getActiveAcademicYear(): Promise<string> {
+  return cached(ACADEMIC_YEAR_CACHE_KEY, ACADEMIC_YEAR_CACHE_TTL_MS, async () => {
+    const activeYear = await prisma.academicYear.findFirst({
+      where: { isActive: true },
+      select: { year: true },
+    });
+
+    if (activeYear) {
+      return activeYear.year;
+    }
+
+    // Fallback: compute from date if no active year is configured
+    return getAcademicYearForDate(new Date());
+  });
 }
 
 export function getSemesterForDate(date: Date): Semester {

@@ -12,26 +12,23 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
 
 type ClassGroupFormInput = {
-  name: string;
   description: string;
   level: string;
   teacherId: string;
-  academicYear: string;
   grade: string;
   isActive: boolean;
 };
 
 function readClassGroupFormInput(formData: FormData): ClassGroupFormInput {
   return {
-    name: readString(formData, "name"),
     description: readString(formData, "description"),
     level: readString(formData, "level"),
     teacherId: readString(formData, "teacherId"),
-    academicYear: readString(formData, "academicYear"),
     grade: readString(formData, "grade"),
     isActive: formData.get("isActive") === "on",
   };
@@ -39,11 +36,9 @@ function readClassGroupFormInput(formData: FormData): ClassGroupFormInput {
 
 function getClassGroupFormExtras(input: ClassGroupFormInput) {
   return {
-    name: input.name,
     description: input.description,
     level: input.level,
     teacherId: input.teacherId,
-    academicYear: input.academicYear,
     grade: input.grade,
     isActive: input.isActive ? "true" : "false",
   };
@@ -56,10 +51,6 @@ async function validateClassGroupInput(
   const t = await getTranslations("Validation");
   const extras = getClassGroupFormExtras(input);
 
-  if (!input.name || input.name.length > 120) {
-    fail(t("halaqahNameRequired"), extras);
-  }
-
   if (input.description && input.description.length > 500) {
     fail(t("halaqahDescTooLong"), extras);
   }
@@ -70,10 +61,6 @@ async function validateClassGroupInput(
 
   if (!input.teacherId) {
     fail(t("halaqahTeacherRequired"), extras);
-  }
-
-  if (!/^\d{4}\/\d{4}$/.test(input.academicYear)) {
-    fail(t("halaqahAcademicYearInvalid"), extras);
   }
 
   if (!["7", "8", "9"].includes(input.grade)) {
@@ -114,16 +101,17 @@ async function resolveClassGroupRelations(
 ) {
   const t = await getTranslations("Validation");
   const grade = Number.parseInt(input.grade, 10);
+  const academicYear = await getActiveAcademicYear();
 
   const [teacher, conflictingClassGroup] = await Promise.all([
     prisma.teacher.findUnique({
       where: { id: input.teacherId },
-      select: { id: true },
+      select: { id: true, fullName: true },
     }),
     prisma.classGroup.findFirst({
       where: {
         teacherId: input.teacherId,
-        academicYear: input.academicYear,
+        academicYear,
         grade,
       },
       select: { id: true, name: true },
@@ -141,14 +129,15 @@ async function resolveClassGroupRelations(
     conflictingClassGroup.id !== currentClassGroupId
   ) {
     fail(
-      t("halaqahDuplicate", { year: input.academicYear, grade, name: conflictingClassGroup.name }),
+      t("halaqahDuplicate", { year: academicYear, grade, name: conflictingClassGroup.name }),
       extras,
     );
   }
 
   return {
     teacherId: teacher!.id,
-    academicYear: input.academicYear,
+    teacherFullName: teacher!.fullName,
+    academicYear,
     grade,
   };
 }
@@ -164,7 +153,7 @@ export async function createClassGroup(formData: FormData) {
 
   await prisma.classGroup.create({
     data: {
-      name: input.name,
+      name: relations.teacherFullName,
       description: input.description || null,
       level: input.level as HalaqahLevel,
       teacherId: relations.teacherId,
@@ -233,7 +222,7 @@ export async function updateClassGroup(
     prisma.classGroup.update({
       where: { id: classGroup.id },
       data: {
-        name: input.name,
+        name: relations.teacherFullName,
         description: input.description || null,
         level: input.level as HalaqahLevel,
         teacherId: relations.teacherId,

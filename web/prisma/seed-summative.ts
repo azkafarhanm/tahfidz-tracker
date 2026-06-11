@@ -171,7 +171,19 @@ const targetMappings: {
 ];
 
 async function main() {
-  const academicYear = "2025/2026";
+  const academicYear = "2026/2027";
+
+  // Seed AcademicYear if not exists
+  await prisma.academicYear.upsert({
+    where: { year: academicYear },
+    update: {},
+    create: {
+      year: academicYear,
+      startDate: new Date(2026, 6, 1),
+      endDate: new Date(2027, 5, 30),
+      isActive: true,
+    },
+  });
 
   console.log("Seeding 114 surahs...");
   for (const s of surahs) {

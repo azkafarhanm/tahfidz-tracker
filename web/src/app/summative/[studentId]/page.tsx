@@ -12,7 +12,7 @@ import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import { Semester } from "@/generated/prisma-next/enums";
-import { getCurrentAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import {
   parseStoredGradingView,
   SUMMATIVE_VIEW_COOKIE,
@@ -64,7 +64,7 @@ export default async function SummativeDetailPage({
       ? query.semester
       : defaultSemester;
 
-  const academicYear = getCurrentAcademicYear();
+  const academicYear = await getActiveAcademicYear();
   const detail = await getStudentSummativeDetail(
     studentId,
     teacherId,

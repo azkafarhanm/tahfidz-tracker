@@ -9,7 +9,6 @@ import {
   UserCheck,
   Signal,
   GraduationCap,
-  CalendarDays,
   PencilLine,
   PlusCircle,
 } from "lucide-react";
@@ -34,11 +33,9 @@ type TeacherOption = {
 };
 
 export type ClassGroupFormValues = {
-  name: string;
   description: string;
   level: string;
   teacherId: string;
-  academicYear: string;
   grade: string;
   isActive: boolean;
 };
@@ -52,7 +49,7 @@ type ClassGroupFormProps = {
   icon: ClassGroupFormIcon;
   submitLabel: string;
   teachers: TeacherOption[];
-  academicYears: string[];
+  activeAcademicYear: string;
   title: string;
   values: ClassGroupFormValues;
 };
@@ -66,16 +63,12 @@ export default function ClassGroupForm({
   icon: iconName,
   submitLabel,
   teachers,
-  academicYears,
+  activeAcademicYear,
   title,
   values,
 }: ClassGroupFormProps) {
   const t = useTranslations("AdminHalaqahForm");
   const tc = useTranslations("CharacterCounter");
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState(
-    values.academicYear,
-  );
-  const [nameLength, setNameLength] = useState(values.name.length);
   const [descLength, setDescLength] = useState(values.description.length);
 
   const Icon = iconMap[iconName];
@@ -128,29 +121,14 @@ export default function ClassGroupForm({
               <h2 className="font-semibold">{t("nameAndTeacher")}</h2>
             </div>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("halaqahName")}
-              </span>
-              <input
-                aria-describedby="halaqah-name-help"
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                defaultValue={values.name}
-                maxLength={120}
-                name="name"
-                onChange={(e) => setNameLength(e.target.value.length)}
-                placeholder={t("halaqahNamePlaceholder")}
-                required
-                type="text"
-              />
-              <CharacterCounter current={nameLength} max={120} maxReachedLabel={tc("maxReached")} />
-              <p
-                className="mt-2 text-xs text-slate-500 dark:text-slate-400"
-                id="halaqah-name-help"
-              >
-                {t("halaqahNameDescription")}
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t("halaqahNameAuto")}
               </p>
-            </label>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {t("halaqahNameAutoDescription")}
+              </p>
+            </div>
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -188,25 +166,13 @@ export default function ClassGroupForm({
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("academicYear")}
               </span>
-              <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
-                <CalendarDays
-                  aria-hidden="true"
-                  className="shrink-0 text-slate-400 dark:text-slate-500"
-                  size={17}
-                  strokeWidth={2.2}
-                />
-                <select
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                  name="academicYear"
-                  onChange={(event) => setSelectedAcademicYear(event.target.value)}
-                  value={selectedAcademicYear}
-                >
-                  {academicYears.map((academicYear) => (
-                    <option key={academicYear} value={academicYear}>
-                      {academicYear}
-                    </option>
-                  ))}
-                </select>
+              <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t("activeAcademicYear")}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-950 dark:text-white">
+                  {activeAcademicYear}
+                </p>
               </div>
             </label>
 
