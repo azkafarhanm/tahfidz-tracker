@@ -4,7 +4,18 @@ type CacheEntry<T> = {
   expiresAt: number;
 };
 
-const store = new Map<string, CacheEntry<unknown>>();
+// Anchored to globalThis so all module instances in the same Node.js process
+// (server components, server actions, middleware) share one Map.
+// A plain module-level Map is re-created whenever Next.js evaluates the module
+// in a different context (e.g. the "use server" action bundle), causing
+// invalidateCache() to iterate an empty Map while the page render context
+// holds the real entries — so invalidation silently does nothing.
+declare global {
+  var __appCacheStore: Map<string, CacheEntry<unknown>> | undefined;
+}
+const store: Map<string, CacheEntry<unknown>> =
+  (globalThis.__appCacheStore ??= new Map());
+
 const DEFAULT_MAX_ENTRIES = 500;
 
 const isDebug = process.env.NODE_ENV === "development" || process.env.APP_CACHE_DEBUG === "true";

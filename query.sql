@@ -1,0 +1,1 @@
+SELECT s.id, s."fullName", COUNT(DISTINCT mr.id) as mem_count, COUNT(DISTINCT t.id) as target_count FROM "Student" s LEFT JOIN "MemorizationRecord" mr ON mr."studentId" = s.id LEFT JOIN "Target" t ON t."studentId" = s.id AND t.status = 'ACTIVE' WHERE s."isActive" = true GROUP BY s.id, s."fullName" ORDER BY mem_count DESC LIMIT 5;

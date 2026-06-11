@@ -4,6 +4,7 @@ import {
   TargetStatus,
   TargetType,
 } from "@/generated/prisma-next/enums";
+import { computeTargetCoverage } from "@/lib/target-progress";
 import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import {
@@ -76,12 +77,17 @@ function formatTarget(target: {
   startDate: Date;
   endDate: Date;
   notes: string | null;
-}, dateFormatter: Intl.DateTimeFormat) {
+}, dateFormatter: Intl.DateTimeFormat, matchingRecords?: { surah: string; fromAyah: number; toAyah: number }[]) {
   const now = new Date();
   const totalDays = target.endDate.getTime() - target.startDate.getTime();
   const elapsed = now.getTime() - target.startDate.getTime();
   const timeProgress = totalDays > 0 ? Math.min(100, Math.max(0, Math.round((elapsed / totalDays) * 100))) : 0;
   const isOverdue = now > target.endDate;
+
+  const totalAyahs = target.toAyah - target.fromAyah + 1;
+  const coverage = matchingRecords
+    ? computeTargetCoverage(target, matchingRecords)
+    : { coveredAyahs: 0, totalAyahs, percent: 0, isComplete: false };
 
   return {
     id: target.id,
@@ -92,6 +98,9 @@ function formatTarget(target: {
     notes: target.notes,
     timeProgress,
     isOverdue,
+    ayahProgress: coverage.percent,
+    coveredAyahs: coverage.coveredAyahs,
+    totalAyahs: coverage.totalAyahs,
   };
 }
 
@@ -394,6 +403,17 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
   ).length;
   const classInfo = formatClassSummary(student);
 
+  const hafalanRanges = student.memorizationRecords.map((r) => ({
+    surah: r.surah,
+    fromAyah: r.fromAyah,
+    toAyah: r.toAyah,
+  }));
+  const murojaahRanges = student.revisionRecords.map((r) => ({
+    surah: r.surah,
+    fromAyah: r.fromAyah,
+    toAyah: r.toAyah,
+  }));
+
   return {
     id: student.id,
     fullName: student.fullName,
@@ -401,7 +421,13 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     gender: student.gender ? genderLabels[student.gender] : "Belum diisi",
     joinDate: dateFormatter.format(student.joinDate),
     notes: student.notes,
-    activeTargets: student.targets.map((target) => formatTarget(target, dateFormatter)),
+    activeTargets: student.targets.map((target) =>
+      formatTarget(
+        target,
+        dateFormatter,
+        target.type === TargetType.HAFALAN ? hafalanRanges : murojaahRanges,
+      ),
+    ),
     latestHafalan: hafalanRecords[0] ?? null,
     latestMurojaah: murojaahRecords[0] ?? null,
     hafalanRecords,

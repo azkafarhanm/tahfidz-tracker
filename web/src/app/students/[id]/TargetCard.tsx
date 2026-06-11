@@ -16,6 +16,9 @@ type TargetItem = {
   notes: string | null;
   timeProgress: number;
   isOverdue: boolean;
+  ayahProgress: number;
+  coveredAyahs: number;
+  totalAyahs: number;
 };
 
 export default function TargetCard({
@@ -67,19 +70,21 @@ export default function TargetCard({
             {target.startDate} - {target.endDate}
           </span>
           <span className="font-medium">
-            {target.timeProgress}% {t("targetTimeProgress")}
+            {target.coveredAyahs}/{target.totalAyahs} {t("targetAyahProgress")}
           </span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              target.isOverdue
-                ? "bg-red-400"
-                : target.timeProgress > 75
-                  ? "bg-amber-400"
-                  : "bg-emerald-400"
+              target.ayahProgress >= 100
+                ? "bg-emerald-500"
+                : target.isOverdue
+                  ? "bg-red-400"
+                  : target.ayahProgress > 75
+                    ? "bg-amber-400"
+                    : "bg-emerald-400"
             }`}
-            style={{ width: `${target.timeProgress}%` }}
+            style={{ width: `${target.ayahProgress}%` }}
           />
         </div>
       </div>

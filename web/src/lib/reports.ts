@@ -2,6 +2,7 @@ import { RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/en
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 import { getCurrentAcademicYear } from "@/lib/academic-year";
+import { computeTargetCoverage } from "@/lib/target-progress";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   getDateFormatter,
@@ -336,6 +337,17 @@ async function getStudentProgressDataInner(
     ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
     : 0;
 
+  const hafalanRanges = student.memorizationRecords.map((r) => ({
+    surah: r.surah,
+    fromAyah: r.fromAyah,
+    toAyah: r.toAyah,
+  }));
+  const murojaahRanges = student.revisionRecords.map((r) => ({
+    surah: r.surah,
+    fromAyah: r.fromAyah,
+    toAyah: r.toAyah,
+  }));
+
   return {
     id: student.id,
     fullName: student.fullName,
@@ -346,13 +358,23 @@ async function getStudentProgressDataInner(
     murojaahCount: murojaahRecords.length,
     avgScore,
     records: allRecords,
-    activeTargets: student.targets.map((t) => ({
-      type: t.type === "HAFALAN" ? "Hafalan" : "Murojaah",
-      range: formatRange(t.surah, t.fromAyah, t.toAyah),
-      startDate: dateFormatter.format(t.startDate),
-      endDate: dateFormatter.format(t.endDate),
-      notes: t.notes,
-    })),
+    activeTargets: student.targets.map((t) => {
+      const matchingRecords = t.type === "HAFALAN" ? hafalanRanges : murojaahRanges;
+      const coverage = computeTargetCoverage(
+        { type: t.type, surah: t.surah, fromAyah: t.fromAyah, toAyah: t.toAyah },
+        matchingRecords,
+      );
+      return {
+        type: t.type === "HAFALAN" ? "Hafalan" : "Murojaah",
+        range: formatRange(t.surah, t.fromAyah, t.toAyah),
+        startDate: dateFormatter.format(t.startDate),
+        endDate: dateFormatter.format(t.endDate),
+        notes: t.notes,
+        ayahProgress: coverage.percent,
+        coveredAyahs: coverage.coveredAyahs,
+        totalAyahs: coverage.totalAyahs,
+      };
+    }),
   };
 }
 

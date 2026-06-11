@@ -152,6 +152,24 @@ export default async function AdminStudentDetailPage({
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                     {target.startDate} - {target.endDate}
                   </p>
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                      <span className="font-medium">
+                        {target.coveredAyahs}/{target.totalAyahs} {t("targetAyahProgress")}
+                      </span>
+                      <span className="font-medium">{target.ayahProgress}%</span>
+                    </div>
+                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          target.ayahProgress >= 100
+                            ? "bg-emerald-500"
+                            : "bg-emerald-400"
+                        }`}
+                        style={{ width: `${target.ayahProgress}%` }}
+                      />
+                    </div>
+                  </div>
                 </article>
               ))}
             </div>
