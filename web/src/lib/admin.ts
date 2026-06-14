@@ -301,6 +301,7 @@ export async function getAdminTeacherFormData(teacherId: string) {
       isActive: true,
       user: {
         select: {
+          username: true,
           email: true,
           isActive: true,
         },
@@ -315,6 +316,7 @@ export async function getAdminTeacherFormData(teacherId: string) {
   return {
     id: teacher.id,
     fullName: teacher.fullName,
+    username: teacher.user.username,
     email: teacher.user.email,
     phoneNumber: teacher.phoneNumber ?? "",
     isActive: teacher.isActive && teacher.user.isActive,

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import {
   type NavigationItem,
   navigationIcons,
   isNavigationItemActive,
 } from "@/lib/navigation";
+
+const SCROLL_KEY = "bottomNavScrollX";
 
 type NavigationLinksProps = {
   items: readonly NavigationItem[];
@@ -22,6 +24,26 @@ export default function NavigationLinks({
 }: NavigationLinksProps) {
   const pathname = usePathname();
   const activeRef = useRef<HTMLAnchorElement>(null);
+
+  const saveScroll = useCallback(() => {
+    if (variant !== "bottom") return;
+    const scroller = document.querySelector("[data-bottom-scroll]");
+    if (scroller) {
+      sessionStorage.setItem(SCROLL_KEY, String(scroller.scrollLeft));
+    }
+  }, [variant]);
+
+  // Restore scroll position on mount and after navigation
+  useEffect(() => {
+    if (variant !== "bottom") return;
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) {
+      const scroller = document.querySelector("[data-bottom-scroll]");
+      if (scroller) {
+        scroller.scrollLeft = Number(saved);
+      }
+    }
+  }, [pathname, variant]);
 
   useEffect(() => {
     const el = activeRef.current;
@@ -39,19 +61,15 @@ export default function NavigationLinks({
       observer.observe(nav);
       return () => observer.disconnect();
     }
-
-    const scroller = el.closest("[data-bottom-scroll]");
-    if (!scroller) return;
-    const scrollerRect = scroller.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const overflowLeft = elRect.left - scrollerRect.left;
-    const overflowRight = elRect.right - scrollerRect.right;
-    if (overflowLeft < 0) {
-      scroller.scrollBy({ left: overflowLeft - 12, behavior: "smooth" });
-    } else if (overflowRight > 0) {
-      scroller.scrollBy({ left: overflowRight + 12, behavior: "smooth" });
-    }
   }, [pathname, variant]);
+
+  // Save scroll position before page unload
+  useEffect(() => {
+    if (variant !== "bottom") return;
+    const handler = () => saveScroll();
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [variant, saveScroll]);
 
   return items.map(({ key, href, iconKey }) => {
     const Icon = navigationIcons[iconKey];
@@ -69,6 +87,7 @@ export default function NavigationLinks({
           }
           href={href}
           key={key}
+          onClick={saveScroll}
         >
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
           <span className="text-[11px] font-medium leading-tight">

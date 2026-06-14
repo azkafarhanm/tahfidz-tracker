@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CalendarDays, PencilLine } from "lucide-react";
 import { actionButtonClass } from "@/components/action-button-styles";
+import { badge } from "@/lib/colors";
 import TargetActions from "@/components/TargetActions";
 
 type TargetItem = {
@@ -53,9 +54,7 @@ export default function TargetCard({
           </Link>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
-              target.isOverdue
-                ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-                : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
+              target.isOverdue ? badge.error : badge.success
             }`}
           >
             {target.isOverdue ? t("targetBadgeOverdue") : t("targetBadgeAktif")}

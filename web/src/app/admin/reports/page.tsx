@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Download, FileText, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getAdminReportData } from "@/lib/reports";
-import PdfExportLink from "@/components/PdfExportLink";
+import ExportSection from "@/components/ExportSection";
+import { badge, statCard, statValue, statLabel, heroSummary, backLink } from "@/lib/colors";
 
 
 export const runtime = "nodejs";
@@ -23,7 +24,7 @@ export default async function AdminReportsPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -35,28 +36,31 @@ export default async function AdminReportsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-              href="/api/reports/export-admin"
-            >
-              <Download aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("excelButton")}
-            </a>
-            <PdfExportLink
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href="/api/reports/pdf-admin"
-              toastMessage={t("pdfToast")}
-            >
-              <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("pdfButton")}
-            </PdfExportLink>
+            <ExportSection
+              excelHref="/api/reports/export-admin"
+              excelClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
+              excelContent={
+                <>
+                  <Download aria-hidden="true" size={16} strokeWidth={2.2} />
+                  {t("excelButton")}
+                </>
+              }
+              pdfHref="/api/reports/pdf-admin"
+              pdfClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+              pdfContent={
+                <>
+                  <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
+                  {t("pdfButton")}
+                </>
+              }
+            />
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <ShieldCheck aria-hidden="true" size={22} strokeWidth={2.2} />
             </div>
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("totalRecordsLabel")}</p>
@@ -81,28 +85,28 @@ export default async function AdminReportsPage() {
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("activeTeachersLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">{data.totalTeachers}</p>
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("activeTeachersLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>{data.totalTeachers}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("activeStudentsLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">{data.totalStudents}</p>
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("activeStudentsLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>{data.totalStudents}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("totalHafalanLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">{data.totalHafalan}</p>
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.progress}`}>
+            <p className={`text-xs font-medium ${statLabel.progress}`}>{t("totalHafalanLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.progress}`}>{data.totalHafalan}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("totalMurojaahLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">{data.totalMurojaah}</p>
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.progress}`}>
+            <p className={`text-xs font-medium ${statLabel.progress}`}>{t("totalMurojaahLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.progress}`}>{data.totalMurojaah}</p>
           </article>
         </section>
 
         <section className="mt-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("teacherSummaryHeading")}</h2>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
               {t("teacherCount", { count: data.teachers.length })}
             </span>
           </div>

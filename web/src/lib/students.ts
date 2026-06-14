@@ -333,7 +333,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     },
     include: {
       classGroup: {
-        select: { name: true, level: true },
+        select: { id: true, name: true, level: true, grade: true },
       },
       academicClass: {
         select: { name: true },
@@ -417,6 +417,9 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
   return {
     id: student.id,
     fullName: student.fullName,
+    classGroupId: student.classGroup.id,
+    classGroupLevel: student.classGroup.level,
+    classGroupGrade: student.classGroup.grade,
     ...classInfo,
     gender: student.gender ? genderLabels[student.gender] : "Belum diisi",
     joinDate: dateFormatter.format(student.joinDate),
@@ -456,18 +459,17 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
     },
   });
 
-  const assignedGrades = [...new Set(classGroups.map((cg) => cg.grade))];
-
-  const academicClasses = assignedGrades.length > 0
-    ? await prisma.academicClass.findMany({
-        where: { isActive: true, grade: { in: assignedGrades } },
-        orderBy: [{ grade: "asc" }, { section: "asc" }],
-        select: {
-          id: true,
-          name: true,
-        },
-      })
-    : [];
+  // Fetch all active academic classes (not filtered by grade)
+  // so the form can filter dynamically based on selected grade
+  const academicClasses = await prisma.academicClass.findMany({
+    where: { isActive: true },
+    orderBy: [{ grade: "asc" }, { section: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      grade: true,
+    },
+  });
 
   return {
     classGroups: classGroups.map((cg) => ({
@@ -482,6 +484,7 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
     academicClasses: academicClasses.map((ac) => ({
       id: ac.id,
       name: ac.name,
+      grade: ac.grade,
       label: ac.name,
     })),
   };

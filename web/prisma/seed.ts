@@ -66,6 +66,7 @@ async function main() {
     where: { email: "admin@tahfidzflow.local" },
     update: {
       name: "Admin",
+      username: "admin",
       role: UserRole.ADMIN,
       locale: "id",
       isActive: true,
@@ -73,6 +74,7 @@ async function main() {
     },
     create: {
       name: "Admin",
+      username: "admin",
       email: "admin@tahfidzflow.local",
       role: UserRole.ADMIN,
       locale: "id",
@@ -85,6 +87,7 @@ async function main() {
     where: { email: "teacher.demo@tahfidzflow.local" },
     update: {
       name: "Ustadzah Nur Aisyah",
+      username: "ustadzah.aisyah",
       role: UserRole.TEACHER,
       locale: "id",
       isActive: true,
@@ -92,6 +95,7 @@ async function main() {
     },
     create: {
       name: "Ustadzah Nur Aisyah",
+      username: "ustadzah.aisyah",
       email: "teacher.demo@tahfidzflow.local",
       role: UserRole.TEACHER,
       locale: "id",
@@ -281,6 +285,7 @@ async function main() {
     where: { email: "teacher.salwa@tahfidzflow.local" },
     update: {
       name: "Ustadzah Salwa Rahmah",
+      username: "ustadzah.salwa",
       role: UserRole.TEACHER,
       locale: "id",
       isActive: true,
@@ -288,6 +293,7 @@ async function main() {
     },
     create: {
       name: "Ustadzah Salwa Rahmah",
+      username: "ustadzah.salwa",
       email: "teacher.salwa@tahfidzflow.local",
       role: UserRole.TEACHER,
       locale: "id",
@@ -397,6 +403,8 @@ async function main() {
     status: RecordStatus;
     score: number;
     notes: string;
+    academicYear: string;
+    semester: "GANJIL" | "GENAP";
   }) {
     const existingRecord = await prisma.memorizationRecord.findFirst({
       where: {
@@ -422,6 +430,8 @@ async function main() {
     status: RecordStatus;
     score: number;
     notes: string;
+    academicYear: string;
+    semester: "GANJIL" | "GENAP";
   }) {
     const existingRecord = await prisma.revisionRecord.findFirst({
       where: {
@@ -474,6 +484,8 @@ async function main() {
       status: RecordStatus.LANCAR,
       score: 92,
       notes: "Lancar dan siap lanjut ayat berikutnya.",
+      academicYear: "2026/2027",
+      semester: "GANJIL",
     }),
     ensureRevisionRecord({
       studentId: nasuha.id,
@@ -485,6 +497,8 @@ async function main() {
       status: RecordStatus.CUKUP,
       score: 82,
       notes: "Masih perlu penguatan pada beberapa ayat.",
+      academicYear: "2026/2027",
+      semester: "GANJIL",
     }),
     ensureMemorizationRecord({
       studentId: jureid.id,
@@ -496,6 +510,8 @@ async function main() {
       status: RecordStatus.PERLU_MUROJAAH,
       score: 68,
       notes: "Perlu murojaah sebelum menambah hafalan baru.",
+      academicYear: "2026/2027",
+      semester: "GANJIL",
     }),
     ensureTarget({
       studentId: afdal.id,
@@ -529,6 +545,8 @@ async function main() {
       status: RecordStatus.LANCAR,
       score: 95,
       notes: "Setoran baru sangat rapi dan stabil.",
+      academicYear: "2026/2027",
+      semester: "GANJIL",
     }),
     ensureRevisionRecord({
       studentId: maryam.id,
@@ -540,6 +558,8 @@ async function main() {
       status: RecordStatus.CUKUP,
       score: 84,
       notes: "Perlu penguatan transisi antar ayat.",
+      academicYear: "2026/2027",
+      semester: "GANJIL",
     }),
     ensureTarget({
       studentId: naila.id,

@@ -64,13 +64,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const identifier = rawIdentifier.trim().toLowerCase();
-        const email =
-          identifier === "admin"
-            ? "admin@tahfidzflow.local"
-            : identifier;
         const password = credentials.password as string;
         const clientAddress = getClientAddress(request);
-        const rateLimitKey = `login:${email}:${clientAddress}`;
+
+        // Determine if identifier is email or username
+        const isEmail = identifier.includes("@");
+        const rateLimitKey = `login:${identifier}:${clientAddress}`;
+
         const rateLimit = await checkRateLimit(rateLimitKey, {
           limit: 5,
           windowMs: 10 * 60_000,
@@ -81,10 +81,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new RateLimitedSignin();
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email },
-          include: { teacher: true },
-        });
+        // Lookup user by email or username
+        const user = isEmail
+          ? await prisma.user.findUnique({
+              where: { email: identifier },
+              include: { teacher: true },
+            })
+          : await prisma.user.findUnique({
+              where: { username: identifier },
+              include: { teacher: true },
+            });
 
         if (!user || !user.passwordHash || !user.isActive) {
           await registerRateLimitFailure(rateLimitKey, {

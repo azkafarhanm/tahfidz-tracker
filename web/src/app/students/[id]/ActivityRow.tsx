@@ -6,6 +6,7 @@ import { BookOpen, PencilLine, RotateCcw, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
 import { actionButtonClass } from "@/components/action-button-styles";
+import { badge } from "@/lib/colors";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 
@@ -21,9 +22,7 @@ type RecordItem = {
 };
 
 function recordStatusClass(record: RecordItem) {
-  return record.needsReview
-    ? "bg-amber-100 text-amber-800"
-    : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400";
+  return record.needsReview ? badge.warning : badge.success;
 }
 
 export default function ActivityRow({
@@ -71,7 +70,7 @@ export default function ActivityRow({
                 {record.status}
               </span>
               {record.score !== null ? (
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                <span className={`rounded-full ${badge.neutral} px-2.5 py-0.5 text-[11px] font-semibold leading-tight`}>
                   {t("scoreLabel")} {record.score}
                 </span>
               ) : null}

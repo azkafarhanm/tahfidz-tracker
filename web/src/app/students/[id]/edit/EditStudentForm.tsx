@@ -6,13 +6,17 @@ import {
   ArrowLeft,
   CalendarDays,
   GraduationCap,
+  Lock,
   PencilLine,
   Save,
   UserRound,
+  Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
+import HalaqahLevelDialog from "@/components/HalaqahLevelDialog";
+import { backLink } from "@/lib/colors";
 
 type ClassGroupOption = {
   id: string;
@@ -26,7 +30,17 @@ type ClassGroupOption = {
 type AcademicClassOption = {
   id: string;
   name: string;
+  grade: number;
   label: string;
+};
+
+type HalaqahInfo = {
+  classGroupId: string;
+  name: string;
+  level: string;
+  levelLabel: string;
+  grade: number;
+  studentCount: number;
 };
 
 type EditStudentFormProps = {
@@ -37,6 +51,7 @@ type EditStudentFormProps = {
     classGroups: ClassGroupOption[];
     academicClasses: AcademicClassOption[];
   };
+  halaqah: HalaqahInfo;
   values: {
     fullName: string;
     academicClassId: string;
@@ -53,6 +68,7 @@ export default function EditStudentForm({
   backHref,
   error,
   options,
+  halaqah,
   values,
 }: EditStudentFormProps) {
   const t = useTranslations("StudentForm");
@@ -60,6 +76,7 @@ export default function EditStudentForm({
   const [isPending, startTransition] = useTransition();
   const [selectedLevel, setSelectedLevel] = useState(values.classGroupLevel);
   const [selectedGrade, setSelectedGrade] = useState(values.classGroupGrade);
+  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(values.academicClassId);
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
 
@@ -69,6 +86,19 @@ export default function EditStudentForm({
 
   const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
 
+  // Filter academic classes by selected grade
+  const filteredAcademicClasses = selectedGrade
+    ? options.academicClasses.filter((ac) => ac.grade === Number(selectedGrade))
+    : options.academicClasses;
+
+  // Auto-reset academic class if it doesn't match selected grade
+  useEffect(() => {
+    const ac = options.academicClasses.find((c) => c.id === selectedAcademicClassId);
+    if (ac && ac.grade !== Number(selectedGrade)) {
+      setSelectedAcademicClassId("");
+    }
+  }, [selectedGrade, selectedAcademicClassId, options.academicClasses]);
+
   useEffect(() => {
     if (lockedLevel && selectedLevel !== lockedLevel) {
       setSelectedLevel(lockedLevel);
@@ -77,6 +107,11 @@ export default function EditStudentForm({
 
   function handleGradeChange(grade: string) {
     setSelectedGrade(grade);
+    // Clear academic class if it doesn't match new grade
+    const ac = options.academicClasses.find((c) => c.id === selectedAcademicClassId);
+    if (ac && ac.grade !== Number(grade)) {
+      setSelectedAcademicClassId("");
+    }
     const cg = options.classGroups.find((g) => g.grade === Number(grade));
     if (cg) {
       setSelectedLevel(cg.levelKey);
@@ -130,7 +165,7 @@ export default function EditStudentForm({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -260,6 +295,58 @@ isSelected
             </div>
           </section>
 
+          {/* Halaqah Aktif Card */}
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex items-center gap-2">
+              <Users
+                aria-hidden="true"
+                className="text-emerald-800 dark:text-emerald-400"
+                size={18}
+                strokeWidth={2.2}
+              />
+              <h2 className="font-semibold">{t("sectionHalaqah")}</h2>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-slate-950 dark:text-white">
+                    {halaqah.name}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                    <span className="inline-flex items-center gap-1">
+                      <GraduationCap aria-hidden="true" size={14} />
+                      {t("grade")}: {halaqah.grade}
+                    </span>
+                    <span className="hidden md:inline">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Lock aria-hidden="true" size={14} />
+                      {t("level")}: {halaqah.levelLabel}
+                    </span>
+                    <span className="hidden md:inline">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Users aria-hidden="true" size={14} />
+                      {t("students")}: {halaqah.studentCount}
+                    </span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <HalaqahLevelDialog
+                    classGroupId={halaqah.classGroupId}
+                    currentLevel={halaqah.level}
+                    currentLevelLabel={halaqah.levelLabel}
+                    halaqahName={halaqah.name}
+                    grade={halaqah.grade}
+                    studentCount={halaqah.studentCount}
+                  />
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                {t("halaqahHelperText")}
+              </p>
+            </div>
+          </section>
+
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <GraduationCap
@@ -325,12 +412,13 @@ isSelected
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-400"
-                defaultValue={values.academicClassId}
                 name="academicClassId"
+                onChange={(e) => setSelectedAcademicClassId(e.target.value)}
                 required
+                value={selectedAcademicClassId}
               >
                 <option value="">{t("academicClassPlaceholder")}</option>
-                {options.academicClasses.map((ac) => (
+                {filteredAcademicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}
                   </option>

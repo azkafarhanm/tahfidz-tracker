@@ -24,6 +24,7 @@ import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import PdfExportLink from "@/components/PdfExportLink";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
+import { badge, heroSummary, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,9 +42,7 @@ type StudentDetailPageProps = {
 };
 
 function recordStatusClass(record: RecordItem) {
-  return record.needsReview
-    ? "bg-amber-100 text-amber-800"
-    : "bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400";
+  return record.needsReview ? badge.warning : badge.success;
 }
 
 function LatestRecordCard({
@@ -60,7 +59,7 @@ function LatestRecordCard({
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${badge.success}`}>
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
@@ -200,7 +199,7 @@ export default async function StudentDetailPage({
               <InitialsAvatar name={student.fullName} size="lg" />
               <div className="min-w-0">
              <Link
-               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+               className={backLink}
                href="/students"
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -209,10 +208,10 @@ export default async function StudentDetailPage({
              <h1 className="mt-3 truncate text-2xl font-semibold text-slate-950 dark:text-white">
                {student.fullName}
              </h1>
-             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-               {student.classSummary}
-             </p>
-             </div>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {student.classSummary}
+              </p>
+              </div>
             </div>
            <div className="flex flex-wrap items-center gap-2">
              <Link
@@ -240,7 +239,7 @@ export default async function StudentDetailPage({
             </div>
          </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("summaryLabel")}</p>
@@ -273,7 +272,7 @@ export default async function StudentDetailPage({
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/hafalan/new`}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+            <span className={`grid h-9 w-9 place-items-center rounded-xl ${badge.success}`}>
               <BookOpen aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             {t("hafalanButton")}
@@ -282,7 +281,7 @@ export default async function StudentDetailPage({
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/murojaah/new`}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+            <span className={`grid h-9 w-9 place-items-center rounded-xl ${badge.success}`}>
               <RotateCcw aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             {t("murojaahButton")}
@@ -315,7 +314,7 @@ export default async function StudentDetailPage({
                 <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                 {t("addTargetButton")}
               </Link>
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`inline-flex items-center gap-2 rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                 <Target aria-hidden="true" size={15} strokeWidth={2.2} />
                 {student.activeTargets.length}
               </span>
@@ -328,7 +327,7 @@ export default async function StudentDetailPage({
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center sm:col-span-2 dark:border-slate-700 dark:bg-slate-900/70">
-                <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                <div className={`mx-auto grid h-11 w-11 place-items-center rounded-2xl ${badge.success}`}>
                   <Target aria-hidden="true" size={20} strokeWidth={2.2} />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -364,7 +363,7 @@ export default async function StudentDetailPage({
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{t("recentActivityHeading")}</h2>
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+            <span className={`inline-flex items-center gap-2 rounded-full ${badge.neutral} px-3 py-1 text-xs font-medium`}>
               <CheckCircle2 aria-hidden="true" size={15} strokeWidth={2.2} />
               {student.recentActivity.length}
             </span>
@@ -381,7 +380,7 @@ export default async function StudentDetailPage({
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center dark:border-slate-700 dark:bg-slate-900/70">
-                <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                <div className={`mx-auto grid h-11 w-11 place-items-center rounded-2xl ${badge.success}`}>
                   <BookOpen aria-hidden="true" size={20} strokeWidth={2.2} />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
@@ -412,7 +411,7 @@ export default async function StudentDetailPage({
           <section className="mt-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold">{t("allHistoryHeading")}</h2>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                 {student.historyRecords.length} {t("allHistoryBadge")}
               </span>
             </div>
@@ -434,11 +433,7 @@ export default async function StudentDetailPage({
                         {r.date}
                       </td>
                       <td className="py-3 pr-4">
-                        <span className={
-                          r.type === "Hafalan"
-                            ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                            : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800"
-                        }>
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${r.type === "Hafalan" ? badge.success : badge.progress}`}>
                           {r.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}
                         </span>
                       </td>
@@ -458,11 +453,11 @@ export default async function StudentDetailPage({
                       </td>
                       <td className="py-3">
                         {r.needsReview ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
                             {r.status}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                          <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
                             {r.status}
                           </span>
                         )}

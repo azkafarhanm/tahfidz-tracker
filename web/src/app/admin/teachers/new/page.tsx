@@ -15,6 +15,7 @@ type NewTeacherPageProps = {
   searchParams?: Promise<{
     error?: string;
     fullName?: string;
+    username?: string;
     email?: string;
     phoneNumber?: string;
     isActive?: string;
@@ -42,6 +43,7 @@ export default async function NewTeacherPage({
       title={t("addTeacher")}
       values={{
         fullName: params?.fullName ?? "",
+        username: params?.username ?? "",
         email: params?.email ?? "",
         phoneNumber: params?.phoneNumber ?? "",
         isActive: params?.isActive ? params.isActive === "true" : true,

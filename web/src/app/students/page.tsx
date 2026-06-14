@@ -19,6 +19,7 @@ import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
+import { badge, heroSummary, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -89,7 +90,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -118,7 +119,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">
@@ -195,7 +196,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   {t("addButton")}
                 </Link>
               ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {isInactiveView
                   ? `${filteredInactiveStudents.length}/${inactiveStudents.length} ${t("inactiveCountBadge")}`
                   : `${studentPage.students.length}/${studentPage.totalCount} ${t("activeCountBadge")}`}
@@ -245,7 +246,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               ) : (
                 <span className="h-10 w-10" aria-hidden="true" />
               )}
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
                 {studentPage.page} / {studentPage.totalPages}
               </span>
               {hasNextPage ? (

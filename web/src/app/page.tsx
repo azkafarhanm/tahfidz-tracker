@@ -17,6 +17,7 @@ import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { getLocaleTag } from "@/lib/format";
+import { badge, heroSummary } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -75,7 +76,7 @@ export default async function DashboardPreview() {
 
         <MotivationCard />
 
-        <section className="mt-5 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-5 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("summaryTodayLabel")}</p>
@@ -107,10 +108,10 @@ export default async function DashboardPreview() {
               href={action.href}
               key={action.label}
             >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <action.icon aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
-              {action.label}
+              <span className="min-w-0 flex-1 break-words">{action.label}</span>
             </Link>
           ))}
         </section>
@@ -119,7 +120,7 @@ export default async function DashboardPreview() {
           <section className="mt-5">
             <div className="flex items-center justify-between">
                <h2 className="text-lg font-semibold">{t("overdueTargetsHeading")}</h2>
-              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.error}`}>
                 {dashboard.overdueTargets.length} {t("overdueDeadlineBadge")}
               </span>
             </div>
@@ -138,10 +139,10 @@ export default async function DashboardPreview() {
                        </div>
                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{ot.range}</p>
                      </div>
-                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
-                      <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
-                      {t("overdueBadgeLewat")}
-                    </span>
+                      <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${badge.error}`}>
+                       <Clock aria-hidden="true" size={13} strokeWidth={2.2} />
+                       {t("overdueBadgeLewat")}
+                     </span>
                   </div>
                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("overdueDeadlineLabel")} {ot.endDate}</p>
                 </Link>
@@ -153,9 +154,9 @@ export default async function DashboardPreview() {
         <section className="mt-6 flex flex-1 flex-col">
           <div className="flex items-center justify-between">
              <h2 className="text-lg font-semibold">{t("recentActivityHeading")}</h2>
-            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-              {dashboard.needsReviewCount} {t("needsReviewBadge")}
-            </span>
+            <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.warning}`}>
+               {dashboard.needsReviewCount} {t("needsReviewBadge")}
+             </span>
           </div>
 
           <div className="mt-3 space-y-3">
@@ -184,9 +185,9 @@ export default async function DashboardPreview() {
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                     <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                      {record.status}
-                    </span>
+                     <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
+                       {record.status}
+                     </span>
                     <Link
                        className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
                       href={`/students/${record.studentId}`}

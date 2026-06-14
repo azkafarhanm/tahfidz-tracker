@@ -19,6 +19,7 @@ import SurahInput from "@/components/SurahInput";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
 import { getTranslations } from "next-intl/server";
+import { backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,7 +84,7 @@ export default async function EditRecordPage({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400"
+              className={backLink}
               href={returnTo ?? `/students/${student.id}`}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />

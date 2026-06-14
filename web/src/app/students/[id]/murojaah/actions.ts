@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { validateRecordFields } from "@/lib/validate-record";
 import { requireSessionScope } from "@/lib/session";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import {
   readString,
   readOptionalString,
@@ -56,6 +57,11 @@ export async function createMurojaahRecord(
     surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
   });
 
+  const [academicYear, semester] = await Promise.all([
+    getActiveAcademicYear(),
+    getSemesterForDate(date!),
+  ]);
+
   const record = await prisma.revisionRecord.create({ data: {
       studentId: student.id,
       teacherId: student.teacherId,
@@ -66,6 +72,8 @@ export async function createMurojaahRecord(
       status: statusValue as RecordStatus,
       score,
       notes,
+      academicYear,
+      semester,
     },
   });
 

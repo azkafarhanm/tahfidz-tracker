@@ -22,6 +22,7 @@ import {
 
 type TeacherFormInput = {
   fullName: string;
+  username: string;
   email: string;
   phoneNumber: string | null;
   password: string;
@@ -32,6 +33,10 @@ function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
+function normalizeUsername(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+}
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -39,6 +44,7 @@ function isValidEmail(value: string) {
 function readTeacherFormInput(formData: FormData): TeacherFormInput {
   return {
     fullName: readString(formData, "fullName"),
+    username: normalizeUsername(readString(formData, "username")),
     email: normalizeEmail(readString(formData, "email")),
     phoneNumber: readOptionalString(formData, "phoneNumber"),
     password: readString(formData, "password"),
@@ -49,10 +55,24 @@ function readTeacherFormInput(formData: FormData): TeacherFormInput {
 function getTeacherFormExtras(input: TeacherFormInput) {
   return {
     fullName: input.fullName,
+    username: input.username,
     email: input.email,
     phoneNumber: input.phoneNumber ?? "",
     isActive: input.isActive ? "true" : "false",
   };
+}
+
+async function ensureUniqueTeacherUsername(username: string, userId?: string) {
+  const existingUser = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (existingUser && existingUser.id !== userId) {
+    return false;
+  }
+
+  return true;
 }
 
 async function ensureUniqueTeacherEmail(email: string, userId?: string) {
@@ -73,6 +93,7 @@ async function validateTeacherInput(
   fail: (message: string, extra?: Record<string, string>) => never,
   options: {
     passwordRequired: boolean;
+    userId?: string;
   },
 ) {
   const t = await getTranslations("Validation");
@@ -80,6 +101,19 @@ async function validateTeacherInput(
 
   if (!input.fullName || input.fullName.length > 120) {
     fail(t("teacherNameRequired"), extras);
+  }
+
+  if (!input.username || input.username.length < 3 || input.username.length > 50) {
+    fail(t("teacherUsernameRequired"), extras);
+  }
+
+  if (!/^[a-z][a-z0-9._-]*$/.test(input.username)) {
+    fail(t("teacherUsernameFormat"), extras);
+  }
+
+  const isUniqueUsername = await ensureUniqueTeacherUsername(input.username, options.userId);
+  if (!isUniqueUsername) {
+    fail(t("teacherUsernameDuplicate"), extras);
   }
 
   if (!input.email || input.email.length > 120 || !isValidEmail(input.email)) {
@@ -149,6 +183,7 @@ export async function createTeacher(formData: FormData) {
     const user = await tx.user.create({
       data: {
         name: input.fullName,
+        username: input.username,
         email: input.email,
         passwordHash,
         role: UserRole.TEACHER,
@@ -177,8 +212,6 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   const input = readTeacherFormInput(formData);
   const fail = createFailFn(`/admin/teachers/${teacherId}/edit`);
 
-  await validateTeacherInput(input, fail, { passwordRequired: false });
-
   const t = await getTranslations("Validation");
 
   const teacher = await prisma.teacher.findUnique({
@@ -192,6 +225,8 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   if (!teacher) {
     redirectAdminTeachersWithMessage("error", t("teacherNotFound"));
   }
+
+  await validateTeacherInput(input, fail, { passwordRequired: false, userId: teacher.userId });
 
   const isUniqueEmail = await ensureUniqueTeacherEmail(input.email, teacher.userId);
 
@@ -208,6 +243,7 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
       where: { id: teacher.userId },
       data: {
         name: input.fullName,
+        username: input.username,
         email: input.email,
         isActive: input.isActive,
         ...(passwordHash ? { passwordHash } : {}),

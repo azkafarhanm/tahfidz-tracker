@@ -23,6 +23,7 @@ import {
   isSemesterValue,
   parseSemester,
 } from "@/lib/summative";
+import { badge, backLink } from "@/lib/colors";
 import SummativeAssessmentsTable from "./SummativeAssessmentsTable";
 
 export const runtime = "nodejs";
@@ -86,7 +87,7 @@ export default async function SummativeDetailPage({
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className={backLink}
             href={`/summative?semester=${semesterValue}&classLevel=${detail.classLevel}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -114,7 +115,7 @@ export default async function SummativeDetailPage({
           ]}
         />
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <span className={`rounded-full ${badge.neutral} px-3 py-1 text-xs font-medium`}>
           {academicYear}
         </span>
 

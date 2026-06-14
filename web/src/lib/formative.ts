@@ -7,7 +7,6 @@ import {
   formatRange,
   statusLabels,
 } from "@/lib/format";
-import { getSemesterDateRange } from "@/lib/academic-year";
 
 type FormativeRow = {
   id: string;
@@ -34,11 +33,13 @@ export type FormativeOverviewStudent = {
   murojaahCount: number;
   dailyScores: Array<{
     id: string;
+    type: "Hafalan" | "Murojaah";
     date: string;
     score: number;
   }>;
   latestScore: number | null;
   averageScore: number | null;
+  latestType: "Hafalan" | "Murojaah" | null;
   latestDate: string;
   latestRange: string;
   latestStatus: string;
@@ -87,7 +88,6 @@ async function getTeacherFormativeOverviewInner(
   pageSize?: number,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const { start, end } = getSemesterDateRange(academicYear, semester);
   const studentWhere = {
     ...(teacherId ? { teacherId } : {}),
     isActive: true,
@@ -129,10 +129,8 @@ async function getTeacherFormativeOverviewInner(
       prisma.memorizationRecord.aggregate({
         where: {
           ...(teacherId ? { teacherId } : {}),
-          date: {
-            gte: start,
-            lte: end,
-          },
+          academicYear,
+          semester,
           student: studentWhere,
         },
         _count: { _all: true, score: true },
@@ -141,10 +139,8 @@ async function getTeacherFormativeOverviewInner(
       prisma.revisionRecord.aggregate({
         where: {
           ...(teacherId ? { teacherId } : {}),
-          date: {
-            gte: start,
-            lte: end,
-          },
+          academicYear,
+          semester,
           student: studentWhere,
         },
         _count: { _all: true, score: true },
@@ -185,8 +181,6 @@ async function getTeacherFormativeOverviewInner(
     studentIds,
     semester,
     academicYear,
-    start,
-    end,
   );
 
   const grouped = new Map<string, FormativeRow[]>();
@@ -220,6 +214,7 @@ async function getTeacherFormativeOverviewInner(
         murojaahCount: studentRows.filter((row) => row.type === "Murojaah").length,
         dailyScores: scoredRows.map((row) => ({
           id: row.id,
+          type: row.type,
           date: dateFormatter.format(row.date),
           score: row.score,
         })),
@@ -231,6 +226,7 @@ async function getTeacherFormativeOverviewInner(
                   10,
               ) / 10
             : null,
+        latestType: latest?.type ?? null,
         latestDate: latest ? dateFormatter.format(latest.date) : "-",
         latestRange: latest
           ? formatRange(latest.surah, latest.fromAyah, latest.toAyah)
@@ -281,7 +277,6 @@ async function getStudentFormativeDetailInner(
 ) {
   const dateFormatter = getDateFormatter(locale);
   const timeFormatter = getTimeFormatter(locale);
-  const { start, end } = getSemesterDateRange(academicYear, semester);
 
   const student = await prisma.student.findFirst({
     where: {
@@ -316,8 +311,6 @@ async function getStudentFormativeDetailInner(
     [studentId],
     semester,
     academicYear,
-    start,
-    end,
   );
 
   const sortedRows = rows.sort(
@@ -379,8 +372,6 @@ async function getTeacherFormativeExportDataInner(
   academicYear: string,
   classLevel?: number,
 ) {
-  const { start, end } = getSemesterDateRange(academicYear, semester);
-
   const students = await prisma.student.findMany({
     where: {
       ...(teacherId ? { teacherId } : {}),
@@ -416,8 +407,6 @@ async function getTeacherFormativeExportDataInner(
           studentIds,
           semester,
           academicYear,
-          start,
-          end,
         )
       : [];
 
@@ -429,18 +418,14 @@ async function getTeacherFormativeRows(
   studentIds: string[],
   semester: Semester,
   academicYear: string,
-  start: Date,
-  end: Date,
 ) {
   const [hafalan, murojaah] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: {
         ...(teacherId ? { teacherId } : {}),
         studentId: { in: studentIds },
-        date: {
-          gte: start,
-          lte: end,
-        },
+        academicYear,
+        semester,
       },
       select: {
         id: true,
@@ -466,10 +451,8 @@ async function getTeacherFormativeRows(
       where: {
         ...(teacherId ? { teacherId } : {}),
         studentId: { in: studentIds },
-        date: {
-          gte: start,
-          lte: end,
-        },
+        academicYear,
+        semester,
       },
       select: {
         id: true,

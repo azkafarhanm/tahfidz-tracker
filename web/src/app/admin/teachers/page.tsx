@@ -20,6 +20,7 @@ import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import { actionButtonClass } from "@/components/action-button-styles";
+import { badge, statCard, statValue, statLabel, widget, heroSummary, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -74,7 +75,7 @@ export default async function AdminTeachersPage({
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -92,7 +93,7 @@ export default async function AdminTeachersPage({
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("heroLabel")}</p>
@@ -115,33 +116,33 @@ export default async function AdminTeachersPage({
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statTotalLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.summary}`}>
+            <p className={`text-xs font-medium ${statLabel.summary}`}>{t("statTotalLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.summary}`}>
               {counts.teacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statTotalSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.summary}`}>{t("statTotalSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeAktif")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("badgeAktif")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>
               {counts.activeTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statAktifSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.success}`}>{t("statAktifSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeNonaktif")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.neutral}`}>
+            <p className={`text-xs font-medium ${statLabel.neutral}`}>{t("badgeNonaktif")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.neutral}`}>
               {counts.inactiveTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statNonaktifSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.neutral}`}>{t("statNonaktifSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statFilteredLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.info}`}>
+            <p className={`text-xs font-medium ${statLabel.info}`}>{t("statFilteredLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.info}`}>
               {counts.filteredTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statFilteredSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.info}`}>{t("statFilteredSubtext")}</p>
           </article>
         </section>
 
@@ -173,9 +174,9 @@ export default async function AdminTeachersPage({
                   {t("resetSearch")}
                 </Link>
               ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                {teachers.length}/{counts.filteredTeacherCount}
-              </span>
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
+                 {teachers.length}/{counts.filteredTeacherCount}
+               </span>
             </div>
           </div>
 
@@ -216,19 +217,15 @@ export default async function AdminTeachersPage({
                          {t("joinedLabel", { date: teacher.joinedAt })}
                        </p>
                      </div>
-                    <span
-                      className={
-                        teacher.isActive
-                          ? "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                          : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-400"
-                      }
-                    >
-                      {teacher.isActive ? t("badgeAktif") : t("badgeNonaktif")}
-                    </span>
+                     <span
+                       className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${teacher.isActive ? badge.success : badge.warning}`}
+                     >
+                       {teacher.isActive ? t("badgeAktif") : t("badgeNonaktif")}
+                     </span>
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <Mail
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
@@ -238,7 +235,7 @@ export default async function AdminTeachersPage({
                       <span className="truncate">{teacher.email}</span>
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <Phone
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
@@ -351,9 +348,9 @@ export default async function AdminTeachersPage({
               ) : (
                 <span className="h-10 w-10" aria-hidden="true" />
               )}
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {pagination.page} / {pagination.totalPages}
-              </span>
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
+                 {pagination.page} / {pagination.totalPages}
+               </span>
               {hasNextPage ? (
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"

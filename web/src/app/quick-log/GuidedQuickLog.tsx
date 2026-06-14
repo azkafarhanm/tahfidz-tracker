@@ -19,6 +19,7 @@ import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { RecentActivityItem } from "@/lib/quick-log";
+import { badge, backLink } from "@/lib/colors";
 
 type Student = {
   id: string;
@@ -166,7 +167,7 @@ export default function GuidedQuickLog({
      <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
              <Link
-               className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+               className={backLink}
                href="/"
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -466,7 +467,7 @@ export default function GuidedQuickLog({
               type="button"
             >
               <span>{t("recentActivityTitle")}</span>
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              <span className={`rounded-full ${badge.neutral} px-2 py-0.5 text-[11px] font-medium`}>
                 {recentItems.length}
               </span>
               <ChevronDown
@@ -510,7 +511,7 @@ function RecentActivityItemRow({ item, now }: { item: RecentActivityItem; now: D
         href={href}
         scroll={false}
       >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${badge.success}`}>
           <Icon aria-hidden="true" size={16} strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
@@ -521,7 +522,7 @@ function RecentActivityItemRow({ item, now }: { item: RecentActivityItem; now: D
             {typeLabel} &middot; {item.surah} {formatAyahRange(item.fromAyah, item.toAyah)}
           </p>
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold leading-tight text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+            <span className={`rounded-full ${badge.success} px-2 py-0.5 text-[11px] font-semibold leading-tight`}>
               {item.status}
             </span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500">

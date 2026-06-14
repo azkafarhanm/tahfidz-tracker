@@ -16,6 +16,7 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
+import { backLink } from "@/lib/colors";
 
 const iconMap = {
   PlusCircle,
@@ -91,7 +92,7 @@ export default function ClassGroupForm({
          <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />

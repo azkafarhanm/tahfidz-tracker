@@ -13,6 +13,7 @@ import { todayInputValue } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
 import { getTranslations } from "next-intl/server";
+import { backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className={backLink}
             href={`/students/${id}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />

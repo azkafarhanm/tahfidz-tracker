@@ -7,12 +7,14 @@ import {
   ArrowLeft,
   CalendarDays,
   GraduationCap,
+  Lock,
   Save,
   UserRound,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
+import { backLink } from "@/lib/colors";
 
 type ClassGroupOption = {
   id: string;
@@ -27,6 +29,7 @@ type ClassGroupOption = {
 type AcademicClassOption = {
   id: string;
   name: string;
+  grade: number;
   label: string;
 };
 
@@ -61,23 +64,51 @@ export default function TeacherStudentForm({
   const tc = useTranslations("CharacterCounter");
   const [selectedLevel, setSelectedLevel] = useState(values.halaqahLevel);
   const [selectedGrade, setSelectedGrade] = useState(values.grade);
+  const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(values.academicClassId);
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
 
+  // Filter academic classes by selected grade
+  const filteredAcademicClasses = selectedGrade
+    ? options.academicClasses.filter((ac) => ac.grade === Number(selectedGrade))
+    : options.academicClasses;
+
+  // Find existing halaqah for selected grade
   const gradeHasExistingCg = selectedGrade
     ? options.classGroups.find((g) => g.grade === Number(selectedGrade)) ?? null
     : null;
 
   const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
 
+  // Lock level when grade has existing halaqah
   useEffect(() => {
     if (lockedLevel && selectedLevel !== lockedLevel) {
       setSelectedLevel(lockedLevel);
     }
   }, [lockedLevel, selectedLevel]);
 
+  // Auto-set grade when academic class is selected
+  function handleAcademicClassChange(academicClassId: string) {
+    setSelectedAcademicClassId(academicClassId);
+    const ac = options.academicClasses.find((c) => c.id === academicClassId);
+    if (ac) {
+      setSelectedGrade(String(ac.grade));
+      // Check if level should be locked for this grade
+      const cg = options.classGroups.find((g) => g.grade === ac.grade);
+      if (cg) {
+        setSelectedLevel(cg.levelKey);
+      }
+    }
+  }
+
   function handleGradeChange(grade: string) {
     setSelectedGrade(grade);
+    // Clear academic class if it doesn't match new grade
+    const ac = options.academicClasses.find((c) => c.id === selectedAcademicClassId);
+    if (ac && ac.grade !== Number(grade)) {
+      setSelectedAcademicClassId("");
+    }
+    // Check if level should be locked for new grade
     const cg = options.classGroups.find((g) => g.grade === Number(grade));
     if (cg) {
       setSelectedLevel(cg.levelKey);
@@ -126,7 +157,7 @@ export default function TeacherStudentForm({
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -283,6 +314,7 @@ export default function TeacherStudentForm({
               {levels.map((lv) => {
                 const isSelected = selectedLevel === lv.key;
                 const isLocked = lockedLevel && lockedLevel !== lv.key;
+                const isLockedSelected = lockedLevel === lv.key;
                 return (
                   <button
                     aria-pressed={isSelected}
@@ -299,11 +331,12 @@ export default function TeacherStudentForm({
                     type="button"
                   >
                     <span
-                      className={`text-sm font-bold ${
+                      className={`flex items-center gap-1 text-sm font-bold ${
                         isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
                       }`}
                     >
                       {lv.label}
+                      {isLockedSelected ? <Lock aria-hidden="true" size={12} strokeWidth={2.5} /> : null}
                     </span>
                     <span className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">
                       {levelBaseSubtitle ?? lv.desc}
@@ -313,7 +346,8 @@ export default function TeacherStudentForm({
               })}
             </div>
             {lockedLevel ? (
-              <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="mt-2 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                <Lock aria-hidden="true" size={11} />
                 {t("levelLockedHint")}
               </p>
             ) : null}
@@ -326,12 +360,13 @@ export default function TeacherStudentForm({
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                defaultValue={values.academicClassId}
                 name="academicClassId"
+                onChange={(e) => handleAcademicClassChange(e.target.value)}
                 required
+                value={selectedAcademicClassId}
               >
                 <option value="">{t("academicClassPlaceholder")}</option>
-                {options.academicClasses.map((ac) => (
+                {filteredAcademicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}
                   </option>

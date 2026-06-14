@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { BookOpen, RotateCcw, Target } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import StudentCardActions from "@/components/StudentCardActions";
+import { badge, widget } from "@/lib/colors";
 
 type LatestRecord = {
   date: string;
@@ -55,18 +56,14 @@ export default function ActiveStudentCard({
           </div>
         </div>
         <span
-          className={
-            needsReview
-              ? "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800"
-              : "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-          }
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${needsReview ? badge.warning : badge.success}`}
         >
           {needsReview ? t("badgeNeedsReview") : t("badgeAktif")}
         </span>
       </div>
 
       <div className="mt-4 space-y-2">
-        <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
+        <div className={`flex items-start gap-3 rounded-2xl p-3 ${widget.elevated}`}>
           <BookOpen
             aria-hidden="true"
             className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"
@@ -88,7 +85,7 @@ export default function ActiveStudentCard({
           </div>
         </div>
 
-        <div className="flex items-start gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
+        <div className={`flex items-start gap-3 rounded-2xl p-3 ${widget.elevated}`}>
           <RotateCcw
             aria-hidden="true"
             className="mt-0.5 shrink-0 text-emerald-800 dark:text-emerald-400"

@@ -3,8 +3,11 @@ import EditStudentForm from "./EditStudentForm";
 import { updateTeacherStudent } from "./actions";
 import { getStudentFormContext } from "@/lib/students";
 import { getTeacherStudentFormOptions } from "@/lib/students";
+import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
+import { halaqahLevelLabels } from "@/lib/format";
+import { backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +37,7 @@ export default async function EditStudentPage({
           {t("teacherOnlyEdit")}
         </p>
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+          className={backLink}
           href="/"
         >
           &larr; TahfidzFlow
@@ -59,6 +62,14 @@ export default async function EditStudentPage({
     );
   }
 
+  // Get halaqah student count for the warning message
+  const halaqahStudentCount = await prisma.student.count({
+    where: {
+      classGroupId: context.classGroupId,
+      isActive: true,
+    },
+  });
+
   const boundAction = updateTeacherStudent.bind(null, id);
 
   return (
@@ -67,6 +78,14 @@ export default async function EditStudentPage({
       backHref={`/students/${id}`}
       error={pageParams?.error}
       options={options}
+      halaqah={{
+        classGroupId: context.classGroupId,
+        name: context.halaqahName,
+        level: context.classGroupLevel,
+        levelLabel: halaqahLevelLabels[context.classGroupLevel as keyof typeof halaqahLevelLabels],
+        grade: Number(context.classGroupGrade),
+        studentCount: halaqahStudentCount,
+      }}
       values={{
         fullName: context.fullName,
         academicClassId: context.academicClassId,

@@ -14,6 +14,8 @@ export default function StudentsLayout({
         "DeleteRecord",
         "DeleteStudent",
         "Error",
+        "HalaqahLevelDialog",
+        "HalaqahLevelEditor",
         "LogoutButton",
         "ReactivateStudent",
         "StudentDetail",

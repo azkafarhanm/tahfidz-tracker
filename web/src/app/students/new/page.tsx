@@ -5,6 +5,7 @@ import { getTeacherStudentFormOptions } from "@/lib/students";
 import { todayInputValue } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
+import { backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ export default async function NewStudentPage({
           {t("teacherOnly")}
         </p>
         <Link
-          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+          className={backLink}
           href="/"
         >
           &larr; TahfidzFlow

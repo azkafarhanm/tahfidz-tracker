@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { requireSessionScope } from "@/lib/session";
 import { validateRecordFields } from "@/lib/validate-record";
+import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import {
   readString,
   readOptionalString,
@@ -79,6 +80,11 @@ export async function createGuidedRecord(formData: FormData) {
     throw e;
   }
 
+  const [academicYear, semester] = await Promise.all([
+    getActiveAcademicYear(),
+    getSemesterForDate(date!),
+  ]);
+
   const data = {
     studentId: student.id,
     teacherId: student.teacherId,
@@ -89,6 +95,8 @@ export async function createGuidedRecord(formData: FormData) {
     status: statusValue as RecordStatus,
     score,
     notes,
+    academicYear,
+    semester,
   };
 
   if ((typeValue as QuickLogRecordType) === "MUROJAAH") {

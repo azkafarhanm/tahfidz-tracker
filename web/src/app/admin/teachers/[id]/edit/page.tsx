@@ -20,6 +20,7 @@ type EditTeacherPageProps = {
   searchParams?: Promise<{
     error?: string;
     fullName?: string;
+    username?: string;
     email?: string;
     phoneNumber?: string;
     isActive?: string;
@@ -60,6 +61,7 @@ export default async function EditTeacherPage({
         title={t("editTeacher")}
         values={{
           fullName: query?.fullName ?? teacher.fullName,
+          username: query?.username ?? teacher.username,
           email: query?.email ?? teacher.email,
           phoneNumber: query?.phoneNumber ?? teacher.phoneNumber,
           isActive: query?.isActive ? query.isActive === "true" : teacher.isActive,

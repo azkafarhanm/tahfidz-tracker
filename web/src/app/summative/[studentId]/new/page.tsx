@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { createSummativeAssessmentAction } from "@/app/summative/actions";
 import { isSemesterValue } from "@/lib/summative";
+import { backLink } from "@/lib/colors";
 import SummativeAssessmentForm from "@/app/summative/SummativeAssessmentForm";
 
 export const runtime = "nodejs";
@@ -73,7 +74,7 @@ export default async function SummativeNewPage({
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className={backLink}
             href={`/summative/${studentId}?semester=${semester}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />

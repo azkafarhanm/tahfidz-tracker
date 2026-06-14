@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import CharacterCounter from "@/components/CharacterCounter";
+import { backLink } from "@/lib/colors";
 
 const iconMap = {
   UserPlus,
@@ -28,6 +29,7 @@ type TeacherFormIcon = keyof typeof iconMap;
 
 export type TeacherFormValues = {
   fullName: string;
+  username: string;
   email: string;
   phoneNumber: string;
   isActive: boolean;
@@ -66,6 +68,7 @@ export default function TeacherForm({
   const [password, setPassword] = useState("");
   const [passwordLength, setPasswordLength] = useState(0);
   const [fullNameLength, setFullNameLength] = useState(values.fullName.length);
+  const [usernameLength, setUsernameLength] = useState(values.username.length);
   const [emailLength, setEmailLength] = useState(values.email.length);
   const [phoneLength, setPhoneLength] = useState(values.phoneNumber.length);
 
@@ -75,7 +78,7 @@ export default function TeacherForm({
          <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -121,6 +124,24 @@ export default function TeacherForm({
                 type="text"
               />
               <CharacterCounter current={fullNameLength} max={120} maxReachedLabel={tc("maxReached")} />
+            </label>
+
+            <label className="mt-4 block">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {t("username")}
+              </span>
+              <input
+                autoComplete="username"
+                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
+                defaultValue={values.username}
+                maxLength={50}
+                name="username"
+                onChange={(e) => setUsernameLength(e.target.value.length)}
+                placeholder={t("usernamePlaceholder")}
+                required
+                type="text"
+              />
+              <CharacterCounter current={usernameLength} max={50} maxReachedLabel={tc("maxReached")} />
             </label>
 
             <label className="mt-4 block">

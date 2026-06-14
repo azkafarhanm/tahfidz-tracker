@@ -7,6 +7,7 @@ import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import CharacterCounter from "@/components/CharacterCounter";
+import { backLink } from "@/lib/colors";
 
 export default function ChangePasswordPage() {
   const t = useTranslations("ChangePassword");
@@ -22,7 +23,7 @@ export default function ChangePasswordPage() {
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
           <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/profile"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />

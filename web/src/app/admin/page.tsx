@@ -9,6 +9,7 @@ import {
 import { getLocale, getTranslations } from "next-intl/server";
 import { getAdminDashboardData } from "@/lib/admin";
 import InitialsAvatar from "@/components/InitialsAvatar";
+import { badge, statCard, statValue, statLabel, heroSummary } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,7 +78,7 @@ export default async function AdminDashboardPage() {
         </div>
       </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("activeUsersLabel")}</p>
@@ -98,48 +99,48 @@ export default async function AdminDashboardPage() {
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statActiveTeachers")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("statActiveTeachers")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>
               {dashboard.counts.activeTeacherCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className={`mt-1 text-xs ${statLabel.success}`}>
               {t("statTeachersSubtext", { count: dashboard.counts.teacherCount })}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statActiveStudents")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("statActiveStudents")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>
               {dashboard.counts.activeStudentCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className={`mt-1 text-xs ${statLabel.success}`}>
               {t("statStudentsSubtext", { count: dashboard.counts.studentCount })}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statClasses")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.info}`}>
+            <p className={`text-xs font-medium ${statLabel.info}`}>{t("statClasses")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.info}`}>
               {dashboard.counts.academicClassCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className={`mt-1 text-xs ${statLabel.info}`}>
               {t("statClassesSubtext")}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statHalaqah")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.progress}`}>
+            <p className={`text-xs font-medium ${statLabel.progress}`}>{t("statHalaqah")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.progress}`}>
               {dashboard.counts.classGroupCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className={`mt-1 text-xs ${statLabel.progress}`}>
               {t("statHalaqahSubtext")}
             </p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statActiveTargets")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.progress}`}>
+            <p className={`text-xs font-medium ${statLabel.progress}`}>{t("statActiveTargets")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.progress}`}>
               {dashboard.counts.activeTargetCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statActiveTargetsSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.progress}`}>{t("statActiveTargetsSubtext")}</p>
           </article>
         </section>
 
@@ -147,7 +148,7 @@ export default async function AdminDashboardPage() {
           <div>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t("managementHeading")}</h2>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {t("phaseBadge")}
               </span>
             </div>
@@ -162,8 +163,8 @@ export default async function AdminDashboardPage() {
                       <area.icon aria-hidden="true" size={18} strokeWidth={2.2} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-slate-950 dark:text-white">{area.title}</p>
-                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      <p className="break-words font-semibold text-slate-950 dark:text-white">{area.title}</p>
+                      <p className="mt-1 break-words text-sm text-slate-600 dark:text-slate-400">
                         {area.description}
                       </p>
                     </div>
@@ -177,7 +178,7 @@ export default async function AdminDashboardPage() {
                         {area.actionLabel}
                       </Link>
                     ) : (
-                      <span className="inline-flex items-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      <span className={`inline-flex items-center rounded-xl px-3 py-2 text-xs font-semibold ${badge.neutral}`}>
                         {area.actionLabel}
                       </span>
                     )}
@@ -191,7 +192,7 @@ export default async function AdminDashboardPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t("recentTeachersHeading")}</h2>
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.info}`}>
                   {dashboard.recentTeachers.length}
                 </span>
                 <Link
@@ -217,19 +218,15 @@ export default async function AdminDashboardPage() {
                        </p>
                      </div>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{teacher.email}</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {teacher.studentCount} {t("teacherStudentCount")}
-                      </span>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {teacher.classGroupCount} {t("teacherHalaqahCount")}
-                      </span>
+                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium">
+                       <span className={`rounded-full px-3 py-1 ${badge.info}`}>
+                         {teacher.studentCount} {t("teacherStudentCount")}
+                       </span>
+                       <span className={`rounded-full px-3 py-1 ${badge.progress}`}>
+                         {teacher.classGroupCount} {t("teacherHalaqahCount")}
+                       </span>
                       <span
-                        className={
-                          teacher.isActive
-                            ? "rounded-full bg-emerald-50 px-3 py-1 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                            : "rounded-full bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900 dark:text-amber-400"
-                        }
+                        className={`rounded-full px-3 py-1 ${teacher.isActive ? badge.success : badge.warning}`}
                       >
                         {teacher.isActive ? t("badgeAktif") : t("badgeNonaktif")}
                       </span>

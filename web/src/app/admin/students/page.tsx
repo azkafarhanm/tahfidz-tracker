@@ -19,6 +19,7 @@ import LiveSearchForm from "@/components/LiveSearchForm";
 import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
+import { badge, statCard, statValue, statLabel, widget, heroSummary, backLink } from "@/lib/colors";
 
 
 export const runtime = "nodejs";
@@ -74,7 +75,7 @@ export default async function AdminStudentsPage({
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -92,7 +93,7 @@ export default async function AdminStudentsPage({
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("heroLabel")}</p>
@@ -113,33 +114,33 @@ export default async function AdminStudentsPage({
         </section>
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statTotalLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.summary}`}>
+            <p className={`text-xs font-medium ${statLabel.summary}`}>{t("statTotalLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.summary}`}>
               {counts.studentCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statTotalSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.summary}`}>{t("statTotalSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeAktif")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.success}`}>
+            <p className={`text-xs font-medium ${statLabel.success}`}>{t("badgeAktif")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.success}`}>
               {counts.activeStudentCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statAktifSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.success}`}>{t("statAktifSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("badgeNonaktif")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.neutral}`}>
+            <p className={`text-xs font-medium ${statLabel.neutral}`}>{t("badgeNonaktif")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.neutral}`}>
               {counts.inactiveStudentCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statNonaktifSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.neutral}`}>{t("statNonaktifSubtext")}</p>
           </article>
-          <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{t("statFilteredLabel")}</p>
-            <p className="mt-2 text-2xl font-semibold">
+          <article className={`rounded-2xl border p-4 shadow-sm ${statCard.info}`}>
+            <p className={`text-xs font-medium ${statLabel.info}`}>{t("statFilteredLabel")}</p>
+            <p className={`mt-2 text-2xl font-semibold ${statValue.info}`}>
               {counts.filteredStudentCount}
             </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t("statFilteredSubtext")}</p>
+            <p className={`mt-1 text-xs ${statLabel.info}`}>{t("statFilteredSubtext")}</p>
           </article>
         </section>
 
@@ -171,7 +172,7 @@ export default async function AdminStudentsPage({
                   {t("resetSearch")}
                 </Link>
               ) : null}
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {students.length}/{counts.filteredStudentCount}
               </span>
             </div>
@@ -210,22 +211,18 @@ export default async function AdminStudentsPage({
                        </p>
                      </div>
                     <span
-                      className={
-                        student.isActive
-                          ? "shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                          : "shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-400"
-                      }
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${student.isActive ? badge.success : badge.warning}`}
                     >
                       {student.isActive ? t("badgeAktif") : t("badgeNonaktif")}
                     </span>
                   </div>
 
                   <div className="mt-4 space-y-2">
-                     <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                     <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                        <InitialsAvatar name={student.teacherName} size="sm" />
                        <span className="truncate">{student.teacherName}</span>
                      </div>
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <BookOpen
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
@@ -236,7 +233,7 @@ export default async function AdminStudentsPage({
                         {student.halaqahName} ({student.halaqahLevel})
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <GraduationCap
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
@@ -367,7 +364,7 @@ export default async function AdminStudentsPage({
               ) : (
                 <span className="h-10 w-10" aria-hidden="true" />
               )}
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
                 {pagination.page} / {pagination.totalPages}
               </span>
               {hasNextPage ? (

@@ -15,6 +15,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
+import { heroSummary, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -54,7 +55,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -72,7 +73,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <p className="text-sm text-emerald-100">{t("activeAccountLabel")}</p>
           <h2 className="mt-3 text-3xl font-semibold">{session.user.name}</h2>
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">

@@ -6,6 +6,7 @@ import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteRecordButton from "@/components/DeleteRecordButton";
 import { actionButtonClass } from "@/components/action-button-styles";
+import { badge } from "@/lib/colors";
 
 type FormativeRecord = {
   id: string;
@@ -92,7 +93,7 @@ export default function FormativeRecordsTable({
                 }`}
               >
                 <td className="px-5 py-4">
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                  <span className={`rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                     {record.type}
                   </span>
                 </td>

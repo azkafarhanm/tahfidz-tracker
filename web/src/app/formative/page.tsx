@@ -3,6 +3,7 @@ import { ArrowLeft, BookText, ChevronLeft, ChevronRight, Download } from "lucide
 import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
+import ExportSection from "@/components/ExportSection";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import { Semester } from "@/generated/prisma-next/enums";
@@ -16,6 +17,7 @@ import {
 } from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
+import { badge, statCard, statValue, statLabel, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -105,7 +107,7 @@ export default async function FormativePage({
       <header className="flex items-start justify-between gap-4">
         <div>
           <Link
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className={backLink}
             href="/"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -152,33 +154,36 @@ export default async function FormativePage({
           />
         </div>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
           {academicYear}
         </span>
 
-        <a
-          className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-          href={`/api/reports/export-formative?semester=${semesterValue}&classLevel=${classLevelValue}`}
-        >
-          <Download aria-hidden="true" size={16} strokeWidth={2.2} />
-          {t("exportExcel")}
-        </a>
+        <ExportSection
+          excelHref={`/api/reports/export-formative?semester=${semesterValue}&classLevel=${classLevelValue}`}
+          excelClassName="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+          excelContent={
+            <>
+              <Download aria-hidden="true" size={16} strokeWidth={2.2} />
+              {t("exportExcel")}
+            </>
+          }
+        />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className={`rounded-[1.75rem] border p-5 shadow-sm ${statCard.success}`}>
+          <p className={`text-sm ${statLabel.success}`}>
             {t("studentCountLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className={`mt-3 text-3xl font-semibold ${statValue.success}`}>
             {overview.totalStudentCount}
           </p>
         </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className={`rounded-[1.75rem] border p-5 shadow-sm ${statCard.progress}`}>
+          <p className={`text-sm ${statLabel.progress}`}>
             {t("assessmentCountLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className={`mt-3 text-3xl font-semibold ${statValue.progress}`}>
             {overview.totalAssessments}
           </p>
         </article>
@@ -201,7 +206,7 @@ export default async function FormativePage({
               </p>
             </div>
             {overview.pagination ? (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {overview.students.length}/{overview.totalStudentCount}
               </span>
             ) : null}
@@ -267,12 +272,15 @@ export default async function FormativePage({
                     </td>
                     <td className="px-4 py-4">
                       {student.dailyScores.length > 0 ? (
-                        <div className="flex max-w-[18rem] flex-wrap gap-2">
+                        <div className="flex max-w-[20rem] flex-wrap gap-2">
                           {student.dailyScores.map((entry) => (
                             <span
                               key={entry.id}
-                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${badge.summary}`}
                             >
+                              <span className={entry.type === "Hafalan" ? "text-emerald-700 dark:text-emerald-300" : "text-blue-700 dark:text-blue-300"}>
+                                {entry.type === "Hafalan" ? t("hafalanBadge") : t("murojaahBadge")}
+                              </span>
                               {entry.date}: {entry.score}
                             </span>
                           ))}
@@ -287,7 +295,12 @@ export default async function FormativePage({
                       </span>
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
-                      <p>{student.latestRange}</p>
+                      {student.latestType ? (
+                        <span className={`text-xs font-semibold ${student.latestType === "Hafalan" ? "text-emerald-700 dark:text-emerald-300" : "text-blue-700 dark:text-blue-300"}`}>
+                          {student.latestType === "Hafalan" ? t("hafalanBadge") : t("murojaahBadge")}
+                        </span>
+                      ) : null}
+                      <p className="mt-0.5">{student.latestRange}</p>
                       <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                         {student.latestDate}
                       </p>
@@ -318,7 +331,7 @@ export default async function FormativePage({
               ) : (
                 <span className="h-10 w-10" aria-hidden="true" />
               )}
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
                 {overview.pagination.page} / {overview.pagination.totalPages}
               </span>
               {hasNextPage ? (

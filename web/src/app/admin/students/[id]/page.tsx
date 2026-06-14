@@ -12,6 +12,7 @@ import {
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
 import PdfExportLink from "@/components/PdfExportLink";
+import { badge, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -49,7 +50,7 @@ export default async function AdminStudentDetailPage({
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/admin/students"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -130,11 +131,7 @@ export default async function AdminStudentDetailPage({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
-                      className={
-                        target.type === "Hafalan"
-                          ? "rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                          : "rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
-                      }
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${target.type === "Hafalan" ? badge.success : badge.progress}`}
                     >
                       {target.type === "Hafalan"
                         ? t("hafalan")
@@ -211,11 +208,7 @@ export default async function AdminStudentDetailPage({
                       </td>
                       <td className="py-3 pr-4">
                         <span
-                          className={
-                            record.type === "Hafalan"
-                              ? "rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400"
-                              : "rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-950 dark:text-blue-400"
-                          }
+                          className={`rounded-full px-2 py-1 text-xs font-medium ${record.type === "Hafalan" ? badge.success : badge.progress}`}
                         >
                           {record.type === "Hafalan"
                             ? t("hafalan")
@@ -242,12 +235,12 @@ export default async function AdminStudentDetailPage({
                       </td>
                       <td className="py-3">
                         {record.needsReview ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
                             <AlertTriangle aria-hidden="true" size={10} />
                             {record.status}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                          <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
                             {record.status}
                           </span>
                         )}

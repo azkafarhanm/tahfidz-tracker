@@ -4,6 +4,7 @@ import { requireAdminScope } from "@/lib/session";
 import { Calendar, CheckCircle2, PlusCircle, XCircle } from "lucide-react";
 import { getAdminAcademicYearsData, setActiveAcademicYear } from "./actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
+import { badge, alert } from "@/lib/colors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
         </header>
 
         {params?.success ? (
-          <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+          <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${alert.success}`}>
             {params.success}
           </div>
         ) : null}
@@ -88,12 +89,12 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-semibold">{year.year}</h2>
                       {year.isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold leading-tight text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-tight ${badge.success}`}>
                           <CheckCircle2 aria-hidden="true" size={12} />
                           {t("active")}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold leading-tight text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-tight ${badge.neutral}`}>
                           <XCircle aria-hidden="true" size={12} />
                           {t("inactive")}
                         </span>

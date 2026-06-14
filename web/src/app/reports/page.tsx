@@ -12,8 +12,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getTeacherReportData } from "@/lib/reports";
 import AppShell from "@/components/AppShell";
-import PdfExportLink from "@/components/PdfExportLink";
+import ExportSection from "@/components/ExportSection";
 import { requireSessionScope } from "@/lib/session";
+import { badge, heroSummary, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
 
@@ -65,7 +66,7 @@ export default async function ReportsPage() {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
-              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
+              className={backLink}
               href="/"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
@@ -77,28 +78,31 @@ export default async function ReportsPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <a
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-              href="/api/reports/export-teacher"
-            >
-              <Download aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("excelButton")}
-            </a>
-            <PdfExportLink
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href="/api/reports/pdf-teacher"
-              toastMessage={t("pdfToast")}
-            >
-              <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
-              {t("pdfButton")}
-            </PdfExportLink>
+            <ExportSection
+              excelHref="/api/reports/export-teacher"
+              excelClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
+              excelContent={
+                <>
+                  <Download aria-hidden="true" size={16} strokeWidth={2.2} />
+                  {t("excelButton")}
+                </>
+              }
+              pdfHref="/api/reports/pdf-teacher"
+              pdfClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+              pdfContent={
+                <>
+                  <FileText aria-hidden="true" size={16} strokeWidth={2.2} />
+                  {t("pdfButton")}
+                </>
+              }
+            />
             <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <BarChart3 aria-hidden="true" size={22} strokeWidth={2.3} />
             </div>
           </div>
         </header>
 
-        <section className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white shadow-2xl shadow-slate-950/20 sm:p-6">
+        <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-emerald-100">{t("avgScoreLabel")}</p>
@@ -148,7 +152,7 @@ export default async function ReportsPage() {
               href="/formative"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                <span className={`grid h-10 w-10 place-items-center rounded-2xl ${badge.success}`}>
                   <BookText aria-hidden="true" size={18} strokeWidth={2.2} />
                 </span>
                 <div>
@@ -166,7 +170,7 @@ export default async function ReportsPage() {
               href="/summative"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                <span className={`grid h-10 w-10 place-items-center rounded-2xl ${badge.success}`}>
                   <ClipboardList aria-hidden="true" size={18} strokeWidth={2.2} />
                 </span>
                 <div>
@@ -193,7 +197,7 @@ export default async function ReportsPage() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-slate-950 dark:text-white">{cg.name}</p>
-                    <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                    <span className={`shrink-0 rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                       {cg.level}
                     </span>
                   </div>
@@ -255,12 +259,12 @@ export default async function ReportsPage() {
                     <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>
                     <td className="py-3 text-center">
                       {s.needsReview ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
                           <AlertTriangle aria-hidden="true" size={10} />
                           {t("badgeCek")}
                         </span>
                       ) : (
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
                           {s.lastStatus}
                         </span>
                       )}
