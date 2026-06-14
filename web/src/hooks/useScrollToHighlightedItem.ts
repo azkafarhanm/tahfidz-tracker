@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 const HIGHLIGHT_PARAM = "highlight";
@@ -9,7 +9,6 @@ const HIGHLIGHT_DURATION_MS = 2000;
 
 export function useScrollToHighlightedItem() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const highlightId = searchParams.get(HIGHLIGHT_PARAM);
   const appliedRef = useRef<string | null>(null);
@@ -27,9 +26,6 @@ export function useScrollToHighlightedItem() {
     el.scrollIntoView({ behavior: "instant", block: "center" });
     el.setAttribute(ACTIVE_ATTR, "");
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete(HIGHLIGHT_PARAM);
-    const query = params.toString();
     let observer: MutationObserver | null = null;
 
     const cleanup = () => {
@@ -56,14 +52,18 @@ export function useScrollToHighlightedItem() {
       el.removeAttribute(ACTIVE_ATTR);
       appliedRef.current = null;
 
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
-      });
+      // Use history.replaceState to update URL without triggering React re-render
+      // router.replace() would cause a re-render that resets scroll position
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete(HIGHLIGHT_PARAM);
+      const query = params.toString();
+      const newUrl = query ? `${pathname}?${query}` : pathname;
+      window.history.replaceState(null, "", newUrl);
     }, HIGHLIGHT_DURATION_MS);
 
     return () => {
       clearTimeout(timeout);
       cleanup();
     };
-  }, [highlightId, searchParams, router, pathname]);
+  }, [highlightId, searchParams, pathname]);
 }
