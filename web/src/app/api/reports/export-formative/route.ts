@@ -36,6 +36,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const semesterValue = searchParams.get("semester") ?? getSemesterForDate(new Date());
     const classLevelValue = searchParams.get("classLevel") ?? "7";
+    const programTypeParam = searchParams.get("programType");
+    const programType = programTypeParam === "ACADEMIC" || programTypeParam === "BOARDING"
+      ? programTypeParam
+      : undefined;
 
     if (!isSemesterValue(semesterValue)) {
       return NextResponse.json({ error: "Invalid semester" }, { status: 400 });
@@ -53,7 +57,11 @@ export async function GET(request: Request) {
       semester,
       academicYear,
       classLevel,
+      programType,
     );
+
+    const isBoarding = programType === "BOARDING";
+    const programLabel = isBoarding ? "Boarding" : "Akademik";
 
     const studentsById = new Map(
       exportData.students.map((student) => [student.id, student]),
@@ -111,6 +119,7 @@ export async function GET(request: Request) {
       { header: "Nilai", key: "value", width: 24 },
     ];
     [
+      { key: "Program", value: programLabel },
       { key: "Tahun ajaran", value: academicYear },
       { key: "Kelas", value: classLevel },
       { key: "Semester", value: semesterLabel(semester) },
@@ -120,12 +129,12 @@ export async function GET(request: Request) {
     finalizeTableSheet(infoSheet);
 
     const summarySheet = workbook.addWorksheet("Ringkasan");
-    summarySheet.columns = [
+    const summaryColumns = [
       { header: "No", key: "no", width: 6 },
       { header: "Nama Santri", key: "studentName", width: 28 },
-      { header: "Kelas Akademik", key: "academicClassName", width: 18 },
+      { header: isBoarding ? "Kelas Boarding" : "Kelas Akademik", key: "academicClassName", width: 18 },
       { header: "Halaqah", key: "halaqahName", width: 24 },
-      { header: "Level", key: "halaqahLevel", width: 12 },
+      ...(!isBoarding ? [{ header: "Level", key: "halaqahLevel", width: 12 }] : []),
       { header: "Hafalan", key: "hafalanCount", width: 12 },
       { header: "Murojaah", key: "murojaahCount", width: 12 },
       { header: "Total Catatan", key: "totalCount", width: 14 },
@@ -133,6 +142,7 @@ export async function GET(request: Request) {
       { header: "Nilai Terakhir", key: "latestScore", width: 14 },
       { header: "Rata-rata Santri", key: "averageScore", width: 16 },
     ];
+    summarySheet.columns = summaryColumns;
 
     exportData.students.forEach((student, index) => {
       const summary = studentSummary.get(student.id);
@@ -146,7 +156,7 @@ export async function GET(request: Request) {
         studentName: student.fullName,
         academicClassName: student.academicClass?.name ?? "-",
         halaqahName: student.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+        ...(!isBoarding ? { halaqahLevel: halaqahLevelLabels[student.classGroup.level] } : {}),
         hafalanCount: summary?.hafalanCount ?? 0,
         murojaahCount: summary?.murojaahCount ?? 0,
         totalCount: summary?.totalCount ?? 0,
@@ -240,7 +250,7 @@ export async function GET(request: Request) {
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(
       workbook,
-      `rekap-formatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
+      `rekap-formatif-${programLabel.toLowerCase()}-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export formative Excel report", error);

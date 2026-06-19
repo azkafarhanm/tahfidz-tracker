@@ -13,10 +13,13 @@ import { deleteClassGroup, toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import ProgramSelector from "@/components/ProgramSelector";
 import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge, statCard, statValue, statLabel, widget, heroSummary, backLink } from "@/lib/colors";
+import { ProgramType } from "@/generated/prisma-next/enums";
+import { programTypeLabels, programTypeOptions } from "@/lib/format";
 
 
 export const runtime = "nodejs";
@@ -32,6 +35,7 @@ type AdminHalaqahPageProps = {
     success?: string;
     error?: string;
     page?: string;
+    programType?: string;
   }>;
 };
 
@@ -50,15 +54,18 @@ export default async function AdminHalaqahPage({
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
   const page = parsePage(params?.page);
+  const programType = (params?.programType as ProgramType) || ProgramType.ACADEMIC;
   const { counts, classGroups, pagination } = await getAdminClassGroupsData(
     query,
     page,
     PAGE_SIZE,
+    programType,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
+    if (programType) nextParams.set("programType", programType);
     const search = nextParams.toString();
     return search ? `/admin/halaqah?${search}` : "/admin/halaqah";
   };
@@ -82,6 +89,13 @@ export default async function AdminHalaqahPage({
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {t("description")}
             </p>
+            <div className="mt-3">
+              <ProgramSelector
+                programs={programTypeOptions.map((o) => o.value)}
+                programTypeLabels={programTypeLabels}
+                currentProgramType={programType ?? ProgramType.ACADEMIC}
+              />
+            </div>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <Users aria-hidden="true" size={22} strokeWidth={2.2} />
@@ -154,7 +168,7 @@ export default async function AdminHalaqahPage({
             <div className="flex items-center gap-2">
               <Link
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href="/admin/halaqah/new"
+                href={`/admin/halaqah/new${programType ? `?programType=${programType}` : ""}`}
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                 {t("addButton")}
@@ -206,14 +220,16 @@ export default async function AdminHalaqahPage({
                   ) : null}
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className={`rounded-2xl p-3 ${widget.elevated}`}>
-                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        {t("levelLabel")}
-                      </p>
-                      <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
-                        {classGroup.level}
-                      </p>
-                    </div>
+                    {classGroup.programType !== "BOARDING" && (
+                      <div className={`rounded-2xl p-3 ${widget.elevated}`}>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          {t("levelLabel")}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold text-slate-950 dark:text-white">
+                          {classGroup.level}
+                        </p>
+                      </div>
+                    )}
                     <div className={`rounded-2xl p-3 ${widget.elevated}`}>
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         {t("studentLabel")}
@@ -238,7 +254,7 @@ export default async function AdminHalaqahPage({
                   <div className="mt-4 flex flex-wrap gap-3">
                     <Link
                       className={actionButtonClass("neutral")}
-                      href={`/admin/halaqah/${classGroup.id}/edit`}
+                      href={`/admin/halaqah/${classGroup.id}/edit${programType ? `?programType=${programType}` : ""}`}
                     >
                       <PencilLine
                         aria-hidden="true"

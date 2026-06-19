@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BookOpen, PencilLine, RotateCcw, Trash2 } from "lucide-react";
+import { BookOpen, PencilLine, RotateCcw, Trash2, Award } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
+import { deleteTasmiAction } from "./tasmi/actions";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge } from "@/lib/colors";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
@@ -19,6 +20,9 @@ type RecordItem = {
   score: number | null;
   needsReview: boolean;
   notes?: string | null;
+  grade?: string;
+  juz?: number;
+  examinerName?: string;
 };
 
 function recordStatusClass(record: RecordItem) {
@@ -38,26 +42,29 @@ export default function ActivityRow({
   const [deleted, setDeleted] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const Icon = record.type === "Hafalan" ? BookOpen : RotateCcw;
-  const recordType = record.type === "Hafalan" ? "hafalan" : "murojaah";
-  const editHref = `/students/${studentId}/records/${recordType}/${record.id}/edit?returnTo=${encodeURIComponent(`/students/${studentId}`)}`;
+  const isTasmi = record.type === "Tasmi'";
+  const Icon = isTasmi ? Award : record.type === "Hafalan" ? BookOpen : RotateCcw;
+  const editHref = isTasmi
+    ? `/students/${studentId}/tasmi/${record.id}/edit`
+    : `/students/${studentId}/records/${record.type === "Hafalan" ? "hafalan" : "murojaah"}/${record.id}/edit?returnTo=${encodeURIComponent(`/students/${studentId}`)}`;
 
   if (deleted) return null;
 
   return (
     <article data-highlight={record.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
       <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${isTasmi ? "bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"}`}>
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-950 dark:text-white">
-                {record.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}
+                {isTasmi ? t("tasmiButton") : record.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}
               </p>
               <p className="mt-0.5 truncate text-[13px] leading-snug text-slate-500 dark:text-slate-400">
                 {record.range}
+                {isTasmi && record.grade ? ` - ${record.grade}` : ""}
               </p>
             </div>
             <p className="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500">
@@ -92,7 +99,15 @@ export default function ActivityRow({
                 label={tDel("delete")}
                 onAction={async () => {
                   setDeleteError(null);
-                  const result = await deleteRecord(studentId, recordType, record.id, `/students/${studentId}`);
+                  if (isTasmi) {
+                    const result = await deleteTasmiAction(record.id, studentId);
+                    if (result.ok) {
+                      setDeleted(true);
+                      refresh();
+                    }
+                    return { ok: result.ok, error: result.error, success: result.message };
+                  }
+                  const result = await deleteRecord(studentId, record.type === "Hafalan" ? "hafalan" : "murojaah", record.id, `/students/${studentId}`);
                   if (result.ok) {
                     setDeleted(true);
                     refresh();

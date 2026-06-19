@@ -1,5 +1,6 @@
 import {
   Gender,
+  ProgramType,
   TargetStatus,
   UserRole,
 } from "@/generated/prisma-next/enums";
@@ -7,8 +8,9 @@ import {
   getDateFormatter,
   formatClassSummary,
   halaqahLevelLabels,
+  programTypeLabels,
 } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 
@@ -88,6 +90,8 @@ function mapStudentSummary(student: {
   classGroup: {
     name: string;
     level: "LOW" | "MEDIUM" | "HIGH";
+    programType: ProgramType;
+    grade: number;
   };
   academicClass: {
     name: string;
@@ -114,9 +118,14 @@ function mapStudentSummary(student: {
     teacherName: student.teacher.fullName,
     classGroupId: student.classGroupId,
     academicClassId: student.academicClassId,
-    academicClassName: classInfo.academicClassName,
-    halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+    academicClassName: classInfo.isBoarding
+      ? String(student.classGroup.grade)
+      : classInfo.academicClassName,
+    halaqahName: classInfo.isBoarding
+      ? `${student.classGroup.grade} - ${student.classGroup.name}`
+      : student.classGroup.name,
+    halaqahLevel: classInfo.isBoarding ? "" : halaqahLevelLabels[student.classGroup.level],
+    programType: student.classGroup.programType,
     classSummary: classInfo.classSummary,
     activeTargetCount: student._count.targets,
     totalRecordCount,
@@ -125,12 +134,16 @@ function mapStudentSummary(student: {
   };
 }
 
-export async function getAdminDashboardData(locale = "id") {
-  return cached(`admin-dashboard:${locale}`, 30_000, () => getAdminDashboardDataInner(locale));
+export async function getAdminDashboardData(locale = "id", programType?: ProgramType) {
+  return cached(`admin-dashboard:${locale}:${programType ?? "all"}`, 30_000, () => withRetry(() => getAdminDashboardDataInner(locale, programType)));
 }
 
-async function getAdminDashboardDataInner(locale = "id") {
+async function getAdminDashboardDataInner(locale = "id", programType?: ProgramType) {
   const dateFormatter = getDateFormatter(locale);
+  const classGroupFilter = programType ? { isActive: true, programType } : { isActive: true };
+  const studentFilter = programType
+    ? { isActive: true, classGroup: { programType } }
+    : { isActive: true };
   const [
     adminCount,
     teacherCount,
@@ -143,7 +156,7 @@ async function getAdminDashboardDataInner(locale = "id") {
     memorizationRecordCount,
     revisionRecordCount,
     recentTeachers,
-  ] = await Promise.all([
+  ] = await withRetry(() => Promise.all([
     prisma.user.count({
       where: { role: UserRole.ADMIN, isActive: true },
     }),
@@ -156,15 +169,17 @@ async function getAdminDashboardDataInner(locale = "id") {
         user: { isActive: true },
       },
     }),
-    prisma.student.count(),
     prisma.student.count({
-      where: { isActive: true },
+      where: programType ? { classGroup: { programType } } : undefined,
+    }),
+    prisma.student.count({
+      where: studentFilter,
     }),
     prisma.academicClass.count({
-      where: { isActive: true },
+      where: programType ? { isActive: true, programType } : { isActive: true },
     }),
     prisma.classGroup.count({
-      where: { isActive: true },
+      where: classGroupFilter,
     }),
     prisma.target.count({
       where: { status: TargetStatus.ACTIVE },
@@ -189,7 +204,7 @@ async function getAdminDashboardDataInner(locale = "id") {
         },
       },
     }),
-  ]);
+  ]));
 
   return {
     counts: {
@@ -248,7 +263,7 @@ export async function getAdminTeachersData(
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [teachers, teacherCount, activeTeacherCount, filteredTeacherCount] = await Promise.all([
+  const [teachers, teacherCount, activeTeacherCount, filteredTeacherCount] = await withRetry(() => Promise.all([
     prisma.teacher.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -272,7 +287,7 @@ export async function getAdminTeachersData(
     prisma.teacher.count(),
     prisma.teacher.count({ where: { isActive: true } }),
     prisma.teacher.count({ where }),
-  ]);
+  ]));
 
   return {
     counts: {
@@ -328,11 +343,14 @@ export async function getAdminStudentsData(
   locale = "id",
   page = 1,
   pageSize = 12,
+  programType?: ProgramType,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
+  const programFilter = programType ? { classGroup: { programType } } : {};
   const where = normalizedQuery
     ? {
+        ...programFilter,
         OR: [
           {
             fullName: {
@@ -366,11 +384,11 @@ export async function getAdminStudentsData(
           },
         ],
       }
-    : undefined;
+    : programType ? { classGroup: { programType } } : undefined;
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [students, studentCount, activeStudentCount, filteredStudentCount] = await Promise.all([
+  const [students, studentCount, activeStudentCount, filteredStudentCount] = await withRetry(() => Promise.all([
     prisma.student.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -384,6 +402,8 @@ export async function getAdminStudentsData(
           select: {
             name: true,
             level: true,
+            programType: true,
+            grade: true,
           },
         },
         academicClass: {
@@ -405,10 +425,10 @@ export async function getAdminStudentsData(
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
-    prisma.student.count(),
-    prisma.student.count({ where: { isActive: true } }),
+    prisma.student.count({ where: programType ? { classGroup: { programType } } : undefined }),
+    prisma.student.count({ where: { isActive: true, ...(programType ? { classGroup: { programType } } : {}) } }),
     prisma.student.count({ where }),
-  ]);
+  ]));
 
   return {
     counts: {
@@ -430,7 +450,7 @@ export async function getAdminStudentsData(
 }
 
 export async function getAdminStudentFormOptions() {
-  const [teachers, classGroups, academicClasses] = await Promise.all([
+  const [teachers, classGroups, academicClasses] = await withRetry(() => Promise.all([
     prisma.teacher.findMany({
       orderBy: { fullName: "asc" },
       select: {
@@ -454,6 +474,7 @@ export async function getAdminStudentFormOptions() {
         teacherId: true,
         grade: true,
         academicYear: true,
+        programType: true,
         isActive: true,
         teacher: {
           select: {
@@ -475,10 +496,11 @@ export async function getAdminStudentFormOptions() {
         name: true,
         grade: true,
         academicYear: true,
+        programType: true,
         isActive: true,
       },
     }),
-  ]);
+  ]));
 
   const academicYears = await buildAcademicYearOptions(
     academicClasses.map((academicClass) => academicClass.academicYear),
@@ -498,6 +520,8 @@ export async function getAdminStudentFormOptions() {
         grade: classGroup.grade,
         gradeLabel: formatHalaqahGradeLabel(classGroup.grade),
         academicYear: classGroup.academicYear,
+        programType: classGroup.programType,
+        programTypeLabel: programTypeLabels[classGroup.programType],
         name: classGroup.name,
         level: classGroup.level,
         levelLabel: halaqahLevelLabels[classGroup.level],
@@ -518,6 +542,8 @@ export async function getAdminStudentFormOptions() {
       name: academicClass.name,
       grade: academicClass.grade,
       academicYear: academicClass.academicYear,
+      programType: academicClass.programType,
+      programTypeLabel: programTypeLabels[academicClass.programType],
       isActive: academicClass.isActive,
       label: academicClass.name,
     })),
@@ -529,10 +555,13 @@ export async function getAdminAcademicClassesData(
   query = "",
   page = 1,
   pageSize = 12,
+  programType?: ProgramType,
 ) {
   const normalizedQuery = query.trim();
+  const baseFilter = programType ? { programType } : {};
   const where = normalizedQuery
     ? {
+        ...baseFilter,
         OR: [
           {
             name: {
@@ -548,28 +577,28 @@ export async function getAdminAcademicClassesData(
           },
         ],
       }
-    : undefined;
+    : programType ? { programType } : undefined;
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [academicClasses, totalCount, activeCount, filteredCount] = await Promise.all([
+  const [academicClasses, totalCount, activeCount, filteredCount] = await withRetry(() => Promise.all([
     prisma.academicClass.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { grade: "asc" }, { section: "asc" }],
       include: {
         _count: {
           select: {
-            students: true,
+            students: { where: { isActive: true } },
           },
         },
       },
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
-    prisma.academicClass.count(),
-    prisma.academicClass.count({ where: { isActive: true } }),
+    prisma.academicClass.count({ where: programType ? { programType } : undefined }),
+    prisma.academicClass.count({ where: { isActive: true, ...(programType ? { programType } : {}) } }),
     prisma.academicClass.count({ where }),
-  ]);
+  ]));
 
   return {
     counts: {
@@ -584,6 +613,7 @@ export async function getAdminAcademicClassesData(
       section: academicClass.section,
       name: academicClass.name,
       academicYear: academicClass.academicYear,
+      programType: academicClass.programType,
       isActive: academicClass.isActive,
       studentCount: academicClass._count.students,
     })),
@@ -605,6 +635,7 @@ export async function getAdminAcademicClassFormData(academicClassId: string) {
       section: true,
       name: true,
       academicYear: true,
+      programType: true,
       isActive: true,
     },
   });
@@ -618,6 +649,7 @@ export async function getAdminAcademicClassFormData(academicClassId: string) {
     grade: String(academicClass.grade),
     section: academicClass.section,
     academicYear: academicClass.academicYear,
+    programType: academicClass.programType,
     isActive: academicClass.isActive,
   };
 }
@@ -641,11 +673,14 @@ export async function getAdminClassGroupsData(
   query = "",
   page = 1,
   pageSize = 12,
+  programType?: ProgramType,
 ) {
   const normalizedQuery = query.trim();
   const parsedGrade = Number.parseInt(normalizedQuery, 10);
+  const programFilter = programType ? { programType } : {};
   const where = normalizedQuery
     ? {
+        ...programFilter,
         OR: [
           {
             name: {
@@ -688,11 +723,11 @@ export async function getAdminClassGroupsData(
           },
         ],
       }
-    : undefined;
+    : programType ? { programType } : undefined;
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [classGroups, totalCount, activeCount, filteredCount] = await Promise.all([
+  const [classGroups, totalCount, activeCount, filteredCount] = await withRetry(() => Promise.all([
     prisma.classGroup.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { name: "asc" }],
@@ -710,17 +745,17 @@ export async function getAdminClassGroupsData(
         },
         _count: {
           select: {
-            students: true,
+            students: { where: { isActive: true } },
           },
         },
       },
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
-    prisma.classGroup.count(),
-    prisma.classGroup.count({ where: { isActive: true } }),
+    prisma.classGroup.count({ where: programType ? { programType } : undefined }),
+    prisma.classGroup.count({ where: { isActive: true, ...(programType ? { programType } : {}) } }),
     prisma.classGroup.count({ where }),
-  ]);
+  ]));
 
   return {
     counts: {
@@ -740,6 +775,8 @@ export async function getAdminClassGroupsData(
       grade: classGroup.grade,
       gradeLabel: formatHalaqahGradeLabel(classGroup.grade),
       academicYear: classGroup.academicYear,
+      programType: classGroup.programType,
+      programTypeLabel: programTypeLabels[classGroup.programType],
       teacherIsActive:
         classGroup.teacher.isActive && classGroup.teacher.user.isActive,
       isActive: classGroup.isActive,
@@ -765,6 +802,7 @@ export async function getAdminClassGroupFormData(classGroupId: string) {
       teacherId: true,
       academicYear: true,
       grade: true,
+      programType: true,
       isActive: true,
     },
   });
@@ -781,12 +819,13 @@ export async function getAdminClassGroupFormData(classGroupId: string) {
     teacherId: classGroup.teacherId,
     academicYear: classGroup.academicYear,
     grade: String(classGroup.grade),
+    programType: classGroup.programType,
     isActive: classGroup.isActive,
   };
 }
 
 export async function getAdminClassGroupFormOptions() {
-  const [teachers, academicClasses] = await Promise.all([
+  const [teachers, academicClasses] = await withRetry(() => Promise.all([
     prisma.teacher.findMany({
       orderBy: { fullName: "asc" },
       where: {
@@ -811,7 +850,7 @@ export async function getAdminClassGroupFormOptions() {
         academicYear: true,
       },
     }),
-  ]);
+  ]));
 
   const academicYears = await buildAcademicYearOptions(
     academicClasses.map((academicClass) => academicClass.academicYear),
@@ -830,7 +869,7 @@ export async function getAdminClassGroupFormOptions() {
 }
 
 export async function getAdminStudentFormData(studentId: string) {
-  const [student, options] = await Promise.all([
+  const [student, options] = await withRetry(() => Promise.all([
     prisma.student.findUnique({
       where: { id: studentId },
       select: {
@@ -847,10 +886,15 @@ export async function getAdminStudentFormData(studentId: string) {
             academicYear: true,
           },
         },
+        classGroup: {
+          select: {
+            programType: true,
+          },
+        },
       },
     }),
     getAdminStudentFormOptions(),
-  ]);
+  ]));
 
   if (!student) {
     return null;
@@ -866,6 +910,7 @@ export async function getAdminStudentFormData(studentId: string) {
         student.academicClass?.academicYear ??
         options.academicYears[0] ??
         await getActiveAcademicYear(),
+      programType: student.classGroup.programType,
       gender: student.gender ?? "",
       joinDate: student.joinDate.toISOString().slice(0, 10),
       isActive: student.isActive,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -24,7 +24,9 @@ type ClassGroupOption = {
   level: string;
   levelKey: string;
   grade: number;
+  programType: string;
   label: string;
+  studentCount: number;
 };
 
 type AcademicClassOption = {
@@ -32,6 +34,7 @@ type AcademicClassOption = {
   name: string;
   grade: number;
   label: string;
+  programType: string;
 };
 
 type HalaqahInfo = {
@@ -61,6 +64,7 @@ type EditStudentFormProps = {
     classGroupLevel: string;
     classGroupGrade: string;
   };
+  defaultProgramType?: string;
 };
 
 export default function EditStudentForm({
@@ -70,6 +74,7 @@ export default function EditStudentForm({
   options,
   halaqah,
   values,
+  defaultProgramType = "ACADEMIC",
 }: EditStudentFormProps) {
   const t = useTranslations("StudentForm");
   const tc = useTranslations("CharacterCounter");
@@ -77,27 +82,98 @@ export default function EditStudentForm({
   const [selectedLevel, setSelectedLevel] = useState(values.classGroupLevel);
   const [selectedGrade, setSelectedGrade] = useState(values.classGroupGrade);
   const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(values.academicClassId);
+  const [classGroups, setClassGroups] = useState(options.classGroups);
+  const [halaqahState, setHalaqahState] = useState(halaqah);
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
+  const pendingLevelSyncRef = useRef<{
+    classGroupId: string;
+    level: string;
+    levelLabel: string;
+  } | null>(null);
 
   const gradeHasExistingCg = selectedGrade
-    ? options.classGroups.find((g) => g.grade === Number(selectedGrade)) ?? null
+    ? classGroups.find(
+        (g) => g.grade === Number(selectedGrade) && g.programType === defaultProgramType,
+      ) ?? null
     : null;
 
-  const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
+  const isActiveHalaqahGradeSelected = selectedGrade === String(halaqahState.grade);
+  const lockedLevel = isActiveHalaqahGradeSelected
+    ? halaqahState.level
+    : (gradeHasExistingCg?.levelKey ?? null);
+  const effectiveSelectedLevel = lockedLevel ?? selectedLevel;
 
-  // Filter academic classes by selected grade
-  const filteredAcademicClasses = selectedGrade
-    ? options.academicClasses.filter((ac) => ac.grade === Number(selectedGrade))
-    : options.academicClasses;
+  // Derive programType from halaqah info
+  const resolvedProgramType = defaultProgramType;
+  const isBoarding = resolvedProgramType === "BOARDING";
+
+  // Filter academic/boarding classes by programType
+  // For Boarding: show ALL Boarding classes (grade is derived from selection)
+  // For Academic: filter by selected grade AND programType
+  const filteredAcademicClasses = isBoarding
+    ? options.academicClasses.filter((ac) => ac.programType === resolvedProgramType)
+    : (selectedGrade
+        ? options.academicClasses.filter(
+            (ac) => ac.grade === Number(selectedGrade) && ac.programType === resolvedProgramType,
+          )
+        : options.academicClasses.filter((ac) => ac.programType === resolvedProgramType));
 
   // Auto-reset academic class if it doesn't match selected grade
+  // For Boarding: also update selectedGrade when class changes
   useEffect(() => {
     const ac = options.academicClasses.find((c) => c.id === selectedAcademicClassId);
-    if (ac && ac.grade !== Number(selectedGrade)) {
-      setSelectedAcademicClassId("");
+    if (ac) {
+      if (isBoarding) {
+        // For Boarding, derive grade from selected class
+        if (ac.grade !== Number(selectedGrade)) {
+          setSelectedGrade(String(ac.grade));
+        }
+      } else {
+        // For Academic, reset class if grade mismatch
+        if (ac.grade !== Number(selectedGrade)) {
+          setSelectedAcademicClassId("");
+        }
+      }
     }
-  }, [selectedGrade, selectedAcademicClassId, options.academicClasses]);
+  }, [selectedAcademicClassId, selectedGrade, options.academicClasses, isBoarding]);
+
+  useEffect(() => {
+    setClassGroups(options.classGroups);
+  }, [options.classGroups]);
+
+  useEffect(() => {
+    const pendingLevelSync = pendingLevelSyncRef.current;
+    if (
+      pendingLevelSync &&
+      pendingLevelSync.classGroupId === halaqah.classGroupId &&
+      pendingLevelSync.level !== halaqah.level
+    ) {
+      return;
+    }
+
+    if (
+      pendingLevelSync &&
+      pendingLevelSync.classGroupId === halaqah.classGroupId &&
+      pendingLevelSync.level === halaqah.level
+    ) {
+      pendingLevelSyncRef.current = null;
+    }
+
+    setHalaqahState(halaqah);
+  }, [halaqah]);
+
+  useEffect(() => {
+    setSelectedLevel(values.classGroupLevel);
+  }, [values.classGroupLevel]);
+
+  useEffect(() => {
+    setSelectedGrade(values.classGroupGrade);
+  }, [values.classGroupGrade]);
+
+  useEffect(() => {
+    setSelectedAcademicClassId(values.academicClassId);
+  }, [values.academicClassId]);
 
   useEffect(() => {
     if (lockedLevel && selectedLevel !== lockedLevel) {
@@ -112,10 +188,44 @@ export default function EditStudentForm({
     if (ac && ac.grade !== Number(grade)) {
       setSelectedAcademicClassId("");
     }
-    const cg = options.classGroups.find((g) => g.grade === Number(grade));
+    const cg = classGroups.find(
+      (g) => g.grade === Number(grade) && g.programType === resolvedProgramType,
+    );
     if (cg) {
       setSelectedLevel(cg.levelKey);
+      setHalaqahState({
+        classGroupId: cg.id,
+        name: cg.name,
+        level: cg.levelKey,
+        levelLabel: cg.level,
+        grade: cg.grade,
+        studentCount: 0,
+      });
+    } else {
+      setSelectedLevel("");
+      setHalaqahState((current) => ({ ...current, grade: Number(grade), classGroupId: "" }));
     }
+  }
+
+  function handleHalaqahLevelUpdated(level: string, levelLabel: string) {
+    const currentClassGroupId = halaqahState.classGroupId;
+    const currentGrade = halaqahState.grade;
+
+    pendingLevelSyncRef.current = {
+      classGroupId: currentClassGroupId,
+      level,
+      levelLabel,
+    };
+    setHalaqahState((current) => ({ ...current, level, levelLabel }));
+    setSelectedLevel(level);
+    setSelectedGrade(String(currentGrade));
+    setClassGroups((classGroupOptions) =>
+      classGroupOptions.map((classGroup) =>
+        classGroup.id === currentClassGroupId
+          ? { ...classGroup, level: levelLabel, levelKey: level }
+          : classGroup,
+      ),
+    );
   }
 
   function handleLevelClick(levelKey: string) {
@@ -141,19 +251,28 @@ export default function EditStudentForm({
     { key: "HIGH", label: "High", desc: t("levelAdvanced") },
   ];
 
-  const matchedCg =
-    selectedLevel && selectedGrade
-      ? options.classGroups.find(
-          (cg) =>
-            cg.levelKey === selectedLevel &&
-            cg.grade === Number(selectedGrade),
-        ) ?? null
-      : null;
+  const matchedCg = isBoarding
+    ? (selectedGrade
+        ? classGroups.find(
+            (cg) =>
+              cg.programType === "BOARDING" &&
+              cg.grade === Number(selectedGrade),
+          ) ?? null
+        : null)
+    : (effectiveSelectedLevel && selectedGrade
+        ? classGroups.find(
+            (cg) =>
+              cg.programType === resolvedProgramType &&
+              cg.levelKey === effectiveSelectedLevel &&
+              cg.grade === Number(selectedGrade),
+          ) ?? null
+        : null);
 
   function handleSubmit(formData: FormData) {
     formData.set("classGroupId", matchedCg?.id ?? "");
-    formData.set("halaqahLevel", selectedLevel);
+    formData.set("halaqahLevel", isBoarding ? (effectiveSelectedLevel || "LOW") : effectiveSelectedLevel);
     formData.set("grade", selectedGrade);
+    formData.set("programType", resolvedProgramType);
     startTransition(async () => {
       await action(formData);
     });
@@ -256,46 +375,50 @@ export default function EditStudentForm({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center gap-2">
-              <GraduationCap
-                aria-hidden="true"
-                className="text-emerald-800 dark:text-emerald-400"
-                size={18}
-                strokeWidth={2.2}
-              />
-              <h2 className="font-semibold">{t("sectionClass")}</h2>
-            </div>
+          {/* Grade selector - only for Academic */}
+          {!isBoarding && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+              <div className="flex items-center gap-2">
+                <GraduationCap
+                  aria-hidden="true"
+                  className="text-emerald-800 dark:text-emerald-400"
+                  size={18}
+                  strokeWidth={2.2}
+                />
+                <h2 className="font-semibold">{t("sectionClass")}</h2>
+              </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {gradeOptions.map((g) => {
-                const isSelected = selectedGrade === g.value;
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
-isSelected
-  ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:shadow-none dark:ring-emerald-800"
-  : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
-                    }`}
-                    key={g.value}
-                    onClick={() => handleGradeChange(g.value)}
-                    type="button"
-                  >
-                    <span
-                      className={`text-sm font-bold ${
-                        isSelected ? "text-emerald-900 dark:text-emerald-300" : "text-slate-950 dark:text-white"
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {gradeOptions.map((g) => {
+                  const isSelected = selectedGrade === g.value;
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:shadow-none dark:ring-emerald-800"
+                          : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50"
                       }`}
+                      key={g.value}
+                      onClick={() => handleGradeChange(g.value)}
+                      type="button"
                     >
-                      {g.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+                      <span
+                        className={`text-sm font-bold ${
+                          isSelected ? "text-emerald-900 dark:text-emerald-300" : "text-slate-950 dark:text-white"
+                        }`}
+                      >
+                        {g.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-          {/* Halaqah Aktif Card */}
+          {/* Halaqah Aktif Card - only for Academic */}
+          {!isBoarding && (
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Users
@@ -311,63 +434,77 @@ isSelected
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-slate-950 dark:text-white">
-                    {halaqah.name}
+                    {gradeHasExistingCg?.name ?? halaqahState.name}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
                     <span className="inline-flex items-center gap-1">
                       <GraduationCap aria-hidden="true" size={14} />
-                      {t("grade")}: {halaqah.grade}
+                      {t("grade")}: {gradeHasExistingCg?.grade ?? halaqahState.grade}
                     </span>
-                    <span className="hidden md:inline">·</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Lock aria-hidden="true" size={14} />
-                      {t("level")}: {halaqah.levelLabel}
-                    </span>
+                    {!isBoarding && (
+                      <>
+                        <span className="hidden md:inline">·</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Lock aria-hidden="true" size={14} />
+                          {t("level")}: {levels.find((l) => l.key === effectiveSelectedLevel)?.label ?? halaqahState.levelLabel}
+                        </span>
+                      </>
+                    )}
                     <span className="hidden md:inline">·</span>
                     <span className="inline-flex items-center gap-1">
                       <Users aria-hidden="true" size={14} />
-                      {t("students")}: {halaqah.studentCount}
+                      {t("students")}: {gradeHasExistingCg?.studentCount ?? halaqahState.studentCount}
                     </span>
                   </div>
                 </div>
-                <div className="shrink-0">
-                  <HalaqahLevelDialog
-                    classGroupId={halaqah.classGroupId}
-                    currentLevel={halaqah.level}
-                    currentLevelLabel={halaqah.levelLabel}
-                    halaqahName={halaqah.name}
-                    grade={halaqah.grade}
-                    studentCount={halaqah.studentCount}
-                  />
-                </div>
+                {!isBoarding && gradeHasExistingCg && (
+                  <div className="shrink-0">
+                    <HalaqahLevelDialog
+                      classGroupId={gradeHasExistingCg.id}
+                      currentLevel={gradeHasExistingCg.levelKey}
+                      currentLevelLabel={gradeHasExistingCg.level}
+                      halaqahName={gradeHasExistingCg.name}
+                      grade={gradeHasExistingCg.grade}
+                      onLevelUpdated={handleHalaqahLevelUpdated}
+                      studentCount={gradeHasExistingCg?.studentCount ?? halaqahState.studentCount}
+                    />
+                  </div>
+                )}
               </div>
               <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                 {t("halaqahHelperText")}
               </p>
             </div>
           </section>
+          )}
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center gap-2">
-              <GraduationCap
-                aria-hidden="true"
-                className="text-emerald-800 dark:text-emerald-400"
-                size={18}
-                strokeWidth={2.2}
-              />
-              <h2 className="font-semibold">{t("sectionLevel")}</h2>
-            </div>
+          {!isBoarding && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+              <div className="flex items-center gap-2">
+                <GraduationCap
+                  aria-hidden="true"
+                  className="text-emerald-800 dark:text-emerald-400"
+                  size={18}
+                  strokeWidth={2.2}
+                />
+                <h2 className="font-semibold">{t("sectionLevel")}</h2>
+              </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
               {levels.map((lv) => {
                 const cg = selectedGrade
-                  ? options.classGroups.find(
+                  ? (isActiveHalaqahGradeSelected && lv.key === halaqahState.level
+                      ? {
+                          name: halaqahState.name,
+                        }
+                      : classGroups.find(
                       (classGroup) =>
+                        classGroup.programType === resolvedProgramType &&
                         classGroup.levelKey === lv.key &&
                         classGroup.grade === Number(selectedGrade),
-                    ) ?? null
+                    ) ?? null)
                   : null;
-                const isSelected = selectedLevel === lv.key;
+                const isSelected = effectiveSelectedLevel === lv.key;
                 const isLocked = lockedLevel && lockedLevel !== lv.key;
                 return (
                   <button
@@ -404,11 +541,12 @@ isSelected
               </p>
             ) : null}
           </section>
+          )}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <label className="block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("labelAcademicClass")}
+                {isBoarding ? t("labelBoardingClass") : t("labelAcademicClass")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-400"
@@ -417,7 +555,7 @@ isSelected
                 required
                 value={selectedAcademicClassId}
               >
-                <option value="">{t("academicClassPlaceholder")}</option>
+                <option value="">{isBoarding ? t("boardingClassPlaceholder") : t("academicClassPlaceholder")}</option>
                 {filteredAcademicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}
@@ -454,7 +592,7 @@ isSelected
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-              disabled={isPending || !selectedLevel || !selectedGrade}
+              disabled={isPending || !(isBoarding ? selectedGrade : (effectiveSelectedLevel && selectedGrade))}
               type="submit"
             >
               <Save aria-hidden="true" size={17} strokeWidth={2.2} />

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAdminScope } from "@/lib/session";
-import { Calendar, CheckCircle2, PlusCircle, XCircle } from "lucide-react";
+import { Calendar, CheckCircle2, Eye, PlusCircle, XCircle, Archive, RotateCcw } from "lucide-react";
 import { getAdminAcademicYearsData, setActiveAcademicYear } from "./actions";
+import { archiveAcademicYear, restoreAcademicYear } from "./archive-actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { badge, alert } from "@/lib/colors";
 
@@ -93,6 +94,11 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                           <CheckCircle2 aria-hidden="true" size={12} />
                           {t("active")}
                         </span>
+                      ) : year.status === "ARCHIVED" ? (
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-tight ${badge.warning}`}>
+                          <Archive aria-hidden="true" size={12} />
+                          {t("archived")}
+                        </span>
                       ) : (
                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-tight ${badge.neutral}`}>
                           <XCircle aria-hidden="true" size={12} />
@@ -103,19 +109,57 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       {year.startDate} — {year.endDate}
                     </p>
+                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                      {t("studentCount", { count: year.studentCount })} · {t("halaqahCount", { count: year.classGroupCount })}
+                    </p>
                   </div>
-                  {!year.isActive ? (
-                    <ConfirmActionDialogButton
-                      cancelLabel={t("cancel")}
-                      confirmLabel={t("confirmActivate")}
-                      confirmMessage={t("confirmActivateMessage", { year: year.year })}
-                      dialogTitle={t("activateYear")}
-                      icon={<CheckCircle2 aria-hidden="true" size={16} strokeWidth={2.2} />}
-                      label={t("activate")}
-                      onAction={setActiveAcademicYear.bind(null, year.id)}
-                      pendingLabel={t("activating")}
-                    />
-                  ) : null}
+                  <div className="flex items-center gap-2">
+                    {year.status === "ARCHIVED" ? (
+                      <Link
+                        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                        href={`/admin/academic-years/${year.id}`}
+                      >
+                        <Eye aria-hidden="true" size={14} strokeWidth={2.2} />
+                        {t("viewDetails")}
+                      </Link>
+                    ) : null}
+                    {!year.isActive && year.status !== "ARCHIVED" ? (
+                      <ConfirmActionDialogButton
+                        cancelLabel={t("cancel")}
+                        confirmLabel={t("confirmActivate")}
+                        confirmMessage={t("confirmActivateMessage", { year: year.year })}
+                        dialogTitle={t("activateYear")}
+                        icon={<CheckCircle2 aria-hidden="true" size={16} strokeWidth={2.2} />}
+                        label={t("activate")}
+                        onAction={setActiveAcademicYear.bind(null, year.id)}
+                        pendingLabel={t("activating")}
+                      />
+                    ) : null}
+                    {!year.isActive && year.status !== "ARCHIVED" ? (
+                      <ConfirmActionDialogButton
+                        cancelLabel={t("cancel")}
+                        confirmLabel={t("confirmArchive")}
+                        confirmMessage={t("confirmArchiveMessage", { year: year.year })}
+                        dialogTitle={t("archiveYear")}
+                        icon={<Archive aria-hidden="true" size={16} strokeWidth={2.2} />}
+                        label={t("archive")}
+                        onAction={archiveAcademicYear.bind(null, year.id)}
+                        pendingLabel={t("archiving")}
+                      />
+                    ) : null}
+                    {year.status === "ARCHIVED" ? (
+                      <ConfirmActionDialogButton
+                        cancelLabel={t("cancel")}
+                        confirmLabel={t("confirmRestore")}
+                        confirmMessage={t("confirmRestoreMessage", { year: year.year })}
+                        dialogTitle={t("restoreYear")}
+                        icon={<RotateCcw aria-hidden="true" size={16} strokeWidth={2.2} />}
+                        label={t("restore")}
+                        onAction={restoreAcademicYear.bind(null, year.id)}
+                        pendingLabel={t("restoring")}
+                      />
+                    ) : null}
+                  </div>
                 </div>
               </article>
             ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useCallback } from "react";
 import {
   type NavigationItem,
@@ -10,6 +10,13 @@ import {
 } from "@/lib/navigation";
 
 const SCROLL_KEY = "bottomNavScrollX";
+
+function appendProgramType(href: string, programType: string | null): string {
+  if (!programType) return href;
+  if (href.includes("programType=")) return href;
+  const separator = href.includes("?") ? "&" : "?";
+  return `${href}${separator}programType=${programType}`;
+}
 
 type NavigationLinksProps = {
   items: readonly NavigationItem[];
@@ -23,6 +30,8 @@ export default function NavigationLinks({
   variant,
 }: NavigationLinksProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const programType = searchParams.get("programType");
   const activeRef = useRef<HTMLAnchorElement>(null);
 
   const saveScroll = useCallback(() => {
@@ -74,6 +83,7 @@ export default function NavigationLinks({
   return items.map(({ key, href, iconKey }) => {
     const Icon = navigationIcons[iconKey];
     const active = isNavigationItemActive(pathname, href);
+    const resolvedHref = appendProgramType(href, programType);
 
     if (variant === "bottom") {
       return (
@@ -85,7 +95,7 @@ export default function NavigationLinks({
               ? "flex min-w-[84px] flex-col items-center gap-1 rounded-2xl bg-emerald-900 px-3 py-3 text-white shadow-sm dark:bg-emerald-950 dark:text-emerald-300"
               : "flex min-w-[84px] flex-col items-center gap-1 rounded-2xl px-3 py-3 text-slate-600 transition duration-100 active:bg-black/5 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:active:bg-white/10 dark:hover:bg-slate-800 dark:hover:text-slate-200"
           }
-          href={href}
+          href={resolvedHref}
           key={key}
           onClick={saveScroll}
         >
@@ -106,7 +116,7 @@ export default function NavigationLinks({
             ? "bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-900"
             : "text-slate-600 active:bg-black/5 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-400 dark:active:bg-white/10 dark:hover:bg-slate-800 dark:hover:text-slate-100"
         }`}
-        href={href}
+        href={resolvedHref}
         key={key}
       >
         <Icon aria-hidden="true" className="shrink-0" size={18} strokeWidth={active ? 2.3 : 2} />

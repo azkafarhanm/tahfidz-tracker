@@ -7,15 +7,25 @@ import { getRequestSessionScope } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const scope = await getRequestSessionScope();
     if (!scope?.isAdmin) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const adminBundle = await getAdminExportBundle();
+    const { searchParams } = new URL(request.url);
+    const programTypeParam = searchParams.get("programType");
+    const programType = programTypeParam === "ACADEMIC" || programTypeParam === "BOARDING"
+      ? programTypeParam
+      : undefined;
+
+    const adminBundle = await getAdminExportBundle(undefined, programType);
     const adminData = adminBundle.summary;
+
+    const isBoarding = programType === "BOARDING";
+    const isAcademic = programType === "ACADEMIC";
+    const programLabel = isBoarding ? "Boarding" : isAcademic ? "Akademik" : "Semua";
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -27,6 +37,7 @@ export async function GET() {
       { header: "Nilai", key: "value", width: 15 },
     ];
     [
+      { metric: "Program", value: programLabel },
       { metric: "Total Guru Aktif", value: adminData.totalTeachers },
       { metric: "Total Santri Aktif", value: adminData.totalStudents },
       { metric: "Total Hafalan", value: adminData.totalHafalan },
@@ -63,7 +74,7 @@ export async function GET() {
       sheet.columns = [
         { header: "Nama Santri", key: "name", width: 25 },
         { header: "Halaqah", key: "halaqah", width: 20 },
-        { header: "Level", key: "level", width: 10 },
+        ...(!isBoarding ? [{ header: "Level", key: "level", width: 10 }] : []),
         { header: "Hafalan", key: "hafalanCount", width: 10 },
         { header: "Murojaah", key: "murojaahCount", width: 10 },
         { header: "Skor", key: "avgScore", width: 10 },
@@ -76,7 +87,7 @@ export async function GET() {
         sheet.addRow({
           name: s.fullName,
           halaqah: s.halaqahName,
-          level: s.halaqahLevel,
+          ...(!isBoarding ? { level: s.halaqahLevel } : {}),
           hafalanCount: s.hafalanCount,
           murojaahCount: s.murojaahCount,
           avgScore: s.avgScore || "-",
@@ -94,7 +105,7 @@ export async function GET() {
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(
       workbook,
-      `laporan-admin-${date}.xlsx`,
+      `laporan-admin-${programLabel.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export admin Excel report", error);

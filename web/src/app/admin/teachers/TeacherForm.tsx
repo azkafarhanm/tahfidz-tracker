@@ -47,6 +47,7 @@ type TeacherFormProps = {
   submitLabel: string;
   title: string;
   values: TeacherFormValues;
+  showUsername?: boolean;
 };
 
 export default function TeacherForm({
@@ -61,6 +62,7 @@ export default function TeacherForm({
   submitLabel,
   title,
   values,
+  showUsername = false,
 }: TeacherFormProps) {
   const t = useTranslations("AdminTeacherForm");
   const tc = useTranslations("CharacterCounter");
@@ -126,23 +128,24 @@ export default function TeacherForm({
               <CharacterCounter current={fullNameLength} max={120} maxReachedLabel={tc("maxReached")} />
             </label>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("username")}
-              </span>
-              <input
-                autoComplete="username"
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                defaultValue={values.username}
-                maxLength={50}
-                name="username"
-                onChange={(e) => setUsernameLength(e.target.value.length)}
-                placeholder={t("usernamePlaceholder")}
-                required
-                type="text"
-              />
-              <CharacterCounter current={usernameLength} max={50} maxReachedLabel={tc("maxReached")} />
-            </label>
+            {showUsername && (
+              <label className="mt-4 block">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t("username")}
+                </span>
+                <input
+                  autoComplete="username"
+                  className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
+                  defaultValue={values.username}
+                  maxLength={50}
+                  name="username"
+                  onChange={(e) => setUsernameLength(e.target.value.length)}
+                  placeholder={t("usernamePlaceholder")}
+                  type="text"
+                />
+                <CharacterCounter current={usernameLength} max={50} maxReachedLabel={tc("maxReached")} />
+              </label>
+            )}
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("email")}</span>

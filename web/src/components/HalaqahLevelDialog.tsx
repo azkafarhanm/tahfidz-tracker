@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Settings, Save, X, AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { updateHalaqahLevel } from "@/app/students/halaqah-actions";
@@ -12,6 +13,7 @@ type HalaqahLevelDialogProps = {
   halaqahName: string;
   grade: number;
   studentCount: number;
+  onLevelUpdated?: (level: string, levelLabel: string) => void;
 };
 
 const levels = [
@@ -27,19 +29,29 @@ export default function HalaqahLevelDialog({
   halaqahName,
   grade,
   studentCount,
+  onLevelUpdated,
 }: HalaqahLevelDialogProps) {
   const t = useTranslations("HalaqahLevelDialog");
+  const router = useRouter();
+  const [currentLevelState, setCurrentLevelState] = useState(currentLevel);
+  const [currentLevelLabelState, setCurrentLevelLabelState] = useState(currentLevelLabel);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(currentLevel);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const hasChanged = selectedLevel !== currentLevel;
+  const hasChanged = selectedLevel !== currentLevelState;
+
+  useEffect(() => {
+    setCurrentLevelState(currentLevel);
+    setCurrentLevelLabelState(currentLevelLabel);
+    setSelectedLevel(currentLevel);
+  }, [currentLevel, currentLevelLabel]);
 
   function handleOpen() {
     setIsOpen(true);
-    setSelectedLevel(currentLevel);
+    setSelectedLevel(currentLevelState);
     setError(null);
     setSuccess(null);
   }
@@ -64,8 +76,13 @@ export default function HalaqahLevelDialog({
     startTransition(async () => {
       const result = await updateHalaqahLevel(classGroupId, selectedLevel);
       if (result.ok) {
+        setCurrentLevelState(result.level);
+        setCurrentLevelLabelState(result.levelLabel);
+        setSelectedLevel(result.level);
+        onLevelUpdated?.(result.level, result.levelLabel);
         setSuccess(result.message);
         setIsOpen(false);
+        router.refresh();
       } else {
         setError(result.error);
       }
@@ -114,7 +131,7 @@ export default function HalaqahLevelDialog({
               <div className="mt-2 flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                 <span>{t("grade")}: {grade}</span>
                 <span>·</span>
-                <span>{t("level")}: {currentLevelLabel}</span>
+                <span>{t("level")}: {currentLevelLabelState}</span>
                 <span>·</span>
                 <span>{t("students")}: {studentCount}</span>
               </div>

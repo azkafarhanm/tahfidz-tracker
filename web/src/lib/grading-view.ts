@@ -1,5 +1,6 @@
 import { Semester } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { isSemesterValue } from "@/lib/summative";
 
 export const FORMATIVE_VIEW_COOKIE = "tf_formative_view";
@@ -34,10 +35,12 @@ export function parseClassLevelValue(value?: string | null): number | undefined 
 }
 
 export async function getPreferredTeacherClassLevel(teacherId: string) {
+  const academicYear = await getActiveAcademicYear();
   const students = await prisma.student.findMany({
     where: {
       teacherId,
       isActive: true,
+      classGroup: { academicYear },
     },
     select: {
       classGroup: {

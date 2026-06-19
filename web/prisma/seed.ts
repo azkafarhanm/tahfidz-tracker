@@ -123,9 +123,10 @@ async function main() {
 
       return prisma.academicClass.upsert({
         where: {
-          name_academicYear: {
+          name_academicYear_programType: {
             name,
             academicYear,
+            programType: "ACADEMIC",
           },
         },
         update: {

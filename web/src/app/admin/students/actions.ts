@@ -4,7 +4,7 @@ import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Gender, TargetStatus } from "@/generated/prisma-next/enums";
+import { Gender, ProgramType, TargetStatus } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
   parseDateInput,
@@ -26,6 +26,7 @@ type StudentFormInput = {
   joinDateValue: string;
   isActive: boolean;
   notes: string | null;
+  programType: string;
 };
 
 function buildDeleteBlockerItems(
@@ -56,6 +57,7 @@ function readStudentFormInput(formData: FormData): StudentFormInput {
     joinDateValue,
     isActive: formData.get("isActive") === "on",
     notes: readOptionalString(formData, "notes"),
+    programType: readString(formData, "programType"),
   };
 }
 
@@ -68,6 +70,7 @@ function getStudentFormExtras(input: StudentFormInput) {
     joinDate: input.joinDateValue,
     isActive: input.isActive ? "true" : "false",
     notes: input.notes ?? "",
+    programType: input.programType,
   };
 }
 
@@ -107,8 +110,10 @@ async function validateStudentInput(
 function redirectAdminStudentsWithMessage(
   type: "success" | "error",
   message: string,
+  programType?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
+  if (programType) params.set("programType", programType);
   redirect(`/admin/students?${params.toString()}`);
 }
 
@@ -165,6 +170,7 @@ async function resolveStudentRelations(
       teacherId: teacher!.id,
       academicYear: academicClass!.academicYear,
       grade: academicClass!.grade,
+      programType: (input.programType as ProgramType) || ProgramType.ACADEMIC,
     },
     select: { id: true, name: true },
   });
@@ -187,7 +193,10 @@ export async function createStudent(formData: FormData) {
   await requireAdminScope();
 
   const input = readStudentFormInput(formData);
-  const fail = createFailFn("/admin/students/new");
+  const failPath = input.programType
+    ? `/admin/students/new?programType=${input.programType}`
+    : "/admin/students/new";
+  const fail = createFailFn(failPath);
 
   await validateStudentInput(input, fail);
   const relations = await resolveStudentRelations(input, fail);
@@ -207,7 +216,7 @@ export async function createStudent(formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidateAdminStudentPaths(student.id);
-  redirectAdminStudentsWithMessage("success", t("adminStudentCreated"));
+  redirectAdminStudentsWithMessage("success", t("adminStudentCreated"), input.programType);
 }
 
 export async function updateStudent(studentId: string, formData: FormData) {
@@ -246,7 +255,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
   });
 
   revalidateAdminStudentPaths(existingStudent.id);
-  redirectAdminStudentsWithMessage("success", t("adminStudentUpdated"));
+  redirectAdminStudentsWithMessage("success", t("adminStudentUpdated"), input.programType);
 }
 
 export async function toggleStudentActive(
@@ -261,6 +270,11 @@ export async function toggleStudentActive(
     select: {
       id: true,
       fullName: true,
+      classGroup: {
+        select: {
+          programType: true,
+        },
+      },
     },
   });
 
@@ -268,19 +282,22 @@ export async function toggleStudentActive(
     redirectAdminStudentsWithMessage("error", t("studentNotFound"));
   }
 
+  const programType = student!.classGroup.programType;
+
   await prisma.student.update({
-    where: { id: student.id },
+    where: { id: student!.id },
     data: {
       isActive: nextActiveState,
     },
   });
 
-  revalidateAdminStudentPaths(student.id);
+  revalidateAdminStudentPaths(student!.id);
   redirectAdminStudentsWithMessage(
     "success",
     nextActiveState
-      ? t("adminStudentActivated", { name: student.fullName })
-      : t("adminStudentDeactivated", { name: student.fullName }),
+      ? t("adminStudentActivated", { name: student!.fullName })
+      : t("adminStudentDeactivated", { name: student!.fullName }),
+    programType,
   );
 }
 

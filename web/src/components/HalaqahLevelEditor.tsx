@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Lock, Save, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { updateHalaqahLevel } from "@/app/students/halaqah-actions";
@@ -23,21 +24,30 @@ export default function HalaqahLevelEditor({
   currentLevelLabel,
 }: HalaqahLevelEditorProps) {
   const t = useTranslations("HalaqahLevelEditor");
+  const router = useRouter();
+  const [currentLevelState, setCurrentLevelState] = useState(currentLevel);
+  const [currentLevelLabelState, setCurrentLevelLabelState] = useState(currentLevelLabel);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState(currentLevel);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setCurrentLevelState(currentLevel);
+    setCurrentLevelLabelState(currentLevelLabel);
+    setSelectedLevel(currentLevel);
+  }, [currentLevel, currentLevelLabel]);
+
   function handleCancel() {
     setIsEditing(false);
-    setSelectedLevel(currentLevel);
+    setSelectedLevel(currentLevelState);
     setError(null);
     setSuccess(null);
   }
 
   function handleSave() {
-    if (selectedLevel === currentLevel) {
+    if (selectedLevel === currentLevelState) {
       setIsEditing(false);
       return;
     }
@@ -48,8 +58,12 @@ export default function HalaqahLevelEditor({
     startTransition(async () => {
       const result = await updateHalaqahLevel(classGroupId, selectedLevel);
       if (result.ok) {
+        setCurrentLevelState(result.level);
+        setCurrentLevelLabelState(result.levelLabel);
+        setSelectedLevel(result.level);
         setSuccess(result.message);
         setIsEditing(false);
+        router.refresh();
       } else {
         setError(result.error);
       }
@@ -62,7 +76,7 @@ export default function HalaqahLevelEditor({
         <div className="flex items-center gap-1.5">
           <Lock aria-hidden="true" size={14} className="text-slate-400 dark:text-slate-500" />
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            {currentLevelLabel}
+            {currentLevelLabelState}
           </span>
         </div>
         <button
@@ -110,7 +124,7 @@ export default function HalaqahLevelEditor({
       <div className="flex gap-2">
         <button
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 disabled:opacity-60"
-          disabled={isPending || selectedLevel === currentLevel}
+          disabled={isPending || selectedLevel === currentLevelState}
           onClick={handleSave}
           type="button"
         >

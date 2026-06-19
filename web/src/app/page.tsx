@@ -16,8 +16,13 @@ import LogoutButton from "@/components/LogoutButton";
 import { requireSessionScope } from "@/lib/session";
 import MotivationCard from "@/components/MotivationCard";
 import InitialsAvatar from "@/components/InitialsAvatar";
-import { getLocaleTag } from "@/lib/format";
+import ActiveYearBadge from "@/components/ActiveYearBadge";
+import ProgramSelector from "@/components/ProgramSelector";
+import ProgramBadge from "@/components/ProgramBadge";
+import { getLocaleTag, programTypeLabels } from "@/lib/format";
 import { badge, heroSummary } from "@/lib/colors";
+import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
+import { ProgramType } from "@/generated/prisma-next/enums";
 
 export const runtime = "nodejs";
 
@@ -26,21 +31,40 @@ export async function generateMetadata() {
   return { title: `${t("navDashboard")} - TahfidzFlow` };
 }
 
-export default async function DashboardPreview() {
+export default async function DashboardPreview({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const locale = await getLocale();
   const [t, logoutT] = await Promise.all([
     getTranslations("Dashboard"),
     getTranslations("LogoutButton"),
   ]);
   const { session, teacherId, isAdmin } = await requireSessionScope();
-  const dashboard = await getDashboardData(teacherId, locale);
+  const params = await searchParams;
+
+  // Program resolution
+  const academicYear = await getActiveAcademicYear();
+  const programContext = teacherId
+    ? await getTeacherProgramContext(teacherId, academicYear)
+    : { programs: [ProgramType.ACADEMIC, ProgramType.BOARDING], hasMultiple: true, resolvedProgramType: undefined };
+  const requestedProgramType = params?.programType as ProgramType | undefined;
+  const programType = isAdmin
+    ? (requestedProgramType && ["ACADEMIC", "BOARDING"].includes(requestedProgramType) ? requestedProgramType : undefined)
+    : (programContext.programs.includes(requestedProgramType as ProgramType)
+        ? (requestedProgramType as ProgramType)
+        : programContext.resolvedProgramType);
+
+  const dashboard = await getDashboardData(teacherId, locale, programType);
   const userName = session?.user?.name ?? t("defaultUserName");
+  const ptSuffix = programType ? `?programType=${programType}` : "";
   const quickActions = [
-    { label: t("quickActionHafalan"), href: "/students", icon: BookOpen },
-    { label: t("quickActionMurojaah"), href: "/students", icon: RotateCcw },
-    { label: t("quickActionQuickLog"), href: "/quick-log", icon: PenLine },
-    { label: t("quickActionFormative"), href: "/formative", icon: BookText },
-    { label: t("quickActionSummative"), href: "/summative", icon: ClipboardList },
+    { label: t("quickActionHafalan"), href: `/students${ptSuffix}`, icon: BookOpen },
+    { label: t("quickActionMurojaah"), href: `/students${ptSuffix}`, icon: RotateCcw },
+    { label: t("quickActionQuickLog"), href: `/quick-log${ptSuffix}`, icon: PenLine },
+    { label: t("quickActionFormative"), href: `/formative${ptSuffix}`, icon: BookText },
+    { label: t("quickActionSummative"), href: `/summative${ptSuffix}`, icon: ClipboardList },
     ...(isAdmin
       ? [{ label: t("quickActionAdmin"), href: "/admin", icon: ShieldCheck }]
       : []),
@@ -65,6 +89,23 @@ export default async function DashboardPreview() {
                 year: "numeric",
               }).format(new Date())}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <ActiveYearBadge />
+              {programType && <ProgramBadge programType={programType} />}
+              {isAdmin ? (
+                <ProgramSelector
+                  programs={["", "ACADEMIC", "BOARDING"]}
+                  programTypeLabels={{ "": "Semua", ...programTypeLabels }}
+                  currentProgramType={programType ?? ""}
+                />
+              ) : programContext.hasMultiple ? (
+                <ProgramSelector
+                  programs={programContext.programs}
+                  programTypeLabels={programTypeLabels}
+                  currentProgramType={programType ?? ProgramType.ACADEMIC}
+                />
+              ) : null}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <LogoutButton label={logoutT("label")} />
@@ -167,13 +208,16 @@ export default async function DashboardPreview() {
                   key={record.id}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                       <p className="font-semibold text-slate-950 dark:text-white">
-                         {record.student}
-                       </p>
-                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                         {record.type === "Hafalan" ? t("quickActionHafalan") : t("quickActionMurojaah")} - {record.range}
-                       </p>
+                    <div className="min-w-0">
+                       <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-slate-950 dark:text-white">
+                          {record.student}
+                        </p>
+                        <ProgramBadge programType={record.programType} />
+                       </div>
+                        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                          {record.type === "Hafalan" ? t("quickActionHafalan") : record.type === "Tasmi'" ? t("quickActionTasmi") : t("quickActionMurojaah")} - {record.range}
+                        </p>
                     </div>
                      <div className="shrink-0 text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                      <p>

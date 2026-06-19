@@ -4,7 +4,7 @@ import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { HalaqahLevel } from "@/generated/prisma-next/enums";
+import { HalaqahLevel, ProgramType } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
   readString,
@@ -21,6 +21,7 @@ type ClassGroupFormInput = {
   level: string;
   teacherId: string;
   grade: string;
+  programType: ProgramType;
   isActive: boolean;
 };
 
@@ -30,6 +31,7 @@ function readClassGroupFormInput(formData: FormData): ClassGroupFormInput {
     level: readString(formData, "level"),
     teacherId: readString(formData, "teacherId"),
     grade: readString(formData, "grade"),
+    programType: (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC,
     isActive: formData.get("isActive") === "on",
   };
 }
@@ -40,6 +42,7 @@ function getClassGroupFormExtras(input: ClassGroupFormInput) {
     level: input.level,
     teacherId: input.teacherId,
     grade: input.grade,
+    programType: input.programType,
     isActive: input.isActive ? "true" : "false",
   };
 }
@@ -55,8 +58,11 @@ async function validateClassGroupInput(
     fail(t("halaqahDescTooLong"), extras);
   }
 
-  if (!validLevels.has(input.level)) {
-    fail(t("halaqahLevelInvalid"), extras);
+  // Level validation only for Academic program
+  if (input.programType === ProgramType.ACADEMIC) {
+    if (!validLevels.has(input.level)) {
+      fail(t("halaqahLevelInvalid"), extras);
+    }
   }
 
   if (!input.teacherId) {
@@ -71,8 +77,10 @@ async function validateClassGroupInput(
 function redirectAdminHalaqahWithMessage(
   type: "success" | "error",
   message: string,
+  programType?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
+  if (programType) params.set("programType", programType);
   redirect(`/admin/halaqah?${params.toString()}`);
 }
 
@@ -113,6 +121,7 @@ async function resolveClassGroupRelations(
         teacherId: input.teacherId,
         academicYear,
         grade,
+        programType: input.programType,
       },
       select: { id: true, name: true },
     }),
@@ -155,7 +164,8 @@ export async function createClassGroup(formData: FormData) {
     data: {
       name: relations.teacherFullName,
       description: input.description || null,
-      level: input.level as HalaqahLevel,
+      level: input.programType === ProgramType.BOARDING ? HalaqahLevel.LOW : (input.level as HalaqahLevel),
+      programType: input.programType,
       teacherId: relations.teacherId,
       academicYear: relations.academicYear,
       grade: relations.grade,
@@ -165,7 +175,7 @@ export async function createClassGroup(formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", t("halaqahCreated"));
+  redirectAdminHalaqahWithMessage("success", t("halaqahCreated"), input.programType);
 }
 
 export async function updateClassGroup(
@@ -224,7 +234,8 @@ export async function updateClassGroup(
       data: {
         name: relations.teacherFullName,
         description: input.description || null,
-        level: input.level as HalaqahLevel,
+        level: input.programType === ProgramType.BOARDING ? HalaqahLevel.LOW : (input.level as HalaqahLevel),
+        programType: input.programType,
         teacherId: relations.teacherId,
         academicYear: relations.academicYear,
         grade: relations.grade,
@@ -240,7 +251,7 @@ export async function updateClassGroup(
   ]);
 
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", t("halaqahUpdated"));
+  redirectAdminHalaqahWithMessage("success", t("halaqahUpdated"), input.programType);
 }
 
 export async function toggleClassGroupActive(
@@ -252,7 +263,7 @@ export async function toggleClassGroupActive(
 
   const classGroup = await prisma.classGroup.findUnique({
     where: { id: classGroupId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, programType: true },
   });
 
   if (!classGroup) {
@@ -268,6 +279,7 @@ export async function toggleClassGroupActive(
       redirectAdminHalaqahWithMessage(
         "error",
         t("halaqahHasStudents", { name: classGroup.name, count: activeStudentCount }),
+        classGroup.programType,
       );
     }
   }
@@ -283,6 +295,7 @@ export async function toggleClassGroupActive(
     nextActiveState
       ? t("halaqahActivated", { name: classGroup.name })
       : t("halaqahDeactivated", { name: classGroup.name }),
+    classGroup.programType,
   );
 }
 

@@ -42,10 +42,12 @@ function isValidEmail(value: string) {
 }
 
 function readTeacherFormInput(formData: FormData): TeacherFormInput {
+  const email = normalizeEmail(readString(formData, "email"));
+  const username = normalizeUsername(readString(formData, "username") || email.split("@")[0]);
   return {
     fullName: readString(formData, "fullName"),
-    username: normalizeUsername(readString(formData, "username")),
-    email: normalizeEmail(readString(formData, "email")),
+    username,
+    email,
     phoneNumber: readOptionalString(formData, "phoneNumber"),
     password: readString(formData, "password"),
     isActive: formData.get("isActive") === "on",
@@ -107,7 +109,7 @@ async function validateTeacherInput(
     fail(t("teacherUsernameRequired"), extras);
   }
 
-  if (!/^[a-z][a-z0-9._-]*$/.test(input.username)) {
+  if (!/^[a-z0-9][a-z0-9._-]*$/.test(input.username)) {
     fail(t("teacherUsernameFormat"), extras);
   }
 
@@ -345,11 +347,19 @@ export async function deleteTeacher(teacherId: string) {
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      (error.code === "P2025" || error.code === "P2014")
-    ) {
-      return { ok: false as const, error: t("teacherNotFound") };
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // P2025: Record not found
+      // P2014: Required relation violation
+      if (error.code === "P2025" || error.code === "P2014") {
+        return { ok: false as const, error: t("teacherNotFound") };
+      }
+      // P2003: Foreign key constraint violation
+      if (error.code === "P2003") {
+        return {
+          ok: false as const,
+          error: t("teacherDeleteFailedRelatedData"),
+        };
+      }
     }
     throw error;
   }

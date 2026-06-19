@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import InactiveStudentRow from "@/components/InactiveStudentRow";
+import { dispatchStudentChange } from "@/lib/optimistic-events";
 
 type InactiveStudent = {
   activeTargetCount: number;
@@ -77,6 +78,14 @@ export default function InactiveStudentsSection({
               });
               setErrors((current) => ({ ...current, [student.id]: message }));
             }}
+            onDeleteRollback={() => {
+              setHiddenIds((current) => {
+                const next = new Set(current);
+                next.delete(student.id);
+                return next;
+              });
+              dispatchStudentChange(0, 1);
+            }}
             onDeleteStart={() => {
               setErrors((current) => {
                 const next = { ...current };
@@ -84,9 +93,17 @@ export default function InactiveStudentsSection({
                 return next;
               });
               setHiddenIds((current) => new Set(current).add(student.id));
+              dispatchStudentChange(0, -1);
             }}
             onReactivateSuccess={() => {
               setHiddenIds((current) => new Set(current).add(student.id));
+            }}
+            onReactivateRollback={() => {
+              setHiddenIds((current) => {
+                const next = new Set(current);
+                next.delete(student.id);
+                return next;
+              });
             }}
           />
         ))}

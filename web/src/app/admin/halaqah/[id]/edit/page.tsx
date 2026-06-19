@@ -25,6 +25,7 @@ type EditClassGroupPageProps = {
     teacherId?: string;
     grade?: string;
     isActive?: string;
+    programType?: string;
   }>;
 };
 
@@ -47,12 +48,16 @@ export default async function EditClassGroupPage({
     notFound();
   }
 
+  const programType = query?.programType ?? classGroup.programType ?? "";
+  const backHref = programType
+    ? `/admin/halaqah?programType=${programType}`
+    : "/admin/halaqah";
   const action = updateClassGroup.bind(null, classGroup.id);
 
   return (
     <ClassGroupForm
       action={action}
-      backHref="/admin/halaqah"
+      backHref={backHref}
       backLabel={t("backHalaqah")}
       description={t("editHalaqahDescription", { name: classGroup.name })}
       error={query?.error}
@@ -61,6 +66,7 @@ export default async function EditClassGroupPage({
       activeAcademicYear={activeAcademicYear}
       teachers={options.teachers}
       title={t("editHalaqah")}
+      programType={programType}
       values={{
         description: query?.description ?? classGroup.description,
         level: query?.level ?? classGroup.level,

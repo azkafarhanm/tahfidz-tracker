@@ -30,6 +30,8 @@ type ConfirmActionDialogProps = {
   icon?: React.ReactNode;
   tone?: Extract<ActionButtonTone, "danger" | "warning" | "success">;
   onConfirm: () => Promise<ActionResult>;
+  onBeforeConfirm?: () => void;
+  onRollback?: () => void;
   showSuccessToast?: boolean;
   onSuccess?: (result: Exclude<ActionResult, void>) => void;
   onError?: (message: string) => void;
@@ -55,6 +57,8 @@ function ConfirmActionDialog({
   icon,
   tone = "danger",
   onConfirm,
+  onBeforeConfirm,
+  onRollback,
   showSuccessToast = true,
   onSuccess,
   onError,
@@ -132,11 +136,13 @@ function ConfirmActionDialog({
             className={compactActionButtonClass(tone, "min-h-10 min-w-[5.5rem] rounded-xl text-sm")}
             disabled={isPending}
             onClick={() => {
+              onBeforeConfirm?.();
               startTransition(async () => {
                 const result = await onConfirm();
 
                 if (result && typeof result === "object" && result.ok === false) {
                   const message = result.error ?? "";
+                  onRollback?.();
                   onOpenChange(false);
                   if (message) {
                     toast.error(message);
@@ -180,6 +186,8 @@ type ConfirmActionDialogButtonProps = {
   disabledReason?: string;
   icon?: React.ReactNode;
   onAction: () => Promise<ActionResult>;
+  onStart?: () => void;
+  onRollback?: () => void;
   onError?: (message: string) => void;
   onSuccess?: (result: Exclude<ActionResult, void>) => void;
   showSuccessToast?: boolean;
@@ -197,6 +205,8 @@ export default function ConfirmActionDialogButton({
   disabledReason,
   icon,
   onAction,
+  onStart,
+  onRollback,
   onError,
   onSuccess,
   showSuccessToast = true,
@@ -257,12 +267,14 @@ export default function ConfirmActionDialogButton({
         confirmLabel={confirmLabel}
         description={confirmMessage}
         icon={icon}
+        onBeforeConfirm={onStart}
         onConfirm={onAction}
         onError={(message) => {
           setInlineError(message || null);
           onError?.(message);
         }}
         onOpenChange={setOpen}
+        onRollback={onRollback}
         onSuccess={onSuccess}
         open={open}
         pendingLabel={pendingLabel}

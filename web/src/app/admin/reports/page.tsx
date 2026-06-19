@@ -3,7 +3,10 @@ import { ArrowLeft, Download, FileText, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getAdminReportData } from "@/lib/reports";
 import ExportSection from "@/components/ExportSection";
+import ProgramSelector from "@/components/ProgramSelector";
 import { badge, statCard, statValue, statLabel, heroSummary, backLink } from "@/lib/colors";
+import { ProgramType } from "@/generated/prisma-next/enums";
+import { programTypeLabels, programTypeOptions } from "@/lib/format";
 
 
 export const runtime = "nodejs";
@@ -14,10 +17,20 @@ export async function generateMetadata() {
   return { title: `${t("heading")} - TahfidzFlow` };
 }
 
-export default async function AdminReportsPage() {
-  const t = await getTranslations("AdminReports");
+type AdminReportsPageProps = {
+  searchParams?: Promise<{
+    programType?: string;
+  }>;
+};
 
-  const data = await getAdminReportData();
+export default async function AdminReportsPage({
+  searchParams,
+}: AdminReportsPageProps) {
+  const t = await getTranslations("AdminReports");
+  const params = await searchParams;
+  const programType = (params?.programType as ProgramType) || ProgramType.ACADEMIC;
+
+  const data = await getAdminReportData(undefined, programType);
 
   return (
     <>
@@ -34,10 +47,17 @@ export default async function AdminReportsPage() {
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {t("description")}
             </p>
+            <div className="mt-2">
+              <ProgramSelector
+                programs={programTypeOptions.map((o) => o.value)}
+                programTypeLabels={programTypeLabels}
+                currentProgramType={programType ?? ProgramType.ACADEMIC}
+              />
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ExportSection
-              excelHref="/api/reports/export-admin"
+              excelHref={`/api/reports/export-admin${programType ? `?programType=${programType}` : ""}`}
               excelClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
               excelContent={
                 <>
@@ -45,7 +65,7 @@ export default async function AdminReportsPage() {
                   {t("excelButton")}
                 </>
               }
-              pdfHref="/api/reports/pdf-admin"
+              pdfHref={`/api/reports/pdf-admin${programType ? `?programType=${programType}` : ""}`}
               pdfClassName="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
               pdfContent={
                 <>

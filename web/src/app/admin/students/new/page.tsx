@@ -24,6 +24,7 @@ type NewStudentPageProps = {
     joinDate?: string;
     isActive?: string;
     notes?: string;
+    programType?: string;
   }>;
 };
 
@@ -38,11 +39,15 @@ export default async function NewStudentPage({
     searchParams,
   ]);
   const t = await getTranslations("AdminFormPage");
+  const programType = params?.programType ?? "";
+  const backHref = programType
+    ? `/admin/students?programType=${programType}`
+    : "/admin/students";
 
   return (
     <StudentForm
       action={createStudent}
-      backHref="/admin/students"
+      backHref={backHref}
       backLabel={t("backStudentDirectory")}
       description={t("addStudentDescription")}
       error={params?.error}
@@ -51,6 +56,7 @@ export default async function NewStudentPage({
       options={options}
       submitLabel={t("saveStudent")}
       title={t("addStudent")}
+      programType={programType}
       values={{
         fullName: params?.fullName ?? "",
         teacherId: params?.teacherId ?? "",

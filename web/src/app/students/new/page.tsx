@@ -4,6 +4,7 @@ import { createTeacherStudent } from "../actions";
 import { getTeacherStudentFormOptions } from "@/lib/students";
 import { todayInputValue } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
+import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
 
@@ -26,6 +27,7 @@ type NewStudentPageProps = {
     gender?: string;
     joinDate?: string;
     notes?: string;
+    programType?: string;
   }>;
 };
 
@@ -51,17 +53,26 @@ export default async function NewStudentPage({
     );
   }
 
-  const [options, params] = await Promise.all([
+  const [options, params, academicYear] = await Promise.all([
     getTeacherStudentFormOptions(teacherId),
     searchParams,
+    getActiveAcademicYear(),
   ]);
+
+  // Determine default programType from teacher's ClassGroups
+  const programContext = await getTeacherProgramContext(teacherId, academicYear);
+  const defaultProgramType = params?.programType ?? programContext.resolvedProgramType ?? "ACADEMIC";
+  const backHref = defaultProgramType
+    ? `/students?programType=${defaultProgramType}`
+    : "/students";
 
   return (
     <StudentForm
       action={createTeacherStudent}
-      backHref="/students"
+      backHref={backHref}
       error={params?.error}
       options={options}
+      defaultProgramType={defaultProgramType}
       values={{
         fullName: params?.fullName ?? "",
         classGroupId: params?.classGroupId ?? "",

@@ -12,9 +12,12 @@ import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import ExportSection from "@/components/ExportSection";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
+import ActiveYearBadge from "@/components/ActiveYearBadge";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
-import { Semester } from "@/generated/prisma-next/enums";
-import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import ProgramSelector from "@/components/ProgramSelector";
+import ProgramBadge from "@/components/ProgramBadge";
+import { ProgramType, Semester } from "@/generated/prisma-next/enums";
+import { getActiveAcademicYear, getSemesterForDate, getTeacherProgramContext } from "@/lib/academic-year";
 import {
   getPreferredTeacherClassLevel,
   parseClassLevelValue,
@@ -28,6 +31,7 @@ import {
   parseSemester,
 } from "@/lib/summative";
 import { badge, statCard, statValue, statLabel, backLink } from "@/lib/colors";
+import { programTypeLabels } from "@/lib/format";
 
 export const runtime = "nodejs";
 
@@ -40,8 +44,9 @@ type SummativePageProps = {
   searchParams?: Promise<{
     semester?: string;
     classLevel?: string;
-    saved?: string;
     page?: string;
+    programType?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -72,11 +77,23 @@ export default async function SummativePage({
     params?.semester && isSemesterValue(params.semester)
       ? params.semester
       : defaultSemester;
-  const classLevel = parseClassLevelValue(params?.classLevel) ?? preferredClassLevel;
+  const explicitClassLevel = parseClassLevelValue(params?.classLevel);
+  const classLevel = explicitClassLevel ?? preferredClassLevel;
   const classLevelValue = String(classLevel);
   const page = parsePage(params?.page);
 
   const academicYear = await getActiveAcademicYear();
+
+  // Program resolution
+  const programContext = teacherId
+    ? await getTeacherProgramContext(teacherId, academicYear)
+    : { programs: [ProgramType.ACADEMIC, ProgramType.BOARDING], hasMultiple: true, resolvedProgramType: ProgramType.ACADEMIC };
+  const requestedProgramType = params?.programType as ProgramType | undefined;
+  const programType = programContext.programs.includes(requestedProgramType as ProgramType)
+    ? (requestedProgramType as ProgramType)
+    : programContext.resolvedProgramType;
+  const fromReports = params?.returnTo === "reports";
+
   const semester = parseSemester(semesterValue);
   const overview = await getTeacherSummativeOverview(
     teacherId,
@@ -86,11 +103,13 @@ export default async function SummativePage({
     locale,
     page,
     PAGE_SIZE,
+    programType,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
     nextParams.set("semester", semesterValue);
     nextParams.set("classLevel", classLevelValue);
+    if (programType) nextParams.set("programType", programType);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     return `/summative?${nextParams.toString()}`;
   };
@@ -120,10 +139,12 @@ export default async function SummativePage({
         <div>
           <Link
             className={backLink}
-            href="/"
+            href={fromReports
+              ? `/reports${programType ? `?programType=${programType}` : ""}`
+              : `/${programType ? `?programType=${programType}` : ""}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-            {t("backLink")}
+            {fromReports ? t("backToReports") : t("backLink")}
           </Link>
           <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
             {t("heading")}
@@ -131,6 +152,17 @@ export default async function SummativePage({
           <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
             {t("description")}
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <ActiveYearBadge />
+            <ProgramBadge programType={programType} />
+            {programContext.hasMultiple && (
+              <ProgramSelector
+                programs={programContext.programs}
+                programTypeLabels={programTypeLabels}
+                currentProgramType={programType}
+              />
+            )}
+          </div>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
           <ClipboardList aria-hidden="true" size={22} strokeWidth={2.3} />
@@ -147,7 +179,7 @@ export default async function SummativePage({
             currentValue={classLevelValue}
             options={classOptions.map((option) => ({
               ...option,
-              href: `/summative?semester=${semesterValue}&classLevel=${option.value}`,
+              href: `/summative?semester=${semesterValue}&classLevel=${option.value}${programType ? `&programType=${programType}` : ""}`,
             }))}
           />
         </div>
@@ -161,7 +193,7 @@ export default async function SummativePage({
             currentValue={semesterValue}
             options={semesterOptions.map((option) => ({
               ...option,
-              href: `/summative?semester=${option.value}&classLevel=${classLevelValue}`,
+              href: `/summative?semester=${option.value}&classLevel=${classLevelValue}${programType ? `&programType=${programType}` : ""}`,
             }))}
           />
         </div>
@@ -171,7 +203,7 @@ export default async function SummativePage({
         </span>
 
         <ExportSection
-          excelHref={`/api/reports/export-summative?semester=${semesterValue}&classLevel=${classLevelValue}`}
+          excelHref={`/api/reports/export-summative?semester=${semesterValue}&classLevel=${classLevelValue}${programType ? `&programType=${programType}` : ""}`}
           excelClassName="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
           excelContent={
             <>
@@ -266,9 +298,11 @@ export default async function SummativePage({
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                       <p>{student.halaqahName}</p>
-                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        {student.halaqahLevel}
-                      </p>
+                      {student.halaqahLevel && (
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {student.halaqahLevel}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-4 text-slate-700 dark:text-slate-300">
                       {student.totalAssessments}
@@ -288,13 +322,13 @@ export default async function SummativePage({
                       <div className="flex flex-wrap justify-end gap-2">
                         <Link
                           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-                          href={`/summative/${student.id}?semester=${semesterValue}`}
+                          href={`/summative/${student.id}?semester=${semesterValue}${programType ? `&programType=${programType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
                         >
                           {t("detailButton")}
                         </Link>
                         <Link
                           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                          href={`/summative/${student.id}/new?semester=${semesterValue}`}
+                          href={`/summative/${student.id}/new?semester=${semesterValue}${programType ? `&programType=${programType}` : ""}`}
                         >
                           <FilePlus2 aria-hidden="true" size={16} strokeWidth={2.2} />
                           {t("addButton")}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import {
@@ -22,6 +22,7 @@ type ClassGroupOption = {
   level: string;
   levelKey: string;
   grade: number;
+  programType: string;
   teacherName: string;
   label: string;
 };
@@ -31,6 +32,7 @@ type AcademicClassOption = {
   name: string;
   grade: number;
   label: string;
+  programType: string;
 };
 
 type TeacherStudentFormProps = {
@@ -51,6 +53,7 @@ type TeacherStudentFormProps = {
     joinDate: string;
     notes: string;
   };
+  defaultProgramType?: string;
 };
 
 export default function TeacherStudentForm({
@@ -59,6 +62,7 @@ export default function TeacherStudentForm({
   error,
   options,
   values,
+  defaultProgramType = "ACADEMIC",
 }: TeacherStudentFormProps) {
   const t = useTranslations("StudentForm");
   const tc = useTranslations("CharacterCounter");
@@ -68,35 +72,43 @@ export default function TeacherStudentForm({
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
 
-  // Filter academic classes by selected grade
-  const filteredAcademicClasses = selectedGrade
-    ? options.academicClasses.filter((ac) => ac.grade === Number(selectedGrade))
-    : options.academicClasses;
-
-  // Find existing halaqah for selected grade
+  // Find existing halaqah for selected grade, filtered by programType
   const gradeHasExistingCg = selectedGrade
-    ? options.classGroups.find((g) => g.grade === Number(selectedGrade)) ?? null
+    ? options.classGroups.find(
+        (g) => g.grade === Number(selectedGrade) && g.programType === defaultProgramType,
+      ) ?? null
     : null;
 
   const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
 
-  // Lock level when grade has existing halaqah
-  useEffect(() => {
-    if (lockedLevel && selectedLevel !== lockedLevel) {
-      setSelectedLevel(lockedLevel);
-    }
-  }, [lockedLevel, selectedLevel]);
+  // Derive programType from selected ClassGroup or default
+  const resolvedProgramType = gradeHasExistingCg?.programType ?? defaultProgramType;
+  const isBoarding = resolvedProgramType === "BOARDING";
 
-  // Auto-set grade when academic class is selected
+  // Filter academic/boarding classes by programType
+  // For Boarding: show ALL Boarding classes (grade is derived from selection)
+  // For Academic: filter by selected grade AND programType
+  const filteredAcademicClasses = isBoarding
+    ? options.academicClasses.filter((ac) => ac.programType === resolvedProgramType)
+    : (selectedGrade
+        ? options.academicClasses.filter(
+            (ac) => ac.grade === Number(selectedGrade) && ac.programType === resolvedProgramType,
+          )
+        : options.academicClasses.filter((ac) => ac.programType === resolvedProgramType));
+
+  // Auto-set grade when academic/boarding class is selected
   function handleAcademicClassChange(academicClassId: string) {
     setSelectedAcademicClassId(academicClassId);
     const ac = options.academicClasses.find((c) => c.id === academicClassId);
     if (ac) {
-      setSelectedGrade(String(ac.grade));
-      // Check if level should be locked for this grade
-      const cg = options.classGroups.find((g) => g.grade === ac.grade);
-      if (cg) {
-        setSelectedLevel(cg.levelKey);
+      const newGrade = String(ac.grade);
+      // Only recalculate level if grade actually changed
+      if (newGrade !== selectedGrade) {
+        setSelectedGrade(newGrade);
+        const cg = options.classGroups.find(
+          (g) => g.grade === ac.grade && g.programType === defaultProgramType,
+        );
+        setSelectedLevel(cg ? cg.levelKey : "");
       }
     }
   }
@@ -108,11 +120,11 @@ export default function TeacherStudentForm({
     if (ac && ac.grade !== Number(grade)) {
       setSelectedAcademicClassId("");
     }
-    // Check if level should be locked for new grade
-    const cg = options.classGroups.find((g) => g.grade === Number(grade));
-    if (cg) {
-      setSelectedLevel(cg.levelKey);
-    }
+    // Auto-select level if existing halaqah found, otherwise reset
+    const cg = options.classGroups.find(
+      (g) => g.grade === Number(grade) && g.programType === defaultProgramType,
+    );
+    setSelectedLevel(cg ? cg.levelKey : "");
   }
 
   function handleLevelClick(levelKey: string) {
@@ -142,14 +154,22 @@ export default function TeacherStudentForm({
     { key: "HIGH", label: "High", desc: t("levelAdvanced") },
   ];
 
-  const matchedCg =
-    selectedLevel && selectedGrade
-      ? options.classGroups.find(
-          (cg) =>
-            cg.levelKey === selectedLevel &&
-            cg.grade === Number(selectedGrade),
-        ) ?? null
-      : null;
+  const matchedCg = isBoarding
+    ? (selectedGrade
+        ? options.classGroups.find(
+            (cg) =>
+              cg.programType === "BOARDING" &&
+              cg.grade === Number(selectedGrade),
+          ) ?? null
+        : null)
+    : (selectedLevel && selectedGrade
+        ? options.classGroups.find(
+            (cg) =>
+              cg.programType === defaultProgramType &&
+              cg.levelKey === selectedLevel &&
+              cg.grade === Number(selectedGrade),
+          ) ?? null
+        : null);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -182,13 +202,16 @@ export default function TeacherStudentForm({
             name="classGroupId"
             type="hidden"
             value={
-              selectedLevel && selectedGrade
-                ? matchedCg?.id ?? ""
-                : values.classGroupId
+              isBoarding
+                ? (matchedCg?.id ?? "")
+                : (selectedLevel && selectedGrade
+                    ? matchedCg?.id ?? ""
+                    : values.classGroupId)
             }
           />
           <input name="halaqahLevel" type="hidden" value={selectedLevel} />
           <input name="grade" type="hidden" value={selectedGrade} />
+          <input name="programType" type="hidden" value={resolvedProgramType} />
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
@@ -260,55 +283,60 @@ export default function TeacherStudentForm({
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center gap-2">
-              <GraduationCap
-                aria-hidden="true"
-                className="text-emerald-800 dark:text-emerald-400"
-                size={18}
-                strokeWidth={2.2}
-              />
-              <h2 className="font-semibold">{t("sectionClass")}</h2>
-            </div>
+          {/* Grade selector - only for Academic */}
+          {!isBoarding && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+              <div className="flex items-center gap-2">
+                <GraduationCap
+                  aria-hidden="true"
+                  className="text-emerald-800 dark:text-emerald-400"
+                  size={18}
+                  strokeWidth={2.2}
+                />
+                <h2 className="font-semibold">{t("sectionClass")}</h2>
+              </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {gradeOptions.map((g) => {
-                const isSelected = selectedGrade === g.value;
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
-                      isSelected
-                        ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
-                        : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-600"
-                    }`}
-                    key={g.value}
-                    onClick={() => handleGradeChange(g.value)}
-                    type="button"
-                  >
-                    <span
-                      className={`text-sm font-bold ${
-                        isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {gradeOptions.map((g) => {
+                  const isSelected = selectedGrade === g.value;
+                  return (
+                    <button
+                      aria-pressed={isSelected}
+                      className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition active:scale-[0.97] ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
+                          : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-600"
                       }`}
+                      key={g.value}
+                      onClick={() => handleGradeChange(g.value)}
+                      type="button"
                     >
-                      {g.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+                      <span
+                        className={`text-sm font-bold ${
+                          isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
+                        }`}
+                      >
+                        {g.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center gap-2">
-              <GraduationCap
-                aria-hidden="true"
-                className="text-emerald-800 dark:text-emerald-400"
-                size={18}
-                strokeWidth={2.2}
-              />
-              <h2 className="font-semibold">{t("sectionLevel")}</h2>
-            </div>
+          {/* Level selector - only for Academic */}
+          {!isBoarding && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+              <div className="flex items-center gap-2">
+                <GraduationCap
+                  aria-hidden="true"
+                  className="text-emerald-800 dark:text-emerald-400"
+                  size={18}
+                  strokeWidth={2.2}
+                />
+                <h2 className="font-semibold">{t("sectionLevel")}</h2>
+              </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
               {levels.map((lv) => {
@@ -352,11 +380,12 @@ export default function TeacherStudentForm({
               </p>
             ) : null}
           </section>
+          )}
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <label className="block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("labelAcademicClass")}
+                {isBoarding ? t("labelBoardingClass") : t("labelAcademicClass")}
               </span>
               <select
                 className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
@@ -365,7 +394,7 @@ export default function TeacherStudentForm({
                 required
                 value={selectedAcademicClassId}
               >
-                <option value="">{t("academicClassPlaceholder")}</option>
+                <option value="">{isBoarding ? t("boardingClassPlaceholder") : t("academicClassPlaceholder")}</option>
                 {filteredAcademicClasses.map((ac) => (
                   <option key={ac.id} value={ac.id}>
                     {ac.label}
@@ -401,7 +430,7 @@ export default function TeacherStudentForm({
               {t("buttonCancel")}
             </Link>
             <SubmitButton
-              canSubmit={Boolean(selectedLevel && selectedGrade)}
+              canSubmit={isBoarding ? Boolean(selectedAcademicClassId) : Boolean(selectedLevel && selectedGrade)}
               idleLabel={t("buttonSave")}
               pendingLabel={t("buttonSaving")}
             />

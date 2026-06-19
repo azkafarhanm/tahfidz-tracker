@@ -35,6 +35,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const semesterValue = searchParams.get("semester") ?? getSemesterForDate(new Date());
     const classLevelValue = searchParams.get("classLevel") ?? "7";
+    const programTypeParam = searchParams.get("programType");
+    const programType = programTypeParam === "ACADEMIC" || programTypeParam === "BOARDING"
+      ? programTypeParam
+      : undefined;
 
     if (!isSemesterValue(semesterValue)) {
       return NextResponse.json({ error: "Invalid semester" }, { status: 400 });
@@ -52,7 +56,11 @@ export async function GET(request: Request) {
       semester,
       academicYear,
       classLevel,
+      programType,
     );
+
+    const isBoarding = programType === "BOARDING";
+    const programLabel = isBoarding ? "Boarding" : "Akademik";
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -64,6 +72,7 @@ export async function GET(request: Request) {
       { header: "Nilai", key: "value", width: 24 },
     ];
     [
+      { key: "Program", value: programLabel },
       { key: "Tahun ajaran", value: academicYear },
       { key: "Kelas", value: classLevel },
       { key: "Semester", value: semesterLabel(semester) },
@@ -76,7 +85,7 @@ export async function GET(request: Request) {
     summarySheet.columns = [
       { header: "No", key: "no", width: 6 },
       { header: "Nama Santri", key: "studentName", width: 28 },
-      { header: "Kelas Akademik", key: "academicClassName", width: 18 },
+      { header: isBoarding ? "Kelas Boarding" : "Kelas Akademik", key: "academicClassName", width: 18 },
       { header: "Halaqah", key: "halaqahName", width: 26 },
       { header: "Total Penilaian", key: "totalAssessments", width: 18 },
       { header: "Surah Terakhir", key: "latestSurah", width: 22 },
@@ -117,7 +126,7 @@ export async function GET(request: Request) {
     detailSheet.columns = [
       { header: "No", key: "no", width: 6 },
       { header: "Nama Santri", key: "studentName", width: 28 },
-      { header: "Kelas Akademik", key: "academicClassName", width: 18 },
+      { header: isBoarding ? "Kelas Boarding" : "Kelas Akademik", key: "academicClassName", width: 18 },
       { header: "Halaqah", key: "halaqahName", width: 26 },
       { header: "Semester", key: "semester", width: 12 },
       { header: "No Surah", key: "surahNumber", width: 10 },
@@ -150,7 +159,7 @@ export async function GET(request: Request) {
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(
       workbook,
-      `nilai-sumatif-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
+      `nilai-sumatif-${programLabel.toLowerCase()}-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export summative Excel report", error);

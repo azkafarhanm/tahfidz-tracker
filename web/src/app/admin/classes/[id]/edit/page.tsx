@@ -25,6 +25,7 @@ type EditAcademicClassPageProps = {
     grade?: string;
     section?: string;
     isActive?: string;
+    programType?: string;
   }>;
 };
 
@@ -46,23 +47,37 @@ export default async function EditAcademicClassPage({
     notFound();
   }
 
+  const programType = query?.programType ?? academicClass.programType ?? "";
+  const isBoarding = programType === "BOARDING";
+  const backHref = programType
+    ? `/admin/classes?programType=${programType}`
+    : "/admin/classes";
   const action = updateAcademicClass.bind(null, academicClass.id);
 
   return (
     <AcademicClassForm
       action={action}
       activeAcademicYear={activeAcademicYear}
-      backHref="/admin/classes"
-      backLabel={t("backAcademicClasses")}
-      description={t("editAcademicClassDescription", {
-        grade: academicClass.grade,
-        section: academicClass.section,
-        year: academicClass.academicYear,
-      })}
+      backHref={backHref}
+      backLabel={isBoarding ? t("backBoardingClasses") : t("backAcademicClasses")}
+      description={
+        isBoarding
+          ? t("editBoardingClassDescription", {
+              grade: academicClass.grade,
+              section: academicClass.section,
+              year: academicClass.academicYear,
+            })
+          : t("editAcademicClassDescription", {
+              grade: academicClass.grade,
+              section: academicClass.section,
+              year: academicClass.academicYear,
+            })
+      }
       error={query?.error}
       icon="PencilLine"
       submitLabel={t("saveChanges")}
-      title={t("editAcademicClass")}
+      title={isBoarding ? t("editBoardingClass") : t("editAcademicClass")}
+      programType={programType}
       values={{
         grade: query?.grade ?? academicClass.grade,
         section: query?.section ?? academicClass.section,

@@ -28,6 +28,8 @@ type FormativeDetailPageProps = {
     semester?: string;
     error?: string;
     success?: string;
+    programType?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -56,6 +58,8 @@ export default async function FormativeDetailPage({
       ? query.semester
       : defaultSemester;
   const returnTo = `/formative/${studentId}?semester=${semesterValue}`;
+  const fromReports = query?.returnTo === "reports";
+  const paramProgramType = query?.programType ?? "";
 
   const academicYear = await getActiveAcademicYear();
   const detail = await getStudentFormativeDetail(
@@ -80,7 +84,7 @@ export default async function FormativeDetailPage({
         <div>
           <Link
             className={backLink}
-            href={`/formative?semester=${semesterValue}&classLevel=${detail.classLevel}`}
+            href={`/formative?semester=${semesterValue}&classLevel=${detail.classLevel}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backToList")}
@@ -89,7 +93,7 @@ export default async function FormativeDetailPage({
             {detail.fullName}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {detail.academicClassName} - {detail.halaqahName} ({detail.halaqahLevel})
+            {detail.academicClassName} - {detail.halaqahName}{detail.halaqahLevel ? ` (${detail.halaqahLevel})` : ""}
           </p>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -102,8 +106,8 @@ export default async function FormativeDetailPage({
           ariaLabel={t("semesterLabel")}
           currentValue={semesterValue}
           options={[
-            { value: Semester.GANJIL, label: t("ganjil"), href: `/formative/${studentId}?semester=${Semester.GANJIL}` },
-            { value: Semester.GENAP, label: t("genap"), href: `/formative/${studentId}?semester=${Semester.GENAP}` },
+            { value: Semester.GANJIL, label: t("ganjil"), href: `/formative/${studentId}?semester=${Semester.GANJIL}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}` },
+            { value: Semester.GENAP, label: t("genap"), href: `/formative/${studentId}?semester=${Semester.GENAP}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}` },
           ]}
         />
 
@@ -113,35 +117,35 @@ export default async function FormativeDetailPage({
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-4">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-slate-700 p-5 shadow-lg shadow-slate-900/20">
+          <p className="text-sm text-slate-300">
             {t("assessmentCountLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.totalAssessments}
           </p>
         </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-green-600 p-5 shadow-lg shadow-green-900/20">
+          <p className="text-sm text-green-100">
             {t("colHafalan")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.hafalanCount}
           </p>
         </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-blue-600 p-5 shadow-lg shadow-blue-900/20">
+          <p className="text-sm text-blue-100">
             {t("colMurojaah")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.murojaahCount}
           </p>
         </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-amber-500 p-5 shadow-lg shadow-amber-900/20">
+          <p className="text-sm text-amber-100">
             {t("studentAverageLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.averageScore ?? "-"}
           </p>
         </article>

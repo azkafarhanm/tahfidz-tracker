@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  Award,
   BookOpen,
   CheckCircle2,
   ClipboardList,
@@ -16,12 +17,13 @@ import {
 } from "lucide-react";
 import { getStudentDetailData } from "@/lib/students";
 import AppShell from "@/components/AppShell";
+import ExportSection from "@/components/ExportSection";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
-import PdfExportLink from "@/components/PdfExportLink";
+import ProgramBadge from "@/components/ProgramBadge";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
@@ -105,6 +107,12 @@ export default async function StudentDetailPage({
     notFound();
   }
 
+  // Extract programType for back navigation (available when student is fully loaded)
+  const programType = "programType" in student ? student.programType : undefined;
+  const studentsBackHref = programType
+    ? `/students?programType=${programType}`
+    : "/students";
+
   if ("isUnauthorized" in student) {
     return (
       <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -125,7 +133,7 @@ export default async function StudentDetailPage({
             <div className="mt-8">
               <Link
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
-                href="/students"
+                href={studentsBackHref}
               >
                 {t("backToStudents")}
               </Link>
@@ -168,7 +176,7 @@ export default async function StudentDetailPage({
                 <div className="flex justify-center gap-3">
                   <Link
                     className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                    href="/students"
+                    href={studentsBackHref}
                   >
                     {t("cancelReactivateButton")}
                   </Link>
@@ -179,7 +187,7 @@ export default async function StudentDetailPage({
               <div className="mt-8">
                 <Link
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
-                  href="/students"
+                  href={studentsBackHref}
                 >
                   {t("backToStudents")}
                 </Link>
@@ -200,7 +208,7 @@ export default async function StudentDetailPage({
               <div className="min-w-0">
              <Link
                className={backLink}
-               href="/students"
+               href={studentsBackHref}
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
                {t("backLink")}
@@ -211,6 +219,11 @@ export default async function StudentDetailPage({
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                 {student.classSummary}
               </p>
+              {programType && (
+                <div className="mt-1">
+                  <ProgramBadge programType={programType} />
+                </div>
+              )}
               </div>
             </div>
            <div className="flex flex-wrap items-center gap-2">
@@ -221,21 +234,24 @@ export default async function StudentDetailPage({
                <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
                {t("editButton")}
              </Link>
-             <a
-               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
-               href={`/api/reports/export-student?studentId=${student.id}`}
-             >
-               <Download aria-hidden="true" size={14} strokeWidth={2.2} />
-               {t("excelButton")}
-             </a>
-              <PdfExportLink
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                href={`/api/reports/pdf-student?studentId=${student.id}`}
-                toastMessage={t("pdfToast")}
-              >
-                <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
-                {t("pdfButton")}
-              </PdfExportLink>
+              <ExportSection
+                excelHref={`/api/reports/export-student?studentId=${student.id}`}
+                excelClassName="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
+                excelContent={
+                  <>
+                    <Download aria-hidden="true" size={14} strokeWidth={2.2} />
+                    {t("excelButton")}
+                  </>
+                }
+                pdfHref={`/api/reports/pdf-student?studentId=${student.id}`}
+                pdfClassName="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                pdfContent={
+                  <>
+                    <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
+                    {t("pdfButton")}
+                  </>
+                }
+              />
             </div>
          </header>
 
@@ -248,11 +264,21 @@ export default async function StudentDetailPage({
               </p>
               <p className="mt-1 text-sm text-slate-300">{t("activeTargetsSubtext")}</p>
             </div>
-            <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
-              <p className="mt-1 text-xl font-semibold">
-                {student.needsReviewCount}
-              </p>
+            <div className="flex gap-3">
+              <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
+                <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {student.needsReviewCount}
+                </p>
+              </div>
+              {student.tasmiJuzSummary ? (
+                <div className="rounded-2xl bg-violet-500/20 px-3 py-2 text-right">
+                  <p className="text-xs text-violet-200">{t("tasmiSummary")}</p>
+                  <p className="mt-1 text-sm font-semibold text-violet-100">
+                    {student.tasmiJuzSummary}
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
@@ -267,7 +293,7 @@ export default async function StudentDetailPage({
           </div>
         </section>
 
-        <section className="mt-5 grid grid-cols-2 gap-3">
+        <section className="mt-5 grid grid-cols-3 gap-3">
           <Link
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/hafalan/new`}
@@ -286,9 +312,18 @@ export default async function StudentDetailPage({
             </span>
             {t("murojaahButton")}
           </Link>
+          <Link
+            className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-violet-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
+            href={`/students/${student.id}/tasmi/new`}
+          >
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400">
+              <Award aria-hidden="true" size={18} strokeWidth={2.2} />
+            </span>
+            {t("tasmiButton")}
+          </Link>
         </section>
 
-        <section className="mt-5 grid gap-3 sm:grid-cols-2">
+        <section className="mt-5 grid gap-3 sm:grid-cols-3">
           <LatestRecordCard
             icon={BookOpen}
             label={t("latestHafalanLabel")}
@@ -299,6 +334,12 @@ export default async function StudentDetailPage({
             icon={RotateCcw}
             label={t("latestMurojaahLabel")}
             record={student.latestMurojaah}
+            t={t}
+          />
+          <LatestRecordCard
+            icon={Award}
+            label={t("latestTasmiLabel")}
+            record={student.latestTasmi}
             t={t}
           />
         </section>
@@ -357,6 +398,55 @@ export default async function StudentDetailPage({
               <h2 className="font-semibold">{t("notesHeading")}</h2>
             </div>
             <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">{student.notes}</p>
+          </section>
+        ) : null}
+
+        {student.tasmiRecords.length > 0 ? (
+          <section className="mt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold">{t("tasmiHeading")}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-violet-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-950"
+                  href={`/students/${student.id}/tasmi/new`}
+                >
+                  <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
+                  {t("tasmiButton")}
+                </Link>
+                <span className={`inline-flex items-center gap-2 rounded-full ${badge.neutral} px-3 py-1 text-xs font-medium`}>
+                  <Award aria-hidden="true" size={15} strokeWidth={2.2} />
+                  {student.tasmiJuzSummary || student.tasmiRecords.length}
+                </span>
+              </div>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[500px] text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 text-left dark:border-slate-700">
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableDate")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableJuz")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableGrade")}</th>
+                    <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableStatus")}</th>
+                    <th className="pb-3 font-semibold text-slate-700 dark:text-slate-300">{t("tableExaminer")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {student.tasmiRecords.map((tr) => (
+                    <tr className="border-b border-slate-100 dark:border-slate-800" key={tr.id}>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{tr.date}</td>
+                      <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">Juz {tr.juz}</td>
+                      <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{tr.grade}</td>
+                      <td className="py-3 pr-4">
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${tr.status === "Lulus" ? badge.success : badge.warning}`}>
+                          {tr.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-slate-600 dark:text-slate-400">{tr.examinerName}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         ) : null}
 
@@ -433,8 +523,8 @@ export default async function StudentDetailPage({
                         {r.date}
                       </td>
                       <td className="py-3 pr-4">
-                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${r.type === "Hafalan" ? badge.success : badge.progress}`}>
-                          {r.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}
+                        <span className={`rounded-full px-2 py-1 text-xs font-medium ${r.type === "Hafalan" ? badge.success : r.type === "Tasmi'" ? "bg-violet-50 text-violet-800 dark:bg-violet-900 dark:text-violet-100" : badge.progress}`}>
+                          {r.type === "Hafalan" ? t("hafalanButton") : r.type === "Tasmi'" ? t("tasmiButton") : t("murojaahButton")}
                         </span>
                       </td>
                       <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">{r.range}</td>

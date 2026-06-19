@@ -1,12 +1,14 @@
 import {
   Gender,
+  ProgramType,
   RecordStatus,
   TargetStatus,
   TargetType,
 } from "@/generated/prisma-next/enums";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { computeTargetCoverage } from "@/lib/target-progress";
 import { cached } from "@/lib/cache";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import {
   getDateFormatter,
   statusLabels,
@@ -14,6 +16,7 @@ import {
   formatRange,
   formatClassSummary,
 } from "@/lib/format";
+import { tasmiGradeLabels, tasmiStatusLabel, formatTasmiJuzSummary, getHighestCompletedTasmiJuz, getCompletedTasmiJuzList } from "@/lib/tasmi";
 
 function formatLatestRecord(
   record:
@@ -120,12 +123,12 @@ function scopeKey(teacherId?: string | null) {
   return teacherId ?? "admin";
 }
 
-export async function getStudentsData(query = "", teacherId?: string | null, locale = "id") {
+export async function getStudentsData(query = "", teacherId?: string | null, locale = "id", programType?: ProgramType) {
   const normalizedQuery = query.trim().toLowerCase();
   const result = await cached(
-    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:1:12`,
+    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:1:12:${programType ?? "all"}`,
     STUDENT_CACHE_TTL_MS,
-    () => getStudentsDataInner(normalizedQuery, teacherId, locale, 1, 12),
+    () => getStudentsDataInner(normalizedQuery, teacherId, locale, 1, 12, programType),
   );
   return result.students;
 }
@@ -136,12 +139,13 @@ export async function getStudentsPageData(
   locale = "id",
   page = 1,
   pageSize = 12,
+  programType?: ProgramType,
 ) {
   const normalizedQuery = query.trim().toLowerCase();
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   return cached(
-    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:${safePage}:${safePageSize}`,
+    `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:${safePage}:${safePageSize}:${programType ?? "all"}`,
     STUDENT_CACHE_TTL_MS,
     () =>
       getStudentsDataInner(
@@ -150,6 +154,7 @@ export async function getStudentsPageData(
         locale,
         safePage,
         safePageSize,
+        programType,
       ),
   );
 }
@@ -160,11 +165,15 @@ async function getStudentsDataInner(
   locale = "id",
   page = 1,
   pageSize = 12,
+  programType?: ProgramType,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const where = {
     isActive: true,
     ...(teacherId ? { teacherId } : {}),
+    classGroup: {
+      ...(programType ? { programType } : {}),
+    },
     ...(normalizedQuery
       ? {
           OR: [
@@ -190,7 +199,7 @@ async function getStudentsDataInner(
     where,
     include: {
       classGroup: {
-        select: { name: true, level: true },
+        select: { name: true, level: true, programType: true, grade: true },
       },
       academicClass: {
         select: { name: true },
@@ -257,23 +266,26 @@ async function getStudentsDataInner(
   };
 }
 
-export async function getInactiveStudentsData(teacherId?: string | null) {
+export async function getInactiveStudentsData(teacherId?: string | null, programType?: ProgramType) {
   return cached(
-    `students:inactive:${scopeKey(teacherId)}`,
+    `students:inactive:${scopeKey(teacherId)}:${programType ?? "all"}`,
     STUDENT_CACHE_TTL_MS,
-    () => getInactiveStudentsDataInner(teacherId),
+    () => getInactiveStudentsDataInner(teacherId, programType),
   );
 }
 
-async function getInactiveStudentsDataInner(teacherId?: string | null) {
+async function getInactiveStudentsDataInner(teacherId?: string | null, programType?: ProgramType) {
   const students = await prisma.student.findMany({
     where: {
       isActive: false,
       ...(teacherId ? { teacherId } : {}),
+      classGroup: {
+        ...(programType ? { programType } : {}),
+      },
     },
     orderBy: { fullName: "asc" },
     include: {
-      classGroup: { select: { name: true, level: true } },
+      classGroup: { select: { name: true, level: true, programType: true, grade: true } },
       academicClass: { select: { name: true } },
       _count: {
         select: {
@@ -307,11 +319,19 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
 
   const check = await prisma.student.findUnique({
     where: { id: studentId },
-    select: { id: true, isActive: true, teacherId: true, fullName: true }
+    select: { id: true, isActive: true, teacherId: true, fullName: true, classGroup: { select: { academicYear: true } } }
   });
 
   if (!check) {
     return null;
+  }
+
+  // Verify student belongs to active academic year (teacher access only)
+  if (teacherId) {
+    const activeYear = await getActiveAcademicYear();
+    if (check.classGroup.academicYear !== activeYear) {
+      return null;
+    }
   }
 
   if (teacherId && check.teacherId !== teacherId) {
@@ -333,7 +353,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     },
     include: {
       classGroup: {
-        select: { id: true, name: true, level: true, grade: true },
+        select: { id: true, name: true, level: true, grade: true, programType: true },
       },
       academicClass: {
         select: { name: true },
@@ -381,6 +401,20 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
           notes: true,
         },
       },
+      tasmiRecords: {
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          juz: true,
+          grade: true,
+          status: true,
+          examinerName: true,
+          date: true,
+          notes: true,
+          semester: true,
+        },
+      },
     },
   });
 
@@ -394,7 +428,25 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
   const murojaahRecords = student.revisionRecords.map((record) =>
     formatRecord(record, "Murojaah", dateFormatter),
   );
-  const historyRecords = [...hafalanRecords, ...murojaahRecords].sort(
+
+  const tasmiRecords = student.tasmiRecords.map((record) => ({
+    id: record.id,
+    type: "Tasmi'" as const,
+    range: `Tasmi' Juz ${record.juz}`,
+    dateTimeIso: record.date.toISOString(),
+    date: dateFormatter.format(record.date),
+    status: tasmiStatusLabel[record.status],
+    grade: tasmiGradeLabels[record.grade],
+    juz: record.juz,
+    examinerName: record.examinerName,
+    notes: record.notes,
+    semester: record.semester,
+    score: null as number | null,
+    needsReview: false,
+    timestamp: record.date.getTime(),
+  }));
+
+  const historyRecords = [...hafalanRecords, ...murojaahRecords, ...tasmiRecords].sort(
     (a, b) => b.timestamp - a.timestamp,
   );
   const latestActivity = historyRecords.slice(0, 6);
@@ -433,8 +485,13 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     ),
     latestHafalan: hafalanRecords[0] ?? null,
     latestMurojaah: murojaahRecords[0] ?? null,
+    latestTasmi: tasmiRecords[0] ?? null,
     hafalanRecords,
     murojaahRecords,
+    tasmiRecords,
+    highestTasmiJuz: getHighestCompletedTasmiJuz(student.tasmiRecords),
+    completedTasmiJuz: getCompletedTasmiJuzList(student.tasmiRecords),
+    tasmiJuzSummary: formatTasmiJuzSummary(getCompletedTasmiJuzList(student.tasmiRecords)),
     recentActivity: latestActivity,
     historyRecords,
     needsReviewCount,
@@ -442,34 +499,44 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
 }
 
 export async function getTeacherStudentFormOptions(teacherId: string) {
-  const classGroups = await prisma.classGroup.findMany({
-    where: {
-      teacherId,
-      isActive: true,
-    },
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      level: true,
-      grade: true,
-      teacher: {
-        select: { fullName: true },
+  const academicYear = await getActiveAcademicYear();
+  const classGroups = await withRetry(() =>
+    prisma.classGroup.findMany({
+      where: {
+        teacherId,
+        isActive: true,
+        academicYear,
       },
-    },
-  });
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        level: true,
+        grade: true,
+        programType: true,
+        teacher: {
+          select: { fullName: true },
+        },
+        _count: {
+          select: { students: { where: { isActive: true } } },
+        },
+      },
+    }),
+  );
 
-  // Fetch all active academic classes (not filtered by grade)
-  // so the form can filter dynamically based on selected grade
-  const academicClasses = await prisma.academicClass.findMany({
-    where: { isActive: true },
-    orderBy: [{ grade: "asc" }, { section: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      grade: true,
-    },
-  });
+  // Fetch all active academic classes for the active academic year
+  const academicClasses = await withRetry(() =>
+    prisma.academicClass.findMany({
+      where: { isActive: true, academicYear },
+      orderBy: [{ grade: "asc" }, { section: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        grade: true,
+        programType: true,
+      },
+    }),
+  );
 
   return {
     classGroups: classGroups.map((cg) => ({
@@ -478,13 +545,18 @@ export async function getTeacherStudentFormOptions(teacherId: string) {
       level: halaqahLevelLabels[cg.level],
       levelKey: cg.level,
       grade: cg.grade,
+      programType: cg.programType,
       teacherName: cg.teacher.fullName,
-      label: `${cg.name} (Kelas ${cg.grade} - ${halaqahLevelLabels[cg.level]})`,
+      studentCount: cg._count.students,
+      label: cg.programType === ProgramType.BOARDING
+        ? `${cg.name} (Kelas ${cg.grade})`
+        : `${cg.name} (Kelas ${cg.grade} - ${halaqahLevelLabels[cg.level]})`,
     })),
     academicClasses: academicClasses.map((ac) => ({
       id: ac.id,
       name: ac.name,
       grade: ac.grade,
+      programType: ac.programType,
       label: ac.name,
     })),
   };
@@ -511,7 +583,7 @@ export async function getStudentFormContext(
       notes: true,
       academicClassId: true,
       classGroup: {
-        select: { id: true, name: true, level: true, grade: true },
+        select: { id: true, name: true, level: true, grade: true, programType: true },
       },
       academicClass: {
         select: { id: true, name: true },

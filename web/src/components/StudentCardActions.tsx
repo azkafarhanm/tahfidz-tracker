@@ -13,11 +13,13 @@ import {
   actionButtonClass,
 } from "@/components/action-button-styles";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialogButton";
+import { dispatchStudentChange } from "@/lib/optimistic-events";
 
 type StudentCardActionsProps = {
   canManage: boolean;
   isActive: boolean;
   onStatusChanged?: () => void;
+  onStatusRollback?: () => void;
   studentId: string;
   studentName: string;
 };
@@ -28,6 +30,7 @@ export default function StudentCardActions({
   canManage,
   isActive,
   onStatusChanged,
+  onStatusRollback,
   studentId,
   studentName,
 }: StudentCardActionsProps) {
@@ -167,10 +170,13 @@ export default function StudentCardActions({
         confirmLabel={deactivateT("buttonConfirm")}
         description={deactivateT("confirmMessage")}
         icon={<UserX aria-hidden="true" size={16} strokeWidth={2.2} />}
+        onBeforeConfirm={() => {
+          onStatusChanged?.();
+          dispatchStudentChange(-1, 1);
+        }}
         onConfirm={async () => {
           const result = await deactivateTeacherStudent(studentId);
           if (result.ok) {
-            onStatusChanged?.();
             router.refresh();
           }
           return result;
@@ -178,6 +184,10 @@ export default function StudentCardActions({
         onError={(message) => setError(message)}
         onOpenChange={(open) => {
           if (!open) setDialogAction(null);
+        }}
+        onRollback={() => {
+          onStatusRollback?.();
+          dispatchStudentChange(1, -1);
         }}
         open={dialogAction === "deactivate"}
         pendingLabel={deactivateT("buttonProcessing")}
@@ -190,10 +200,13 @@ export default function StudentCardActions({
         confirmLabel={reactivateT("confirmLabel")}
         description={reactivateT("confirmMessage")}
         icon={<RotateCcw aria-hidden="true" size={16} strokeWidth={2.2} />}
+        onBeforeConfirm={() => {
+          onStatusChanged?.();
+          dispatchStudentChange(1, -1);
+        }}
         onConfirm={async () => {
           const result = await reactivateTeacherStudent(studentId);
           if (result.ok) {
-            onStatusChanged?.();
             router.refresh();
           }
           return result;
@@ -201,6 +214,10 @@ export default function StudentCardActions({
         onError={(message) => setError(message)}
         onOpenChange={(open) => {
           if (!open) setDialogAction(null);
+        }}
+        onRollback={() => {
+          onStatusRollback?.();
+          dispatchStudentChange(-1, 1);
         }}
         open={dialogAction === "reactivate"}
         pendingLabel={reactivateT("processing")}

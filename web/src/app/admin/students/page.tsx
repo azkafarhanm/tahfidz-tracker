@@ -16,10 +16,13 @@ import { getAdminStudentsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import ProgramSelector from "@/components/ProgramSelector";
 import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge, statCard, statValue, statLabel, widget, heroSummary, backLink } from "@/lib/colors";
+import { ProgramType } from "@/generated/prisma-next/enums";
+import { programTypeLabels, programTypeOptions } from "@/lib/format";
 
 
 export const runtime = "nodejs";
@@ -35,6 +38,7 @@ type AdminStudentsPageProps = {
     success?: string;
     error?: string;
     page?: string;
+    programType?: string;
   }>;
 };
 
@@ -54,16 +58,19 @@ export default async function AdminStudentsPage({
   const params = await searchParams;
   const query = params?.q?.trim() ?? "";
   const page = parsePage(params?.page);
+  const programType = (params?.programType as ProgramType) || ProgramType.ACADEMIC;
   const { counts, students, pagination } = await getAdminStudentsData(
     query,
     locale,
     page,
     PAGE_SIZE,
+    programType,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
+    if (programType) nextParams.set("programType", programType);
     const search = nextParams.toString();
     return search ? `/admin/students?${search}` : "/admin/students";
   };
@@ -87,6 +94,13 @@ export default async function AdminStudentsPage({
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {t("description")}
             </p>
+            <div className="mt-3">
+              <ProgramSelector
+                programs={programTypeOptions.map((o) => o.value)}
+                programTypeLabels={programTypeLabels}
+                currentProgramType={programType ?? ProgramType.ACADEMIC}
+              />
+            </div>
           </div>
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <ShieldCheck aria-hidden="true" size={22} strokeWidth={2.2} />
@@ -159,7 +173,7 @@ export default async function AdminStudentsPage({
             <div className="flex items-center gap-2">
               <Link
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href="/admin/students/new"
+                href={`/admin/students/new${programType ? `?programType=${programType}` : ""}`}
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                 {t("addButton")}
@@ -167,7 +181,7 @@ export default async function AdminStudentsPage({
               {query ? (
                 <Link
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                  href="/admin/students"
+                  href={`/admin/students?programType=${programType}`}
                 >
                   {t("resetSearch")}
                 </Link>
@@ -230,7 +244,9 @@ export default async function AdminStudentsPage({
                         strokeWidth={2.2}
                       />
                       <span className="truncate">
-                        {student.halaqahName} ({student.halaqahLevel})
+                        {student.halaqahLevel
+                          ? `${student.halaqahName} (${student.halaqahLevel})`
+                          : student.halaqahName}
                       </span>
                     </div>
                     <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>

@@ -6,6 +6,7 @@ import {
   MailCheck,
   ShieldCheck,
   UserCircle,
+  UserRound,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
@@ -39,7 +40,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   ]);
   const currentUser = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true },
+    select: { email: true, username: true },
   });
   const roleDescription = isAdmin
     ? t("roleDescriptionAdmin")
@@ -81,6 +82,12 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               <Mail aria-hidden="true" size={15} strokeWidth={2.2} />
               {currentUser?.email ?? session.user.email}
             </span>
+            {currentUser?.username && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-slate-100">
+                <UserRound aria-hidden="true" size={15} strokeWidth={2.2} />
+                {currentUser.username}
+              </span>
+            )}
             <span className="rounded-full bg-emerald-400/15 px-3 py-1 font-medium text-emerald-100">
               {isAdmin ? t("roleBadgeAdmin") : t("roleBadgeTeacher")}
             </span>
@@ -162,6 +169,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             >
               <MailCheck aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changeEmailButton")}
+            </Link>
+            <Link
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+              href="/profile/change-username"
+            >
+              <UserRound aria-hidden="true" size={15} strokeWidth={2.2} />
+               {t("changeUsernameButton")}
             </Link>
             <Link
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"

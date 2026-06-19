@@ -30,7 +30,7 @@ export async function updateHalaqahLevel(classGroupId: string, newLevel: string)
       teacherId,
       isActive: true,
     },
-    select: { id: true, grade: true, level: true },
+    select: { id: true, grade: true, level: true, programType: true },
   });
 
   if (!classGroup) {
@@ -39,10 +39,15 @@ export async function updateHalaqahLevel(classGroupId: string, newLevel: string)
 
   // No change needed
   if (classGroup.level === newLevel) {
-    return { ok: true as const, message: t("halaqahLevelUnchanged") };
+    return {
+      ok: true as const,
+      message: t("halaqahLevelUnchanged"),
+      level: classGroup.level,
+      levelLabel: halaqahLevelLabels[classGroup.level],
+    };
   }
 
-  // Check uniqueness: another active halaqah with same teacher+grade+level
+  // Check uniqueness: another active halaqah with same teacher+grade+level+programType
   const academicYear = await getActiveAcademicYear();
   const conflicting = await prisma.classGroup.findFirst({
     where: {
@@ -50,6 +55,7 @@ export async function updateHalaqahLevel(classGroupId: string, newLevel: string)
       academicYear,
       grade: classGroup.grade,
       level: newLevel as HalaqahLevel,
+      programType: classGroup.programType,
       isActive: true,
       id: { not: classGroupId },
     },
@@ -67,9 +73,10 @@ export async function updateHalaqahLevel(classGroupId: string, newLevel: string)
   }
 
   // Update level
-  await prisma.classGroup.update({
+  const updatedClassGroup = await prisma.classGroup.update({
     where: { id: classGroupId },
     data: { level: newLevel as HalaqahLevel },
+    select: { id: true, grade: true, level: true, programType: true },
   });
 
   revalidatePath("/");
@@ -79,7 +86,9 @@ export async function updateHalaqahLevel(classGroupId: string, newLevel: string)
   return {
     ok: true as const,
     message: t("halaqahLevelUpdated", {
-      level: halaqahLevelLabels[newLevel as HalaqahLevel],
+      level: halaqahLevelLabels[updatedClassGroup.level],
     }),
+    level: updatedClassGroup.level,
+    levelLabel: halaqahLevelLabels[updatedClassGroup.level],
   };
 }

@@ -1,11 +1,13 @@
-import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma, withRetry } from "@/lib/prisma";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import {
   formatClassSummary,
   formatRange,
   getDateFormatter,
   statusLabels,
 } from "@/lib/format";
+import { formatTasmiJuzSummary, getCompletedTasmiJuzList } from "@/lib/tasmi";
 
 const PAGE_SIZE_FALLBACK = 12;
 
@@ -44,13 +46,16 @@ export async function getLiveStudentsPageData(
   locale = "id",
   page = 1,
   pageSize = PAGE_SIZE_FALLBACK,
+  programType: ProgramType = ProgramType.ACADEMIC,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim().toLowerCase();
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
+  const academicYear = await getActiveAcademicYear();
   const where = {
     isActive: true,
+    classGroup: { academicYear, programType },
     ...scopeWhere(teacherId),
     ...(normalizedQuery
       ? {
@@ -76,7 +81,7 @@ export async function getLiveStudentsPageData(
     prisma.student.findMany({
       where,
       include: {
-        classGroup: { select: { name: true, level: true } },
+        classGroup: { select: { name: true, level: true, programType: true, grade: true } },
         academicClass: { select: { name: true } },
         memorizationRecords: {
           orderBy: { date: "desc" },
@@ -98,6 +103,16 @@ export async function getLiveStudentsPageData(
             toAyah: true,
             date: true,
             status: true,
+          },
+        },
+        tasmiRecords: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: {
+            juz: true,
+            grade: true,
+            status: true,
+            date: true,
           },
         },
         _count: {
@@ -122,6 +137,8 @@ export async function getLiveStudentsPageData(
     students: students.map((student) => {
       const latestHafalan = formatLatestRecord(student.memorizationRecords[0], dateFormatter);
       const latestMurojaah = formatLatestRecord(student.revisionRecords[0], dateFormatter);
+      const completedJuz = getCompletedTasmiJuzList(student.tasmiRecords);
+      const tasmiJuzSummary = formatTasmiJuzSummary(completedJuz);
 
       return {
         id: student.id,
@@ -131,6 +148,7 @@ export async function getLiveStudentsPageData(
         activeTargetCount: student._count.targets,
         latestHafalan,
         latestMurojaah,
+        tasmiJuzSummary,
         needsReview: Boolean(
           latestHafalan?.needsReview || latestMurojaah?.needsReview,
         ),
@@ -139,16 +157,18 @@ export async function getLiveStudentsPageData(
   };
 }
 
-export async function getLiveInactiveStudentsData(teacherId?: string | null) {
+export async function getLiveInactiveStudentsData(teacherId?: string | null, programType: ProgramType = ProgramType.ACADEMIC) {
+  const academicYear = await getActiveAcademicYear();
   const students = await withRetry(() =>
     prisma.student.findMany({
       where: {
         isActive: false,
+        classGroup: { academicYear, programType },
         ...scopeWhere(teacherId),
       },
       orderBy: { fullName: "asc" },
       include: {
-        classGroup: { select: { name: true, level: true } },
+        classGroup: { select: { name: true, level: true, programType: true, grade: true } },
         academicClass: { select: { name: true } },
         _count: {
           select: {

@@ -1,4 +1,4 @@
-import { Semester } from "@/generated/prisma-next/enums";
+import { ProgramType, Semester, AcademicYearStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 
@@ -15,7 +15,7 @@ export function getAcademicYearForDate(date: Date): string {
 export async function getActiveAcademicYear(): Promise<string> {
   return cached(ACADEMIC_YEAR_CACHE_KEY, ACADEMIC_YEAR_CACHE_TTL_MS, async () => {
     const activeYear = await prisma.academicYear.findFirst({
-      where: { isActive: true },
+      where: { isActive: true, status: AcademicYearStatus.ACTIVE },
       select: { year: true },
     });
 
@@ -52,4 +52,38 @@ export function getSemesterDateRange(academicYear: string, semester: Semester) {
     start: new Date(endYear, 0, 1, 0, 0, 0, 0),
     end: new Date(endYear, 5, 30, 23, 59, 59, 999),
   };
+}
+
+export type TeacherProgramContext = {
+  programs: ProgramType[];
+  hasMultiple: boolean;
+  resolvedProgramType: ProgramType;
+};
+
+export async function getTeacherProgramContext(
+  teacherId: string,
+  academicYear: string,
+): Promise<TeacherProgramContext> {
+  return cached(
+    `teacher-program:${teacherId}:${academicYear}`,
+    30_000,
+    () => getTeacherProgramContextInner(teacherId, academicYear),
+  );
+}
+
+async function getTeacherProgramContextInner(
+  teacherId: string,
+  academicYear: string,
+): Promise<TeacherProgramContext> {
+  const classGroups = await prisma.classGroup.findMany({
+    where: { teacherId, academicYear, isActive: true },
+    select: { programType: true },
+    distinct: ["programType"],
+  });
+
+  const programs = classGroups.map((cg) => cg.programType);
+  const hasMultiple = programs.length > 1;
+  const resolvedProgramType = programs[0] ?? ProgramType.ACADEMIC;
+
+  return { programs, hasMultiple, resolvedProgramType };
 }

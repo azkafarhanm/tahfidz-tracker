@@ -1,4 +1,4 @@
-import { RecordStatus, Semester } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import {
   getDateFormatter,
@@ -12,6 +12,7 @@ type FormativeRow = {
   id: string;
   studentId: string;
   studentName: string;
+  academicClassName: string;
   type: "Hafalan" | "Murojaah";
   surah: string;
   fromAyah: number;
@@ -66,6 +67,7 @@ export async function getTeacherFormativeOverview(
   locale = "id",
   page?: number,
   pageSize?: number,
+  programType?: ProgramType,
 ) {
   return getTeacherFormativeOverviewInner(
     teacherId,
@@ -75,6 +77,7 @@ export async function getTeacherFormativeOverview(
     locale,
     page,
     pageSize,
+    programType,
   );
 }
 
@@ -86,12 +89,17 @@ async function getTeacherFormativeOverviewInner(
   locale: string,
   page?: number,
   pageSize?: number,
+  programType?: ProgramType,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const studentWhere = {
     ...(teacherId ? { teacherId } : {}),
     isActive: true,
-    ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+    classGroup: {
+      academicYear,
+      ...(programType ? { programType } : {}),
+      ...(classLevel ? { grade: classLevel } : {}),
+    },
   };
   const safePage = page ? Math.max(1, page) : undefined;
   const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
@@ -108,6 +116,8 @@ async function getTeacherFormativeOverviewInner(
             select: {
               name: true,
               level: true,
+              programType: true,
+              grade: true,
             },
           },
           academicClass: {
@@ -207,8 +217,8 @@ async function getTeacherFormativeOverviewInner(
         id: student.id,
         fullName: student.fullName,
         halaqahName: student.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-        academicClassName: student.academicClass?.name ?? "-",
+        halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+        academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
         totalAssessments: studentRows.length,
         hafalanCount: studentRows.filter((row) => row.type === "Hafalan").length,
         murojaahCount: studentRows.filter((row) => row.type === "Murojaah").length,
@@ -292,6 +302,7 @@ async function getStudentFormativeDetailInner(
           name: true,
           level: true,
           grade: true,
+          programType: true,
         },
       },
       academicClass: {
@@ -324,9 +335,10 @@ async function getStudentFormativeDetailInner(
     id: student.id,
     fullName: student.fullName,
     halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+    halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+    programType: student.classGroup.programType,
     classLevel: student.classGroup.grade,
-    academicClassName: student.academicClass?.name ?? "-",
+    academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
     totalAssessments: sortedRows.length,
     hafalanCount: sortedRows.filter((row) => row.type === "Hafalan").length,
     murojaahCount: sortedRows.filter((row) => row.type === "Murojaah").length,
@@ -357,12 +369,14 @@ export async function getTeacherFormativeExportData(
   semester: Semester,
   academicYear: string,
   classLevel?: number,
+  programType?: ProgramType,
 ) {
   return getTeacherFormativeExportDataInner(
     teacherId,
     semester,
     academicYear,
     classLevel,
+    programType,
   );
 }
 
@@ -371,12 +385,17 @@ async function getTeacherFormativeExportDataInner(
   semester: Semester,
   academicYear: string,
   classLevel?: number,
+  programType?: ProgramType,
 ) {
   const students = await prisma.student.findMany({
     where: {
       ...(teacherId ? { teacherId } : {}),
       isActive: true,
-      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+      classGroup: {
+        academicYear,
+        ...(programType ? { programType } : {}),
+        ...(classLevel ? { grade: classLevel } : {}),
+      },
     },
     select: {
       id: true,
@@ -386,6 +405,7 @@ async function getTeacherFormativeExportDataInner(
           grade: true,
           name: true,
           level: true,
+          programType: true,
         },
       },
       academicClass: {
@@ -440,6 +460,8 @@ async function getTeacherFormativeRows(
         student: {
           select: {
             fullName: true,
+            academicClass: { select: { name: true } },
+            classGroup: { select: { programType: true, grade: true } },
           },
         },
       },
@@ -467,6 +489,8 @@ async function getTeacherFormativeRows(
         student: {
           select: {
             fullName: true,
+            academicClass: { select: { name: true } },
+            classGroup: { select: { programType: true, grade: true } },
           },
         },
       },
@@ -480,6 +504,7 @@ async function getTeacherFormativeRows(
     id: record.id,
     studentId: record.studentId,
     studentName: record.student.fullName,
+    academicClassName: record.student.classGroup.programType === "BOARDING" ? String(record.student.classGroup.grade) : (record.student.academicClass?.name ?? "-"),
     type: "Hafalan",
     surah: record.surah,
     fromAyah: record.fromAyah,
@@ -494,6 +519,7 @@ async function getTeacherFormativeRows(
     id: record.id,
     studentId: record.studentId,
     studentName: record.student.fullName,
+    academicClassName: record.student.classGroup.programType === "BOARDING" ? String(record.student.classGroup.grade) : (record.student.academicClass?.name ?? "-"),
     type: "Murojaah",
     surah: record.surah,
     fromAyah: record.fromAyah,

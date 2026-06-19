@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Gender, HalaqahLevel, TargetStatus } from "@/generated/prisma-next/enums";
+import { Gender, HalaqahLevel, ProgramType, TargetStatus } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
   parseDateInput,
@@ -19,6 +19,7 @@ import { halaqahLevelLabels } from "@/lib/format";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
+const validProgramTypes = new Set<string>(Object.values(ProgramType));
 
 function buildDeleteBlockerItems(
   counts: {
@@ -50,17 +51,19 @@ export async function updateTeacherStudent(
 
   const fullName = readString(formData, "fullName");
   const classGroupId = readOptionalString(formData, "classGroupId");
-  const halaqahLevel = readString(formData, "halaqahLevel");
+  const halaqahLevelRaw = readString(formData, "halaqahLevel");
   const gradeRaw = readString(formData, "grade");
   const grade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
   const academicClassId = readString(formData, "academicClassId");
+  const programType = (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC;
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
   const parsedJoinDate = joinDate ? parseDateInput(joinDate) : null;
   const notes = readOptionalString(formData, "notes");
+  const isBoarding = programType === ProgramType.BOARDING;
 
-  if (!fullName || fullName.length > 120) {
-    return fail(t("studentNameRequired"), {
+  if (!validProgramTypes.has(programType)) {
+    return fail(t("halaqahMismatch"), {
       fullName,
       gender,
       joinDate,
@@ -68,8 +71,25 @@ export async function updateTeacherStudent(
     });
   }
 
-  if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
-    return fail(t("halaqahLevelRequired"), {
+  // For Boarding, skip halaqahLevel validation and assign default
+  let halaqahLevel = halaqahLevelRaw;
+  if (isBoarding) {
+    if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
+      halaqahLevel = HalaqahLevel.LOW;
+    }
+  } else {
+    if (!halaqahLevel || !validLevels.has(halaqahLevel)) {
+      return fail(t("halaqahLevelRequired"), {
+        fullName,
+        gender,
+        joinDate,
+        notes: notes ?? "",
+      });
+    }
+  }
+
+  if (!fullName || fullName.length > 120) {
+    return fail(t("studentNameRequired"), {
       fullName,
       gender,
       joinDate,
@@ -97,10 +117,14 @@ export async function updateTeacherStudent(
 
   const academicClass = await prisma.academicClass.findFirst({
     where: { id: academicClassId, isActive: true },
-    select: { id: true, grade: true },
+    select: { id: true, grade: true, programType: true },
   });
 
-  if (!academicClass || academicClass.grade !== grade) {
+  if (
+    !academicClass ||
+    academicClass.grade !== grade ||
+    academicClass.programType !== programType
+  ) {
     return fail(t("academicClassGradeMismatch"), {
       fullName,
       gender,
@@ -141,7 +165,7 @@ export async function updateTeacherStudent(
   if (classGroupId) {
     const selectedClassGroup = await prisma.classGroup.findFirst({
       where: { id: classGroupId, teacherId, isActive: true },
-      select: { id: true, grade: true },
+      select: { id: true, grade: true, programType: true },
     });
 
     if (!selectedClassGroup) {
@@ -153,7 +177,10 @@ export async function updateTeacherStudent(
       });
     }
 
-    if (selectedClassGroup.grade !== grade) {
+    if (
+      selectedClassGroup.grade !== grade ||
+      selectedClassGroup.programType !== programType
+    ) {
       return fail(t("halaqahMismatch"), {
         fullName,
         gender,
@@ -168,12 +195,12 @@ export async function updateTeacherStudent(
     const academicYear = await getActiveAcademicYear();
 
     const existingCg = await prisma.classGroup.findUnique({
-      where: { teacherId_academicYear_grade: { teacherId, academicYear, grade } },
+      where: { teacherId_academicYear_grade_programType: { teacherId, academicYear, grade, programType } },
       select: { id: true, level: true },
     });
 
     if (existingCg) {
-      if (existingCg.level !== level) {
+      if (!isBoarding && existingCg.level !== level) {
         return fail(
           t("halaqahLevelLocked", { grade, level: halaqahLevelLabels[existingCg.level] }),
           { fullName, gender, joinDate, notes: notes ?? "" },
@@ -193,6 +220,7 @@ export async function updateTeacherStudent(
           level,
           grade,
           academicYear,
+          programType,
           isActive: true,
         },
       });
@@ -201,7 +229,7 @@ export async function updateTeacherStudent(
     }
   }
 
-  await prisma.student.update({
+  const updatedStudent = await prisma.student.update({
     where: { id: studentId },
     data: {
       fullName,
@@ -211,13 +239,18 @@ export async function updateTeacherStudent(
       academicClassId,
       classGroupId: resolvedClassGroupId,
     },
+    select: {
+      classGroup: {
+        select: { programType: true },
+      },
+    },
   });
 
   revalidatePath("/");
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}`);
+  redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}&programType=${updatedStudent.classGroup.programType}`);
 }
 
 export async function deactivateTeacherStudent(studentId: string) {

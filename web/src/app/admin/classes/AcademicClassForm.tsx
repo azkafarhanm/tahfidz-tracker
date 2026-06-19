@@ -41,6 +41,7 @@ type AcademicClassFormProps = {
   submitLabel: string;
   title: string;
   values: AcademicClassFormValues;
+  programType?: string;
 };
 
 export default function AcademicClassForm({
@@ -54,11 +55,13 @@ export default function AcademicClassForm({
   submitLabel,
   title,
   values,
+  programType = "",
 }: AcademicClassFormProps) {
   const t = useTranslations("AdminClassForm");
   const tc = useTranslations("CharacterCounter");
   const Icon = iconMap[iconName];
   const [sectionLength, setSectionLength] = useState(values.section.length);
+  const isBoarding = programType === "BOARDING";
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -85,6 +88,7 @@ export default function AcademicClassForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {programType && <input type="hidden" name="programType" value={programType} />}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Hash
@@ -112,29 +116,31 @@ export default function AcademicClassForm({
               />
             </label>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {t("classSection")}
-              </span>
-              <input
-                className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                defaultValue={values.section}
-                maxLength={5}
-                name="section"
-                onChange={(e) => setSectionLength(e.target.value.length)}
-                placeholder={t("sectionPlaceholder")}
-                required
-                type="text"
-              />
-              <CharacterCounter current={sectionLength} max={5} maxReachedLabel={tc("maxReached")} />
-            </label>
+            {!isBoarding && (
+              <label className="mt-4 block">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {t("classSection")}
+                </span>
+                <input
+                  className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
+                  defaultValue={values.section}
+                  maxLength={5}
+                  name="section"
+                  onChange={(e) => setSectionLength(e.target.value.length)}
+                  placeholder={t("sectionPlaceholder")}
+                  required
+                  type="text"
+                />
+                <CharacterCounter current={sectionLength} max={5} maxReachedLabel={tc("maxReached")} />
+              </label>
+            )}
 
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("className")}
               </span>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {t("classNameDescription")}
+                {isBoarding ? t("classNameDescriptionBoarding") : t("classNameDescription")}
               </p>
             </label>
           </section>

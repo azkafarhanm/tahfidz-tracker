@@ -22,6 +22,7 @@ type NewClassGroupPageProps = {
     teacherId?: string;
     grade?: string;
     isActive?: string;
+    programType?: string;
   }>;
 };
 
@@ -36,11 +37,15 @@ export default async function NewClassGroupPage({
     getActiveAcademicYear(),
   ]);
   const t = await getTranslations("AdminFormPage");
+  const programType = params?.programType ?? "";
+  const backHref = programType
+    ? `/admin/halaqah?programType=${programType}`
+    : "/admin/halaqah";
 
   return (
     <ClassGroupForm
       action={createClassGroup}
-      backHref="/admin/halaqah"
+      backHref={backHref}
       backLabel={t("backHalaqah")}
       description={t("addHalaqahDescription")}
       error={params?.error}
@@ -49,6 +54,7 @@ export default async function NewClassGroupPage({
       activeAcademicYear={activeAcademicYear}
       teachers={options.teachers}
       title={t("addHalaqah")}
+      programType={programType}
       values={{
         description: params?.description ?? "",
         level: params?.level ?? "LOW",

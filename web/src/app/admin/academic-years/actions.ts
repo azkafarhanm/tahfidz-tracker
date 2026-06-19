@@ -22,13 +22,31 @@ export async function getAdminAcademicYearsData() {
     orderBy: { year: "desc" },
   });
 
-  return years.map((year) => ({
-    id: year.id,
-    year: year.year,
-    startDate: year.startDate.toISOString().slice(0, 10),
-    endDate: year.endDate.toISOString().slice(0, 10),
-    isActive: year.isActive,
-  }));
+  // Get counts for each year
+  const yearsWithCounts = await Promise.all(
+    years.map(async (year) => {
+      const [studentCount, classGroupCount] = await Promise.all([
+        prisma.student.count({
+          where: { classGroup: { academicYear: year.year } },
+        }),
+        prisma.classGroup.count({
+          where: { academicYear: year.year },
+        }),
+      ]);
+      return {
+        id: year.id,
+        year: year.year,
+        startDate: year.startDate.toISOString().slice(0, 10),
+        endDate: year.endDate.toISOString().slice(0, 10),
+        isActive: year.isActive,
+        status: year.status,
+        studentCount,
+        classGroupCount,
+      };
+    }),
+  );
+
+  return yearsWithCounts;
 }
 
 export async function createAcademicYear(formData: FormData) {

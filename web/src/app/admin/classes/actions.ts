@@ -12,10 +12,12 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
+import { ProgramType } from "@/generated/prisma-next/enums";
 
 type AcademicClassFormInput = {
   grade: string;
   section: string;
+  programType: ProgramType;
   isActive: boolean;
 };
 
@@ -23,6 +25,7 @@ function readAcademicClassFormInput(formData: FormData): AcademicClassFormInput 
   return {
     grade: readString(formData, "grade"),
     section: readString(formData, "section"),
+    programType: (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC,
     isActive: formData.get("isActive") === "on",
   };
 }
@@ -31,6 +34,7 @@ function getAcademicClassFormExtras(input: AcademicClassFormInput) {
   return {
     grade: input.grade,
     section: input.section,
+    programType: input.programType,
     isActive: input.isActive ? "true" : "false",
   };
 }
@@ -47,7 +51,9 @@ async function validateAcademicClassInput(
     fail(t("classGradeRange"), extras);
   }
 
-  if (!input.section || input.section.length > 5) {
+  const isBoarding = input.programType === ProgramType.BOARDING;
+
+  if (!isBoarding && (!input.section || input.section.length > 5)) {
     fail(t("classSectionRequired"), extras);
   }
 }
@@ -55,8 +61,10 @@ async function validateAcademicClassInput(
 function redirectAdminClassesWithMessage(
   type: "success" | "error",
   message: string,
+  programType?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
+  if (programType) params.set("programType", programType);
   redirect(`/admin/classes?${params.toString()}`);
 }
 
@@ -88,13 +96,16 @@ export async function createAcademicClass(formData: FormData) {
   await validateAcademicClassInput(input, fail);
 
   const grade = Number.parseInt(input.grade, 10);
-  const name = `${grade}${input.section}`;
+  const isBoarding = input.programType === ProgramType.BOARDING;
+  const section = isBoarding ? "" : input.section;
+  const name = isBoarding ? String(grade) : `${grade}${section}`;
 
   const existing = await prisma.academicClass.findUnique({
     where: {
-      name_academicYear: {
+      name_academicYear_programType: {
         name,
         academicYear,
+        programType: input.programType,
       },
     },
     select: { id: true },
@@ -110,15 +121,16 @@ export async function createAcademicClass(formData: FormData) {
   await prisma.academicClass.create({
     data: {
       grade,
-      section: input.section,
+      section,
       name,
       academicYear,
+      programType: input.programType,
       isActive: input.isActive,
     },
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", t("classCreated"));
+  redirectAdminClassesWithMessage("success", t("classCreated"), input.programType);
 }
 
 export async function updateAcademicClass(
@@ -141,17 +153,20 @@ export async function updateAcademicClass(
   });
 
   if (!academicClass) {
-    redirectAdminClassesWithMessage("error", t("classNotFound"));
+    redirectAdminClassesWithMessage("error", t("classNotFound"), input.programType);
   }
 
   const grade = Number.parseInt(input.grade, 10);
-  const name = `${grade}${input.section}`;
+  const isBoarding = input.programType === ProgramType.BOARDING;
+  const section = isBoarding ? "" : input.section;
+  const name = isBoarding ? String(grade) : `${grade}${section}`;
 
   const existing = await prisma.academicClass.findUnique({
     where: {
-      name_academicYear: {
+      name_academicYear_programType: {
         name,
         academicYear,
+        programType: input.programType,
       },
     },
     select: { id: true },
@@ -168,15 +183,16 @@ export async function updateAcademicClass(
     where: { id: academicClass.id },
     data: {
       grade,
-      section: input.section,
+      section,
       name,
       academicYear,
+      programType: input.programType,
       isActive: input.isActive,
     },
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", t("classUpdated"));
+  redirectAdminClassesWithMessage("success", t("classUpdated"), input.programType);
 }
 
 export async function toggleAcademicClassActive(
@@ -188,7 +204,7 @@ export async function toggleAcademicClassActive(
 
   const academicClass = await prisma.academicClass.findUnique({
     where: { id: academicClassId },
-    select: { id: true, name: true, academicYear: true },
+    select: { id: true, name: true, academicYear: true, programType: true },
   });
 
   if (!academicClass) {
@@ -204,6 +220,7 @@ export async function toggleAcademicClassActive(
       redirectAdminClassesWithMessage(
         "error",
         t("classHasStudents", { name: academicClass.name, count: activeStudentCount }),
+        academicClass.programType,
       );
     }
   }
@@ -219,6 +236,7 @@ export async function toggleAcademicClassActive(
     nextActiveState
       ? t("classActivated", { name: academicClass.name, year: academicClass.academicYear })
       : t("classDeactivated", { name: academicClass.name, year: academicClass.academicYear }),
+    academicClass.programType,
   );
 }
 

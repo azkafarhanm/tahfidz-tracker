@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
-import PdfExportLink from "@/components/PdfExportLink";
+import ExportSection from "@/components/ExportSection";
 import { badge, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
@@ -44,6 +44,10 @@ export default async function AdminStudentDetailPage({
     notFound();
   }
 
+  const studentsBackHref = data.programType
+    ? `/admin/students?programType=${data.programType}`
+    : "/admin/students";
+
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
@@ -51,7 +55,7 @@ export default async function AdminStudentDetailPage({
           <div className="min-w-0">
             <Link
               className={backLink}
-              href="/admin/students"
+              href={studentsBackHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
@@ -60,8 +64,12 @@ export default async function AdminStudentDetailPage({
               {data.fullName}
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              {data.halaqahName} ({data.halaqahLevel}) &middot;{" "}
-              {data.academicClassName}
+              {data.halaqahLevel
+                ? `${data.halaqahName} (${data.halaqahLevel})`
+                : data.halaqahName}
+              {data.programType !== "BOARDING" && data.academicClassName !== "-"
+                ? ` · ${data.academicClassName}`
+                : ""}
             </p>
           </div>
 
@@ -73,21 +81,24 @@ export default async function AdminStudentDetailPage({
               <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
               {t("editButton")}
             </Link>
-            <a
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
-              href={`/api/reports/export-student?studentId=${id}`}
-            >
-              <Download aria-hidden="true" size={14} strokeWidth={2.2} />
-              {t("excelButton")}
-            </a>
-            <PdfExportLink
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href={`/api/reports/pdf-student?studentId=${id}`}
-              toastMessage={t("pdfToast")}
-            >
-              <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
-              {t("pdfButton")}
-            </PdfExportLink>
+            <ExportSection
+              excelHref={`/api/reports/export-student?studentId=${id}`}
+              excelClassName="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
+              excelContent={
+                <>
+                  <Download aria-hidden="true" size={14} strokeWidth={2.2} />
+                  {t("excelButton")}
+                </>
+              }
+              pdfHref={`/api/reports/pdf-student?studentId=${id}`}
+              pdfClassName="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+              pdfContent={
+                <>
+                  <FileText aria-hidden="true" size={14} strokeWidth={2.2} />
+                  {t("pdfButton")}
+                </>
+              }
+            />
           </div>
         </header>
 

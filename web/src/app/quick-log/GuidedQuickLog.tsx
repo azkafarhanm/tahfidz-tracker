@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -35,6 +36,8 @@ type GuidedQuickLogProps = {
   action: (formData: FormData) => Promise<ActionResult>;
   students: Student[];
   recentItems: RecentActivityItem[];
+  programBadge?: React.ReactNode;
+  programSelector?: React.ReactNode;
 };
 
 function formatRelativeTime(date: Date, now: Date): string {
@@ -58,8 +61,13 @@ export default function GuidedQuickLog({
   action,
   students,
   recentItems,
+  programBadge,
+  programSelector,
 }: GuidedQuickLogProps) {
   const t = useTranslations("QuickLog");
+  const searchParams = useSearchParams();
+  const programType = searchParams.get("programType");
+  const dashboardHref = programType ? `/?programType=${programType}` : "/";
 
   const statusOptions = [
     { value: "LANCAR", label: t("statusLancar") },
@@ -164,11 +172,11 @@ export default function GuidedQuickLog({
 
   return (
     <>
-     <header className="flex items-center justify-between gap-4">
+     <header className="flex items-start justify-between gap-4">
           <div className="min-w-0">
              <Link
                className={backLink}
-               href="/"
+               href={dashboardHref}
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
                {t("backLink")}
@@ -179,6 +187,16 @@ export default function GuidedQuickLog({
              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                {t("description")}
              </p>
+              {programBadge && (
+                <div className="mt-2">
+                  {programBadge}
+                </div>
+              )}
+              {programSelector && (
+                <div className="mt-2">
+                  {programSelector}
+                </div>
+              )}
           </div>
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
             <PenLine aria-hidden="true" size={22} strokeWidth={2.3} />

@@ -1,6 +1,7 @@
-import { RecordStatus } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
 import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import {
   formatClassSummary as formatStudentClassSummary,
   statusLabels,
@@ -27,8 +28,10 @@ export type RecentActivityItem = {
   date: Date;
 };
 
-export async function getQuickLogRecentActivity(teacherId?: string | null): Promise<RecentActivityItem[]> {
-  const filter = teacherId ? { teacherId } : {};
+export async function getQuickLogRecentActivity(teacherId?: string | null, programType?: ProgramType): Promise<RecentActivityItem[]> {
+  const academicYear = await getActiveAcademicYear();
+  const studentFilter = programType ? { classGroup: { academicYear, programType } } : { classGroup: { academicYear } };
+  const filter = { ...((teacherId) ? { teacherId } : {}), academicYear, student: studentFilter };
   const [memRecords, revRecords] = await Promise.all([
     prisma.memorizationRecord.findMany({
       where: filter,
@@ -345,23 +348,25 @@ function extractRange(value: string) {
   };
 }
 
-export async function getQuickLogStudents(teacherId?: string | null) {
+export async function getQuickLogStudents(teacherId?: string | null, programType?: ProgramType) {
   return cached(
-    `quick-log-students:${scopeKey(teacherId)}`,
+    `quick-log-students:${scopeKey(teacherId)}:${programType ?? "all"}`,
     QUICK_LOG_CACHE_TTL_MS,
-    () => getQuickLogStudentsInner(teacherId),
+    () => getQuickLogStudentsInner(teacherId, programType),
   );
 }
 
-async function getQuickLogStudentsInner(teacherId?: string | null) {
+async function getQuickLogStudentsInner(teacherId?: string | null, programType?: ProgramType) {
+  const academicYear = await getActiveAcademicYear();
   const students = await prisma.student.findMany({
     where: {
       isActive: true,
+      classGroup: { academicYear, ...(programType ? { programType } : {}) },
       ...(teacherId ? { teacherId } : {}),
     },
     include: {
       classGroup: {
-        select: { name: true, level: true },
+        select: { name: true, level: true, programType: true, grade: true },
       },
       academicClass: {
         select: { name: true },

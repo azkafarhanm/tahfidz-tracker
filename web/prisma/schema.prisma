@@ -46,6 +46,28 @@ enum Semester {
   GENAP
 }
 
+enum AcademicYearStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProgramType {
+  ACADEMIC
+  BOARDING
+}
+
+enum TasmiGrade {
+  MUMTAZ
+  JAYYID_JIDDAN
+  JAYYID
+  MAQBUL
+}
+
+enum TasmiStatus {
+  LULUS
+  MENGULANG
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -58,9 +80,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  teacher  Teacher?
-  accounts Account[]
-  sessions Session[]
+  teacher   Teacher?
+  accounts  Account[]
+  sessions  Session[]
+  auditLogs AuditLog[]
 
   @@index([role])
 }
@@ -81,37 +104,42 @@ model Teacher {
   memorizationRecords MemorizationRecord[]
   revisionRecords     RevisionRecord[]
   targets             Target[]
+  tasmiRecords        TasmiRecord[]
 
   @@index([isActive])
 }
 
 model AcademicYear {
-  id        String   @id @default(cuid())
-  year      String   @unique
+  id        String             @id @default(cuid())
+  year      String             @unique
   startDate DateTime
   endDate   DateTime
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean            @default(false)
+  status    AcademicYearStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   @@index([isActive])
+  @@index([status])
 }
 
 model AcademicClass {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   grade        Int
   section      String
   name         String
   academicYear String
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  programType  ProgramType @default(ACADEMIC)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   students Student[]
 
-  @@unique([name, academicYear])
+  @@unique([name, academicYear, programType])
   @@index([grade])
   @@index([isActive])
+  @@index([programType])
 }
 
 model ClassGroup {
@@ -122,6 +150,7 @@ model ClassGroup {
   name         String
   description  String?
   level        HalaqahLevel @default(LOW)
+  programType  ProgramType  @default(ACADEMIC)
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -135,7 +164,8 @@ model ClassGroup {
   @@index([level])
   @@index([isActive])
   @@index([teacherId, isActive, grade, level])
-  @@unique([teacherId, academicYear, grade])
+  @@index([programType])
+  @@unique([teacherId, academicYear, grade, programType])
 }
 
 model Student {
@@ -158,6 +188,7 @@ model Student {
   revisionRecords     RevisionRecord[]
   targets             Target[]
   summativeScores     SummativeScore[]
+  tasmiRecords        TasmiRecord[]
 
   @@index([teacherId])
   @@index([classGroupId])
@@ -348,4 +379,63 @@ model TargetSurah {
   @@index([classLevel])
   @@index([semester])
   @@index([classLevel, semester, academicYear])
+}
+
+model TasmiRecord {
+  id           String      @id @default(cuid())
+  studentId    String
+  teacherId    String
+  juz          Int
+  grade        TasmiGrade
+  status       TasmiStatus
+  examinerName String
+  date         DateTime    @default(now())
+  notes        String?
+  academicYear String
+  semester     Semester
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([juz])
+  @@index([academicYear])
+  @@index([semester])
+  @@index([studentId, academicYear, semester])
+  @@index([studentId, createdAt])
+  @@index([teacherId, academicYear])
+  @@index([grade])
+  @@index([status])
+}
+
+enum AuditAction {
+  DELETE_STUDENT
+  DELETE_ARCHIVED_STUDENTS
+  DELETE_ACADEMIC_YEAR
+  CREATE_TASMI
+  UPDATE_TASMI
+  DELETE_TASMI
+}
+
+model AuditLog {
+  id             String      @id @default(cuid())
+  userId         String?
+  action         AuditAction
+  academicYearId String?
+  academicYear   String?
+  targetType     String
+  targetId       String?
+  targetName     String?
+  metadata       Json?
+  createdAt      DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([academicYearId])
+  @@index([createdAt])
 }

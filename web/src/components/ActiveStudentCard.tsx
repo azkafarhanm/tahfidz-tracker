@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { BookOpen, RotateCcw, Target } from "lucide-react";
+import { BookOpen, RotateCcw, Target, Award } from "lucide-react";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import StudentCardActions from "@/components/StudentCardActions";
 import { badge, widget } from "@/lib/colors";
@@ -21,6 +21,7 @@ type ActiveStudentCardProps = {
   id: string;
   latestHafalan: LatestRecord;
   latestMurojaah: LatestRecord;
+  tasmiJuzSummary: string;
   needsReview: boolean;
 };
 
@@ -32,6 +33,7 @@ export default function ActiveStudentCard({
   id,
   latestHafalan,
   latestMurojaah,
+  tasmiJuzSummary,
   needsReview,
 }: ActiveStudentCardProps) {
   const t = useTranslations("Students");
@@ -106,6 +108,25 @@ export default function ActiveStudentCard({
             ) : null}
           </div>
         </div>
+
+        {tasmiJuzSummary ? (
+          <div className={`flex items-start gap-3 rounded-2xl p-3 ${widget.elevated}`}>
+            <Award
+              aria-hidden="true"
+              className="mt-0.5 shrink-0 text-violet-700 dark:text-violet-400"
+              size={17}
+              strokeWidth={2.2}
+            />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {t("tasmiSummaryLabel")}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {tasmiJuzSummary}
+              </p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
@@ -117,6 +138,7 @@ export default function ActiveStudentCard({
           canManage={canManage}
           isActive
           onStatusChanged={() => setIsHidden(true)}
+          onStatusRollback={() => setIsHidden(false)}
           studentId={id}
           studentName={fullName}
         />

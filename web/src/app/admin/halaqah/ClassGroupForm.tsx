@@ -53,6 +53,7 @@ type ClassGroupFormProps = {
   activeAcademicYear: string;
   title: string;
   values: ClassGroupFormValues;
+  programType?: string;
 };
 
 export default function ClassGroupForm({
@@ -67,6 +68,7 @@ export default function ClassGroupForm({
   activeAcademicYear,
   title,
   values,
+  programType = "",
 }: ClassGroupFormProps) {
   const t = useTranslations("AdminHalaqahForm");
   const tc = useTranslations("CharacterCounter");
@@ -85,6 +87,8 @@ export default function ClassGroupForm({
     { value: "8", label: t("grade8") },
     { value: "9", label: t("grade9") },
   ];
+
+  const isBoarding = programType === "BOARDING";
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -111,6 +115,7 @@ export default function ClassGroupForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {programType && <input type="hidden" name="programType" value={programType} />}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <UserCheck
@@ -200,46 +205,50 @@ export default function ClassGroupForm({
             </label>
           </section>
 
+          {!isBoarding && (
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+              <div className="flex items-center gap-2">
+                <Signal
+                  aria-hidden="true"
+                  className="text-emerald-800 dark:text-emerald-400"
+                  size={18}
+                  strokeWidth={2.2}
+                />
+                <h2 className="font-semibold">{t("halaqahLevel")}</h2>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {(["LOW", "MEDIUM", "HIGH"] as const).map((level) => (
+                  <label
+                    className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50 has-[:checked]:ring-2 has-[:checked]:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:has-[:checked]:border-emerald-400 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:ring-emerald-900"
+                    key={level}
+                  >
+                    <input
+                      className="mt-1 h-4 w-4 shrink-0 border-slate-300 text-emerald-900 focus:ring-emerald-500"
+                      defaultChecked={values.level === level}
+                      name="level"
+                      type="radio"
+                      value={level}
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-slate-950 dark:text-white">
+                        {level === "LOW"
+                          ? t("levelLow")
+                          : level === "MEDIUM"
+                            ? t("levelMedium")
+                            : t("levelHigh")}
+                      </span>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {levelDescriptions[level]}
+                      </p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <div className="flex items-center gap-2">
-              <Signal
-                aria-hidden="true"
-                className="text-emerald-800 dark:text-emerald-400"
-                size={18}
-                strokeWidth={2.2}
-              />
-              <h2 className="font-semibold">{t("halaqahLevel")}</h2>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {(["LOW", "MEDIUM", "HIGH"] as const).map((level) => (
-                <label
-                  className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50 has-[:checked]:ring-2 has-[:checked]:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:has-[:checked]:border-emerald-400 dark:has-[:checked]:bg-emerald-950 dark:has-[:checked]:ring-emerald-900"
-                  key={level}
-                >
-                  <input
-                    className="mt-1 h-4 w-4 shrink-0 border-slate-300 text-emerald-900 focus:ring-emerald-500"
-                    defaultChecked={values.level === level}
-                    name="level"
-                    type="radio"
-                    value={level}
-                  />
-                  <div>
-                    <span className="text-sm font-semibold text-slate-950 dark:text-white">
-                      {level === "LOW"
-                        ? t("levelLow")
-                        : level === "MEDIUM"
-                          ? t("levelMedium")
-                          : t("levelHigh")}
-                    </span>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {levelDescriptions[level]}
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-
             <label className="mt-4 block">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {t("description")}

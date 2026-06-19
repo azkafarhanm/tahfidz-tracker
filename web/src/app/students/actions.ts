@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Gender, HalaqahLevel } from "@/generated/prisma-next/enums";
+import { Gender, HalaqahLevel, ProgramType } from "@/generated/prisma-next/enums";
+import { Prisma } from "@/generated/prisma-next/client";
 import {
   createFailFn,
   parseDateInput,
@@ -35,6 +36,7 @@ export async function createTeacherStudent(formData: FormData) {
   const gradeRaw = readString(formData, "grade");
   const submittedGrade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
   const academicClassId = readString(formData, "academicClassId");
+  const programType = (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC;
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
   const parsedJoinDate = joinDate ? parseDateInput(joinDate) : new Date();
@@ -45,6 +47,7 @@ export async function createTeacherStudent(formData: FormData) {
     halaqahLevel: halaqahLevel ?? "",
     grade: gradeRaw,
     academicClassId: academicClassId ?? "",
+    programType,
     gender,
     joinDate,
     notes: notes ?? "",
@@ -70,6 +73,8 @@ export async function createTeacherStudent(formData: FormData) {
   let resolvedLevel = halaqahLevel;
   let resolvedGrade = submittedGrade;
 
+  const isBoarding = programType === ProgramType.BOARDING;
+
   if (resolvedClassGroupId) {
     const classGroup = await prisma.classGroup.findFirst({
       where: { id: resolvedClassGroupId, teacherId, isActive: true },
@@ -80,21 +85,27 @@ export async function createTeacherStudent(formData: FormData) {
       return fail(t("halaqahMismatch"), failValues);
     }
 
-    const activeClassGroup = classGroup;
-
-    resolvedLevel ??= activeClassGroup.level;
-    resolvedGrade ||= activeClassGroup.grade;
+    resolvedLevel ??= classGroup.level;
+    resolvedGrade ||= classGroup.grade;
 
     if (
-      (halaqahLevel && halaqahLevel !== activeClassGroup.level) ||
-      (submittedGrade && submittedGrade !== activeClassGroup.grade)
+      !isBoarding &&
+      ((halaqahLevel && halaqahLevel !== classGroup.level) ||
+      (submittedGrade && submittedGrade !== classGroup.grade))
     ) {
       return fail(t("halaqahMismatch"), failValues);
     }
   }
 
-  if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
-    return fail(t("halaqahLevelRequired"), failValues);
+  // For Boarding, skip halaqahLevel validation and assign default
+  if (isBoarding) {
+    if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
+      resolvedLevel = HalaqahLevel.LOW;
+    }
+  } else {
+    if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
+      return fail(t("halaqahLevelRequired"), failValues);
+    }
   }
 
   if (!resolvedGrade || resolvedGrade < 7 || resolvedGrade > 9) {
@@ -115,12 +126,12 @@ export async function createTeacherStudent(formData: FormData) {
     const academicYear = await getActiveAcademicYear();
 
     const existingCg = await prisma.classGroup.findUnique({
-      where: { teacherId_academicYear_grade: { teacherId, academicYear, grade: resolvedGrade } },
+      where: { teacherId_academicYear_grade_programType: { teacherId, academicYear, grade: resolvedGrade, programType } },
       select: { id: true, level: true },
     });
 
     if (existingCg) {
-      if (existingCg.level !== level) {
+      if (!isBoarding && existingCg.level !== level) {
         return fail(
           t("halaqahLevelLocked", { grade: resolvedGrade, level: halaqahLevelLabels[existingCg.level] }),
           failValues,
@@ -133,18 +144,37 @@ export async function createTeacherStudent(formData: FormData) {
         select: { fullName: true },
       });
 
-      const classGroup = await prisma.classGroup.create({
-        data: {
-          teacherId,
-          name: teacher?.fullName ?? "Halaqah",
-          level,
-          grade: resolvedGrade,
-          academicYear,
-          isActive: true,
-        },
-      });
-
-      resolvedClassGroupId = classGroup.id;
+      try {
+        const classGroup = await prisma.classGroup.create({
+          data: {
+            teacherId,
+            name: teacher?.fullName ?? "Halaqah",
+            level,
+            grade: resolvedGrade,
+            academicYear,
+            programType,
+            isActive: true,
+          },
+        });
+        resolvedClassGroupId = classGroup.id;
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          const retryCg = await prisma.classGroup.findUnique({
+            where: { teacherId_academicYear_grade_programType: { teacherId, academicYear, grade: resolvedGrade, programType } },
+            select: { id: true },
+          });
+          if (retryCg) {
+            resolvedClassGroupId = retryCg.id;
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
     }
   }
 
@@ -161,8 +191,14 @@ export async function createTeacherStudent(formData: FormData) {
     },
   });
 
+  invalidateStudentRelatedCaches();
   revalidatePath("/");
   revalidatePath("/students");
-  invalidateStudentRelatedCaches();
-  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}&highlight=${newStudent.id}`);
+  revalidatePath("/students/new");
+  revalidatePath("/students/program-select");
+  revalidatePath("/quick-log");
+  revalidatePath("/formative");
+  revalidatePath("/summative");
+  revalidatePath("/reports");
+  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}&highlight=${newStudent.id}&programType=${programType}`);
 }

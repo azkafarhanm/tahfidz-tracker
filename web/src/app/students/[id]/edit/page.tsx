@@ -78,6 +78,7 @@ export default async function EditStudentPage({
       backHref={`/students/${id}`}
       error={pageParams?.error}
       options={options}
+      defaultProgramType={context.programType}
       halaqah={{
         classGroupId: context.classGroupId,
         name: context.halaqahName,

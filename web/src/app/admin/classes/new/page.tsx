@@ -20,6 +20,7 @@ type NewAcademicClassPageProps = {
     grade?: string;
     section?: string;
     isActive?: string;
+    programType?: string;
   }>;
 };
 
@@ -33,18 +34,24 @@ export default async function NewAcademicClassPage({
     getActiveAcademicYear(),
   ]);
   const t = await getTranslations("AdminFormPage");
+  const programType = params?.programType ?? "";
+  const isBoarding = programType === "BOARDING";
+  const backHref = programType
+    ? `/admin/classes?programType=${programType}`
+    : "/admin/classes";
 
   return (
     <AcademicClassForm
       action={createAcademicClass}
       activeAcademicYear={activeAcademicYear}
-      backHref="/admin/classes"
-      backLabel={t("backAcademicClasses")}
-      description={t("addAcademicClassDescription")}
+      backHref={backHref}
+      backLabel={isBoarding ? t("backBoardingClasses") : t("backAcademicClasses")}
+      description={isBoarding ? t("addBoardingClassDescription") : t("addAcademicClassDescription")}
       error={params?.error}
       icon="PlusCircle"
       submitLabel={t("saveClass")}
-      title={t("addAcademicClass")}
+      title={isBoarding ? t("addBoardingClass") : t("addAcademicClass")}
+      programType={programType}
       values={{
         grade: params?.grade ?? "",
         section: params?.section ?? "",

@@ -1,5 +1,6 @@
 import {
   HalaqahLevel,
+  ProgramType,
   RecordStatus,
 } from "@/generated/prisma-next/enums";
 import { getJuzLabel } from "@/lib/juz";
@@ -51,6 +52,16 @@ export const halaqahLevelLabels: Record<HalaqahLevel, string> = {
   [HalaqahLevel.HIGH]: "High",
 };
 
+export const programTypeLabels: Record<ProgramType, string> = {
+  [ProgramType.ACADEMIC]: "Akademik",
+  [ProgramType.BOARDING]: "Boarding",
+};
+
+export const programTypeOptions = [
+  { value: ProgramType.ACADEMIC, label: programTypeLabels[ProgramType.ACADEMIC] },
+  { value: ProgramType.BOARDING, label: programTypeLabels[ProgramType.BOARDING] },
+] as const;
+
 export function formatRange(surah: string, fromAyah: number, toAyah: number) {
   const juz = getJuzLabel(surah, fromAyah, toAyah);
   return `${surah} ${fromAyah}-${toAyah}${juz ? ` - ${juz}` : ""}`;
@@ -58,20 +69,26 @@ export function formatRange(surah: string, fromAyah: number, toAyah: number) {
 
 export function formatClassSummary(student: {
   academicClass: { name: string } | null;
-  classGroup: { name: string; level: HalaqahLevel };
+  classGroup: { name: string; level: HalaqahLevel; programType: ProgramType; grade: number };
 }) {
   const academicClassName = student.academicClass?.name ?? null;
-  const halaqahLabel = `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`;
+  const isBoarding = student.classGroup.programType === ProgramType.BOARDING;
+  const halaqahLabel = isBoarding
+    ? `${student.classGroup.grade} - ${student.classGroup.name}`
+    : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`;
 
-  const classSummary = academicClassName
+  // Boarding: never show academic class in summary
+  const classSummary = !isBoarding && academicClassName
     ? `${academicClassName} - ${halaqahLabel}`
     : halaqahLabel;
 
   return {
-    academicClassName: academicClassName ?? "Kelas belum diisi",
+    academicClassName: isBoarding ? "" : (academicClassName ?? "Kelas belum diisi"),
     halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+    halaqahLevel: isBoarding ? "" : halaqahLevelLabels[student.classGroup.level],
     classSummary,
+    programType: student.classGroup.programType,
+    isBoarding,
   };
 }
 

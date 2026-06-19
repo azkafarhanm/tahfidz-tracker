@@ -10,6 +10,7 @@ type DeleteStudentButtonProps = {
   disabledReason?: string;
   onDeleteError?: (error: string) => void;
   onDeleteStart?: () => void;
+  onDeleteRollback?: () => void;
   studentId: string;
 };
 
@@ -17,6 +18,7 @@ export default function DeleteStudentButton({
   disabledReason,
   onDeleteError,
   onDeleteStart,
+  onDeleteRollback,
   studentId,
 }: DeleteStudentButtonProps) {
   const t = useTranslations("DeleteStudent");
@@ -32,12 +34,13 @@ export default function DeleteStudentButton({
       icon={<Trash2 aria-hidden="true" size={12} strokeWidth={2.2} />}
       label={t("buttonDelete")}
       onAction={async () => {
-        onDeleteStart?.();
         const result = await deleteTeacherStudent(studentId);
         refresh();
         return result;
       }}
       onError={(message) => onDeleteError?.(message)}
+      onRollback={onDeleteRollback}
+      onStart={onDeleteStart}
       pendingLabel={t("buttonProcessing")}
       tone="danger"
     />

@@ -137,6 +137,7 @@ export function invalidateStudentRelatedCaches(studentId?: string) {
   invalidateCache("admin-dashboard");
   invalidateCache("dashboard");
   invalidateCache("students");
+  invalidateCache("teacher-program");
   invalidateCache("quick-log-students");
   invalidateCache("formative-");
   invalidateCache("summative-");
@@ -144,11 +145,15 @@ export function invalidateStudentRelatedCaches(studentId?: string) {
   invalidateCache("report-teacher");
   if (studentId) {
     invalidateCache(`report-student:${studentId}`);
+    invalidateCache(`export-bundle:student:${studentId}`);
     invalidateCache(`summative-detail:${studentId}:`);
     invalidateCache(`summative-history:${studentId}`);
+    invalidateCache(`tasmi-detail:${studentId}`);
   } else {
     invalidateCache("report-student");
+    invalidateCache("export-bundle:student");
     invalidateCache("summative-detail:");
     invalidateCache("summative-history:");
+    invalidateCache("tasmi-detail");
   }
 }

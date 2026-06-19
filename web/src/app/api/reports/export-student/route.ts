@@ -30,6 +30,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     const { progress: data, summativeScores } = exportBundle;
+    const tasmiRecords = exportBundle.tasmiRecords ?? [];
+
+    const isBoarding = data.programType === "BOARDING";
+    const programLabel = isBoarding ? "Boarding" : "Akademik";
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -41,12 +45,14 @@ export async function GET(request: Request) {
       { header: "Nilai", key: "value", width: 18 },
     ];
     [
+      { metric: "Program", value: programLabel },
       { metric: "Nama Santri", value: data.fullName },
       { metric: "Halaqah", value: data.halaqahName },
-      { metric: "Level", value: data.halaqahLevel },
+      ...(!isBoarding ? [{ metric: "Level", value: data.halaqahLevel }] : []),
       { metric: "Kelas", value: data.academicClassName },
       { metric: "Total Hafalan", value: data.hafalanCount },
       { metric: "Total Murojaah", value: data.murojaahCount },
+      { metric: "Total Tasmi'", value: tasmiRecords.length },
       { metric: "Rata-rata Skor", value: data.avgScore || "-" },
     ].forEach((row) => summarySheet.addRow(row));
     finalizeTableSheet(summarySheet);
@@ -79,6 +85,34 @@ export async function GET(request: Request) {
       wrapColumns: ["range", "status"],
       centerColumns: ["score"],
     });
+
+    if (tasmiRecords.length > 0) {
+      const tasmiSheet = workbook.addWorksheet("Tasmi");
+      tasmiSheet.columns = [
+        { header: "Tanggal", key: "date", width: 18 },
+        { header: "Semester", key: "semester", width: 12 },
+        { header: "Juz", key: "juz", width: 8 },
+        { header: "Nilai", key: "grade", width: 15 },
+        { header: "Status", key: "status", width: 12 },
+        { header: "Penguji", key: "examinerName", width: 25 },
+        { header: "Catatan", key: "notes", width: 30 },
+      ];
+      tasmiRecords.forEach((t) =>
+        tasmiSheet.addRow({
+          date: t.date,
+          semester: t.semester,
+          juz: t.juz,
+          grade: t.grade,
+          status: t.status,
+          examinerName: t.examinerName,
+          notes: t.notes ?? "",
+        }),
+      );
+      finalizeTableSheet(tasmiSheet, {
+        wrapColumns: ["examinerName", "notes"],
+        centerColumns: ["semester", "juz"],
+      });
+    }
 
     if (data.activeTargets.length > 0) {
       const targetSheet = workbook.addWorksheet("Target Aktif");
@@ -123,7 +157,7 @@ export async function GET(request: Request) {
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(
       workbook,
-      `progres-${safeName}-${date}.xlsx`,
+      `progres-${safeName}-${programLabel.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export student Excel report", error);

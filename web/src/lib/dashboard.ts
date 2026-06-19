@@ -1,13 +1,15 @@
 import { cookies } from "next/headers";
-import { RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
-import { prisma } from "@/lib/prisma";
+import { ProgramType, RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
+import { prisma, withRetry } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import {
   getDateFormatter,
   getTimeFormatter,
   statusLabels,
   formatRange,
 } from "@/lib/format";
+import { tasmiGradeLabels, tasmiStatusLabel } from "@/lib/tasmi";
 
 function getUserToday(timezoneOffsetMinutes: number | null): Date {
   const now = new Date();
@@ -55,77 +57,97 @@ async function readTimezoneOffset(): Promise<number | null> {
   }
 }
 
-export async function getDashboardData(teacherId?: string | null, locale = "id") {
+export async function getDashboardData(teacherId?: string | null, locale = "id", programType?: ProgramType) {
   const tzOffset = await readTimezoneOffset();
-  const cacheKey = `dashboard:${teacherId ?? "admin"}:${locale}:${tzOffset ?? "utc"}`;
-  return cached(cacheKey, 30_000, () => getDashboardDataInner(teacherId, locale, tzOffset));
+  const cacheKey = `dashboard:${teacherId ?? "admin"}:${locale}:${tzOffset ?? "utc"}:${programType ?? "all"}`;
+  return cached(cacheKey, 30_000, () => withRetry(() => getDashboardDataInner(teacherId, locale, tzOffset, programType)));
 }
 
-async function getDashboardDataInner(teacherId?: string | null, locale = "id", tzOffset: number | null = null) {
+async function getDashboardDataInner(teacherId?: string | null, locale = "id", tzOffset: number | null = null, programType?: ProgramType) {
   const today = getUserToday(tzOffset);
   const weekStart = getWeekStart(today, tzOffset);
-  const filter = teacherFilter(teacherId);
+  const academicYear = await getActiveAcademicYear();
+  const teacherOnly = teacherFilter(teacherId);
+  const programFilter = programType ? { student: { classGroup: { programType } } } : {};
+  const recordFilter = { ...teacherOnly, academicYear, ...programFilter };
   const dateFormatter = getDateFormatter(locale);
   const timeFormatter = getTimeFormatter(locale);
 
   const [
     memorizationRecords,
     revisionRecords,
+    tasmiRecords,
     todayMemorizationCount,
     todayRevisionCount,
+    todayTasmiCount,
     weeklyMemorizationCount,
     weeklyRevisionCount,
+    weeklyTasmiCount,
     weeklyCompletedTargets,
     needsReviewCount,
     overdueTargets,
   ] = await Promise.all([
     prisma.memorizationRecord.findMany({
-      where: filter,
-      include: { student: { select: { id: true, fullName: true } } },
+      where: recordFilter,
+      include: { student: { select: { id: true, fullName: true, classGroup: { select: { programType: true } } } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
     prisma.revisionRecord.findMany({
-      where: filter,
-      include: { student: { select: { id: true, fullName: true } } },
+      where: recordFilter,
+      include: { student: { select: { id: true, fullName: true, classGroup: { select: { programType: true } } } } },
+      orderBy: { date: "desc" },
+      take: 6,
+    }),
+    prisma.tasmiRecord.findMany({
+      where: recordFilter,
+      include: { student: { select: { id: true, fullName: true, classGroup: { select: { programType: true } } } } },
       orderBy: { date: "desc" },
       take: 6,
     }),
     prisma.memorizationRecord.count({
-      where: { ...filter, date: { gte: today } },
+      where: { ...recordFilter, date: { gte: today } },
     }),
     prisma.revisionRecord.count({
-      where: { ...filter, date: { gte: today } },
+      where: { ...recordFilter, date: { gte: today } },
+    }),
+    prisma.tasmiRecord.count({
+      where: { ...recordFilter, date: { gte: today } },
     }),
     prisma.memorizationRecord.count({
-      where: { ...filter, date: { gte: weekStart } },
+      where: { ...recordFilter, date: { gte: weekStart } },
     }),
     prisma.revisionRecord.count({
-      where: { ...filter, date: { gte: weekStart } },
+      where: { ...recordFilter, date: { gte: weekStart } },
+    }),
+    prisma.tasmiRecord.count({
+      where: { ...recordFilter, date: { gte: weekStart } },
     }),
     prisma.target.count({
       where: {
-        ...filter,
+        ...teacherOnly,
         status: TargetStatus.COMPLETED,
         updatedAt: { gte: weekStart },
+        ...(programType ? { student: { classGroup: { programType } } } : {}),
       },
     }),
     (async () => {
       const [mem, rev] = await Promise.all([
         prisma.memorizationRecord.count({
-          where: { ...filter, status: RecordStatus.PERLU_MUROJAAH },
+          where: { ...recordFilter, status: RecordStatus.PERLU_MUROJAAH },
         }),
         prisma.revisionRecord.count({
-          where: { ...filter, status: RecordStatus.PERLU_MUROJAAH },
+          where: { ...recordFilter, status: RecordStatus.PERLU_MUROJAAH },
         }),
       ]);
       return mem + rev;
     })(),
     prisma.target.findMany({
       where: {
-        ...filter,
+        ...teacherOnly,
         status: TargetStatus.ACTIVE,
         endDate: { lt: new Date() },
+        ...(programType ? { student: { classGroup: { programType } } } : {}),
       },
       select: {
         id: true,
@@ -144,6 +166,7 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
       id: `hafalan-${record.id}`,
       studentId: record.studentId,
       student: record.student.fullName,
+      programType: record.student.classGroup.programType,
       type: "Hafalan",
       range: formatRange(record.surah, record.fromAyah, record.toAyah),
       status: statusLabels[record.status],
@@ -157,10 +180,26 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
       id: `murojaah-${record.id}`,
       studentId: record.studentId,
       student: record.student.fullName,
+      programType: record.student.classGroup.programType,
       type: "Murojaah",
       range: formatRange(record.surah, record.fromAyah, record.toAyah),
       status: statusLabels[record.status],
       needsReview: record.status === RecordStatus.PERLU_MUROJAAH,
+      dateTimeIso: record.date.toISOString(),
+      date: dateFormatter.format(record.date),
+      time: timeFormatter.format(record.date),
+      timestamp: record.date.getTime(),
+    })),
+    ...tasmiRecords.map((record) => ({
+      id: `tasmi-${record.id}`,
+      studentId: record.studentId,
+      student: record.student.fullName,
+      programType: record.student.classGroup.programType,
+      type: "Tasmi'",
+      range: `Tasmi' Juz ${record.juz}`,
+      status: tasmiStatusLabel[record.status],
+      grade: tasmiGradeLabels[record.grade],
+      needsReview: false,
       dateTimeIso: record.date.toISOString(),
       date: dateFormatter.format(record.date),
       time: timeFormatter.format(record.date),
@@ -171,9 +210,10 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
     .slice(0, 5);
 
   return {
-    todayRecordCount: todayMemorizationCount + todayRevisionCount,
+    todayRecordCount: todayMemorizationCount + todayRevisionCount + todayTasmiCount,
     weeklyMemorizationCount,
     weeklyRevisionCount,
+    weeklyTasmiCount,
     weeklyCompletedTargets,
     needsReviewCount,
     recentRecords,

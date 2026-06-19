@@ -13,7 +13,9 @@ type InactiveStudentRowProps = {
   id: string;
   onDeleteError: (error: string) => void;
   onDeleteStart: () => void;
+  onDeleteRollback: () => void;
   onReactivateSuccess: () => void;
+  onReactivateRollback: () => void;
 };
 
 export default function InactiveStudentRow({
@@ -24,7 +26,9 @@ export default function InactiveStudentRow({
   id,
   onDeleteError,
   onDeleteStart,
+  onDeleteRollback,
   onReactivateSuccess,
+  onReactivateRollback,
 }: InactiveStudentRowProps) {
   const t = useTranslations("Students");
 
@@ -60,12 +64,14 @@ export default function InactiveStudentRow({
             canManage
             isActive={false}
             onStatusChanged={onReactivateSuccess}
+            onStatusRollback={onReactivateRollback}
             studentId={id}
             studentName={fullName}
           />
           <DeleteStudentButton
             disabledReason={deleteDisabledReason}
             onDeleteError={onDeleteError}
+            onDeleteRollback={onDeleteRollback}
             onDeleteStart={onDeleteStart}
             studentId={id}
           />

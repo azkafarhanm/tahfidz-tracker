@@ -1,4 +1,4 @@
-import { RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
@@ -14,26 +14,31 @@ import {
   getStudentSummativeHistory,
   getTeacherSummativeExportData,
 } from "@/lib/summative";
+import { tasmiGradeLabels, tasmiStatusLabel } from "@/lib/tasmi";
 
-export async function getTeacherReportData(teacherId: string, locale = "id") {
-  return cached(`report-teacher:${teacherId}:${locale}`, 30_000, () => getTeacherReportDataInner(teacherId, locale));
+export async function getTeacherReportData(teacherId: string, locale = "id", programType?: ProgramType, academicYear?: string) {
+  const year = academicYear ?? await getActiveAcademicYear();
+  const cacheKey = `report-teacher:${teacherId}:${locale}:${programType ?? "all"}:${year}`;
+  return cached(cacheKey, 30_000, () => getTeacherReportDataInner(teacherId, locale, programType, year));
 }
 
-async function getTeacherReportDataInner(teacherId: string, locale = "id") {
+async function getTeacherReportDataInner(teacherId: string, locale = "id", programType?: ProgramType, academicYear?: string) {
   const dateFormatter = getDateFormatter(locale);
+  const year = academicYear ?? await getActiveAcademicYear();
+  const programFilter = programType ? { programType } : {};
   const [classGroups, students] = await Promise.all([
     prisma.classGroup.findMany({
-      where: { teacherId, isActive: true },
+      where: { teacherId, isActive: true, academicYear: year, ...programFilter },
       orderBy: { name: "asc" },
       include: {
         _count: { select: { students: { where: { isActive: true } } } },
       },
     }),
     prisma.student.findMany({
-      where: { teacherId, isActive: true },
+      where: { teacherId, isActive: true, classGroup: { academicYear: year, ...programFilter } },
       orderBy: { fullName: "asc" },
       include: {
-        classGroup: { select: { name: true, level: true } },
+        classGroup: { select: { name: true, level: true, grade: true, programType: true } },
         academicClass: { select: { name: true } },
         _count: {
           select: {
@@ -163,7 +168,9 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
     classGroups: classGroups.map((cg) => ({
       id: cg.id,
       name: cg.name,
-      level: halaqahLevelLabels[cg.level],
+      grade: cg.grade,
+      level: cg.programType === "BOARDING" ? "" : halaqahLevelLabels[cg.level],
+      programType: cg.programType,
       studentCount: cg._count.students,
     })),
     studentCount: students.length,
@@ -186,9 +193,10 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id") {
       return {
         id: s.id,
         fullName: s.fullName,
+        grade: s.classGroup.grade,
         halaqahName: s.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[s.classGroup.level],
-        academicClassName: s.academicClass?.name ?? "-",
+        halaqahLevel: s.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[s.classGroup.level],
+        academicClassName: s.classGroup.programType === "BOARDING" ? String(s.classGroup.grade) : (s.academicClass?.name ?? "-"),
         hafalanCount: s._count.memorizationRecords,
         murojaahCount: s._count.revisionRecords,
         avgScore: studentAvg,
@@ -251,7 +259,7 @@ async function getStudentProgressDataInner(
       ...(teacherId ? { teacherId } : {}),
     },
     include: {
-      classGroup: { select: { name: true, level: true } },
+      classGroup: { select: { name: true, level: true, programType: true, grade: true } },
       academicClass: { select: { name: true } },
       memorizationRecords: {
         orderBy: { date: "desc" },
@@ -352,8 +360,9 @@ async function getStudentProgressDataInner(
     id: student.id,
     fullName: student.fullName,
     halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-    academicClassName: student.academicClass?.name ?? "-",
+    halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+    programType: student.classGroup.programType,
+    academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
     hafalanCount: hafalanRecords.length,
     murojaahCount: murojaahRecords.length,
     avgScore,
@@ -378,31 +387,43 @@ async function getStudentProgressDataInner(
   };
 }
 
-export async function getAdminReportData(locale = "id") {
-  return cached(`report-admin:${locale}`, 30_000, () => getAdminReportDataInner(locale));
+export async function getAdminReportData(locale = "id", programType?: ProgramType) {
+  return cached(`report-admin:${locale}:${programType ?? "all"}`, 30_000, () => getAdminReportDataInner(locale, programType));
 }
 
-async function getAdminReportDataInner(locale = "id") {
+async function getAdminReportDataInner(locale = "id", programType?: ProgramType) {
   const dateFormatter = getDateFormatter(locale);
+  const studentWhere = programType
+    ? { isActive: true, classGroup: { programType } }
+    : { isActive: true };
+  const recordWhere = programType
+    ? { student: { isActive: true, classGroup: { programType } } }
+    : {};
+  const targetWhere = programType
+    ? { status: TargetStatus.ACTIVE, student: { isActive: true, classGroup: { programType } } }
+    : { status: TargetStatus.ACTIVE };
   const [teachers, totalStudents, totalHafalan, totalMurojaah, totalActiveTargets] =
     await Promise.all([
       prisma.teacher.findMany({
-        where: { isActive: true },
+        where: {
+          isActive: true,
+          students: { some: studentWhere },
+        },
         orderBy: { fullName: "asc" },
         include: {
           user: { select: { email: true } },
           _count: {
             select: {
-              students: { where: { isActive: true } },
-              classes: { where: { isActive: true } },
+              students: { where: studentWhere },
+              classes: { where: { isActive: true, ...(programType ? { programType } : {}) } },
             },
           },
         },
       }),
-      prisma.student.count({ where: { isActive: true } }),
-      prisma.memorizationRecord.count(),
-      prisma.revisionRecord.count(),
-      prisma.target.count({ where: { status: TargetStatus.ACTIVE } }),
+      prisma.student.count({ where: studentWhere }),
+      prisma.memorizationRecord.count({ where: recordWhere }),
+      prisma.revisionRecord.count({ where: recordWhere }),
+      prisma.target.count({ where: targetWhere }),
     ]);
 
   return {
@@ -454,19 +475,21 @@ export async function getTeacherExportBundle(
   teacherId: string,
   locale = "id",
   academicYear?: string,
+  programType?: ProgramType,
 ) {
   const year = academicYear ?? await getActiveAcademicYear();
+  const cacheKey = `export-bundle:teacher:${teacherId}:${locale}:${year}:${programType ?? "all"}`;
   return cached(
-    `export-bundle:teacher:${teacherId}:${locale}:${year}`,
+    cacheKey,
     30_000,
     async () => {
       const [summary, formativeGanjil, formativeGenap, summativeGanjil, summativeGenap] =
         await Promise.all([
-          getTeacherReportData(teacherId, locale),
-          getTeacherFormativeExportData(teacherId, Semester.GANJIL, year),
-          getTeacherFormativeExportData(teacherId, Semester.GENAP, year),
-          getTeacherSummativeExportData(teacherId, Semester.GANJIL, year),
-          getTeacherSummativeExportData(teacherId, Semester.GENAP, year),
+          getTeacherReportData(teacherId, locale, programType, year),
+          getTeacherFormativeExportData(teacherId, Semester.GANJIL, year, undefined, programType),
+          getTeacherFormativeExportData(teacherId, Semester.GENAP, year, undefined, programType),
+          getTeacherSummativeExportData(teacherId, Semester.GANJIL, year, undefined, programType),
+          getTeacherSummativeExportData(teacherId, Semester.GENAP, year, undefined, programType),
         ]);
 
       return {
@@ -549,9 +572,11 @@ function summarizeTeacherFormativeExport(
 
     return {
       fullName: student.fullName,
-      halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
-      halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-      academicClassName: student.academicClass?.name ?? "-",
+      halaqahName: student.classGroup.programType === "BOARDING"
+        ? student.classGroup.name
+        : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+      halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+      academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
       hafalanCount: summary?.hafalanCount ?? 0,
       murojaahCount: summary?.murojaahCount ?? 0,
       totalAssessments,
@@ -600,11 +625,12 @@ export async function getStudentExportBundle(
     `export-bundle:student:${studentId}:${teacherId ?? "admin"}:${locale}`,
     30_000,
     async () => {
-      const [progress, summativeScores] = await Promise.all([
+      const [progress, summativeScores, tasmiRecords] = await Promise.all([
         getStudentProgressData(studentId, teacherId, locale),
         getStudentSummativeHistory(studentId, undefined, teacherId, {
           skipTeacherOwnershipCheck: true,
         }),
+        getStudentTasmiHistoryForExport(studentId, teacherId),
       ]);
 
       if (!progress) {
@@ -614,14 +640,52 @@ export async function getStudentExportBundle(
       return {
         progress,
         summativeScores,
+        tasmiRecords,
       };
     },
   );
 }
 
-export async function getAdminExportBundle(locale = "id") {
-  return cached(`export-bundle:admin:${locale}`, 30_000, async () => {
-    const adminData = await getAdminReportData(locale);
+async function getStudentTasmiHistoryForExport(
+  studentId: string,
+  teacherId?: string | null,
+) {
+  const academicYear = await getActiveAcademicYear();
+  const records = await prisma.tasmiRecord.findMany({
+    where: {
+      studentId,
+      academicYear,
+      ...(teacherId ? { teacherId } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      juz: true,
+      grade: true,
+      status: true,
+      examinerName: true,
+      date: true,
+      notes: true,
+      semester: true,
+    },
+  });
+
+  const dateFormatter = getDateFormatter();
+  return records.map((r) => ({
+    id: r.id,
+    juz: r.juz,
+    grade: tasmiGradeLabels[r.grade],
+    status: tasmiStatusLabel[r.status],
+    examinerName: r.examinerName,
+    date: dateFormatter.format(r.date),
+    notes: r.notes,
+    semester: r.semester === "GANJIL" ? "Ganjil" : "Genap",
+  }));
+}
+
+export async function getAdminExportBundle(locale = "id", programType?: ProgramType) {
+  return cached(`export-bundle:admin:${locale}:${programType ?? "all"}`, 30_000, async () => {
+    const adminData = await getAdminReportData(locale, programType);
     const teacherDirectory = adminData.teachers.map((teacher) => ({
       id: teacher.id,
       fullName: teacher.fullName,
@@ -633,6 +697,9 @@ export async function getAdminExportBundle(locale = "id") {
         teacher: {
           isActive: true,
         },
+        classGroup: {
+          ...(programType ? { programType } : {}),
+        },
       },
       orderBy: [{ teacher: { fullName: "asc" } }, { fullName: "asc" }],
       select: {
@@ -643,6 +710,7 @@ export async function getAdminExportBundle(locale = "id") {
           select: {
             name: true,
             level: true,
+            programType: true,
           },
         },
         _count: {
@@ -746,7 +814,7 @@ export async function getAdminExportBundle(locale = "id") {
       const row = {
         fullName: student.fullName,
         halaqahName: student.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+        halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
         hafalanCount: student._count.memorizationRecords,
         murojaahCount: student._count.revisionRecords,
         avgScore: scoreStats

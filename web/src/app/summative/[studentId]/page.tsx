@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import ExportSection from "@/components/ExportSection";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import { Semester } from "@/generated/prisma-next/enums";
@@ -37,6 +38,8 @@ type SummativeDetailPageProps = {
     saved?: string;
     deleted?: string;
     error?: string;
+    programType?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -64,6 +67,8 @@ export default async function SummativeDetailPage({
     query?.semester && isSemesterValue(query.semester)
       ? query.semester
       : defaultSemester;
+  const fromReports = query?.returnTo === "reports";
+  const paramProgramType = query?.programType ?? "";
 
   const academicYear = await getActiveAcademicYear();
   const detail = await getStudentSummativeDetail(
@@ -88,7 +93,7 @@ export default async function SummativeDetailPage({
         <div>
           <Link
             className={backLink}
-            href={`/summative?semester=${semesterValue}&classLevel=${detail.classLevel}`}
+            href={`/summative?semester=${semesterValue}&classLevel=${detail.classLevel}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backToList")}
@@ -97,7 +102,7 @@ export default async function SummativeDetailPage({
             {detail.fullName}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {detail.academicClassName} - {detail.halaqahName} ({detail.halaqahLevel})
+            {detail.academicClassName} - {detail.halaqahName}{detail.halaqahLevel ? ` (${detail.halaqahLevel})` : ""}
           </p>
         </div>
         <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
@@ -110,8 +115,8 @@ export default async function SummativeDetailPage({
           ariaLabel={t("semesterLabel")}
           currentValue={semesterValue}
           options={[
-            { value: Semester.GANJIL, label: t("ganjil"), href: `/summative/${studentId}?semester=${Semester.GANJIL}` },
-            { value: Semester.GENAP, label: t("genap"), href: `/summative/${studentId}?semester=${Semester.GENAP}` },
+            { value: Semester.GANJIL, label: t("ganjil"), href: `/summative/${studentId}?semester=${Semester.GANJIL}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}` },
+            { value: Semester.GENAP, label: t("genap"), href: `/summative/${studentId}?semester=${Semester.GENAP}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}` },
           ]}
         />
 
@@ -119,13 +124,16 @@ export default async function SummativeDetailPage({
           {academicYear}
         </span>
 
-        <a
-          className="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-          href={`/api/reports/export-summative?semester=${semesterValue}&classLevel=${detail.classLevel}`}
-        >
-          <Download aria-hidden="true" size={16} strokeWidth={2.2} />
-          {t("exportExcel")}
-        </a>
+        <ExportSection
+          excelHref={`/api/reports/export-summative?semester=${semesterValue}&classLevel=${detail.classLevel}&programType=${detail.programType}`}
+          excelClassName="ml-auto inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+          excelContent={
+            <>
+              <Download aria-hidden="true" size={16} strokeWidth={2.2} />
+              {t("exportExcel")}
+            </>
+          }
+        />
         <Link
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
           href={`/summative/${studentId}/new?semester=${semesterValue}`}
@@ -136,19 +144,19 @@ export default async function SummativeDetailPage({
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-blue-600 p-5 shadow-lg shadow-blue-900/20">
+          <p className="text-sm text-white/80">
             {t("assessmentCountLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.totalAssessments}
           </p>
         </article>
-        <article className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <article className="rounded-[1.75rem] bg-amber-500 p-5 shadow-lg shadow-amber-900/20">
+          <p className="text-sm text-white/80">
             {t("studentAverageLabel")}
           </p>
-          <p className="mt-3 text-3xl font-semibold text-slate-950 dark:text-white">
+          <p className="mt-3 text-3xl font-bold text-white">
             {detail.averageScore ?? "-"}
           </p>
         </article>

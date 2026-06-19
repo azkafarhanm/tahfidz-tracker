@@ -59,6 +59,7 @@ export default async function EditTeacherPage({
         passwordRequired={false}
         submitLabel={t("saveChanges")}
         title={t("editTeacher")}
+        showUsername
         values={{
           fullName: query?.fullName ?? teacher.fullName,
           username: query?.username ?? teacher.username,

@@ -1,5 +1,5 @@
 import { Prisma } from "@/generated/prisma-next/client";
-import { Semester } from "@/generated/prisma-next/enums";
+import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
@@ -33,6 +33,7 @@ export type SummativeOverviewStudent = {
   fullName: string;
   halaqahName: string;
   halaqahLevel: string;
+  programType: string;
   academicClassName: string;
   totalAssessments: number;
   averageScore: number | null;
@@ -69,6 +70,7 @@ export type StudentSummativeDetail = {
   fullName: string;
   halaqahName: string;
   halaqahLevel: string;
+  programType: string;
   classLevel: number;
   academicClassName: string;
   totalAssessments: number;
@@ -169,6 +171,7 @@ export async function getTeacherSummativeOverview(
   locale = "id",
   page?: number,
   pageSize?: number,
+  programType?: ProgramType,
 ) {
   return getTeacherSummativeOverviewInner(
     teacherId,
@@ -178,6 +181,7 @@ export async function getTeacherSummativeOverview(
     locale,
     page,
     pageSize,
+    programType,
   );
 }
 
@@ -189,12 +193,17 @@ async function getTeacherSummativeOverviewInner(
   locale: string,
   page?: number,
   pageSize?: number,
+  programType?: ProgramType,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const studentWhere = {
     ...(teacherId ? { teacherId } : {}),
     isActive: true,
-    ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+    classGroup: {
+      academicYear,
+      ...(programType ? { programType } : {}),
+      ...(classLevel ? { grade: classLevel } : {}),
+    },
   };
   const safePage = page ? Math.max(1, page) : undefined;
   const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
@@ -216,6 +225,8 @@ async function getTeacherSummativeOverviewInner(
           select: {
             name: true,
             level: true,
+            programType: true,
+            grade: true,
           },
         },
         academicClass: {
@@ -328,8 +339,9 @@ async function getTeacherSummativeOverviewInner(
         id: student.id,
         fullName: student.fullName,
         halaqahName: student.classGroup.name,
-        halaqahLevel: halaqahLevelLabels[student.classGroup.level],
-        academicClassName: student.academicClass?.name ?? "-",
+        halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+        programType: student.classGroup.programType,
+        academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
         totalAssessments: stats?.totalAssessments ?? 0,
         averageScore: stats?.averageScore ?? null,
         latestAssessment: latest?.latestAssessment ?? "-",
@@ -388,6 +400,7 @@ async function getStudentSummativeDetailInner(
           name: true,
           level: true,
           grade: true,
+          programType: true,
         },
       },
       academicClass: {
@@ -434,9 +447,10 @@ async function getStudentSummativeDetailInner(
     id: student.id,
     fullName: student.fullName,
     halaqahName: student.classGroup.name,
-    halaqahLevel: halaqahLevelLabels[student.classGroup.level],
+    halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
+    programType: student.classGroup.programType,
     classLevel: student.classGroup.grade,
-    academicClassName: student.academicClass?.name ?? "-",
+    academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
     totalAssessments: student.summativeScores.length,
     averageScore: scores.length > 0 ? roundAverage(scores) : null,
     assessments: student.summativeScores.map((assessment) => ({
@@ -492,12 +506,14 @@ export async function getTeacherSummativeExportData(
   semester: Semester,
   academicYear: string,
   classLevel?: number,
+  programType?: ProgramType,
 ) {
   return getTeacherSummativeExportDataInner(
     teacherId,
     semester,
     academicYear,
     classLevel,
+    programType,
   );
 }
 
@@ -506,12 +522,17 @@ async function getTeacherSummativeExportDataInner(
   semester: Semester,
   academicYear: string,
   classLevel?: number,
+  programType?: ProgramType,
 ) {
   const students = await prisma.student.findMany({
     where: {
       ...(teacherId ? { teacherId } : {}),
       isActive: true,
-      ...(classLevel ? { classGroup: { grade: classLevel } } : {}),
+      classGroup: {
+        academicYear,
+        ...(programType ? { programType } : {}),
+        ...(classLevel ? { grade: classLevel } : {}),
+      },
     },
     select: {
       id: true,
@@ -521,6 +542,7 @@ async function getTeacherSummativeExportDataInner(
           grade: true,
           name: true,
           level: true,
+          programType: true,
         },
       },
       academicClass: {
@@ -579,8 +601,10 @@ async function getTeacherSummativeExportDataInner(
     students.map((student) => [
       student.id,
       {
-        academicClassName: student.academicClass?.name ?? "-",
-        halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
+        halaqahName: student.classGroup.programType === "BOARDING"
+          ? student.classGroup.name
+          : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
         classLevel: student.classGroup.grade,
       },
     ]),
@@ -624,8 +648,10 @@ async function getTeacherSummativeExportDataInner(
       return {
         id: student.id,
         fullName: student.fullName,
-        academicClassName: student.academicClass?.name ?? "-",
-        halaqahName: `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
+        halaqahName: student.classGroup.programType === "BOARDING"
+          ? student.classGroup.name
+          : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
         classLevel: student.classGroup.grade,
         totalAssessments: summary?.totalAssessments ?? 0,
         averageScore:

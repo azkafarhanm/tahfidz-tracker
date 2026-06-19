@@ -27,6 +27,7 @@ type EditStudentPageProps = {
     joinDate?: string;
     isActive?: string;
     notes?: string;
+    programType?: string;
   }>;
 };
 
@@ -48,12 +49,16 @@ export default async function EditStudentPage({
     notFound();
   }
 
+  const programType = query?.programType ?? data.student.programType ?? "";
+  const backHref = programType
+    ? `/admin/students?programType=${programType}`
+    : "/admin/students";
   const action = updateStudent.bind(null, data.student.id);
 
   return (
     <StudentForm
       action={action}
-      backHref="/admin/students"
+      backHref={backHref}
       backLabel={t("backStudentDirectory")}
       description={t("editStudentDescription", { name: data.student.fullName })}
       error={query?.error}
@@ -62,6 +67,7 @@ export default async function EditStudentPage({
       options={data.options}
       submitLabel={t("saveChanges")}
       title={t("editStudent")}
+      programType={programType}
       values={{
         fullName: query?.fullName ?? data.student.fullName,
         teacherId: query?.teacherId ?? data.student.teacherId,

@@ -15,11 +15,18 @@ import ActiveStudentCard from "@/components/ActiveStudentCard";
 import AppShell from "@/components/AppShell";
 import InactiveStudentsSection from "@/components/InactiveStudentsSection";
 import LiveSearchForm from "@/components/LiveSearchForm";
+import OptimisticNumber from "@/components/OptimisticNumber";
 import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
+import ActiveYearBadge from "@/components/ActiveYearBadge";
+import ProgramSelector from "@/components/ProgramSelector";
+import ProgramBadge from "@/components/ProgramBadge";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
+import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
+import { ProgramType } from "@/generated/prisma-next/enums";
+import { programTypeLabels } from "@/lib/format";
 
 export const runtime = "nodejs";
 
@@ -35,6 +42,7 @@ type StudentsPageProps = {
     error?: string;
     page?: string;
     status?: string;
+    programType?: string;
   }>;
 };
 
@@ -53,8 +61,20 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const status = params?.status === "inactive" && !isAdmin ? "inactive" : "active";
   const isInactiveView = status === "inactive";
-  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE);
-  const inactiveStudents = !isAdmin ? await getLiveInactiveStudentsData(teacherId) : [];
+
+  // Program resolution
+  const academicYear = await getActiveAcademicYear();
+  const programContext = teacherId
+    ? await getTeacherProgramContext(teacherId, academicYear)
+    : { programs: [ProgramType.ACADEMIC, ProgramType.BOARDING], hasMultiple: true, resolvedProgramType: ProgramType.ACADEMIC };
+  const requestedProgramType = params?.programType as ProgramType | undefined;
+  const programType = programContext.programs.includes(requestedProgramType as ProgramType)
+    ? (requestedProgramType as ProgramType)
+    : programContext.resolvedProgramType;
+
+  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType);
+  // Only fetch inactive students when viewing the inactive tab
+  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType) : [];
   const filteredInactiveStudents = query
     ? inactiveStudents.filter((student) => {
         const normalizedQuery = query.toLowerCase();
@@ -69,6 +89,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     const nextParams = new URLSearchParams();
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
+    if (programType) nextParams.set("programType", programType);
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
   };
@@ -76,6 +97,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     const nextParams = new URLSearchParams();
     if (nextStatus === "inactive") nextParams.set("status", "inactive");
     if (query) nextParams.set("q", query);
+    if (programType) nextParams.set("programType", programType);
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
   };
@@ -88,10 +110,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <StudentsPageAutoRefresh />
         <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
-          <div>
+           <div>
             <Link
               className={backLink}
-              href="/"
+              href={`/${programType ? `?programType=${programType}` : ""}`}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
@@ -102,12 +124,23 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {t("description")}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <ActiveYearBadge />
+              <ProgramBadge programType={programType} />
+              {programContext.hasMultiple && (
+                <ProgramSelector
+                  programs={programContext.programs}
+                  programTypeLabels={programTypeLabels}
+                  currentProgramType={programType}
+                />
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             {isAdmin ? (
               <Link
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href="/admin/students"
+                href={`/admin/students?programType=${programType}`}
               >
                 <ShieldCheck aria-hidden="true" size={16} strokeWidth={2.2} />
                 Kelola
@@ -126,7 +159,9 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                 {isInactiveView ? t("inactiveHeading") : t("activeStudentsLabel")}
               </p>
               <p className="mt-3 text-4xl font-semibold">
-                {isInactiveView ? inactiveStudents.length : studentPage.totalCount}
+                {isInactiveView
+                  ? <OptimisticNumber value={inactiveStudents.length} field="inactive" />
+                  : <OptimisticNumber value={studentPage.totalCount} field="active" />}
               </p>
               <p className="mt-1 text-sm text-slate-300">
                 {isInactiveView ? t("inactiveDescription") : t("activeStudentsSubtext")}
@@ -138,7 +173,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
               </p>
               <p className="mt-1 text-xl font-semibold">
                 {isInactiveView
-                  ? studentPage.totalCount
+                  ? <OptimisticNumber value={studentPage.totalCount} field="active" />
                   : studentPage.students.filter((student) => student.needsReview).length}
               </p>
             </div>
@@ -188,18 +223,31 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             </h2>
             <div className="flex items-center gap-2">
               {!isAdmin && !isInactiveView ? (
-                <Link
-                  className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                  href="/students/new"
-                >
-                  <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
-                  {t("addButton")}
-                </Link>
+                <>
+                  <Link
+                    className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
+                    href={programContext.programs.length === 0
+                      ? "/students/program-select"
+                      : `/students/new${programType ? `?programType=${programType}` : ""}`}
+                  >
+                    <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
+                    {t("addButton")}
+                  </Link>
+                  {programContext.programs.length === 1 && (
+                    <Link
+                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-600"
+                      href={`/students/new?programType=${programContext.programs[0] === "ACADEMIC" ? "BOARDING" : "ACADEMIC"}`}
+                    >
+                      <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
+                      {programContext.programs[0] === "ACADEMIC" ? t("activateBoarding") : t("activateAcademic")}
+                    </Link>
+                  )}
+                </>
               ) : null}
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {isInactiveView
-                  ? `${filteredInactiveStudents.length}/${inactiveStudents.length} ${t("inactiveCountBadge")}`
-                  : `${studentPage.students.length}/${studentPage.totalCount} ${t("activeCountBadge")}`}
+                  ? <><OptimisticNumber value={filteredInactiveStudents.length} field="inactive" />/<OptimisticNumber value={inactiveStudents.length} field="inactive" /> {t("inactiveCountBadge")}</>
+                  : <><OptimisticNumber value={studentPage.students.length} field="active" />/<OptimisticNumber value={studentPage.totalCount} field="active" /> {t("activeCountBadge")}</>}
               </span>
             </div>
           </div>
@@ -217,6 +265,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                     key={student.id}
                     latestHafalan={student.latestHafalan}
                     latestMurojaah={student.latestMurojaah}
+                    tasmiJuzSummary={student.tasmiJuzSummary}
                     needsReview={student.needsReview}
                   />
                 ))

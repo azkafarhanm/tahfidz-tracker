@@ -42,12 +42,14 @@ type ClassGroupOption = StudentOption & {
   levelLabel: string;
   name: string;
   teacherName: string;
+  programType: string;
 };
 
 type AcademicClassOption = StudentOption & {
   grade: number;
   name: string;
   academicYear: string;
+  programType: string;
 };
 
 export type StudentFormValues = {
@@ -76,6 +78,7 @@ type StudentFormProps = {
   submitLabel: string;
   title: string;
   values: StudentFormValues;
+  programType?: string;
 };
 
 export default function StudentForm({
@@ -90,6 +93,7 @@ export default function StudentForm({
   submitLabel,
   title,
   values,
+  programType = "",
 }: StudentFormProps) {
   const t = useTranslations("AdminStudentForm");
   const tc = useTranslations("CharacterCounter");
@@ -106,12 +110,16 @@ export default function StudentForm({
     { value: "FEMALE", label: t("female") },
   ];
 
+  const isBoarding = programType === "BOARDING";
+
   const filteredAcademicClasses = useMemo(
     () =>
       options.academicClasses.filter(
-        (academicClass) => academicClass.academicYear === activeAcademicYear,
+        (academicClass) =>
+          academicClass.academicYear === activeAcademicYear &&
+          (!programType || academicClass.programType === programType),
       ),
-    [options.academicClasses, activeAcademicYear],
+    [options.academicClasses, activeAcademicYear, programType],
   );
 
   const selectedAcademicClass = useMemo(
@@ -179,6 +187,7 @@ export default function StudentForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={handleSubmit} className="mt-6 space-y-4">
+          {programType && <input type="hidden" name="programType" value={programType} />}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <UserRound
@@ -277,12 +286,12 @@ export default function StudentForm({
 
             <label className="mt-4 block">
                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                 {t("academicClass")}
+                 {isBoarding ? t("boardingClass") : t("academicClass")}
                </span>
               <div className="mt-2 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:focus-within:border-emerald-400 dark:focus-within:bg-slate-800 dark:focus-within:ring-emerald-900">
-                 <GraduationCap
-                   aria-hidden="true"
-                   className="shrink-0 text-slate-400 dark:text-slate-500"
+                <GraduationCap
+                  aria-hidden="true"
+                  className="shrink-0 text-slate-400 dark:text-slate-500"
                   size={17}
                   strokeWidth={2.2}
                 />
@@ -293,7 +302,7 @@ export default function StudentForm({
                   required
                   value={selectedAcademicClassId}
                 >
-                  <option value="">{t("selectAcademicClass")}</option>
+                  <option value="">{isBoarding ? t("selectBoardingClass") : t("selectAcademicClass")}</option>
                   {filteredAcademicClasses.map((academicClass) => (
                     <option key={academicClass.id} value={academicClass.id}>
                       {academicClass.label}
@@ -303,7 +312,7 @@ export default function StudentForm({
                 </select>
               </div>
                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                 {t("academicClassDescription")}
+                 {isBoarding ? t("boardingClassDescription") : t("academicClassDescription")}
                </p>
             </label>
 
@@ -328,45 +337,49 @@ export default function StudentForm({
                 </select>
               </label>
 
-            {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
-              <p className="mt-4 text-sm text-amber-600">
-                {t("noHalaqahWarning", {
-                  year: activeAcademicYear,
-                  grade: selectedAcademicClass.grade,
-                })}
-              </p>
-            ) : null}
+            {!isBoarding ? (
+              <>
+                {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
+                  <p className="mt-4 text-sm text-amber-600">
+                    {t("noHalaqahWarning", {
+                      year: activeAcademicYear,
+                      grade: selectedAcademicClass.grade,
+                    })}
+                  </p>
+                ) : null}
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                  <BookOpen
-                    aria-hidden="true"
-                    className="text-emerald-800 dark:text-emerald-400"
-                    size={16}
-                    strokeWidth={2.2}
-                  />
-                  {t("connectedHalaqah")}
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <BookOpen
+                        aria-hidden="true"
+                        className="text-emerald-800 dark:text-emerald-400"
+                        size={16}
+                        strokeWidth={2.2}
+                      />
+                      {t("connectedHalaqah")}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-950 dark:text-white">
+                      {resolvedClassGroup?.name ?? t("connectedHalaqahEmpty")}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <Signal
+                        aria-hidden="true"
+                        className="text-emerald-800 dark:text-emerald-400"
+                        size={16}
+                        strokeWidth={2.2}
+                      />
+                      {t("halaqahLevel")}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-950 dark:text-white">
+                      {resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                  {resolvedClassGroup?.name ?? t("connectedHalaqahEmpty")}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                  <Signal
-                    aria-hidden="true"
-                    className="text-emerald-800 dark:text-emerald-400"
-                    size={16}
-                    strokeWidth={2.2}
-                  />
-                  {t("halaqahLevel")}
-                </div>
-                <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                  {resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
-                </p>
-              </div>
-            </div>
+              </>
+            ) : null}
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
