@@ -218,6 +218,7 @@ function renderPdfDocument(
         day: "2-digit",
         month: "long",
         year: "numeric",
+        timeZone: "Asia/Jakarta",
       })}`,
       { align: "center" },
     );

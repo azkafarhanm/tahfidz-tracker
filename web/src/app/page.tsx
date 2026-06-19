@@ -87,6 +87,7 @@ export default async function DashboardPreview({
                 day: "numeric",
                 month: "long",
                 year: "numeric",
+                timeZone: "Asia/Jakarta",
               }).format(new Date())}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-3">

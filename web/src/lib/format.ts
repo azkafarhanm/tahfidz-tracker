@@ -20,6 +20,7 @@ export function getDateFormatter(locale?: string) {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "Asia/Jakarta",
   });
 }
 
@@ -28,6 +29,7 @@ export function getTimeFormatter(locale?: string) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: "Asia/Jakarta",
   });
 }
 
