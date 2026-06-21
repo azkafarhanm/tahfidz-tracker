@@ -1,41 +1,67 @@
 # TahfidzFlow
 
-TahfidzFlow is a mobile-first tahfidz tracking system for SMP grades 7-9. It helps teachers record hafalan and murojaah, review formative progress, manage flexible summative assessments, and export reports. Admins can manage teachers, halaqah, classes, students, and system-wide reports.
+TahfidzFlow is a mobile-first tahfidz tracking system for SMP grades 7-9. It supports a dual-program architecture (Academic and Boarding), helping teachers record hafalan, murojaah, and Tasmi' sessions, review formative progress, manage flexible summative assessments, and export reports. Admins can manage teachers, halaqah, classes, students, academic years, and system-wide reports, with full audit logging for destructive operations.
 
 ## Main Features
 
 ### Teacher workflow
-- Dashboard with daily stats, weekly target progress, and recent activity
-- Student list with search, pagination, latest records, and review indicators
+- Dashboard with daily stats, weekly target progress, and recent activity (includes Tasmi')
+- Program-aware filtering via ProgramSelector (Academic / Boarding)
+- Student list with search, pagination, latest records, Tasmi' badges, and review indicators
 - Quick Log guided record entry
 - Hafalan and murojaah create/edit/delete with surah + ayah range input
+- Tasmi' module: create/edit/delete per-juz Tasmi' records with grade and examiner
 - Formative recap generated automatically from daily records, per semester
 - Flexible summative assessment per student and per surah
 - Active targets with cancel/complete actions
-- Student detail with history, targets, and exports (Excel + PDF)
-- Teacher reports with Excel and PDF export
+- Student detail with history, targets, Tasmi' summary, and exports (Excel + PDF)
+- Teacher reports with Excel and PDF export, context-aware back navigation
 
 ### Admin workflow
 - Admin dashboard with system-wide statistics
 - Teacher CRUD with activate/deactivate/delete safety guards
-- Academic class CRUD
-- Halaqah CRUD with teacher assignment and level
+- Academic class CRUD (program-aware)
+- Halaqah CRUD with teacher assignment, level, and program type
 - Student CRUD across teachers with admin detail view
+- Academic Year management with archive workflow
+- Archive module: per-year student/teacher archives with bulk delete and AuditLog trail
 - Admin reports with Excel and PDF export
+- ProgramSelector with "Semua" (All) option for cross-program views
+
+### Program Type system
+- `ProgramType` enum (`ACADEMIC`, `BOARDING`) on `AcademicClass` and `ClassGroup`
+- Teachers see only their program context (auto-detected from ClassGroups; selector shown for dual-program teachers)
+- Admins get a "Semua" (All) option in addition to per-program filtering
+- Program context persists across all navigation via URL params
+- Boarding-specific UI rules: level hidden, section hidden, grade cards hidden, class labels show numeric grade only
+- `ProgramBadge` display component on all list/detail pages
+- `ProgramSelector` context-switching control on all filtered pages
+
+### Audit Logging
+- `AuditLog` model tracks destructive operations
+- Actions: `DELETE_STUDENT`, `DELETE_ARCHIVED_STUDENTS`, `DELETE_ACADEMIC_YEAR`, `CREATE_TASMI`, `UPDATE_TASMI`, `DELETE_TASMI`
+- `userId` nullable with `onDelete: SetNull` — preserves trail even after User deletion
+- Indexed by `userId`, `action`, `academicYearId`, `createdAt`
 
 ### Platform
 - Next.js 15 App Router with Server Components and Server Actions
-- Prisma 7 + PostgreSQL (Neon)
+- Prisma 7 + PostgreSQL (Neon) with `@prisma/adapter-pg`
 - NextAuth 5 (beta) role-based auth with JWT sessions
 - Rate-limited login with Upstash Redis persistence
 - Full i18n: Indonesian, English, Arabic with RTL support
 - PWA: install prompt, service worker, offline banner
 - Dark mode (system/light/dark/auto with 6am/6pm schedule)
 - Responsive desktop/mobile layout with sidebar navigation
+- In-memory TTL cache (`globalThis`-backed) with prefix-based invalidation
+- `withRetry` wrapper for transient Neon connection errors (exponential backoff)
+- Optimistic UI for student list mutations (instant count updates with rollback on failure)
+- All timestamps displayed in Asia/Jakarta (WIB) timezone
 - Security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, COOP
 - GitHub Actions CI: schema validation, lint, typecheck, unit tests, build
 
 ## Demo Accounts
+
+Demo data is seeded via `npm run db:seed` and may vary by environment.
 
 | Role | Login | Password |
 |---|---|---|
@@ -43,19 +69,22 @@ TahfidzFlow is a mobile-first tahfidz tracking system for SMP grades 7-9. It hel
 | Teacher 1 | `teacher.demo@tahfidzflow.local` | `2026` |
 | Teacher 2 | `teacher.salwa@tahfidzflow.local` | `2026` |
 
+> After a full database reset (`reset-school.ts`), only the admin account and 114 Surah entries remain. Run `npm run db:seed` to restore demo teachers and students.
+
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 15.5 (App Router) |
 | UI | React 19, TypeScript 5, Tailwind CSS 4 |
-| Database | PostgreSQL (Neon), Prisma 7 |
+| Database | PostgreSQL (Neon), Prisma 7.8 with `@prisma/adapter-pg` |
 | Auth | NextAuth 5 beta, bcryptjs |
 | Rate Limiting | Upstash Redis |
 | i18n | next-intl (id, en, ar) |
 | Exports | exceljs (Excel), pdfkit (PDF) |
 | Icons | lucide-react |
 | Toasts | sonner |
+| Theming | next-themes |
 | PWA | Custom service worker, Web App Manifest |
 | CI | GitHub Actions |
 
@@ -71,6 +100,8 @@ tahfidz-tracker/
       schema.prisma
       seed.ts
       seed-summative.ts
+      reset-school.ts          -- full fresh-install reset
+      reset-uat-data.ts        -- operational data reset (keeps teachers/classes)
       migrations/
     messages/
       id.json, en.json, ar.json
@@ -80,7 +111,7 @@ tahfidz-tracker/
       app/          -- Next.js App Router pages and layouts
       components/   -- Shared React components
       i18n/         -- Locale config, actions, request handler
-      lib/          -- Server utilities (prisma, session, rate-limit, etc.)
+      lib/          -- Server utilities (prisma, session, rate-limit, cache, etc.)
       generated/    -- Prisma generated client
 ```
 
@@ -96,6 +127,9 @@ The Next.js app lives in `web/`. Vercel Root Directory must be set to `web`.
 | `KV_REST_API_URL` | Recommended | Upstash Redis REST URL. Rate limiting falls back to in-memory without it |
 | `KV_REST_API_TOKEN` | Recommended | Upstash Redis REST token |
 | `APP_DEFAULT_LOCALE` | No | Default locale. Defaults to `id` |
+| `DATABASE_POOL_MAX` | No | Max Prisma pool connections. Defaults to 10 (production) or 5 (dev) |
+| `APP_CACHE_DEBUG` | No | Set to `true` to enable cache hit/miss logging |
+| `APP_MEMORY_CACHE_MAX_ENTRIES` | No | Max in-memory cache entries. Defaults to 500 |
 
 ## Local Setup
 
@@ -133,8 +167,23 @@ Open `http://localhost:3000/login`.
 | `npm run db:generate` | Generate Prisma client |
 | `npm run db:validate` | Validate Prisma schema |
 | `npm run db:migrate` | Create and apply migration |
-| `npm run db:seed` | Seed demo + surah data |
+| `npm run db:seed` | Seed demo teachers/students + surah data |
+| `npm run db:seed:base` | Seed demo teachers/students only |
+| `npm run db:seed:summative` | Seed 114 surah entries + target curriculum |
 | `npm run db:studio` | Open Prisma Studio |
+
+### Database Reset Scripts
+
+These scripts use `pg` Client directly (not Prisma) and are transaction-wrapped:
+
+```bash
+# Full fresh-install reset: keeps only admin User + 114 Surah
+node --env-file=.env --import tsx prisma/reset-school.ts
+
+# Operational data reset: keeps teachers, classes, halaqah, surah data
+# Deletes students, all records, targets, scores, audit logs
+node --env-file=.env --import tsx prisma/reset-uat-data.ts
+```
 
 ### Pre-push verification
 
@@ -146,21 +195,53 @@ CI runs on every push to `main` and every PR.
 
 ## Data Model
 
-- `User` -- auth account (`ADMIN` or `TEACHER` role)
-- `Teacher` -- profile linked to User
-- `AcademicClass` -- school class (7A, 8B, 9C) scoped by academic year
-- `ClassGroup` -- halaqah, owned by a teacher, scoped by grade + academic year
-- `Student` -- linked to teacher, class group, and optional academic class
-- `MemorizationRecord` -- daily hafalan record (formative source)
-- `RevisionRecord` -- daily murojaah record (formative source)
-- `Target` -- progress target with date range and status lifecycle
-- `SummativeScore` -- per-surah assessment per semester
-- `Account`, `Session` -- NextAuth persistent sessions
+### Enums
 
-Business rules:
+| Enum | Values |
+|---|---|
+| `UserRole` | `ADMIN`, `TEACHER` |
+| `Gender` | `MALE`, `FEMALE` |
+| `HalaqahLevel` | `LOW`, `MEDIUM`, `HIGH` |
+| `RecordStatus` | `LANCAR`, `CUKUP`, `PERLU_MUROJAAH` |
+| `TargetType` | `HAFALAN`, `MUROJAAH` |
+| `TargetStatus` | `ACTIVE`, `COMPLETED`, `MISSED`, `CANCELLED` |
+| `Semester` | `GANJIL`, `GENAP` |
+| `ProgramType` | `ACADEMIC`, `BOARDING` |
+| `AcademicYearStatus` | `ACTIVE`, `ARCHIVED` |
+| `TasmiGrade` | `MUMTAZ`, `JAYYID_JIDDAN`, `JAYYID`, `MAQBUL` |
+| `TasmiStatus` | `LULUS`, `MENGULANG` |
+| `AuditAction` | `DELETE_STUDENT`, `DELETE_ARCHIVED_STUDENTS`, `DELETE_ACADEMIC_YEAR`, `CREATE_TASMI`, `UPDATE_TASMI`, `DELETE_TASMI` |
+
+### Models
+
+| Model | Description |
+|---|---|
+| `User` | Auth account (`ADMIN` or `TEACHER` role). Includes `username` (unique, auto-generated from email) |
+| `Teacher` | Profile linked to User |
+| `AcademicYear` | School year with start/end dates, `isActive`, and `status` (`ACTIVE`/`ARCHIVED`) |
+| `AcademicClass` | School class (7A, 8B, 9C) scoped by academic year and `programType` |
+| `ClassGroup` | Halaqah, owned by a teacher, scoped by grade + academic year + `programType` |
+| `Student` | Linked to teacher, class group, and optional academic class |
+| `MemorizationRecord` | Daily hafalan record (formative source), scoped by academicYear + semester |
+| `RevisionRecord` | Daily murojaah record (formative source), scoped by academicYear + semester |
+| `TasmiRecord` | Per-juz Tasmi' session with grade, status, examiner name, scoped by academicYear + semester |
+| `Target` | Progress target with date range and status lifecycle |
+| `SummativeScore` | Per-surah assessment per semester |
+| `Surah` | Quran surah reference data (114 entries) |
+| `TargetSurah` | Curriculum mapping per grade + semester |
+| `AuditLog` | Destructive operation trail (student/year deletion, Tasmi' CRUD) |
+| `Account`, `Session`, `VerificationToken` | NextAuth persistent session infrastructure |
+
+### Key Business Rules
+
+- **ProgramType** exists only on `AcademicClass` and `ClassGroup` — never on record tables or `AcademicYear`
+- AcademicYear remains global and single; serves as the archive boundary
+- Boarding `HalaqahLevel` (`LOW`) is stored internally but never shown in UI
 - Formative scores derive from real daily hafalan and murojaah records
 - Summative scores are flexible per student and per surah
-- Targets track status lifecycle: ACTIVE -> COMPLETED / CANCELLED / MISSED
+- Targets track status lifecycle: `ACTIVE` -> `COMPLETED` / `CANCELLED` / `MISSED`
+- Export filenames include programType suffix (`akademik`/`boarding`/`semua`)
+- All timestamps displayed in Asia/Jakarta (WIB, UTC+7) timezone
 
 ## Security
 
@@ -169,8 +250,10 @@ Business rules:
 - IDOR protection in record and student flows
 - Login rate limiting: 5 attempts / 10 min window / 15 min block (Upstash Redis)
 - Delete/deactivate guards for entities with dependent records
+- AuditLog trail for all destructive operations (student/year/Tasmi' deletion)
 - Security headers on all routes (X-Frame-Options DENY, nosniff, etc.)
 - Locale cookie validation prevents injection attacks
+- `returnTo` open-redirect guard on all record edit forms
 
 ## Documentation
 
@@ -180,3 +263,11 @@ Business rules:
 | `docs/ROLLBACK.md` | Rollback procedures for Vercel and database |
 | `docs/KNOWN_ISSUES.md` | Known outstanding issues |
 | `docs/TEST_RESULTS.md` | Full UAT audit results (192 items) |
+| `docs/UAT_CHECKLIST.md` | UAT checklist with PASS/FAIL criteria |
+| `docs/MANUAL_TEST_CHECKLIST.md` | Role-based manual testing guide |
+| `docs/PWA_READINESS_REPORT.md` | PWA readiness assessment |
+| `docs/PWA_BUGS.md` | PWA bug inventory and severity |
+| `docs/RELEASE_CHECKLIST.md` | PWA release decision checklist |
+| `docs/ui-ux-speed-improvements-plan.md` | Performance optimization plan |
+| `AI_CONTEXT.md` | AI handoff context and architecture overview |
+| `rules.md` | AI coding rules and engineering principles |
