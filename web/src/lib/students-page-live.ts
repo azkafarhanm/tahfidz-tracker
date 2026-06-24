@@ -1,5 +1,6 @@
 import { ProgramType, RecordStatus, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma, withRetry } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import {
   formatClassSummary,
@@ -47,15 +48,49 @@ export async function getLiveStudentsPageData(
   page = 1,
   pageSize = PAGE_SIZE_FALLBACK,
   programType: ProgramType = ProgramType.ACADEMIC,
+  academicYear?: string,
+) {
+  const cacheKey = [
+    "students:list",
+    teacherId ?? "admin",
+    locale,
+    page,
+    pageSize,
+    programType,
+    query.trim().toLowerCase(),
+    academicYear ?? "active",
+  ].join(":");
+
+  return cached(cacheKey, 15_000, () =>
+    getLiveStudentsPageDataInner(
+      query,
+      teacherId,
+      locale,
+      page,
+      pageSize,
+      programType,
+      academicYear,
+    ),
+  );
+}
+
+async function getLiveStudentsPageDataInner(
+  query = "",
+  teacherId?: string | null,
+  locale = "id",
+  page = 1,
+  pageSize = PAGE_SIZE_FALLBACK,
+  programType: ProgramType = ProgramType.ACADEMIC,
+  academicYear?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim().toLowerCase();
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const academicYear = await getActiveAcademicYear();
+  const year = academicYear ?? await getActiveAcademicYear();
   const where = {
     isActive: true,
-    classGroup: { academicYear, programType },
+    classGroup: { academicYear: year, programType },
     ...scopeWhere(teacherId),
     ...(normalizedQuery
       ? {
@@ -76,8 +111,8 @@ export async function getLiveStudentsPageData(
       : {}),
   };
 
-  const totalCount = await withRetry(() => prisma.student.count({ where }));
-  const students = await withRetry(() =>
+  const [totalCount, students] = await withRetry(() => Promise.all([
+    prisma.student.count({ where }),
     prisma.student.findMany({
       where,
       include: {
@@ -127,7 +162,7 @@ export async function getLiveStudentsPageData(
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     }),
-  );
+  ]));
 
   return {
     totalCount,
@@ -157,13 +192,29 @@ export async function getLiveStudentsPageData(
   };
 }
 
-export async function getLiveInactiveStudentsData(teacherId?: string | null, programType: ProgramType = ProgramType.ACADEMIC) {
-  const academicYear = await getActiveAcademicYear();
+export async function getLiveInactiveStudentsData(
+  teacherId?: string | null,
+  programType: ProgramType = ProgramType.ACADEMIC,
+  academicYear?: string,
+) {
+  return cached(
+    `students:inactive:${teacherId ?? "admin"}:${programType}:${academicYear ?? "active"}`,
+    15_000,
+    () => getLiveInactiveStudentsDataInner(teacherId, programType, academicYear),
+  );
+}
+
+async function getLiveInactiveStudentsDataInner(
+  teacherId?: string | null,
+  programType: ProgramType = ProgramType.ACADEMIC,
+  academicYear?: string,
+) {
+  const year = academicYear ?? await getActiveAcademicYear();
   const students = await withRetry(() =>
     prisma.student.findMany({
       where: {
         isActive: false,
-        classGroup: { academicYear, programType },
+        classGroup: { academicYear: year, programType },
         ...scopeWhere(teacherId),
       },
       orderBy: { fullName: "asc" },

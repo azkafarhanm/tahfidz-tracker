@@ -3,7 +3,7 @@ import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 
 export type ClassTargetSurah = {
   surahId: string;
@@ -173,15 +173,20 @@ export async function getTeacherSummativeOverview(
   pageSize?: number,
   programType?: ProgramType,
 ) {
-  return getTeacherSummativeOverviewInner(
-    teacherId,
-    semester,
-    academicYear,
-    classLevel,
-    locale,
-    page,
-    pageSize,
-    programType,
+  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}`;
+  return cached(cacheKey, 30_000, () =>
+    withRetry(() =>
+      getTeacherSummativeOverviewInner(
+        teacherId,
+        semester,
+        academicYear,
+        classLevel,
+        locale,
+        page,
+        pageSize,
+        programType,
+      ),
+    ),
   );
 }
 

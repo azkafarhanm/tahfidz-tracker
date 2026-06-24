@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useTransition } from "react";
 
 type ProgramSelectorProps = {
   programs: string[];
@@ -16,19 +17,42 @@ export default function ProgramSelector({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+  const searchParamString = searchParams.toString();
 
-  if (programs.length <= 1) {
-    return null;
-  }
-
-  function handleChange(value: string) {
-    const params = new URLSearchParams(searchParams.toString());
+  const buildHref = useCallback((value: string) => {
+    const params = new URLSearchParams(searchParamString);
     if (value) {
       params.set("programType", value);
     } else {
       params.delete("programType");
     }
-    router.push(`${pathname}?${params.toString()}`);
+    const nextSearch = params.toString();
+    return nextSearch ? `${pathname}?${nextSearch}` : pathname;
+  }, [pathname, searchParamString]);
+
+  const prefetchHrefs = useMemo(
+    () => programs.map((program) => buildHref(program)),
+    [buildHref, programs],
+  );
+
+  useEffect(() => {
+    for (const href of prefetchHrefs) {
+      router.prefetch(href);
+    }
+  }, [prefetchHrefs, router]);
+
+  function handleChange(value: string) {
+    if (value === currentProgramType) return;
+
+    const href = buildHref(value);
+    startTransition(() => {
+      router.push(href);
+    });
+  }
+
+  if (programs.length <= 1) {
+    return null;
   }
 
   return (
@@ -43,7 +67,11 @@ export default function ProgramSelector({
         id="program-type-selector"
         value={currentProgramType}
         onChange={(e) => handleChange(e.target.value)}
-        className="min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+        aria-busy={isPending}
+        disabled={isPending}
+        className={`min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white ${
+          isPending ? "cursor-wait opacity-70" : ""
+        }`}
       >
         {programs.map((p) => (
           <option key={p} value={p}>

@@ -81,7 +81,7 @@ export default async function ReportsPage({
     : programContext.resolvedProgramType;
   const isBoarding = programType === ProgramType.BOARDING;
 
-  const data = await getTeacherReportData(teacherId, locale, programType);
+  const data = await getTeacherReportData(teacherId, locale, programType, academicYear);
 
   return (
     <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>

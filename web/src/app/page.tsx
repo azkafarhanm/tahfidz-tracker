@@ -44,17 +44,15 @@ export default async function DashboardPreview({
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const params = await searchParams;
 
-  // Program resolution
-  const academicYear = await getActiveAcademicYear();
-  const programContext = teacherId
-    ? await getTeacherProgramContext(teacherId, academicYear)
-    : { programs: [ProgramType.ACADEMIC, ProgramType.BOARDING], hasMultiple: true, resolvedProgramType: undefined };
   const requestedProgramType = params?.programType as ProgramType | undefined;
+  const programContext = teacherId
+    ? await getTeacherProgramContext(teacherId, await getActiveAcademicYear())
+    : { programs: [ProgramType.ACADEMIC, ProgramType.BOARDING], hasMultiple: true, resolvedProgramType: undefined };
   const programType = isAdmin
     ? (requestedProgramType && ["ACADEMIC", "BOARDING"].includes(requestedProgramType) ? requestedProgramType : undefined)
     : (programContext.programs.includes(requestedProgramType as ProgramType)
-        ? (requestedProgramType as ProgramType)
-        : programContext.resolvedProgramType);
+      ? (requestedProgramType as ProgramType)
+      : programContext.resolvedProgramType);
 
   const dashboard = await getDashboardData(teacherId, locale, programType);
   const userName = session?.user?.name ?? t("defaultUserName");

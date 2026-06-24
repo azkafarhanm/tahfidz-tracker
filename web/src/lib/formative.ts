@@ -1,5 +1,6 @@
 import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import {
   getDateFormatter,
   getTimeFormatter,
@@ -69,15 +70,20 @@ export async function getTeacherFormativeOverview(
   pageSize?: number,
   programType?: ProgramType,
 ) {
-  return getTeacherFormativeOverviewInner(
-    teacherId,
-    semester,
-    academicYear,
-    classLevel,
-    locale,
-    page,
-    pageSize,
-    programType,
+  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}`;
+  return cached(cacheKey, 30_000, () =>
+    withRetry(() =>
+      getTeacherFormativeOverviewInner(
+        teacherId,
+        semester,
+        academicYear,
+        classLevel,
+        locale,
+        page,
+        pageSize,
+        programType,
+      ),
+    ),
   );
 }
 

@@ -1,5 +1,6 @@
 import { Semester } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
+import { cached } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { isSemesterValue } from "@/lib/summative";
 
@@ -35,6 +36,11 @@ export function parseClassLevelValue(value?: string | null): number | undefined 
 }
 
 export async function getPreferredTeacherClassLevel(teacherId: string) {
+  const cacheKey = `preferred-class-level:${teacherId}`;
+  return cached(cacheKey, 60_000, () => getPreferredTeacherClassLevelInner(teacherId));
+}
+
+async function getPreferredTeacherClassLevelInner(teacherId: string) {
   const academicYear = await getActiveAcademicYear();
   const students = await prisma.student.findMany({
     where: {

@@ -139,6 +139,7 @@ export function invalidateStudentRelatedCaches(studentId?: string) {
   invalidateCache("students");
   invalidateCache("teacher-program");
   invalidateCache("quick-log-students");
+  invalidateCache("preferred-class-level");
   invalidateCache("formative-");
   invalidateCache("summative-");
   invalidateCache("report-admin");

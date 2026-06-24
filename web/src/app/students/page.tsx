@@ -72,9 +72,9 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     ? (requestedProgramType as ProgramType)
     : programContext.resolvedProgramType;
 
-  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType);
+  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear);
   // Only fetch inactive students when viewing the inactive tab
-  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType) : [];
+  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear) : [];
   const filteredInactiveStudents = query
     ? inactiveStudents.filter((student) => {
         const normalizedQuery = query.toLowerCase();
