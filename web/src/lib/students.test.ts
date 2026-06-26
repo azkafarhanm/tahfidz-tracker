@@ -8,6 +8,9 @@ vi.mock("./prisma", () => ({
     student: {
       findUnique: vi.fn(),
     },
+    academicYear: {
+      findFirst: vi.fn(),
+    },
   },
 }));
 
@@ -15,6 +18,9 @@ describe("getStudentDetailData", () => {
   beforeEach(() => {
     clearCache();
     vi.clearAllMocks();
+    vi.mocked(prisma.academicYear.findFirst).mockResolvedValue({
+      year: "2027/2028",
+    } as never);
   });
 
   it("returns null if the student does not exist", async () => {
@@ -30,6 +36,7 @@ describe("getStudentDetailData", () => {
       isActive: true,
       teacherId: "teacher-owner",
       fullName: "Test Student",
+      classGroup: { academicYear: "2027/2028" },
     } as unknown as never);
 
     const result = await getStudentDetailData("student-1", "teacher-other");
@@ -42,6 +49,7 @@ describe("getStudentDetailData", () => {
       isActive: false,
       teacherId: "teacher-owner",
       fullName: "Test Student",
+      classGroup: { academicYear: "2027/2028" },
     } as unknown as never);
 
     const result = await getStudentDetailData("student-1", "teacher-owner");
@@ -59,6 +67,7 @@ describe("getStudentDetailData", () => {
       isActive: false,
       teacherId: "teacher-owner",
       fullName: "Test Student",
+      classGroup: { academicYear: "2027/2028" },
     } as unknown as never);
 
     const result = await getStudentDetailData("student-1", null);
