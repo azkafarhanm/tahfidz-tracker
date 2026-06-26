@@ -140,6 +140,9 @@ node --env-file=.env --import tsx prisma/reset-school.ts
 # Operational data reset: keeps teachers, classes, halaqah, surah data
 # Deletes students, all records, targets, scores, audit logs
 node --env-file=.env --import tsx prisma/reset-uat-data.ts
+
+# Testing data reset
+node --env-file=.env --import tsx prisma/reset-testing-data.ts
 ```
 
 These scripts use `pg` Client directly (not Prisma) and are transaction-wrapped. They do NOT apply migrations — run `npm run db:migrate` first.

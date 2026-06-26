@@ -1,5 +1,9 @@
 # TEST RESULTS — TahfidzFlow UAT Audit
 
+> **Historical Snapshot**: This document captures the UAT audit results from 2026-05-29.
+> All four P0 issues listed below have since been resolved — see `docs/KNOWN_ISSUES.md` for current status.
+> This file is retained as a point-in-time reference and does not reflect the current project state.
+
 Audited: 2026-05-29
 Auditor: Automated codebase verification
 Method: Static analysis of source files, routes, components, and server actions

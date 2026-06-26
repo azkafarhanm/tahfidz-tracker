@@ -1363,5 +1363,8 @@
   },
   "CharacterCounter": {
     "maxReached": "Maximum characters reached"
+  },
+  "Export": {
+    "pdfSuccess": "PDF downloaded successfully"
   }
 }

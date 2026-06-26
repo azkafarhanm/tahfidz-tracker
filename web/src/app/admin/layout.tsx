@@ -20,6 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         "CharacterCounter",
         "DeleteTeacher",
         "Error",
+        "Export",
         "LogoutButton",
       ]}
     >

@@ -128,7 +128,12 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
         ...teacherOnly,
         status: TargetStatus.COMPLETED,
         updatedAt: { gte: weekStart },
-        ...(programType ? { student: { classGroup: { programType } } } : {}),
+        student: {
+          classGroup: {
+            academicYear,
+            ...(programType ? { programType } : {}),
+          },
+        },
       },
     }),
     (async () => {
@@ -147,7 +152,12 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
         ...teacherOnly,
         status: TargetStatus.ACTIVE,
         endDate: { lt: new Date() },
-        ...(programType ? { student: { classGroup: { programType } } } : {}),
+        student: {
+          classGroup: {
+            academicYear,
+            ...(programType ? { programType } : {}),
+          },
+        },
       },
       select: {
         id: true,

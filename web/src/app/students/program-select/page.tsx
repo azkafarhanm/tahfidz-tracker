@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { GraduationCap, Home } from "lucide-react";
 import { requireSessionScope } from "@/lib/session";
 import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
@@ -31,13 +32,7 @@ export default async function ProgramSelectPage() {
   // If teacher already has programs, redirect to new student page
   if (programContext.programs.length > 0) {
     const defaultProgram = programContext.resolvedProgramType;
-    return (
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.location.href="/students/new?programType=${defaultProgram}"`,
-        }}
-      />
-    );
+    redirect(`/students/new?programType=${defaultProgram}`);
   }
 
   // Teacher has no programs - show selection

@@ -1363,5 +1363,8 @@
   },
   "CharacterCounter": {
     "maxReached": "تم بلوغ الحد الأقصى للأحرف"
+  },
+  "Export": {
+    "pdfSuccess": "تم تحميل PDF بنجاح"
   }
 }

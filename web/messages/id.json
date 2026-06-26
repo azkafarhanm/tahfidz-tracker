@@ -1363,5 +1363,8 @@
   },
   "CharacterCounter": {
     "maxReached": "Batas karakter tercapai"
+  },
+  "Export": {
+    "pdfSuccess": "PDF berhasil diunduh"
   }
 }

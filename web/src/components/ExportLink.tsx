@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import ExportBanner from "./ExportBanner";
 
 type ExportLinkProps = {
@@ -21,6 +23,7 @@ export default function ExportLink({
   onBannerChange,
 }: ExportLinkProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const t = useTranslations("Export");
 
   async function handleClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -61,6 +64,10 @@ export default function ExportLink({
       URL.revokeObjectURL(url);
 
       onBannerChange?.(bannerId, null);
+
+      if (type === "pdf") {
+        toast.success(t("pdfSuccess"));
+      }
     } catch {
       onBannerChange?.(
         bannerId,
