@@ -85,7 +85,7 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                 key={year.id}
                 className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-semibold">{year.year}</h2>
@@ -113,7 +113,7 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                       {t("studentCount", { count: year.studentCount })} · {t("halaqahCount", { count: year.classGroupCount })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                     {year.status === "ARCHIVED" ? (
                       <Link
                         className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"

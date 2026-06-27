@@ -1,147 +1,179 @@
-import pg from "pg";
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../src/generated/prisma-next/client";
+import { getDatabaseUrl } from "../src/lib/database-url";
 
-const { Client } = pg;
-
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  console.error("❌ DATABASE_URL not set");
-  process.exit(1);
-}
-
-const client = new Client({ connectionString });
-
-const OPS_TABLES = [
-  "MemorizationRecord",
-  "RevisionRecord",
-  "Target",
-  "SummativeScore",
-  "TasmiRecord",
-  "AuditLog",
-  "Student",
-] as const;
-
-const MASTER_TABLES = [
-  "User",
-  "Teacher",
-  "AcademicYear",
-  "AcademicClass",
-  "ClassGroup",
-  "Surah",
-  "TargetSurah",
-] as const;
-
-async function countRow(table: string): Promise<number> {
-  const res = await client.query(`SELECT COUNT(*)::int AS count FROM "${table}"`);
-  return res.rows[0].count;
-}
-
-async function countAll(tables: readonly string[]): Promise<Record<string, number>> {
-  const result: Record<string, number> = {};
-  for (const table of tables) {
-    result[table] = await countRow(table);
-  }
-  return result;
-}
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: getDatabaseUrl() }),
+});
 
 async function main() {
-  await client.connect();
-
   console.log("=".repeat(60));
-  console.log("  UAT DATA RESET — removes operational data only");
+  console.log("  UAT DATA RESET — removes all operational and demo data");
   console.log("=".repeat(60));
 
-  // ── BEFORE ──────────────────────────────────────────────
-  console.log("\n📋 BEFORE RESET\n");
+  const admins = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true, email: true, name: true },
+    orderBy: { createdAt: "asc" },
+  });
 
-  const opsBefore = await countAll(OPS_TABLES);
-  const masterBefore = await countAll(MASTER_TABLES);
+  console.log("\nAdmin accounts to preserve:\n");
+  for (const a of admins) {
+    console.log(`    ${a.email.padEnd(35)} ${a.name}`);
+  }
 
-  console.log("  Operational data:");
-  for (const [table, count] of Object.entries(opsBefore)) {
+  if (admins.length === 0) {
+    console.error("\nNo admin account found — aborting to prevent lockout.");
+    process.exit(1);
+  }
+
+  console.log("\n" + "-".repeat(60));
+  console.log("  BEFORE RESET");
+  console.log("-".repeat(60) + "\n");
+
+  const before = {
+    MemorizationRecord: await prisma.memorizationRecord.count(),
+    RevisionRecord: await prisma.revisionRecord.count(),
+    Target: await prisma.target.count(),
+    SummativeScore: await prisma.summativeScore.count(),
+    TasmiRecord: await prisma.tasmiRecord.count(),
+    AuditLog: await prisma.auditLog.count(),
+    Student: await prisma.student.count(),
+    ClassGroup: await prisma.classGroup.count(),
+    AcademicClass: await prisma.academicClass.count(),
+    AcademicYear: await prisma.academicYear.count(),
+    Teacher: await prisma.teacher.count(),
+    "User (non-admin)": await prisma.user.count({ where: { role: "TEACHER" } }),
+  };
+
+  console.log("  Operational + demo data:");
+  for (const [table, count] of Object.entries(before)) {
     if (count > 0) console.log(`    ${table.padEnd(25)} ${count}`);
   }
 
-  console.log("\n  Master data (must survive):");
-  for (const [table, count] of Object.entries(masterBefore)) {
-    console.log(`    ${table.padEnd(25)} ${count}`);
-  }
+  const surahBefore = await prisma.surah.count();
+  const targetSurahBefore = await prisma.targetSurah.count();
 
-  const totalOps = Object.values(opsBefore).reduce((a, b) => a + b, 0);
-  if (totalOps === 0) {
-    console.log("\n✅ Operational data already empty — nothing to reset.");
-    await client.end();
+  console.log("\n  Preserved (must survive):");
+  console.log(`    ${"Surah".padEnd(25)} ${surahBefore}`);
+  console.log(`    ${"TargetSurah".padEnd(25)} ${targetSurahBefore}`);
+
+  const totalToDelete = Object.values(before).reduce((a, b) => a + b, 0);
+  if (totalToDelete === 0) {
+    console.log("\nAll operational data already empty — nothing to reset.");
+    await prisma.$disconnect();
     return;
   }
 
-  // ── DELETE (child → parent FK order) ────────────────────
-  //
-  // Deletion order respects FK dependencies:
-  //   1. MemorizationRecord  (FK studentId → Student, onDelete: Cascade)
-  //   2. RevisionRecord       (FK studentId → Student, onDelete: Cascade)
-  //   3. Target               (FK studentId → Student, onDelete: Cascade)
-  //   4. SummativeScore       (FK studentId → Student, onDelete: Cascade)
-  //   5. TasmiRecord          (FK studentId → Student, onDelete: Cascade)
-  //   6. AuditLog             (no FK to Student; standalone operational log)
-  //   7. Student              (parent of 1–5)
-  //
-  // Tables NOT touched (master data):
-  //   User, Teacher, AcademicYear, AcademicClass,
-  //   ClassGroup, Surah, TargetSurah, Account, Session
+  console.log("\n" + "-".repeat(60));
+  console.log("  DELETING");
+  console.log("-".repeat(60) + "\n");
 
-  console.log("\n🗑️  DELETING OPERATIONAL DATA\n");
+  const deleted = await prisma.$transaction(
+    async (tx) => {
+      const r: Record<string, number> = {};
 
-  // Wrap in transaction so we can roll back on error
-  await client.query("BEGIN");
+      r["MemorizationRecord"] = (
+        await tx.memorizationRecord.deleteMany()
+      ).count;
+      r["RevisionRecord"] = (await tx.revisionRecord.deleteMany()).count;
+      r["Target"] = (await tx.target.deleteMany()).count;
+      r["SummativeScore"] = (await tx.summativeScore.deleteMany()).count;
+      r["TasmiRecord"] = (await tx.tasmiRecord.deleteMany()).count;
+      r["AuditLog"] = (await tx.auditLog.deleteMany()).count;
 
-  try {
-    for (const table of OPS_TABLES) {
-      const res = await client.query(`DELETE FROM "${table}"`);
-      console.log(`    ${table.padEnd(25)} deleted ${res.rowCount} rows`);
-    }
-    await client.query("COMMIT");
-  } catch (err) {
-    await client.query("ROLLBACK");
-    throw err;
+      r["Student"] = (await tx.student.deleteMany()).count;
+
+      r["ClassGroup"] = (await tx.classGroup.deleteMany()).count;
+      r["AcademicClass"] = (await tx.academicClass.deleteMany()).count;
+      r["AcademicYear"] = (await tx.academicYear.deleteMany()).count;
+
+      r["Session"] = (
+        await tx.session.deleteMany({
+          where: { user: { role: "TEACHER" } },
+        })
+      ).count;
+      r["Account"] = (
+        await tx.account.deleteMany({
+          where: { user: { role: "TEACHER" } },
+        })
+      ).count;
+      r["Teacher"] = (await tx.teacher.deleteMany()).count;
+      r["User (non-admin)"] = (
+        await tx.user.deleteMany({ where: { role: "TEACHER" } })
+      ).count;
+
+      return r;
+    },
+    { timeout: 60_000 },
+  );
+
+  for (const [table, count] of Object.entries(deleted)) {
+    console.log(`    ${table.padEnd(25)} deleted ${count}`);
   }
 
-  // ── AFTER ───────────────────────────────────────────────
-  console.log("\n📋 AFTER RESET\n");
+  console.log("\n" + "-".repeat(60));
+  console.log("  AFTER RESET");
+  console.log("-".repeat(60) + "\n");
 
-  const opsAfter = await countAll(OPS_TABLES);
-  const masterAfter = await countAll(MASTER_TABLES);
+  const after = {
+    MemorizationRecord: await prisma.memorizationRecord.count(),
+    RevisionRecord: await prisma.revisionRecord.count(),
+    Target: await prisma.target.count(),
+    SummativeScore: await prisma.summativeScore.count(),
+    TasmiRecord: await prisma.tasmiRecord.count(),
+    AuditLog: await prisma.auditLog.count(),
+    Student: await prisma.student.count(),
+    ClassGroup: await prisma.classGroup.count(),
+    AcademicClass: await prisma.academicClass.count(),
+    AcademicYear: await prisma.academicYear.count(),
+    Teacher: await prisma.teacher.count(),
+    "User (non-admin)": await prisma.user.count({
+      where: { role: "TEACHER" },
+    }),
+  };
 
-  console.log("  Operational data:");
-  for (const [table, count] of Object.entries(opsAfter)) {
-    const status = count === 0 ? "✅" : "❌";
-    console.log(`    ${status} ${table.padEnd(23)} ${count}`);
+  let allClean = true;
+
+  console.log("  Operational + demo data:");
+  for (const [table, count] of Object.entries(after)) {
+    const ok = count === 0;
+    if (!ok) allClean = false;
+    console.log(`    ${ok ? "PASS" : "FAIL"} ${table.padEnd(21)} ${count}`);
   }
 
-  console.log("\n  Master data (must survive):");
-  let masterOk = true;
-  for (const [table, count] of Object.entries(masterAfter)) {
-    const before = masterBefore[table];
-    const unchanged = count === before;
-    if (!unchanged) masterOk = false;
-    const status = unchanged ? "✅" : "❌";
-    console.log(`    ${status} ${table.padEnd(23)} ${count}  (was ${before})`);
-  }
+  const adminAfter = await prisma.user.count({ where: { role: "ADMIN" } });
+  const surahAfter = await prisma.surah.count();
+  const targetSurahAfter = await prisma.targetSurah.count();
 
-  // ── VERDICT ─────────────────────────────────────────────
-  const allOpsZero = Object.values(opsAfter).every((v) => v === 0);
+  console.log("\n  Preserved data:");
+  const adminOk = adminAfter === admins.length;
+  const surahOk = surahAfter === surahBefore;
+  const targetSurahOk = targetSurahAfter === targetSurahBefore;
+  if (!adminOk || !surahOk || !targetSurahOk) allClean = false;
+  console.log(
+    `    ${adminOk ? "PASS" : "FAIL"} ${"User (admin)".padEnd(21)} ${adminAfter}  (was ${admins.length})`,
+  );
+  console.log(
+    `    ${surahOk ? "PASS" : "FAIL"} ${"Surah".padEnd(21)} ${surahAfter}  (was ${surahBefore})`,
+  );
+  console.log(
+    `    ${targetSurahOk ? "PASS" : "FAIL"} ${"TargetSurah".padEnd(21)} ${targetSurahAfter}  (was ${targetSurahBefore})`,
+  );
 
   console.log("\n" + "=".repeat(60));
-  if (allOpsZero && masterOk) {
-    console.log("  ✅ RESET SUCCESSFUL — ready for UAT");
+  if (allClean) {
+    console.log("  RESET SUCCESSFUL — clean UAT state");
   } else {
-    console.log("  ❌ RESET INCOMPLETE — check errors above");
+    console.log("  RESET INCOMPLETE — check errors above");
   }
   console.log("=".repeat(60));
-
-  await client.end();
 }
 
-main().catch((e) => {
-  console.error("\n❌ Reset failed:", e);
-  client.end();
-  process.exitCode = 1;
-});
+main()
+  .catch((e) => {
+    console.error("\nReset failed:", e);
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());
