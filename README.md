@@ -212,7 +212,7 @@ tahfidz-tracker/
       seed.ts
       seed-summative.ts
       reset-school.ts          -- full fresh-install reset
-      reset-uat-data.ts        -- operational data reset (keeps teachers/classes)
+      reset-uat-data.ts        -- full UAT reset (keeps admin + surah only)
       reset-testing-data.ts    -- testing data reset
       migrations/
     messages/
@@ -293,14 +293,14 @@ Open `http://localhost:3000/login`.
 
 ### Database Reset Scripts
 
-These scripts use `pg` Client directly (not Prisma) and are transaction-wrapped:
+These scripts are transaction-wrapped and safe to run multiple times:
 
 ```bash
 # Full fresh-install reset: keeps only admin User + 114 Surah
 node --env-file=.env --import tsx prisma/reset-school.ts
 
-# Operational data reset: keeps teachers, classes, halaqah, surah data
-# Deletes students, all records, targets, scores, audit logs
+# Full UAT reset: keeps admin accounts + Surah + TargetSurah only
+# Deletes teachers, classes, halaqah, students, all records, targets, scores, audit logs
 node --env-file=.env --import tsx prisma/reset-uat-data.ts
 
 # Testing data reset
