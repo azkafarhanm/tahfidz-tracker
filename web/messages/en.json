@@ -748,7 +748,8 @@
     "processing": "Processing...",
     "confirmComplete": "Yes, complete",
     "confirmCompleteMessage": "Mark this target as completed?",
-    "completing": "Completing..."
+    "completing": "Completing...",
+    "genericError": "An error occurred"
   },
   "ChangePassword": {
     "backLink": "Profile",
@@ -1376,6 +1377,11 @@
     "maxReached": "Maximum characters reached"
   },
   "Export": {
-    "pdfSuccess": "PDF downloaded successfully"
+    "pdfSuccess": "PDF downloaded successfully",
+    "excelLoading": "Preparing Excel report...",
+    "pdfLoading": "Preparing PDF report...",
+    "defaultError": "Failed to prepare report. Please try again.",
+    "dismiss": "Dismiss",
+    "fetchFailed": "Export failed"
   }
 }

@@ -748,7 +748,8 @@
     "processing": "???? ????????...",
     "confirmComplete": "نعم، إكمال",
     "confirmCompleteMessage": "وضع علامة على هذا الهدف كمكتمل؟",
-    "completing": "جارٍ الإكمال..."
+    "completing": "جارٍ الإكمال...",
+    "genericError": "حدث خطأ"
   },
   "ChangePassword": {
     "backLink": "الملف الشخصي",
@@ -1376,6 +1377,11 @@
     "maxReached": "تم بلوغ الحد الأقصى للأحرف"
   },
   "Export": {
-    "pdfSuccess": "تم تحميل PDF بنجاح"
+    "pdfSuccess": "تم تحميل PDF بنجاح",
+    "excelLoading": "جارٍ إعداد تقرير Excel...",
+    "pdfLoading": "جارٍ إعداد تقرير PDF...",
+    "defaultError": "فشل إعداد التقرير. يرجى المحاولة مرة أخرى.",
+    "dismiss": "إغلاق",
+    "fetchFailed": "فشل التصدير"
   }
 }

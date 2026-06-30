@@ -36,7 +36,7 @@ export default function TargetActions({
               onActionSuccess?.();
               refresh();
             } else {
-              setError(result.error ?? "Error");
+              setError(result.error ?? t("genericError"));
             }
             return result;
           }}
@@ -57,7 +57,7 @@ export default function TargetActions({
               onActionSuccess?.();
               refresh();
             } else {
-              setError(result.error ?? "Error");
+              setError(result.error ?? t("genericError"));
             }
             return result;
           }}

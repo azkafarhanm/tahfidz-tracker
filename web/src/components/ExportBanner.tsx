@@ -1,6 +1,7 @@
 "use client";
 
 import { FileSpreadsheet, FileText, Loader2, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type ExportBannerProps = {
   type: "excel" | "pdf";
@@ -9,25 +10,14 @@ type ExportBannerProps = {
   onDismiss?: () => void;
 };
 
-const labels = {
-  excel: {
-    loading: "Menyiapkan laporan Excel...",
-    icon: FileSpreadsheet,
-  },
-  pdf: {
-    loading: "Menyiapkan laporan PDF...",
-    icon: FileText,
-  },
-} as const;
-
 export default function ExportBanner({
   type,
   status,
   errorMessage,
   onDismiss,
 }: ExportBannerProps) {
-  const config = labels[type];
-  const Icon = config.icon;
+  const t = useTranslations("Export");
+  const Icon = type === "excel" ? FileSpreadsheet : FileText;
 
   if (status === "loading") {
     return (
@@ -35,7 +25,7 @@ export default function ExportBanner({
         <Loader2 className="shrink-0 animate-spin" size={18} strokeWidth={2.2} />
         <span className="flex items-center gap-2">
           <Icon aria-hidden="true" size={16} strokeWidth={2.2} />
-          {config.loading}
+          {type === "excel" ? t("excelLoading") : t("pdfLoading")}
         </span>
       </div>
     );
@@ -45,7 +35,7 @@ export default function ExportBanner({
     <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
       <XCircle className="shrink-0" size={18} strokeWidth={2.2} />
       <span className="flex-1">
-        {errorMessage ?? "Gagal menyiapkan laporan. Silakan coba lagi."}
+        {errorMessage ?? t("defaultError")}
       </span>
       {onDismiss ? (
         <button
@@ -53,7 +43,7 @@ export default function ExportBanner({
           onClick={onDismiss}
           type="button"
         >
-          Tutup
+          {t("dismiss")}
         </button>
       ) : null}
     </div>

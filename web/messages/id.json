@@ -748,7 +748,8 @@
     "processing": "Memproses...",
     "confirmComplete": "Ya, selesaikan",
     "confirmCompleteMessage": "Tandai target ini sebagai selesai?",
-    "completing": "Menyelesaikan..."
+    "completing": "Menyelesaikan...",
+    "genericError": "Terjadi kesalahan"
   },
   "ChangePassword": {
     "backLink": "Profil",
@@ -1376,6 +1377,11 @@
     "maxReached": "Batas karakter tercapai"
   },
   "Export": {
-    "pdfSuccess": "PDF berhasil diunduh"
+    "pdfSuccess": "PDF berhasil diunduh",
+    "excelLoading": "Menyiapkan laporan Excel...",
+    "pdfLoading": "Menyiapkan laporan PDF...",
+    "defaultError": "Gagal menyiapkan laporan. Silakan coba lagi.",
+    "dismiss": "Tutup",
+    "fetchFailed": "Gagal mengekspor"
   }
 }

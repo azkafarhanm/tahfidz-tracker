@@ -36,7 +36,7 @@ export default function ExportLink({
       const response = await fetch(href);
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "Export failed");
+        const errorText = await response.text().catch(() => t("fetchFailed"));
         onBannerChange?.(
           bannerId,
           <ExportBanner
