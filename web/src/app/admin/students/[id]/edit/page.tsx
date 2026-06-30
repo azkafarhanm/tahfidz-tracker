@@ -3,8 +3,10 @@ import StudentForm from "../../StudentForm";
 import { updateStudent } from "../../actions";
 import { getAdminStudentFormData } from "@/lib/admin";
 import { getActiveAcademicYear } from "@/lib/academic-year";
+import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
+import { halaqahLevelLabels } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,6 +51,14 @@ export default async function EditStudentPage({
     notFound();
   }
 
+  // Active student count in the student's halaqah (for the Edit Level warning).
+  const halaqahStudentCount = await prisma.student.count({
+    where: {
+      classGroupId: data.student.classGroupId,
+      isActive: true,
+    },
+  });
+
   const programType = query?.programType ?? data.student.programType ?? "";
   const backHref = programType
     ? `/admin/students?programType=${programType}`
@@ -68,6 +78,15 @@ export default async function EditStudentPage({
       submitLabel={t("saveChanges")}
       title={t("editStudent")}
       programType={programType}
+      initialLevel={data.student.classGroupLevel}
+      halaqah={{
+        classGroupId: data.student.classGroupId,
+        name: data.student.classGroupName,
+        level: data.student.classGroupLevel,
+        levelLabel: halaqahLevelLabels[data.student.classGroupLevel as keyof typeof halaqahLevelLabels],
+        grade: data.student.classGroupGrade,
+        studentCount: halaqahStudentCount,
+      }}
       values={{
         fullName: query?.fullName ?? data.student.fullName,
         teacherId: query?.teacherId ?? data.student.teacherId,

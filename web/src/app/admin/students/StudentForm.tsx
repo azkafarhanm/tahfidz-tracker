@@ -1,18 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   CalendarDays,
   FileText,
   GraduationCap,
+  Lock,
   PencilLine,
   Save,
   School,
   ShieldCheck,
   UserRound,
   UserPlus,
+  Users,
   BookOpen,
   Signal,
 } from "lucide-react";
@@ -20,6 +22,7 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
+import HalaqahLevelDialog from "@/components/HalaqahLevelDialog";
 import { backLink } from "@/lib/colors";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -62,6 +65,15 @@ export type StudentFormValues = {
   notes: string;
 };
 
+export type HalaqahInfo = {
+  classGroupId: string;
+  name: string;
+  level: string;
+  levelLabel: string;
+  grade: number;
+  studentCount: number;
+};
+
 type StudentFormProps = {
   action: (formData: FormData) => Promise<void>;
   backHref: string;
@@ -79,6 +91,10 @@ type StudentFormProps = {
   title: string;
   values: StudentFormValues;
   programType?: string;
+  /** Supplied on Edit to render the halaqah card + Edit Level button. */
+  halaqah?: HalaqahInfo;
+  /** Initial level for the selector (Edit). */
+  initialLevel?: string;
 };
 
 export default function StudentForm({
@@ -94,6 +110,8 @@ export default function StudentForm({
   title,
   values,
   programType = "",
+  halaqah,
+  initialLevel = "",
 }: StudentFormProps) {
   const t = useTranslations("AdminStudentForm");
   const tc = useTranslations("CharacterCounter");
@@ -104,6 +122,10 @@ export default function StudentForm({
   const [isPending, startTransition] = useTransition();
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
+  // Stateful mirror of the halaqah card data so an in-place level change from
+  // the Edit Level dialog updates the card/selector instantly, without waiting
+  // for the router.refresh() revalidation to land (mirrors the Teacher Edit form).
+  const [halaqahState, setHalaqahState] = useState(halaqah);
 
   const genderOptions = [
     { value: "MALE", label: t("male") },
@@ -154,6 +176,50 @@ export default function StudentForm({
     );
   }, [selectedAcademicClass, selectedTeacherId, teacherClassGroups]);
 
+  const [selectedLevel, setSelectedLevel] = useState(
+    initialLevel || resolvedClassGroup?.level || "",
+  );
+
+  // Once a halaqah exists for the selected teacher + academic class grade, its
+  // level is locked (mirrors the Teacher flow). The selector stays visible so
+  // the active level is shown; editing happens elsewhere (out of scope here).
+  const lockedLevel = !isBoarding ? (resolvedClassGroup?.level ?? null) : null;
+  const effectiveLevel = lockedLevel ?? selectedLevel;
+
+  // When the teacher/class selection changes and a halaqah resolves, sync the
+  // selector to that halaqah's level; otherwise reset to allow a fresh choice.
+  useEffect(() => {
+    if (resolvedClassGroup) {
+      setSelectedLevel(resolvedClassGroup.level);
+    } else {
+      setSelectedLevel("");
+    }
+  }, [resolvedClassGroup]);
+
+  function handleLevelClick(levelKey: string) {
+    if (!lockedLevel) {
+      setSelectedLevel(levelKey);
+    }
+  }
+
+  // Reflect an in-place level change from the Edit Level dialog (Edit page).
+  // Updates both the selector and the card's displayed level immediately, so
+  // the UI does not lag behind the delayed router.refresh() revalidation.
+  function handleLevelUpdated(level: string, levelLabel?: string) {
+    setSelectedLevel(level);
+    setHalaqahState((current) =>
+      current
+        ? { ...current, level, levelLabel: levelLabel ?? current.levelLabel }
+        : current,
+    );
+  }
+
+  const levels = [
+    { key: "LOW", label: "Low", desc: t("levelBeginner") },
+    { key: "MEDIUM", label: "Medium", desc: t("levelIntermediate") },
+    { key: "HIGH", label: "High", desc: t("levelAdvanced") },
+  ];
+
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       await action(formData);
@@ -188,6 +254,7 @@ export default function StudentForm({
 
         <form action={handleSubmit} className="mt-6 space-y-4">
           {programType && <input type="hidden" name="programType" value={programType} />}
+          <input type="hidden" name="halaqahLevel" value={isBoarding ? "LOW" : effectiveLevel} />
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <UserRound
@@ -339,15 +406,54 @@ export default function StudentForm({
 
             {!isBoarding ? (
               <>
-                {selectedTeacherId && selectedAcademicClass && !resolvedClassGroup ? (
-                  <p className="mt-4 text-sm text-amber-600">
-                    {t("noHalaqahWarning", {
-                      year: activeAcademicYear,
-                      grade: selectedAcademicClass.grade,
-                    })}
-                  </p>
+                {/* Halaqah card with Edit Level button (Edit page only). Mirrors
+                    the Teacher Edit card; reuses the shared HalaqahLevelDialog +
+                    shared role-aware updateHalaqahLevel action. Reads from
+                    halaqahState so an in-place level change shows immediately. */}
+                {halaqahState ? (
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-950 dark:text-white">
+                          {halaqahState.name}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1">
+                            <GraduationCap aria-hidden="true" size={14} />
+                            {t("grade")}: {halaqahState.grade}
+                          </span>
+                          <span className="hidden md:inline">·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Lock aria-hidden="true" size={14} />
+                            {t("level")}: {halaqahState.levelLabel}
+                          </span>
+                          <span className="hidden md:inline">·</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Users aria-hidden="true" size={14} />
+                            {t("students")}: {halaqahState.studentCount}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="shrink-0">
+                        <HalaqahLevelDialog
+                          classGroupId={halaqahState.classGroupId}
+                          currentLevel={halaqahState.level}
+                          currentLevelLabel={halaqahState.levelLabel}
+                          halaqahName={halaqahState.name}
+                          grade={halaqahState.grade}
+                          studentCount={halaqahState.studentCount}
+                          onLevelUpdated={(level, levelLabel) => handleLevelUpdated(level, levelLabel)}
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                      {t("halaqahHelperText")}
+                    </p>
+                  </div>
                 ) : null}
 
+                {/* Connected halaqah status: shows the existing halaqah, or an
+                    auto-create message when none exists yet (first student). */}
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
                     <div className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -360,7 +466,7 @@ export default function StudentForm({
                       {t("connectedHalaqah")}
                     </div>
                     <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                      {resolvedClassGroup?.name ?? t("connectedHalaqahEmpty")}
+                      {resolvedClassGroup?.name ?? t("halaqahWillBeCreated")}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
@@ -377,6 +483,68 @@ export default function StudentForm({
                       {resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
                     </p>
                   </div>
+                </div>
+
+                {/* Level selector — visible always; locked once a halaqah exists.
+                    On first student (no halaqah), choosing a level sets the
+                    auto-create level. Mirrors the Teacher StudentForm. */}
+                <div className="mt-4">
+                  <div className="flex items-center gap-2">
+                    <Signal
+                      aria-hidden="true"
+                      className="text-emerald-800 dark:text-emerald-400"
+                      size={16}
+                      strokeWidth={2.2}
+                    />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {t("sectionLevel")}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {levels.map((lv) => {
+                      const isSelected = effectiveLevel === lv.key;
+                      const isLocked = lockedLevel && lockedLevel !== lv.key;
+                      const isLockedSelected = lockedLevel === lv.key;
+                      return (
+                        <button
+                          aria-pressed={isSelected}
+                          aria-disabled={isLocked || undefined}
+                          className={`flex min-h-[5.5rem] flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition ${
+                            isSelected
+                              ? "border-emerald-500 bg-emerald-50 shadow-sm ring-2 ring-emerald-200 dark:bg-emerald-950 dark:ring-emerald-800"
+                              : isLocked
+                                ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-40 dark:border-slate-800 dark:bg-slate-900"
+                                : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-emerald-600"
+                          }`}
+                          key={lv.key}
+                          onClick={() => handleLevelClick(lv.key)}
+                          type="button"
+                        >
+                          <span
+                            className={`flex items-center gap-1 text-sm font-bold ${
+                              isSelected ? "text-emerald-900" : "text-slate-950 dark:text-white"
+                            }`}
+                          >
+                            {lv.label}
+                            {isLockedSelected ? <Lock aria-hidden="true" size={12} strokeWidth={2.5} /> : null}
+                          </span>
+                          <span className="mt-1 text-[10px] leading-tight text-slate-500 dark:text-slate-400">
+                            {lv.desc}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {lockedLevel ? (
+                    <p className="mt-2 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      <Lock aria-hidden="true" size={11} />
+                      {t("levelLockedHint")}
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                      {t("levelSelectHint")}
+                    </p>
+                  )}
                 </div>
               </>
             ) : null}
@@ -444,7 +612,7 @@ export default function StudentForm({
             </Link>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
-              disabled={isPending}
+              disabled={isPending || (!isBoarding && !effectiveLevel)}
               type="submit"
             >
               <Save aria-hidden="true" size={17} strokeWidth={2.2} />

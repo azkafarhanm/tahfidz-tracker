@@ -4,7 +4,7 @@ import { Prisma } from "@/generated/prisma-next/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Gender, ProgramType, TargetStatus } from "@/generated/prisma-next/enums";
+import { Gender, HalaqahLevel, ProgramType, TargetStatus } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
   parseDateInput,
@@ -14,8 +14,10 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
+import { halaqahLevelLabels } from "@/lib/format";
 
 const validGenders = new Set<string>(Object.values(Gender));
+const validLevels = new Set<string>(Object.values(HalaqahLevel));
 
 type StudentFormInput = {
   fullName: string;
@@ -27,6 +29,7 @@ type StudentFormInput = {
   isActive: boolean;
   notes: string | null;
   programType: string;
+  halaqahLevel: string | null;
 };
 
 function buildDeleteBlockerItems(
@@ -47,6 +50,7 @@ function buildDeleteBlockerItems(
 function readStudentFormInput(formData: FormData): StudentFormInput {
   const genderValue = readOptionalString(formData, "gender");
   const joinDateValue = readString(formData, "joinDate");
+  const halaqahLevel = readOptionalString(formData, "halaqahLevel");
 
   return {
     fullName: readString(formData, "fullName"),
@@ -58,6 +62,7 @@ function readStudentFormInput(formData: FormData): StudentFormInput {
     isActive: formData.get("isActive") === "on",
     notes: readOptionalString(formData, "notes"),
     programType: readString(formData, "programType"),
+    halaqahLevel,
   };
 }
 
@@ -71,6 +76,7 @@ function getStudentFormExtras(input: StudentFormInput) {
     isActive: input.isActive ? "true" : "false",
     notes: input.notes ?? "",
     programType: input.programType,
+    halaqahLevel: input.halaqahLevel ?? "",
   };
 }
 
@@ -144,10 +150,13 @@ async function resolveStudentRelations(
   fail: (message: string, extra?: Record<string, string>) => never,
 ) {
   const t = await getTranslations("Validation");
+  const programType = (input.programType as ProgramType) || ProgramType.ACADEMIC;
+  const isBoarding = programType === ProgramType.BOARDING;
+
   const [teacher, academicClass] = await Promise.all([
     prisma.teacher.findUnique({
       where: { id: input.teacherId },
-      select: { id: true },
+      select: { id: true, fullName: true },
     }),
     prisma.academicClass.findUnique({
       where: { id: input.academicClassId },
@@ -165,28 +174,94 @@ async function resolveStudentRelations(
     fail(t("adminAcademicClassNotFound"), extras);
   }
 
-  const classGroup = await prisma.classGroup.findFirst({
+  // Resolve the halaqah level: Boarding defaults to LOW (never shown in UI);
+  // Academic requires a valid level when creating the first student. Mirrors
+  // the Teacher flow in students/actions.ts.
+  let resolvedLevel = input.halaqahLevel;
+  if (isBoarding) {
+    if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
+      resolvedLevel = HalaqahLevel.LOW;
+    }
+  } else if (!resolvedLevel || !validLevels.has(resolvedLevel)) {
+    fail(t("halaqahLevelRequired"), extras);
+  }
+  const level = resolvedLevel as HalaqahLevel;
+
+  const existingCg = await prisma.classGroup.findUnique({
     where: {
-      teacherId: teacher!.id,
-      academicYear: academicClass!.academicYear,
-      grade: academicClass!.grade,
-      programType: (input.programType as ProgramType) || ProgramType.ACADEMIC,
+      teacherId_academicYear_grade_programType: {
+        teacherId: teacher!.id,
+        academicYear: academicClass!.academicYear,
+        grade: academicClass!.grade,
+        programType,
+      },
     },
-    select: { id: true, name: true },
+    select: { id: true, level: true },
   });
 
-  if (!classGroup) {
-    fail(
-      t("adminTeacherNoHalaqah", { year: academicClass!.academicYear, grade: academicClass!.grade }),
-      extras,
-    );
+  // Existing halaqah: reuse it. Academic level is locked to the existing level
+  // to prevent accidental duplicate creation (mirrors the Teacher flow).
+  if (existingCg) {
+    if (!isBoarding && existingCg.level !== level) {
+      fail(
+        t("halaqahLevelLocked", { grade: academicClass!.grade, level: halaqahLevelLabels[existingCg.level] }),
+        extras,
+      );
+    }
+    return {
+      teacherId: teacher!.id,
+      classGroupId: existingCg.id,
+      academicClassId: academicClass!.id,
+    };
   }
 
-  return {
-    teacherId: teacher!.id,
-    classGroupId: classGroup!.id,
-    academicClassId: academicClass!.id,
-  };
+  // No halaqah yet: auto-create one (mirrors createTeacherStudent). Guarded by
+  // the @@unique([teacherId, academicYear, grade, programType]) constraint with
+  // a P2002 retry so concurrent first-student submissions can't create duplicates.
+  try {
+    const created = await prisma.classGroup.create({
+      data: {
+        teacherId: teacher!.id,
+        name: teacher!.fullName ?? "Halaqah",
+        level,
+        grade: academicClass!.grade,
+        academicYear: academicClass!.academicYear,
+        programType,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return {
+      teacherId: teacher!.id,
+      classGroupId: created.id,
+      academicClassId: academicClass!.id,
+    };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const retryCg = await prisma.classGroup.findUnique({
+        where: {
+          teacherId_academicYear_grade_programType: {
+            teacherId: teacher!.id,
+            academicYear: academicClass!.academicYear,
+            grade: academicClass!.grade,
+            programType,
+          },
+        },
+        select: { id: true },
+      });
+      if (retryCg) {
+        return {
+          teacherId: teacher!.id,
+          classGroupId: retryCg.id,
+          academicClassId: academicClass!.id,
+        };
+      }
+    }
+    throw error;
+  }
 }
 
 export async function createStudent(formData: FormData) {

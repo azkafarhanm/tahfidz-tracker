@@ -21,6 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         "DeleteTeacher",
         "Error",
         "Export",
+        "HalaqahLevelDialog",
         "LogoutButton",
       ]}
     >

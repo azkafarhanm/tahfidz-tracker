@@ -888,6 +888,10 @@ export async function getAdminStudentFormData(studentId: string) {
         },
         classGroup: {
           select: {
+            id: true,
+            name: true,
+            level: true,
+            grade: true,
             programType: true,
           },
         },
@@ -915,6 +919,10 @@ export async function getAdminStudentFormData(studentId: string) {
       joinDate: student.joinDate.toISOString().slice(0, 10),
       isActive: student.isActive,
       notes: student.notes ?? "",
+      classGroupId: student.classGroup.id,
+      classGroupName: student.classGroup.name,
+      classGroupLevel: student.classGroup.level,
+      classGroupGrade: student.classGroup.grade,
     },
     options,
   };
