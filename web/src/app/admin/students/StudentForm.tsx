@@ -183,7 +183,9 @@ export default function StudentForm({
   // Once a halaqah exists for the selected teacher + academic class grade, its
   // level is locked (mirrors the Teacher flow). The selector stays visible so
   // the active level is shown; editing happens elsewhere (out of scope here).
-  const lockedLevel = !isBoarding ? (resolvedClassGroup?.level ?? null) : null;
+  // Prefer halaqahState (local, updated immediately by Edit Level dialog) over
+  // resolvedClassGroup (server props, stale until router.refresh() lands).
+  const lockedLevel = !isBoarding ? (halaqahState?.level ?? resolvedClassGroup?.level ?? null) : null;
   const effectiveLevel = lockedLevel ?? selectedLevel;
 
   // When the teacher/class selection changes and a halaqah resolves, sync the
@@ -480,7 +482,7 @@ export default function StudentForm({
                       {t("halaqahLevel")}
                     </div>
                     <p className="mt-2 text-sm text-slate-950 dark:text-white">
-                      {resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
+                      {halaqahState?.levelLabel ?? resolvedClassGroup?.levelLabel ?? t("halaqahLevelEmpty")}
                     </p>
                   </div>
                 </div>
