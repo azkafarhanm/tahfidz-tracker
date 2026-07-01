@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="TahfidzFlow">
+  <rect width="512" height="512" rx="104" fill="#064e3b"/>
+  <path
+    fill="none"
+    stroke="#fff"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M96 178
+       C142 158 206 164 256 194
+       C306 164 370 158 416 178
+       V384
+       C370 366 306 374 256 412
+       C206 374 142 366 96 384
+       Z"
+  />
+  <path
+    fill="none"
+    stroke="#fff"
+    stroke-width="22"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M256 194 V412"
+  />
+</svg>

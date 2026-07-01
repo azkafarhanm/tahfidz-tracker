@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<title>Panduan Guru TahfidzFlow</title>
+<style>
+
+@page {
+    size: A4 portrait;
+    margin: 20mm 18mm 18mm 18mm;
+    @top-center {
+        content: "Panduan Guru TahfidzFlow";
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-size: 8pt;
+        color: #9aa0a6;
+    }
+    @bottom-center {
+        content: "Halaman " counter(page) " dari " counter(pages);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        font-size: 8pt;
+        color: #9aa0a6;
+    }
+}
+@page :first {
+    margin: 0;
+    @top-center { content: ""; }
+    @bottom-center { content: ""; }
+}
+
+html { font-size: 10.5pt; }
+
+body {
+    font-family: Georgia, "Times New Roman", "Charis SIL", serif;
+    color: #1f2933;
+    line-height: 1.6;
+    margin: 0;
+    hyphens: auto;
+}
+
+/* ---------- Cover ---------- */
+/* Chromium's print engine ignores text-align:center on blocks. The only
+   reliable centering method is absolute positioning with left:50% +
+   translateX(-50%). Each element is absolutely placed on the A4 page. */
+.cover {
+    page-break-after: always;
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+}
+.cover-inner { }
+.cover .cover-logo,
+.cover .cover-kicker,
+.cover .cover-title,
+.cover .cover-sub,
+.cover .cover-rule,
+.cover .cover-version,
+.cover .cover-date {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    margin: 0;
+}
+/* Vertical placement on the 297mm page (logo ~ middle-upper, text flowing down) */
+.cover .cover-logo   { top: 88mm;  }
+.cover .cover-kicker { top: 122mm; }
+.cover .cover-title  { top: 132mm; }
+.cover .cover-sub    { top: 168mm; }
+.cover .cover-rule   { top: 192mm; }
+.cover .cover-version{ top: 204mm; }
+.cover .cover-date   { top: 214mm; }
+
+.cover-logo svg {
+    display: block;
+    margin: 0 auto;
+}
+.cover-kicker {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 14pt;
+    font-weight: 600;
+    color: #0f6e4f;
+    letter-spacing: 4pt;
+    text-transform: uppercase;
+}
+.cover-title {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 40pt;
+    font-weight: 800;
+    color: #064e3b;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+}
+.cover-sub {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 13pt;
+    font-weight: 400;
+    color: #52606d;
+}
+.cover-rule {
+    display: block;
+    width: 40mm;
+    height: 2pt;
+    background: #0f6e4f;
+    border: none;
+}
+.cover-version {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #1f2933;
+}
+.cover-date {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 11pt;
+    font-weight: 400;
+    color: #52606d;
+}
+
+/* ---------- Headings ---------- */
+h2.chapter {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 19pt;
+    font-weight: 700;
+    color: #0f6e4f;
+    margin: 0 0 4mm 0;
+    padding-bottom: 2mm;
+    border-bottom: 2pt solid #0f6e4f;
+    page-break-before: always;
+    page-break-after: avoid;
+}
+h3 {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 13.5pt;
+    font-weight: 700;
+    color: #145a43;
+    margin: 7mm 0 2mm 0;
+    page-break-after: avoid;
+}
+h2:not(.chapter) {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #0f6e4f;
+    margin: 0 0 3mm 0;
+    padding-bottom: 1.5mm;
+    border-bottom: 1.5pt solid #0f6e4f;
+    page-break-before: always;
+    page-break-after: avoid;
+}
+.anchor { display: block; }
+
+/* ---------- Labeled blocks (Tujuan, Tampilan, ...) ---------- */
+p.label {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-weight: 700;
+    color: #0f6e4f;
+    margin: 4mm 0 1mm 0;
+    page-break-after: avoid;
+}
+
+/* ---------- Body text ---------- */
+p { margin: 0 0 2.5mm 0; text-align: justify; }
+p.completion {
+    font-style: italic;
+    color: #52606d;
+    margin-top: 3mm;
+    padding-left: 3mm;
+    border-left: 2pt solid #c8e6d6;
+    text-align: left;
+}
+
+/* ---------- Lists ---------- */
+ol.steps { margin: 1mm 0 3mm 0; padding-left: 7mm; }
+ol.steps > li { margin: 0 0 1.5mm 0; text-align: justify; }
+ol.steps > li::marker { font-weight: 700; color: #0f6e4f; }
+ul.sub { margin: 1.5mm 0 1mm 0; padding-left: 6mm; list-style: disc; }
+ul.sub li { margin: 0 0 1mm 0; }
+ul.bullets { margin: 1mm 0 3mm 0; padding-left: 7mm; list-style: disc; }
+ul.bullets li { margin: 0 0 1.5mm 0; text-align: justify; }
+
+/* ---------- Screenshots ---------- */
+/* The "Tampilan" label and its screenshot are wrapped together so they never
+   split across a page break (which previously produced a page with only the
+   label or only the heading). */
+.tampilan-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin: 2mm 0 3mm 0;
+}
+.tampilan-block p.label {
+    margin: 2mm 0 1mm 0;
+}
+figure.screenshot {
+    margin: 2mm 0 3mm 0;
+    text-align: center;
+    page-break-inside: avoid;
+}
+figure.screenshot img {
+    width: auto;
+    max-width: 174mm;          /* full content width on A4 with 18mm margins */
+    /* Constrain height so a label+figure pair always fits with room for the
+       label and caption on the same page. ~245mm keeps tall portrait shots
+       on one page without cropping (height:auto preserves aspect ratio). */
+    max-height: 245mm;
+    height: auto;
+    border: 1pt solid #d9dde2;
+    border-radius: 3pt;
+}
+figure.screenshot figcaption {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 8.5pt;
+    color: #7b8794;
+    margin-top: 1.5mm;
+    font-style: italic;
+}
+
+/* ---------- Tables ---------- */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 2mm 0 4mm 0;
+    font-size: 9.5pt;
+    page-break-inside: auto;
+}
+th, td {
+    border: 0.5pt solid #cdd2d8;
+    padding: 2mm 3mm;
+    text-align: left;
+    vertical-align: top;
+}
+thead th {
+    background: #0f6e4f;
+    color: #ffffff;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-weight: 700;
+}
+tbody tr:nth-child(even) { background: #f3f7f5; }
+
+/* ---------- Blockquote ---------- */
+blockquote {
+    margin: 2mm 0;
+    padding: 2.5mm 4mm;
+    background: #f3f7f5;
+    border-left: 3pt solid #0f6e4f;
+    color: #3e4c59;
+    font-style: italic;
+}
+
+/* ---------- Horizontal rule ---------- */
+hr.section-rule {
+    border: none;
+    border-top: 0.5pt solid #d9dde2;
+    margin: 5mm 0;
+}
+
+/* ---------- Table of Contents ---------- */
+.toc {
+    page-break-after: always;
+}
+.toc h2 {
+    page-break-before: avoid;
+}
+.toc ol { list-style: none; padding-left: 0; margin: 4mm 0; }
+.toc .toc-l1 {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-weight: 700;
+    color: #1f2933;
+    font-size: 10.5pt;
+    margin: 2.2mm 0 0.5mm 0;
+}
+.toc .toc-l2 {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: #52606d;
+    font-size: 10pt;
+    margin: 0.8mm 0 0.8mm 6mm;
+}
+/* Clickable entry + page number. The <a> is a flex row: title on the left,
+   dotted leader filling the middle, page number on the right. Chromium does
+   NOT support CSS target-counter, so page numbers are injected as real text
+   via a two-pass render and styled here. */
+.toc li a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: baseline;
+    text-align: left;
+}
+.toc li a .toc-title {
+    flex: 0 1 auto;
+}
+/* Dotted leader between title and page number */
+.toc li a .toc-title::after {
+    content: "";
+    display: inline-block;
+    width: 100%;
+    border-bottom: 0.5pt dotted #b9c1cc;
+    margin: 0 1.5mm;
+    transform: translateY(-3px);
+}
+.toc li a .toc-page {
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+    min-width: 7mm;
+    text-align: right;
+}
+/* When no page number is injected (first render pass), hide the empty leader */
+.toc li a:not(:has(.toc-page)) .toc-title::after {
+    content: none;
+}
+.toc .dot {
+    border-bottom: 0.5pt dotted #b9c1cc;
+    margin: 0 1.5mm;
+}
+
+/* avoid orphan headings at page bottom */
+h2, h3, p.label { widows: 2; orphans: 2; }
+
+</style>
+</head>
+<body>
+<section class="cover">
+  <div class="cover-inner">
+    <div class="cover-logo">
+      <svg viewBox="0 0 512 512" width="120" height="120" role="img" aria-label="TahfidzFlow">
+        <rect width="512" height="512" rx="112" fill="#064e3b"/>
+        <g fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M256 150 C 200 120 130 120 90 138 L 90 388 C 130 370 200 370 256 400"/>
+          <path d="M256 150 C 312 120 382 120 422 138 L 422 388 C 382 370 312 370 256 400"/>
+          <line x1="256" y1="150" x2="256" y2="400"/>
+        </g>
+      </svg>
+    </div>
+    <p class="cover-kicker">Panduan Guru</p>
+    <h1 class="cover-title">TahfidzFlow</h1>
+    <p class="cover-sub">Sistem Manajemen Pembelajaran Tahfidz</p>
+    <div class="cover-rule"></div>
+    <p class="cover-version">Versi 1.0</p>
+    <p class="cover-date">Juli 2026</p>
+  </div>
+</section>
+
+<h2 id="informasi-dokumen" class="chapter"><a class="anchor" href="#informasi-dokumen"></a>Informasi Dokumen</h2>
+
+<table><thead><tr><th>Item</th><th>Keterangan</th></tr></thead><tbody><tr><td>Judul</td><td>Panduan Guru TahfidzFlow</td></tr><tr><td>Versi</td><td>1.0</td></tr><tr><td>Tanggal</td><td>Juli 2026</td></tr><tr><td>Pembaca Sasaran</td><td>Guru tahfidz (pengguna akhir)</td></tr><tr><td>Perangkat</td><td>Dapat dibuka di perangkat HP, tablet, maupun komputer</td></tr><tr><td>Bahasa</td><td>Bahasa Indonesia</td></tr></tbody></table>
+
+<blockquote>Panduan ini ditulis untuk guru yang baru pertama kali menggunakan TahfidzFlow. Bacalah bab demi bab secara berurutan agar Anda cepat terbiasa dengan aplikasi.</blockquote>
+
+<hr class="section-rule"/>
+
+<section class="toc"><h2 id="daftar-isi">Daftar Isi</h2><ol>
+<li class="toc-l1"><a href="#informasi-dokumen"><span class="toc-title">Informasi Dokumen</span><span class="toc-page">2</span></a></li>
+<li class="toc-l1"><a href="#daftar-isi"><span class="toc-title">Daftar Isi</span><span class="toc-page">2</span></a></li>
+<li class="toc-l1"><a href="#bab-1-pendahuluan-masuk-ke-aplikasi"><span class="toc-title">Bab 1 — Pendahuluan &amp; Masuk ke Aplikasi</span><span class="toc-page">5</span></a></li>
+<li class="toc-l1"><a href="#bab-2-mengenal-dashboard-beranda"><span class="toc-title">Bab 2 — Mengenal Dashboard (Beranda)</span><span class="toc-page">7</span></a></li>
+<li class="toc-l1"><a href="#bab-3-mengelola-data-santri"><span class="toc-title">Bab 3 — Mengelola Data Santri</span><span class="toc-page">9</span></a></li>
+<li class="toc-l2"><a href="#31-melihat-daftar-santri"><span class="toc-title">3.1 Melihat Daftar Santri</span><span class="toc-page">9</span></a></li>
+<li class="toc-l2"><a href="#32-memilih-program-saat-pertama-kali-menambah-santri"><span class="toc-title">3.2 Memilih Program Saat Pertama Kali Menambah Santri</span><span class="toc-page">10</span></a></li>
+<li class="toc-l2"><a href="#33-menambah-santri-baru"><span class="toc-title">3.3 Menambah Santri Baru</span><span class="toc-page">12</span></a></li>
+<li class="toc-l2"><a href="#34-detail-santri"><span class="toc-title">3.4 Detail Santri</span><span class="toc-page">14</span></a></li>
+<li class="toc-l2"><a href="#35-mengubah-data-santri"><span class="toc-title">3.5 Mengubah Data Santri</span><span class="toc-page">16</span></a></li>
+<li class="toc-l1"><a href="#bab-4-mencatat-aktivitas-harian-santri"><span class="toc-title">Bab 4 — Mencatat Aktivitas Harian Santri</span><span class="toc-page">19</span></a></li>
+<li class="toc-l2"><a href="#41-catat-cepat"><span class="toc-title">4.1 Catat Cepat</span><span class="toc-page">19</span></a></li>
+<li class="toc-l2"><a href="#42-menambah-hafalan"><span class="toc-title">4.2 Menambah Hafalan</span><span class="toc-page">20</span></a></li>
+<li class="toc-l2"><a href="#43-menambah-murojaah"><span class="toc-title">4.3 Menambah Murojaah</span><span class="toc-page">22</span></a></li>
+<li class="toc-l2"><a href="#44-menambah-tasmi"><span class="toc-title">4.4 Menambah Tasmi&#x27;</span><span class="toc-page">24</span></a></li>
+<li class="toc-l2"><a href="#45-menambah-target"><span class="toc-title">4.5 Menambah Target</span><span class="toc-page">26</span></a></li>
+<li class="toc-l1"><a href="#bab-5-rekap-formatif"><span class="toc-title">Bab 5 — Rekap Formatif</span><span class="toc-page">29</span></a></li>
+<li class="toc-l2"><a href="#51-halaman-rekap-formatif"><span class="toc-title">5.1 Halaman Rekap Formatif</span><span class="toc-page">29</span></a></li>
+<li class="toc-l2"><a href="#52-detail-formatif-santri"><span class="toc-title">5.2 Detail Formatif Santri</span><span class="toc-page">30</span></a></li>
+<li class="toc-l1"><a href="#bab-6-penilaian-sumatif"><span class="toc-title">Bab 6 — Penilaian Sumatif</span><span class="toc-page">32</span></a></li>
+<li class="toc-l2"><a href="#61-halaman-nilai-sumatif"><span class="toc-title">6.1 Halaman Nilai Sumatif</span><span class="toc-page">32</span></a></li>
+<li class="toc-l2"><a href="#62-menambah-penilaian-sumatif"><span class="toc-title">6.2 Menambah Penilaian Sumatif</span><span class="toc-page">33</span></a></li>
+<li class="toc-l1"><a href="#bab-7-laporan-ekspor-excel-pdf"><span class="toc-title">Bab 7 — Laporan &amp; Ekspor (Excel &amp; PDF)</span><span class="toc-page">35</span></a></li>
+<li class="toc-l2"><a href="#71-halaman-laporan"><span class="toc-title">7.1 Halaman Laporan</span><span class="toc-page">35</span></a></li>
+<li class="toc-l2"><a href="#72-mengekspor-ke-excel"><span class="toc-title">7.2 Mengekspor ke Excel</span><span class="toc-page">36</span></a></li>
+<li class="toc-l2"><a href="#73-mengekspor-ke-pdf"><span class="toc-title">7.3 Mengekspor ke PDF</span><span class="toc-page">37</span></a></li>
+<li class="toc-l1"><a href="#bab-8-profil-pengaturan-akun"><span class="toc-title">Bab 8 — Profil &amp; Pengaturan Akun</span><span class="toc-page">39</span></a></li>
+<li class="toc-l2"><a href="#81-halaman-profil-tema-bahasa"><span class="toc-title">8.1 Halaman Profil (Tema &amp; Bahasa)</span><span class="toc-page">39</span></a></li>
+<li class="toc-l2"><a href="#82-mengubah-username"><span class="toc-title">8.2 Mengubah Username</span><span class="toc-page">40</span></a></li>
+<li class="toc-l2"><a href="#83-mengubah-email"><span class="toc-title">8.3 Mengubah Email</span><span class="toc-page">41</span></a></li>
+<li class="toc-l2"><a href="#84-mengubah-password"><span class="toc-title">8.4 Mengubah Password</span><span class="toc-page">42</span></a></li>
+<li class="toc-l1"><a href="#bab-9-menginstal-aplikasi-pwa-keluar"><span class="toc-title">Bab 9 — Menginstal Aplikasi (PWA) &amp; Keluar</span><span class="toc-page">44</span></a></li>
+<li class="toc-l2"><a href="#91-menginstal-aplikasi"><span class="toc-title">9.1 Menginstal Aplikasi</span><span class="toc-page">44</span></a></li>
+<li class="toc-l2"><a href="#92-keluar-logout"><span class="toc-title">9.2 Keluar (Logout)</span><span class="toc-page">45</span></a></li>
+<li class="toc-l1"><a href="#glosarium"><span class="toc-title">Glosarium</span><span class="toc-page">47</span></a></li>
+<li class="toc-l1"><a href="#daftar-pertanyaan-umum-faq"><span class="toc-title">Daftar Pertanyaan Umum (FAQ)</span><span class="toc-page">48</span></a></li>
+<li class="toc-l1"><a href="#penutup"><span class="toc-title">Penutup</span><span class="toc-page">49</span></a></li>
+<li class="toc-l1"><a href="#informasi-versi-dokumen"><span class="toc-title">Informasi Versi Dokumen</span><span class="toc-page">50</span></a></li>
+</ol></section>
+<h2 id="bab-1-pendahuluan-masuk-ke-aplikasi" class="chapter"><a class="anchor" href="#bab-1-pendahuluan-masuk-ke-aplikasi"></a>Bab 1 — Pendahuluan &amp; Masuk ke Aplikasi</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Sebagai guru tahfidz, Anda akan membuka TahfidzFlow hampir setiap hari untuk mencatat setoran dan memantau perkembangan Santri. Semua aktivitas itu dimulai dari satu pintu yang sama, yaitu halaman masuk, sehingga langkah ini menjadi fondasi dari seluruh penggunaan aplikasi Anda sehari-hari.</p>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Bab ini membantu Anda mengenal TahfidzFlow secara singkat dan berhasil masuk (login) ke aplikasi untuk pertama kali. Setelah bab ini, Anda akan berada di halaman utama (Dashboard) dan siap memulai aktivitas harian.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/01.%20Login.png" alt="Tampilan Halaman Masuk (Login)"/><figcaption>Tampilan Halaman Masuk (Login)</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka aplikasi TahfidzFlow di perangkat Anda melalui peramban (browser) atau aplikasi yang sudah terpasang.</li><li>Pada halaman <strong>Masuk</strong>, isi kolom <strong>Username atau Email</strong> dengan nama pengguna atau surel yang diberikan oleh sekolah.</li><li>Isi kolom <strong>Password</strong> dengan kata sandi Anda.</li><li>Jika ingin memastikan kata sandi yang diketik sudah benar, ketuk ikon mata di sisi kanan kolom <strong>Password</strong> untuk menampilkan sementara.</li><li>Ketuk tombol <strong>Masuk</strong>.</li><li>Jika data benar, Anda akan diarahkan langsung ke <strong>Dashboard</strong> (Beranda).</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Setelah berhasil masuk untuk pertama kali, segera ubah kata sandi bawaan melalui menu <strong>Profil → Ubah Password</strong> agar akun lebih aman.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Jika lupa kata sandi dan tidak dapat masuk ke aplikasi, hubungi administrator sekolah untuk mendapatkan bantuan.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Di bawah formulir masuk, Anda akan melihat kartu motivasi yang menampilkan ayat Al-Qur&#x27;an atau hadis secara bergiliran. Bagian ini hanya untuk motivasi dan tidak perlu diisi.</li><li>Gunakan Username atau Email dan kata sandi yang sama setiap kali Anda masuk. Jangan berbagi kata sandi dengan orang lain agar data Santri (Murid) Anda tetap aman.</li></ul>
+
+<p class="completion">Setelah berhasil masuk, Anda akan dibawa langsung ke Dashboard dan siap mengenal bagian-bagian aplikasi pada bab berikutnya.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-2-mengenal-dashboard-beranda" class="chapter"><a class="anchor" href="#bab-2-mengenal-dashboard-beranda"></a>Bab 2 — Mengenal Dashboard (Beranda)</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Setiap kali Anda masuk ke TahfidzFlow, halaman pertama yang menyambut adalah Dashboard. Inilah tempat Anda memulai pekerjaan harian, melihat setoran hari ini, memantau target, dan memilih fitur mana yang ingin dibuka lebih lanjut.</p>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Bab ini membantu Anda memahami <strong>Dashboard</strong> sebagai pusat kerja harian. Di sini Anda dapat melihat ringkasan aktivitas, memantau target, dan membuka fitur-fitur utama TahfidzFlow dengan cepat.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/02.%20Dashboard.png" alt="Tampilan Dashboard (Beranda)"/><figcaption>Tampilan Dashboard (Beranda)</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Perhatikan bagian atas layar. Di sana tertera sapaan, nama Anda, dan tanggal hari ini. Pada bagian ini juga ditampilkan tahun ajaran aktif serta lencana program (<strong>Akademik</strong> atau <strong>Boarding</strong>).</li><li>Tepat di bawahnya, terdapat kartu motivasi yang menampilkan ayat Al-Qur&#x27;an atau hadis secara bergiliran. Bagian ini berfungsi sebagai pengingat dan tidak perlu diisi.</li><li>Lihat kartu <strong>Ringkasan hari ini</strong>. Angka besar menunjukkan jumlah setoran yang sudah tercatat pada hari ini, lengkap dengan keterangan <strong>setoran tercatat</strong>.</li><li>Pada sisi kanan kartu, perhatikan <strong>Aktivitas minggu ini</strong>. Di bawahnya tertera rincian berupa jumlah <strong>Hafalan</strong>, <strong>Murojaah</strong>, dan <strong>Target Selesai</strong> selama satu minggu terakhir.</li><li>Gulir ke bawah ke deretan tombol aksi cepat. Ketuk salah satu untuk langsung membuka fitur yang Anda butuhkan:<ul class="sub"><li><strong>Hafalan</strong> — membuka daftar Santri (Murid) untuk mencatat hafalan baru.</li><li><strong>Murojaah</strong> — membuka daftar Santri untuk mencatat murojaah.</li><li><strong>Quick Log</strong> — membuka catatan cepat.</li><li><strong>Formatif</strong> — membuka Rekap Formatif.</li><li><strong>Sumatif</strong> — membuka Nilai Sumatif.</li><li><strong>Laporan</strong> — membuka halaman Laporan.</li></ul></li><li>Pada bagian <strong>Aktivitas terbaru</strong>, lihat daftar kegiatan Santri terakhir. Setiap kartu memuat nama Santri, jenis kegiatan, rentang ayat atau juz, tanggal, status, dan tautan <strong>Detail</strong>.</li><li>Ketuk <strong>Detail</strong> pada salah satu kartu untuk membuka halaman Santri yang bersangkutan.</li><li>Untuk berpindah antarfitur, gunakan menu navigasi yang tersedia: <strong>Dashboard</strong>, <strong>Santri</strong>, <strong>Catat Cepat</strong>, <strong>Rekap Formatif</strong>, <strong>Nilai Sumatif</strong>, dan <strong>Profil</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan tombol aksi cepat di Dashboard untuk langsung mencatat tanpa harus membuka menu terlebih dahulu. Ini cara tercepat untuk memulai aktivitas harian Anda.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Tampilan Dashboard dapat sedikit berbeda antar guru. Jika Anda mengajar di dua program sekaligus (Akademik dan Boarding), akan muncul pemilih program (ProgramSelector) untuk berganti konteks. Jika Anda hanya mengajar di satu program, bagian pemilih program tidak ditampilkan karena program terdeteksi secara otomatis.</p>
+
+<p class="completion">Setelah memahami bagian-bagian Dashboard, Anda dapat mulai mengelola data Santri pada bab berikutnya.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-3-mengelola-data-santri" class="chapter"><a class="anchor" href="#bab-3-mengelola-data-santri"></a>Bab 3 — Mengelola Data Santri</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Sebelum mencatat hafalan atau murojaah, Anda perlu memastikan data Santri (Murid) sudah terdaftar dengan benar di dalam aplikasi. Bab ini menemani Anda mulai dari melihat daftar Santri, menambah Santri baru, membuka detail, hingga mengubah data — pekerjaan yang biasanya Anda lakukan di awal tahun ajaran atau ketika ada Santri baru bergabung di tengah semester.</p>
+
+<h3 id="31-melihat-daftar-santri"><a class="anchor" href="#31-melihat-daftar-santri"></a>3.1 Melihat Daftar Santri</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengenali tampilan halaman Daftar Santri agar Anda dapat mencari, memantau kondisi, dan membuka data setiap Santri dengan cepat sebelum mulai mencatat.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/03.%20Daftar%20Santri.png" alt="Tampilan Daftar Santri"/><figcaption>Tampilan Daftar Santri</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Santri</strong> dari navigasi bawah atau samping.</li><li>Pada bagian atas, perhatikan lencana tahun ajaran aktif dan lencana program (<strong>Akademik</strong> atau <strong>Boarding</strong>). Jika Anda mengajar di dua program, gunakan pemilih program (ProgramSelector) untuk berganti tampilan.</li><li>Lihat kartu <strong>Santri aktif</strong> yang menampilkan jumlah total Santri aktif dengan keterangan <strong>siap dicatat hari ini</strong>. Kotak di sampingnya menampilkan jumlah <strong>Perlu cek</strong>, yaitu Santri yang perlu diperiksa ulang.</li><li>Untuk berpindah antara Santri aktif dan nonaktif, ketuk tab <strong>Santri Aktif</strong> atau <strong>Santri Nonaktif</strong> di bawah kartu.</li><li>Gunakan kotak <strong>Cari nama santri</strong> untuk menemukan Santri tertentu, lalu ketuk tombol <strong>Cari</strong>.</li><li>Pada bagian <strong>Daftar santri</strong>, perhatikan kartu setiap Santri. Setiap kartu memuat nama, ringkasan kelas, lencana status (<strong>Aktif</strong> atau <strong>Cek</strong>), catatan <strong>Hafalan terakhir</strong>, <strong>Murojaah terakhir</strong>, ringkasan <strong>Tasmi&#x27;</strong>, serta jumlah target aktif.</li><li>Ketuk <strong>Detail</strong> pada kartu untuk membuka halaman lengkap Santri tersebut.</li><li>Jika Santri lebih dari satu halaman, gunakan tombol panah di bagian bawah untuk berpindah halaman.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan kotak pencarian dengan nama yang singkat (misalnya nama depan) agar hasilnya lebih cepat ditemukan, terutama bila Santri Anda sangat banyak.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Jika sebuah kartu menampilkan lencana <strong>Cek</strong>, artinya Santri tersebut memiliki catatan yang perlu diperiksa ulang. Segera buka detailnya untuk meninjau.</li><li>Tombol <strong>Tambah</strong> di bagian atas daftar digunakan untuk menambah Santri baru (lihat sub-bab 3.2 dan 3.3).</li></ul>
+
+<p class="completion">Setelah Anda mengenali tampilan daftar, langkah berikutnya adalah menambahkan Santri baru bila ada yang belum terdaftar.</p>
+
+<h3 id="32-memilih-program-saat-pertama-kali-menambah-santri"><a class="anchor" href="#32-memilih-program-saat-pertama-kali-menambah-santri"></a>3.2 Memilih Program Saat Pertama Kali Menambah Santri</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Memilih program (Akademik atau Boarding) sebelum menambah Santri pertama kali. Langkah ini muncul otomatis ketika Anda belum memiliki program aktif apa pun.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/05.%20Pilihan%20Program%20Awal%20Penambahan%20Santri.png" alt="Tampilan Pilihan Program Awal Penambahan Santri"/><figcaption>Tampilan Pilihan Program Awal Penambahan Santri</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Daftar Santri, ketuk tombol <strong>Tambah</strong>. Jika ini pertama kalinya Anda menambahkan Santri, Anda akan diarahkan ke halaman <strong>Pilih Program</strong>.</li><li>Baca keterangan pada halaman: <em>Pilih program yang akan Anda gunakan untuk menambah santri.</em></li><li>Pilih salah satu program sesuai jenis Santri:<ul class="sub"><li><strong>Akademik</strong> — program tahfidz reguler dengan halaqah dan kelas akademik.</li><li><strong>Boarding</strong> — program tahfidz intensif dengan kelas boarding.</li></ul></li><li>Setelah memilih, Anda akan dibawa langsung ke formulir Tambah Santri untuk program tersebut.</li><li>Jika ingin membatalkan, ketuk tautan <strong>Kembali ke Daftar Santri</strong> di bagian bawah.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Pilih program yang benar-benar sesuai dengan kelas yang Anda ampu, karena pilihan ini akan menentukan tampilan formulir dan jenis kelas yang tersedia.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Halaman pemilihan program ini hanya muncul sekali, yaitu ketika Anda belum memiliki program aktif. Setelah salah satu program aktif, penambahan Santri berikutnya akan langsung masuk ke formulir.</p>
+
+<p class="completion">Setelah program dipilih, Anda siap mengisi formulir data Santri baru.</p>
+
+<h3 id="33-menambah-santri-baru"><a class="anchor" href="#33-menambah-santri-baru"></a>3.3 Menambah Santri Baru</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengisi data Santri baru secara lengkap dan benar agar Santri tersimpan dan siap dicatat aktivitasnya.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/04.%20Tambah%20Santri.png" alt="Tampilan Tambah Santri"/><figcaption>Tampilan Tambah Santri</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Pada formulir <strong>Tambah Santri</strong>, isi bagian <strong>Data santri</strong> terlebih dahulu:<ul class="sub"><li><strong>Nama lengkap</strong> — ketik nama lengkap Santri.</li><li><strong>Jenis kelamin</strong> — pilih <em>Laki-laki</em>, <em>Perempuan</em>, atau biarkan <em>Belum dipilih</em>.</li><li><strong>Tanggal bergabung</strong> — isi tanggal Santri mulai bergabung. Secara bawaan sudah terisi tanggal hari ini.</li></ul></li><li>Pada bagian <strong>Kelas</strong>, pilih tingkat kelas Santri dengan mengetuk salah satu tombol: <strong>Kelas 7</strong>, <strong>Kelas 8</strong>, atau <strong>Kelas 9</strong>.</li><li>Pada bagian <strong>Level Halaqah</strong>, pilih level Santri: <strong>Low</strong> (Pemula), <strong>Medium</strong> (Menengah), atau <strong>High</strong> (Lanjutan). Bila level dalam keadaan terkunci, level ditentukan otomatis oleh halaqah yang sudah ada untuk kelas tersebut.</li><li>Pada bagian <strong>Kelas akademik</strong>, pilih kelas akademik Santri dari daftar yang tersedia.</li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong> bila diperlukan.</li><li>Periksa kembali seluruh data, lalu ketuk tombol <strong>Simpan Santri</strong> di bagian bawah.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Pastikan <strong>Nama lengkap</strong> ditulis sesuai nama resmi agar mudah dicari dan tidak tertukar dengan Santri lain.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Level dan kelas menentukan halaqah Santri. Jika level dalam keadaan terkunci, itu berarti halaqah untuk kelas tersebut sudah ada dan perubahan level dapat memengaruhi seluruh Santri di halaqah yang sama.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Tampilan formulir dapat berbeda untuk program <strong>Boarding</strong>: bagian <strong>Kelas</strong> dan <strong>Level Halaqah</strong> tidak ditampilkan, dan label pilihan kelas berubah menjadi <strong>Kelas boarding</strong>.</li><li>Isi hanya field yang tersedia di layar Anda. Field yang tidak ditampilkan memang tidak berlaku untuk program yang dipilih.</li></ul>
+
+<p class="completion">Setelah langkah-langkah di atas selesai, Santri baru akan tersimpan dan langsung muncul di Daftar Santri siap untuk dicatat.</p>
+
+<h3 id="34-detail-santri"><a class="anchor" href="#34-detail-santri"></a>3.4 Detail Santri</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Membuka dan memahami halaman Detail Santri sebagai pusat informasi setiap Santri — tempat Anda melihat riwayat, target aktif, catatan, serta membuka pencatatan hafalan, murojaah, dan Tasmi&#x27;.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/06.%20Detail%20Santri.png" alt="Tampilan Detail Santri"/><figcaption>Tampilan Detail Santri</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari Daftar Santri, ketuk <strong>Detail</strong> pada kartu Santri yang ingin Anda buka.</li><li>Pada bagian <strong>Ringkasan santri</strong>, perhatikan informasi dasar seperti <strong>Gender</strong>, <strong>Bergabung</strong>, jumlah <strong>Perlu cek</strong>, serta jumlah target aktif.</li><li>Di bagian atas halaman, gunakan tombol berikut bila diperlukan:<ul class="sub"><li><strong>Edit</strong> — membuka formulir pengubahan data Santri (lihat sub-bab 3.5).</li><li><strong>Excel</strong> dan <strong>PDF</strong> — mengunduh data Santri dalam format Excel atau PDF.</li></ul></li><li>Untuk langsung mencatat aktivitas, ketuk salah satu tombol <strong>Hafalan</strong>, <strong>Murojaah</strong>, atau <strong>Tasmi&#x27;</strong>.</li><li>Tinjau catatan terakhir Santri pada kotak <strong>Hafalan terakhir</strong>, <strong>Murojaah terakhir</strong>, dan <strong>Tasmi&#x27; terakhir</strong>. Jika belum ada catatan, akan tertulis <strong>Belum ada catatan</strong>.</li><li>Pada bagian <strong>Target aktif</strong>, lihat daftar target Santri beserta lencana statusnya (<strong>Aktif</strong> atau <strong>Lewat</strong>). Ketuk <strong>Tambah</strong> untuk membuat target baru.</li><li>Gulir ke bagian <strong>Riwayat Tasmi&#x27;</strong> untuk melihat tabel Tasmi&#x27; yang berisi kolom <strong>Juz</strong>, <strong>Nilai</strong>, dan <strong>Penguji</strong>.</li><li>Baca keterangan tambahan pada bagian <strong>Catatan</strong> bila Santri memiliki catatan.</li><li>Pada bagian <strong>Aktivitas terbaru</strong>, tinjau kegiatan belajar Santri. Untuk melihat seluruh catatan, buka bagian <strong>Semua Riwayat</strong>.</li><li>Ketuk tautan <strong>Santri</strong> di bagian atas untuk kembali ke Daftar Santri.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Halaman Detail Santri adalah tempat terbaik untuk memulai pekerjaan harian. Dari sini Anda dapat langsung mencatat tanpa harus bolak-balik ke daftar.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Tombol <strong>Excel</strong> dan <strong>PDF</strong> berguna saat Anda perlu menyerahkan laporan perkembangan satu Santri kepada wali atau koordinator.</li><li>Jika belum ada aktivitas, akan muncul keterangan bahwa Santri belum memiliki catatan — ini wajar untuk Santri baru.</li></ul>
+
+<p class="completion">Setelah Anda memahami halaman Detail Santri, Anda dapat melakukan perubahan data bila ada informasi yang perlu diperbarui.</p>
+
+<h3 id="35-mengubah-data-santri"><a class="anchor" href="#35-mengubah-data-santri"></a>3.5 Mengubah Data Santri</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Memperbarui data Santri, seperti nama, jenis kelamin, kelas, level, atau catatan, agar informasi tetap sesuai kondisi terkini.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/07.%20Edit%20Santri.png" alt="Tampilan Edit Santri"/><figcaption>Tampilan Edit Santri</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Detail Santri dari Santri yang ingin diubah.</li><li>Ketuk tombol <strong>Edit</strong> di bagian atas halaman. Anda akan masuk ke formulir <strong>Edit Santri</strong>.</li><li>Perbarui informasi pada bagian <strong>Data santri</strong> (nama lengkap, jenis kelamin, tanggal bergabung) sesuai kebutuhan.</li><li>Pada bagian <strong>Halaqah Aktif</strong>, tinjau level dan kelas Santri. Bila perlu dan diperbolehkan, ubah level Santri.</li><li>Perbarui <strong>Kelas akademik</strong> (atau <strong>Kelas boarding</strong>) bila Santri pindah kelas.</li><li>(Opsional) Ubah keterangan pada kotak <strong>Catatan</strong>.</li><li>Periksa kembali perubahan Anda, lalu ketuk tombol <strong>Simpan Perubahan</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Sebelum menyimpan, periksa kembali nama dan kelas Santri untuk memastikan tidak ada kesalahan ketik.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Perubahan level pada bagian <strong>Halaqah Aktif</strong> akan memengaruhi seluruh Santri yang berada dalam halaqah yang sama. Pastikan perubahan ini benar-benar diperlukan sebelum disimpan.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Cara lain membuka halaman edit adalah melalui menu tindakan (ikon titik tiga) pada kartu Santri di Daftar Santri, lalu pilih <strong>Edit Santri</strong>.</p>
+
+<p class="completion">Setelah selesai, Anda akan kembali ke halaman Detail Santri dan perubahan akan langsung terlihat.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-4-mencatat-aktivitas-harian-santri" class="chapter"><a class="anchor" href="#bab-4-mencatat-aktivitas-harian-santri"></a>Bab 4 — Mencatat Aktivitas Harian Santri</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Mencatat aktivitas adalah pekerjaan yang paling sering Anda lakukan di TahfidzFlow, hampir setiap kali Santri (Murid) selesai menyetor. Catatan harian inilah yang menjadi dasar rekap formatif dan laporan perkembangan Santri, sehingga ketepatan mencatat sangat menentukan kualitas data Anda. Bab ini menemani Anda mencatat empat jenis aktivitas utama — Catat Cepat, Hafalan, Murojaah, dan Tasmi&#x27; — serta menambah target sebagai panduan capaian Santri.</p>
+
+<h3 id="41-catat-cepat"><a class="anchor" href="#41-catat-cepat"></a>4.1 Catat Cepat</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mencatat hafalan atau murojaah beberapa Santri sekaligus dengan cepat dari satu halaman, tanpa harus berpindah-pindah halaman Detail Santri.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/08.%20Catat%20Cepat.png" alt="Tampilan Catat Cepat"/><figcaption>Tampilan Catat Cepat</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Catat Cepat</strong> dari navigasi.</li><li>Pada bagian <strong>Pilih Santri</strong>, ketik nama Santri pada kotak <strong>Ketik nama santri...</strong>. Daftar yang muncul akan menyaring secara otomatis.</li><li>Ketuk nama Santri yang dimaksud dari daftar. Santri yang dipilih akan tampil di dalam kotak berwarna.</li><li>Pada bagian <strong>Jenis Catatan</strong>, ketuk <strong>Hafalan</strong> atau <strong>Murojaah</strong> sesuai aktivitas yang akan dicatat.</li><li>Pada bagian <strong>Materi</strong>, lakukan hal berikut:<ul class="sub"><li>Isi <strong>Surah</strong> dengan surah yang disetorkan.</li><li>Isi <strong>Ayat awal</strong> dan <strong>Ayat akhir</strong> dengan nomor ayat yang sesuai.</li></ul></li><li>Pada bagian <strong>Penilaian</strong>:<ul class="sub"><li>Pilih <strong>Status</strong> hasil setoran: <strong>Lancar</strong>, <strong>Cukup</strong>, atau <strong>Perlu murojaah</strong>.</li><li>(Opsional) Isi <strong>Nilai</strong> dengan angka, atau biarkan kosong (tertera <em>Opsional</em>).</li></ul></li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong> bila perlu.</li><li>Ketuk tombol <strong>Simpan</strong> di bagian bawah. Setelah tersimpan, form akan otomatis terisi ulang sehingga Anda dapat langsung mencatat Santri berikutnya.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan Catat Cepat saat Anda mencatat banyak Santri sekaligus dalam satu sesi, misalnya setelah jam halaqah, karena form terisi otomatis setelah setiap penyimpanan.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Pada bagian bawah halaman terdapat <strong>Aktivitas Terbaru</strong> yang dapat diperluas untuk melihat catatan yang baru saja Anda buat.</li><li>Tanggal dan waktu catatan terisi otomatis sesuai perangkat Anda, jadi Anda tidak perlu mengisinya secara manual.</li></ul>
+
+<p class="completion">Setelah disimpan, catatan akan langsung tersimpan dan muncul di halaman Detail Santri serta Dashboard.</p>
+
+<h3 id="42-menambah-hafalan"><a class="anchor" href="#42-menambah-hafalan"></a>4.2 Menambah Hafalan</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mencatat satu setoran hafalan baru untuk satu Santri tertentu, lengkap dengan materi, status, nilai, dan catatan.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/09.%20Tambah%20Hafalan.png" alt="Tampilan Tambah Hafalan"/><figcaption>Tampilan Tambah Hafalan</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Detail Santri yang akan dicatat (lihat Bab 3, sub-bab 3.4).</li><li>Ketuk tombol <strong>Hafalan</strong> di bagian atas halaman. Anda akan masuk ke formulir <strong>Tambah Hafalan</strong>.</li><li>Pada bagian <strong>Materi hafalan</strong>, isi hal berikut:<ul class="sub"><li><strong>Surah</strong> — pilih surah yang disetorkan.</li><li><strong>Ayat awal</strong> dan <strong>Ayat akhir</strong> — isi rentang ayat yang dihafal.</li></ul></li><li>Pada bagian <strong>Penilaian</strong>, atur hal berikut:<ul class="sub"><li><strong>Status</strong> — pilih <strong>Lancar</strong>, <strong>Cukup</strong>, atau <strong>Perlu murojaah</strong>.</li><li><strong>Nilai</strong> — (opsional) isi angka nilai, atau biarkan kosong.</li><li><strong>Tanggal</strong> dan <strong>Waktu</strong> — secara bawaan sudah terisi saat ini; ubah bila perlu mencatat setoran yang terjadi pada waktu lain.</li></ul></li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong>, misalnya catatan tajwid yang perlu diperhatikan.</li><li>Periksa kembali data, lalu ketuk tombol <strong>Simpan</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Catat hafalan segera setelah Santri selesai menyetor agar tanggal dan statusnya akurat dan tidak tertukar dengan hari lain.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Pastikan rentang <strong>Ayat awal</strong> dan <strong>Ayat akhir</strong> benar sebelum menyimpan, karena catatan hafalan berpengaruh pada Rekap Formatif Santri.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Hafalan yang Anda catat di sini akan otomatis menjadi bagian dari Rekap Formatif (lihat Bab 5), jadi Anda tidak perlu mengisi rekap secara terpisah.</p>
+
+<p class="completion">Setelah disimpan, catatan hafalan akan tersimpan dan Anda akan kembali ke halaman Detail Santri.</p>
+
+<h3 id="43-menambah-murojaah"><a class="anchor" href="#43-menambah-murojaah"></a>4.3 Menambah Murojaah</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mencatat satu sesi murojaah (pengulangan) untuk satu Santri, agar aktivitas mengulang materi lama tetap terdokumentasi.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/10.%20Tambah%20Murojaah.png" alt="Tampilan Tambah Murojaah"/><figcaption>Tampilan Tambah Murojaah</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Detail Santri yang akan dicatat.</li><li>Ketuk tombol <strong>Murojaah</strong> di bagian atas halaman. Anda akan masuk ke formulir <strong>Tambah Murojaah</strong>.</li><li>Pada bagian <strong>Materi murojaah</strong>, isi hal berikut:<ul class="sub"><li><strong>Surah</strong> — pilih surah yang diulang.</li><li><strong>Ayat awal</strong> dan <strong>Ayat akhir</strong> — isi rentang ayat yang diulang.</li></ul></li><li>Pada bagian <strong>Penilaian</strong>, atur hal berikut:<ul class="sub"><li><strong>Status</strong> — pilih <strong>Lancar</strong>, <strong>Cukup</strong>, atau <strong>Perlu murojaah</strong>.</li><li><strong>Nilai</strong> — (opsional) isi angka nilai, atau biarkan kosong.</li><li><strong>Tanggal</strong> dan <strong>Waktu</strong> — sesuaikan bila perlu.</li></ul></li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong>, misalnya ayat mana yang masih sering tertukar.</li><li>Periksa kembali data, lalu ketuk tombol <strong>Simpan</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan catatan pada kolom <strong>Catatan</strong> untuk menandai bagian yang masih perlu diulang Santri pada sesi berikutnya.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Sama seperti hafalan, catatan murojaah turut membentuk Rekap Formatif Santri secara otomatis.</p>
+
+<p class="completion">Setelah disimpan, catatan murojaah akan tersimpan dan Anda akan kembali ke halaman Detail Santri.</p>
+
+<h3 id="44-menambah-tasmi"><a class="anchor" href="#44-menambah-tasmi"></a>4.4 Menambah Tasmi&#x27;</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mencatat hasil setoran Tasmi&#x27; per juz, lengkap dengan nilai, status kelulusan, dan nama penguji.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/12.%20Tambah%20Tasmi.png" alt="Tampilan Tambah Tasmi&#x27;"/><figcaption>Tampilan Tambah Tasmi&#x27;</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Detail Santri yang akan dicatat.</li><li>Ketuk tombol <strong>Tasmi&#x27;</strong> di bagian atas halaman. Anda akan masuk ke formulir <strong>Tambah Tasmi&#x27;</strong>.</li><li>Pada bagian <strong>Penilaian Tasmi&#x27;</strong>, isi hal berikut:<ul class="sub"><li><strong>Juz</strong> — pilih nomor juz yang disetorkan (Juz 1 hingga Juz 30).</li><li><strong>Nilai</strong> — pilih nilai Tasmi&#x27;: <strong>Mumtaz</strong>, <strong>Jayyid Jiddan</strong>, <strong>Jayyid</strong>, atau <strong>Maqbul</strong>.</li><li><strong>Status</strong> — pilih <strong>Lulus</strong> atau <strong>Mengulang</strong>.</li><li><strong>Nama Penguji</strong> — ketik nama ustadz atau penguji yang menyaksikan setoran.</li><li><strong>Tanggal</strong> — sesuaikan bila perlu.</li></ul></li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong>, misalnya catatan kelancaran atau bagian yang perlu diperbaiki.</li><li>Periksa kembali data, lalu ketuk tombol <strong>Simpan</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Pastikan <strong>Nama Penguji</strong> diisi dengan benar karena informasi ini ikut tercatat dalam Riwayat Tasmi&#x27; dan laporan Santri.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Setiap juz hanya boleh dicatat sesuai hasil setoran yang sebenarnya. Pilih status <strong>Lulus</strong> atau <strong>Mengulang</strong> dengan teliti karena memengaruhi ringkasan capaian Tasmi&#x27; Santri.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Catatan Tasmi&#x27; akan muncul di bagian <strong>Riwayat Tasmi&#x27;</strong> pada halaman Detail Santri, beserta ringkasan juz yang sudah diselesaikan.</p>
+
+<p class="completion">Setelah disimpan, data Tasmi&#x27; akan tersimpan dan muncul di Riwayat Tasmi&#x27; pada halaman Detail Santri.</p>
+
+<h3 id="45-menambah-target"><a class="anchor" href="#45-menambah-target"></a>4.5 Menambah Target</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Menetapkan target hafalan atau murojaah untuk Santri beserta jadwal penyelesaiannya, agar Santri dan Anda sama-sama dapat memantau capaian.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/11.%20Tambah%20Target.png" alt="Tampilan Tambah Target"/><figcaption>Tampilan Tambah Target</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Detail Santri yang akan diberi target.</li><li>Pada bagian <strong>Target aktif</strong>, ketuk tombol <strong>Tambah</strong>. Anda akan masuk ke formulir <strong>Tambah Target</strong>.</li><li>Pada bagian <strong>Jenis target</strong>, ketuk <strong>Hafalan</strong> atau <strong>Murojaah</strong>.</li><li>Pada bagian <strong>Materi target</strong>, isi hal berikut:<ul class="sub"><li><strong>Surah</strong> — pilih surah yang menjadi target.</li><li><strong>Ayat awal</strong> dan <strong>Ayat akhir</strong> — isi rentang ayat yang menjadi target.</li></ul></li><li>Pada bagian <strong>Jadwal</strong>, atur hal berikut:<ul class="sub"><li><strong>Mulai</strong> — tanggal mulai target (secara bawaan terisi hari ini).</li><li><strong>Target selesai</strong> — tanggal batas penyelesaian target (secara bawaan terisi tujuh hari ke depan).</li></ul></li><li>(Opsional) Tambahkan keterangan pada kotak <strong>Catatan</strong>.</li><li>Periksa kembali data, lalu ketuk tombol <strong>Simpan Target</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Tetapkan target yang realistis dengan jangka waktu yang wajar agar Santri termotivasi, lalu pantau perkembangannya di bagian <strong>Target aktif</strong> pada halaman Detail Santri.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Target yang sudah dibuat akan tampil di bagian <strong>Target aktif</strong> dengan lencana <strong>Aktif</strong>. Bila sudah melewati batas waktu, lencana akan berubah menjadi <strong>Lewat</strong>.</li><li>Target juga muncul di Dashboard pada bagian target mingguan, sehingga Anda dapat memantau target semua Santri di satu tempat.</li></ul>
+
+<p class="completion">Setelah disimpan, target akan tersimpan dan langsung tampil di bagian Target aktif pada halaman Detail Santri maupun di Dashboard.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-5-rekap-formatif" class="chapter"><a class="anchor" href="#bab-5-rekap-formatif"></a>Bab 5 — Rekap Formatif</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Setiap catatan hafalan dan murojaah yang Anda buat setiap hari sebenarnya sudah terkumpul menjadi sebuah rekap nilai. Bab ini membantu Anda membaca Rekap Formatif — fitur yang biasanya Anda buka di akhir minggu atau menjelang rapat untuk melihat perkembangan harian Santri (Murid) tanpa perlu menghitung manual.</p>
+
+<h3 id="51-halaman-rekap-formatif"><a class="anchor" href="#51-halaman-rekap-formatif"></a>5.1 Halaman Rekap Formatif</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Melihat rekap nilai harian seluruh Santri secara otomatis, dengan filter semester dan tingkat kelas, serta mengunduhnya bila diperlukan.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/13.%20Rekap%20Formatif.png" alt="Tampilan Rekap Formatif"/><figcaption>Tampilan Rekap Formatif</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Rekap Formatif</strong> dari navigasi.</li><li>Pada bagian atas, pilih filter sesuai kebutuhan:<ul class="sub"><li><strong>Semester</strong> — pilih <strong>Ganjil</strong> atau <strong>Genap</strong>.</li><li><strong>Kelas</strong> — pilih <strong>Kelas 7</strong>, <strong>Kelas 8</strong>, atau <strong>Kelas 9</strong>.</li></ul></li><li>Perhatikan ringkasan di bagian atas, yaitu <strong>Jumlah santri</strong> dan <strong>Jumlah catatan</strong> untuk filter yang dipilih.</li><li>Gulir ke bagian <strong>Daftar rekap santri</strong>. Tabel menampilkan kolom berikut untuk setiap Santri:<ul class="sub"><li><strong>Santri</strong> — nama Santri.</li><li><strong>Halaqah</strong> — nama halaqah.</li><li><strong>Hafalan</strong> — jumlah catatan hafalan.</li><li><strong>Murojaah</strong> — jumlah catatan murojaah.</li><li><strong>Nilai harian</strong> dan <strong>Rata-rata santri</strong> — ringkasan nilai.</li></ul></li><li>Untuk melihat rincian satu Santri, ketuk <strong>Detail</strong> pada baris yang dimaksud.</li><li>Untuk mengunduh rekap, ketuk tombol <strong>Unduh Excel</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Rekap Formatif terisi otomatis dari catatan harian Anda, jadi pastikan hafalan dan murojaah selalu dicatat agar rekapnya lengkap dan akurat.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Rekap berlaku per semester dan tahun ajaran aktif, sesuai filter yang Anda pilih.</li><li>Tombol <strong>Unduh Excel</strong> berguna saat Anda perlu menyerahkan rekap kepada koordinator atau wali kelas.</li></ul>
+
+<p class="completion">Setelah Anda mengenali tampilan rekap, Anda dapat membuka rincian satu Santri untuk meninjau sumber nilainya.</p>
+
+<h3 id="52-detail-formatif-santri"><a class="anchor" href="#52-detail-formatif-santri"></a>5.2 Detail Formatif Santri</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Melihat rincian nilai formatif satu Santri, termasuk catatan harian yang menjadi sumber nilainya.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/14.%20Detail%20Formatif.png" alt="Tampilan Detail Formatif"/><figcaption>Tampilan Detail Formatif</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Rekap Formatif, ketuk <strong>Detail</strong> pada baris Santri yang ingin Anda tinjau.</li><li>Baca keterangan di bagian atas: nilai formatif berasal dari catatan hafalan dan murojaah.</li><li>Perhatikan tabel rincian yang memuat kolom <strong>Jenis</strong>, <strong>Materi</strong>, <strong>Nilai</strong>, <strong>Status</strong>, <strong>Dicatat pada</strong>, dan <strong>Catatan</strong>.</li><li>Gunakan kolom <strong>Jenis</strong> untuk membedakan mana catatan hafalan dan mana murojaah.</li><li>Tinjau kolom <strong>Status</strong> untuk mengetahui kualitas setoran (misalnya <em>Lancar</em>, <em>Cukup</em>, atau <em>Perlu murojaah</em>).</li><li>Bila perlu kembali, ketuk tautan <strong>Kembali ke rekap</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan halaman ini ketika ingin menelusuri sumber nilai formatif seorang Santri, misalnya saat ada pertanyaan dari wali mengenai perkembangan anaknya.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Jika tabel masih kosong, itu berarti Santri tersebut belum memiliki catatan harian. Catat hafalan atau murojaah terlebih dahulu agar rekap formatif terisi secara otomatis.</p>
+
+<p class="completion">Setelah selesai meninjau, Anda dapat kembali ke rekap utama atau membuka Santri lain untuk diperiksa.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-6-penilaian-sumatif" class="chapter"><a class="anchor" href="#bab-6-penilaian-sumatif"></a>Bab 6 — Penilaian Sumatif</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Berbeda dengan formatif yang terbentuk otomatis, penilaian sumatif sengaja Anda isi sendiri sebagai penilaian per surah untuk setiap Santri (Murid). Bab ini membantu Anda memberikan nilai sumatif, biasanya dilakukan setelah selesai satu juz atau surah tertentu, atau menjelang penilaian akhir semester.</p>
+
+<h3 id="61-halaman-nilai-sumatif"><a class="anchor" href="#61-halaman-nilai-sumatif"></a>6.1 Halaman Nilai Sumatif</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Melihat ringkasan penilaian sumatif seluruh Santri per semester, serta membuka detail Santri untuk menambah atau mengubah nilai.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/15.%20Nilai%20Sumatif.png" alt="Tampilan Nilai Sumatif"/><figcaption>Tampilan Nilai Sumatif</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Nilai Sumatif</strong> dari navigasi.</li><li>Pada bagian atas, pilih filter sesuai kebutuhan:<ul class="sub"><li><strong>Semester</strong> — pilih <strong>Ganjil</strong> atau <strong>Genap</strong>.</li><li><strong>Kelas</strong> — pilih <strong>Kelas 7</strong>, <strong>Kelas 8</strong>, atau <strong>Kelas 9</strong>.</li></ul></li><li>Perhatikan ringkasan di bagian atas, yaitu <strong>Jumlah santri</strong>, <strong>Jumlah penilaian</strong>, dan <strong>Rata-rata</strong> kelas.</li><li>Gulir ke bagian <strong>Daftar penilaian santri</strong>. Tabel menampilkan kolom berikut:<ul class="sub"><li><strong>Santri</strong> — nama Santri.</li><li><strong>Halaqah</strong> — nama halaqah.</li><li><strong>Total penilaian</strong> — jumlah surah yang sudah dinilai.</li><li><strong>Rata-rata</strong> — rata-rata nilai sumatif Santri.</li><li><strong>Penilaian terakhir</strong> — surah terakhir yang dinilai.</li></ul></li><li>Untuk membuka detail dan menambah nilai, ketuk <strong>Detail</strong> pada baris Santri yang dimaksud.</li><li>Untuk mengunduh rekap, ketuk tombol <strong>Unduh Excel</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Periksa semester sebelum menilai agar nilai tersimpan pada periode yang benar, terutama saat pergantian semester.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Berbeda dengan formatif, sumatif fleksibel — Anda dapat memberikan penilaian per Santri dan per surah sesuai kebutuhan.</li><li>Tombol <strong>Unduh Excel</strong> berguna untuk menyerahkan rekap sumatif kepada koordinator.</li></ul>
+
+<p class="completion">Setelah Anda memilih Santri, langkah berikutnya adalah menambahkan penilaian sumatif untuk surah yang dinilai.</p>
+
+<h3 id="62-menambah-penilaian-sumatif"><a class="anchor" href="#62-menambah-penilaian-sumatif"></a>6.2 Menambah Penilaian Sumatif</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Menambahkan satu penilaian sumatif untuk satu surah pada satu Santri tertentu.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/16.%20Tambah%20Penilaian%20Sumatif.png" alt="Tampilan Tambah Penilaian Sumatif"/><figcaption>Tampilan Tambah Penilaian Sumatif</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Nilai Sumatif, ketuk <strong>Detail</strong> pada baris Santri yang akan dinilai.</li><li>Pada halaman detail Santri, ketuk tombol <strong>Tambah nilai</strong>. Anda akan masuk ke formulir <strong>Tambah Penilaian Sumatif</strong>.</li><li>Isi data penilaian sebagai berikut:<ul class="sub"><li><strong>Semester</strong> — pilih <strong>Ganjil</strong> atau <strong>Genap</strong> sesuai periode penilaian.</li><li><strong>Tahun ajaran</strong> — terisi otomatis sesuai tahun ajaran aktif.</li><li><strong>Surah</strong> — pilih surah yang dinilai.</li><li><strong>Nilai</strong> — isi angka nilai (0–100).</li><li><strong>Catatan</strong> — (opsional) tambahkan catatan, misalnya kekuatan hafalan atau catatan tajwid.</li></ul></li><li>Periksa kembali data, lalu ketuk tombol <strong>Simpan Penilaian</strong>.</li><li>Untuk membatalkan, ketuk tombol <strong>Batal</strong>.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Catat hasil penilaian segera setelah selesai menilai agar nilai tersimpan pada surah dan periode yang tepat.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<ul class="bullets"><li>Anda dapat menilai lebih dari satu surah untuk Santri yang sama dengan mengulangi langkah di atas.</li><li>Bagian <strong>Surah acuan kelas</strong> pada halaman detail berfungsi sebagai monitoring target, bukan sebagai batas penilaian. Anda tetap bebas menilai surah mana pun.</li></ul>
+
+<p class="completion">Setelah disimpan, penilaian sumatif akan tersimpan dan muncul di halaman detail sumatif Santri.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-7-laporan-ekspor-excel-pdf" class="chapter"><a class="anchor" href="#bab-7-laporan-ekspor-excel-pdf"></a>Bab 7 — Laporan &amp; Ekspor (Excel &amp; PDF)</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Pada akhir periode atau saat diminta laporan, Anda perlu merangkum perkembangan halaqah dan Santri (Murid) dalam bentuk berkas. Bab ini menunjukkan cara membuka halaman Laporan dan mengunduh data ke Excel maupun PDF. Catatan: halaman Laporan dibuka melalui tombol aksi cepat <strong>Laporan</strong> di Dashboard, bukan dari navigasi utama.</p>
+
+<h3 id="71-halaman-laporan"><a class="anchor" href="#71-halaman-laporan"></a>7.1 Halaman Laporan</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Melihat ringkasan progres halaqah dan Santri Anda dalam satu halaman, serta membuka alur penilaian formatif dan sumatif.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/17.%20Laporan.png" alt="Tampilan Laporan"/><figcaption>Tampilan Laporan</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari Dashboard, ketuk tombol aksi cepat <strong>Laporan</strong>. Anda akan masuk ke halaman <strong>Laporan</strong>.</li><li>Perhatikan bagian statistik di bagian atas, yaitu <strong>Santri aktif</strong>, <strong>Hafalan</strong>, <strong>Murojaah</strong>, dan <strong>Target aktif</strong>.</li><li>Lihat juga informasi <strong>Rata-rata skor</strong> beserta <strong>Perlu cek</strong> untuk mengetahui Santri yang perlu diperiksa ulang.</li><li>Pada bagian <strong>Halaqah</strong>, tinjau ringkasan setiap halaqah beserta jumlah santrinya.</li><li>Pada bagian <strong>Progres Santri</strong>, perhatikan tabel yang memuat kolom <strong>Nama</strong>, <strong>Kelas</strong>, <strong>Halaqah</strong>, <strong>Hafalan</strong>, <strong>Murojaah</strong>, <strong>Skor</strong>, dan <strong>Status</strong>.</li><li>Pada bagian <strong>Alur penilaian</strong>, gunakan tombol berikut bila perlu:<ul class="sub"><li><strong>Rekap Formatif</strong> — membuka rekap nilai harian otomatis.</li><li><strong>Nilai Sumatif</strong> — membuka penilaian sumatif per surah.</li></ul></li><li>Untuk kembali, ketuk tautan <strong>Dashboard</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Halaman Laporan adalah tempat terbaik untuk memantau gambaran besar perkembangan seluruh Santri Anda sebelum mengunduh berkas laporan.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Tombol <strong>Rekap Formatif</strong> dan <strong>Nilai Sumatif</strong> pada halaman ini membawa Anda kembali ke bab penilaian (Bab 5 dan Bab 6) dengan navigasi yang sudah terhubung.</p>
+
+<p class="completion">Setelah memahami isi laporan, Anda dapat mengunduh data ke dalam berkas Excel atau PDF pada sub-bab berikutnya.</p>
+
+<h3 id="72-mengekspor-ke-excel"><a class="anchor" href="#72-mengekspor-ke-excel"></a>7.2 Mengekspor ke Excel</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengunduh data laporan ke dalam berkas Excel untuk diolah atau dicetak.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/18.%20Export%20Excel.png" alt="Tampilan Export Excel"/><figcaption>Tampilan Export Excel</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Laporan dari tombol aksi cepat <strong>Laporan</strong> di Dashboard.</li><li>Pada bagian atas halaman, ketuk tombol <strong>Excel</strong>.</li><li>Tunggu hingga proses unduhan selesai dan berkas Excel tersimpan di perangkat Anda.</li><li>Buka berkas tersebut menggunakan aplikasi pembaca Excel untuk memeriksa isinya.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Ekspor Excel juga tersedia di halaman Rekap Formatif, Nilai Sumatif, dan halaman Detail Santri — gunakan tombol <strong>Unduh Excel</strong> atau <strong>Excel</strong> yang tersedia di masing-masing halaman.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Pastikan koneksi internet stabil dan tunggu hingga proses unduhan selesai sebelum menutup halaman.</p>
+
+<p class="completion">Setelah berkas Excel tersimpan, Anda dapat membuka dan mencetaknya sesuai kebutuhan.</p>
+
+<h3 id="73-mengekspor-ke-pdf"><a class="anchor" href="#73-mengekspor-ke-pdf"></a>7.3 Mengekspor ke PDF</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengunduh data laporan ke dalam berkas PDF yang siap dibagikan atau dicetak.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/19.%20Export%20Pdf.png" alt="Tampilan Export PDF"/><figcaption>Tampilan Export PDF</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka halaman Laporan dari tombol aksi cepat <strong>Laporan</strong> di Dashboard.</li><li>Pada bagian atas halaman, ketuk tombol <strong>PDF</strong>.</li><li>Tunggu hingga proses pembuatan dan unduhan PDF selesai. Akan muncul keterangan <strong>Memuat PDF…</strong> selama proses berlangsung.</li><li>Setelah selesai, berkas PDF tersimpan di perangkat Anda dan siap dibuka atau dibagikan.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Format PDF cocok digunakan saat Anda perlu menyerahkan laporan resmi kepada pihak sekolah atau wali Santri karena tampilannya rapi dan konsisten.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Pastikan koneksi internet stabil dan tunggu hingga proses unduhan selesai sebelum menutup halaman.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Ekspor PDF per Santri juga tersedia di halaman Detail Santri melalui tombol <strong>PDF</strong> di bagian atas halaman.</p>
+
+<p class="completion">Setelah berkas PDF tersimpan, laporan siap dibagikan atau dicetak sesuai kebutuhan.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-8-profil-pengaturan-akun" class="chapter"><a class="anchor" href="#bab-8-profil-pengaturan-akun"></a>Bab 8 — Profil &amp; Pengaturan Akun</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Halaman Profil adalah tempat Anda mengatur tampilan aplikasi, bahasa, serta keamanan akun. Bab ini membantu Anda menyesuaikan pengaturan tersebut — pekerjaan yang biasanya dilakukan sekali di awal, lalu sesekali diperbarui bila ada perubahan data diri.</p>
+
+<h3 id="81-halaman-profil-tema-bahasa"><a class="anchor" href="#81-halaman-profil-tema-bahasa"></a>8.1 Halaman Profil (Tema &amp; Bahasa)</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengenal halaman Profil dan mengatur tampilan (tema) serta bahasa aplikasi sesuai kenyamanan Anda.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/20.%20Profil.png" alt="Tampilan Profil"/><figcaption>Tampilan Profil</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Profil</strong> dari navigasi.</li><li>Pada bagian atas, perhatikan informasi <strong>Akun aktif</strong>, <strong>Peran akun</strong> (misalnya <em>Guru</em>), dan keterangan peran Anda.</li><li>Pada bagian <strong>Tampilan</strong>, pilih tema sesuai kenyamanan mata Anda:<ul class="sub"><li><strong>Otomatis</strong> — mengikuti waktu (terang di siang hari, gelap di malam hari).</li><li><strong>Sistem</strong> — mengikuti pengaturan perangkat Anda.</li><li><strong>Terang</strong> — tampilan terang sepanjang waktu.</li><li><strong>Gelap</strong> — tampilan gelap sepanjang waktu.</li></ul></li><li>Pada bagian bahasa, pilih bahasa aplikasi yang Anda inginkan.</li><li>Pada bagian <strong>Aksi akun</strong>, Anda dapat membuka area utama seperti <strong>Lihat Santri</strong>, atau mengubah data akun (lihat sub-bab berikutnya).</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Jika Anda sering membuka aplikasi di malam hari, tema <strong>Gelap</strong> atau <strong>Otomatis</strong> membuat mata lebih nyaman.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Pilihan tema dan bahasa hanya memengaruhi tampilan di perangkat Anda, tidak mengubah data Santri atau pengaturan akun lainnya.</p>
+
+<p class="completion">Setelah tampilan dan bahasa sesuai, Anda dapat memperbarui data keamanan akun pada sub-bab berikutnya.</p>
+
+<h3 id="82-mengubah-username"><a class="anchor" href="#82-mengubah-username"></a>8.2 Mengubah Username</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Mengubah Username yang Anda gunakan untuk masuk ke aplikasi.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/21.%20Ubah%20Username.png" alt="Tampilan Ubah Username"/><figcaption>Tampilan Ubah Username</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Profil, ketuk <strong>Ubah Username</strong>.</li><li>Pada kolom <strong>Username baru</strong>, ketik Username pengganti (minimal 4 karakter).</li><li>Periksa kembali Username yang diketik.</li><li>Ketuk tombol <strong>Simpan Username Baru</strong>.</li><li>Untuk membatalkan, ketuk tautan <strong>Profil</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Ingat Username baru Anda karena kombinasi ini akan digunakan untuk masuk pada login berikutnya.</p>
+
+<p class="completion">Setelah disimpan, Username baru langsung berlaku untuk login berikutnya.</p>
+
+<h3 id="83-mengubah-email"><a class="anchor" href="#83-mengubah-email"></a>8.3 Mengubah Email</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Memperbarui alamat email akun Anda dengan verifikasi kata sandi saat ini.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/22.%20Ubah%20Email.png" alt="Tampilan Ubah Email"/><figcaption>Tampilan Ubah Email</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Profil, ketuk <strong>Ubah Email</strong>.</li><li>Pada kolom <strong>Password saat ini</strong>, masukkan kata sandi Anda yang sekarang untuk verifikasi.</li><li>Pada kolom <strong>Email baru</strong>, ketik alamat email pengganti.</li><li>Pada kolom <strong>Konfirmasi email baru</strong>, ketik ulang email yang sama.</li><li>Pastikan menggunakan email aktif yang mudah Anda akses.</li><li>Ketuk tombol <strong>Simpan Email Baru</strong>.</li><li>Untuk membatalkan, ketuk tautan <strong>Profil</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Verifikasi dengan <strong>Password saat ini</strong> diperlukan untuk keamanan. Pastikan Anda mengingat kata sandi yang aktif sebelum mengubah email.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Perubahan email berlaku untuk login berikutnya dan notifikasi akun, jadi gunakan email yang masih aktif.</p>
+
+<p class="completion">Setelah disimpan, email baru langsung berlaku untuk login berikutnya.</p>
+
+<h3 id="84-mengubah-password"><a class="anchor" href="#84-mengubah-password"></a>8.4 Mengubah Password</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Memperbarui kata sandi akun Anda agar tetap aman.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/23.%20Ubah%20Password.png" alt="Tampilan Ubah Password"/><figcaption>Tampilan Ubah Password</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Dari halaman Profil, ketuk <strong>Ubah Password</strong>.</li><li>Pada kolom <strong>Password saat ini</strong>, masukkan kata sandi Anda yang sekarang.</li><li>Pada kolom <strong>Password baru</strong>, ketik kata sandi pengganti. Pastikan memenuhi syarat berikut:<ul class="sub"><li>minimal 8 karakter,</li><li>mengandung huruf,</li><li>mengandung angka,</li><li>sama dengan kolom konfirmasi.</li></ul></li><li>Pada kolom <strong>Konfirmasi password baru</strong>, ketik ulang kata sandi baru yang sama.</li><li>Periksa kembali, lalu ketuk tombol <strong>Simpan Password Baru</strong>.</li><li>Untuk membatalkan, ketuk tautan <strong>Profil</strong> di bagian atas.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Gunakan kata sandi yang mudah diingat namun sulit ditebak.</p>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Ingat kata sandi baru Anda. Jika lupa dan tidak dapat masuk, Anda perlu menghubungi administrator sekolah untuk dibantu.</p>
+
+<p class="completion">Setelah disimpan, kata sandi baru langsung berlaku untuk login berikutnya.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="bab-9-menginstal-aplikasi-pwa-keluar" class="chapter"><a class="anchor" href="#bab-9-menginstal-aplikasi-pwa-keluar"></a>Bab 9 — Menginstal Aplikasi (PWA) &amp; Keluar</h2>
+
+<p class="label"><strong>Pengantar</strong></p>
+
+<p>Anda dapat memasang TahfidzFlow sebagai aplikasi biasa di perangkat agar lebih cepat dibuka. Bab ini juga menjelaskan cara keluar dengan aman — dua hal yang penting dilakukan terutama bila Anda memakai perangkat bersama, seperti komputer atau HP kelas.</p>
+
+<h3 id="91-menginstal-aplikasi"><a class="anchor" href="#91-menginstal-aplikasi"></a>9.1 Menginstal Aplikasi</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Memasang TahfidzFlow ke layar utama perangkat agar dapat dibuka seperti aplikasi biasa.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/24.%20Install%20APP.png" alt="Tampilan Install APP"/><figcaption>Tampilan Install APP</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Profil</strong> dari navigasi.</li><li>Pada bagian <strong>Aksi akun</strong>, ketuk tombol <strong>Pasang Aplikasi</strong>.</li><li>Pada jendela <strong>Pasang Aplikasi</strong> yang muncul, ketuk <strong>Install</strong> untuk memasang, atau <strong>Nanti</strong> bila ingin menunda.</li><li>Jika tidak muncul jendela otomatis, ikuti petunjuk manual sesuai perangkat Anda:<ul class="sub"><li><strong>Android</strong> — buka menu peramban (⋮), lalu pilih <strong>Tambahkan ke Layar Utama</strong> atau <strong>Pasang Aplikasi</strong>.</li><li><strong>iPhone/iPad</strong> — ketuk tombol Share, lalu pilih <strong>Tambahkan ke Layar Utama</strong>.</li><li><strong>Komputer</strong> — ketuk ikon pasang (↓) di address bar peramban, lalu ketuk <strong>Pasang</strong>.</li></ul></li><li>Setelah terpasang, ikon TahfidzFlow akan muncul di layar utama dan dapat dibuka seperti aplikasi biasa.</li></ol>
+
+<p class="label"><strong>Tips</strong></p>
+
+<p>Memasang aplikasi membuat TahfidzFlow terbuka lebih cepat dan terasa seperti aplikasi asli, tanpa perlu membuka peramban terlebih dahulu.</p>
+
+<p class="label"><strong>Catatan</strong></p>
+
+<p>Jika aplikasi sudah terpasang dan dibuka dari layar utama, tombol <strong>Pasang Aplikasi</strong> tidak akan ditampilkan lagi.</p>
+
+<p class="completion">Setelah terpasang, Anda dapat membuka TahfidzFlow langsung dari layar utama perangkat.</p>
+
+<h3 id="92-keluar-logout"><a class="anchor" href="#92-keluar-logout"></a>9.2 Keluar (Logout)</h3>
+
+<p class="label"><strong>Tujuan</strong></p>
+
+<p>Keluar dari akun dengan aman, terutama saat menggunakan perangkat bersama.</p>
+
+<div class="tampilan-block">
+<p class="label"><strong>Tampilan</strong></p>
+<figure class="screenshot"><img src="Assets/25.%20Logout.png" alt="Tampilan Logout"/><figcaption>Tampilan Logout</figcaption></figure>
+</div>
+
+<p class="label"><strong>Langkah-langkah</strong></p>
+
+<ol class="steps"><li>Buka menu <strong>Profil</strong> dari navigasi.</li><li>Pada bagian <strong>Aksi akun</strong>, ketuk tombol <strong>Keluar</strong>.</li><li>Pada jendela konfirmasi yang menampilkan <em>Akhiri sesi ini?</em>, ketuk <strong>Ya, keluar</strong> untuk mengonfirmasi.</li><li>Untuk membatalkan, ketuk <strong>Batal</strong>.</li><li>Setelah keluar, Anda akan kembali ke halaman Masuk (Login).</li></ol>
+
+<p class="label"><strong>Perhatian</strong></p>
+
+<p>Selalu keluar dari akun pada perangkat bersama agar data Santri Anda tidak dapat diakses oleh orang lain.</p>
+
+<p class="completion">Setelah keluar, akun Anda aman dan dapat masuk kembali kapan saja menggunakan Username dan kata sandi.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="glosarium" class="chapter"><a class="anchor" href="#glosarium"></a>Glosarium</h2>
+
+<p>Berikut adalah penjelasan istilah-istilah penting yang sering muncul di TahfidzFlow, ditulis dengan bahasa sederhana agar mudah dipahami.</p>
+
+<table><thead><tr><th>Istilah</th><th>Penjelasan</th></tr></thead><tbody><tr><td><strong>Santri</strong></td><td>Murid yang mengikuti program tahfidz (menghafal Al-Qur&#x27;an).</td></tr><tr><td><strong>Hafalan</strong></td><td>Kegiatan menambah hafalan baru Al-Qur&#x27;an.</td></tr><tr><td><strong>Murojaah</strong></td><td>Kegiatan mengulang hafalan lama agar tetap kuat diingat.</td></tr><tr><td><strong>Tasmi&#x27;</strong></td><td>Sesi setoran atau pemeriksaan hafalan per juz, biasanya dihadiri penguji.</td></tr><tr><td><strong>Target</strong></td><td>Rencana capaian hafalan atau murojaah untuk Santri, lengkap dengan jadwal.</td></tr><tr><td><strong>Formatif</strong></td><td>Rekap nilai harian yang terbentuk otomatis dari catatan hafalan dan murojaah.</td></tr><tr><td><strong>Sumatif</strong></td><td>Penilaian per surah yang sengaja diisi guru, fleksibel untuk setiap Santri.</td></tr><tr><td><strong>Semester</strong></td><td>Periode setengah tahun ajaran, terdiri dari <strong>Ganjil</strong> dan <strong>Genap</strong>.</td></tr><tr><td><strong>Program Akademik</strong></td><td>Program tahfidz reguler dengan halaqah dan kelas akademik.</td></tr><tr><td><strong>Program Boarding</strong></td><td>Program tahfidz intensif dengan kelas boarding (pondok).</td></tr><tr><td><strong>Halaqah</strong></td><td>Kelompok Santri yang dibimbing oleh seorang guru dalam lingkaran hafalan.</td></tr><tr><td><strong>Juz</strong></td><td>Bagian Al-Qur&#x27;an; satu juz terdiri dari beberapa surah. Al-Qur&#x27;an terbagi menjadi 30 juz.</td></tr><tr><td><strong>Username</strong></td><td>Nama pengguna yang Anda gunakan untuk masuk ke aplikasi.</td></tr><tr><td><strong>PWA</strong></td><td>Aplikasi web yang dapat dipasang di perangkat dan dibuka seperti aplikasi biasa.</td></tr></tbody></table>
+
+<hr class="section-rule"/>
+
+<h2 id="daftar-pertanyaan-umum-faq" class="chapter"><a class="anchor" href="#daftar-pertanyaan-umum-faq"></a>Daftar Pertanyaan Umum (FAQ)</h2>
+
+<p class="label"><strong>T: Mengapa saya tidak melihat semua Santri?</strong></p>
+
+<p><strong>J:</strong> Setiap guru hanya melihat Santri yang berada di bawah bimbingannya. Selain itu, daftar hanya menampilkan Santri aktif. Jika Santri yang Anda cari tidak terlihat, periksa tab <strong>Santri Nonaktif</strong> atau pastikan Santri tersebut memang berada di halaqah Anda. Jika Anda mengajar di dua program (Akademik dan Boarding), gunakan pemilih program untuk berganti tampilan.</p>
+
+<p class="label"><strong>T: Bagaimana jika lupa kata sandi?</strong></p>
+
+<p><strong>J:</strong> Jika lupa kata sandi dan tidak dapat masuk ke aplikasi, hubungi administrator sekolah untuk mendapatkan bantuan. Untuk menghindari hal ini, segera ubah kata sandi bawaan melalui menu <strong>Profil → Ubah Password</strong> setelah berhasil masuk untuk pertama kali.</p>
+
+<p class="label"><strong>T: Apa perbedaan Akademik dan Boarding?</strong></p>
+
+<p><strong>J:</strong> <strong>Akademik</strong> adalah program tahfidz reguler dengan halaqah dan kelas akademik (seperti Kelas 7, 8, dan 9). <strong>Boarding</strong> adalah program tahfidz intensif dengan kelas boarding (pondok). Tampilan formulir juga sedikit berbeda: pada program Boarding, bagian tingkat kelas dan level halaqah tidak ditampilkan. Jika Anda mengajar di kedua program, gunakan pemilih program untuk berganti konteks.</p>
+
+<p class="label"><strong>T: Bagaimana jika saya salah memasukkan data hafalan?</strong></p>
+
+<p><strong>J:</strong> Buka halaman Detail Santri, lalu cari catatan yang salah pada bagian riwayat. Dari sana, Anda dapat mengubah catatan yang dimaksud agar datanya kembali benar. Pastikan selalu memeriksa rentang surah dan ayat sebelum menyimpan.</p>
+
+<p class="label"><strong>T: Apakah data hilang jika saya ganti ponsel?</strong></p>
+
+<p><strong>J:</strong> Tidak. TahfidzFlow menyimpan data secara daring, jadi seluruh catatan Santri, target, dan laporan tetap aman. Anda cukup masuk kembali menggunakan Username dan kata sandi yang sama di perangkat baru.</p>
+
+<p class="label"><strong>T: Bagaimana cara mengunduh laporan satu Santri?</strong></p>
+
+<p><strong>J:</strong> Buka halaman Detail Santri yang dimaksud, lalu ketuk tombol <strong>Excel</strong> atau <strong>PDF</strong> di bagian atas halaman. Berkas akan terunduh ke perangkat Anda dan siap dibagikan.</p>
+
+<p class="label"><strong>T: Mengapa Rekap Formatif saya masih kosong?</strong></p>
+
+<p><strong>J:</strong> Rekap Formatif terisi otomatis dari catatan hafalan dan murojaah. Jika masih kosong, itu berarti Santri belum memiliki catatan harian. Catat hafalan atau murojaah terlebih dahulu, lalu rekap akan terbentuk dengan sendirinya.</p>
+
+<p class="label"><strong>T: Apakah saya perlu mengisi Rekap Formatif secara manual?</strong></p>
+
+<p><strong>J:</strong> Tidak. Rekap Formatif sepenuhnya otomatis, dihitung dari catatan harian hafalan dan murojaah Anda. Anda hanya perlu mencatat setiap setoran dengan benar.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="penutup" class="chapter"><a class="anchor" href="#penutup"></a>Penutup</h2>
+
+<p>Terima kasih telah meluangkan waktu membaca panduan ini hingga selesai. Semoga TahfidzFlow dapat membantu Anda mengelola data Santri, mencatat perkembangan hafalan dan murojaah, memantau target, serta menyiapkan laporan dengan lebih mudah dan menyenangkan.</p>
+
+<p>Dengan adanya aplikasi ini, semoga manfaatnya dapat dirasakan oleh Anda selaku guru, oleh para Santri yang dibimbing, dan oleh sekolah dalam menjalankan program tahfidz secara keseluruhan. Catatan yang rapi dan konsisten akan sangat membantu menghadirkan layanan pendidikan yang lebih baik.</p>
+
+<p>Apabila Anda menemui kendala teknis atau ada hal yang belum jelas, silahkan menghubungi administrator.</p>
+
+<p>Kami menghargai dedikasi dan kesabaran Anda dalam membimbing Santri dan murid menuntut ilmu dan menjaga hafalan Al-Qur&#x27;an. Semoga setiap usaha yang Anda tanamkan menjadi amal jariyah yang berkepanjangan.</p>
+
+<p class="completion">Semoga Allah subhanahu wa ta&#x27;ala senantiasa memudahkan langkah kita, memberkahi waktu dan tenaga yang kita curahkan, serta menjadikan ilmu yang diajarkan sebagai cahaya bagi para Santri dan murid. Aamiin.</p>
+
+<hr class="section-rule"/>
+
+<h2 id="informasi-versi-dokumen" class="chapter"><a class="anchor" href="#informasi-versi-dokumen"></a>Informasi Versi Dokumen</h2>
+
+<p class="label"><strong>Panduan Guru TahfidzFlow</strong></p>
+
+<p>Versi: 1.0</p>
+
+<p>Tanggal: Juli 2026</p>
+</body>
+</html>
