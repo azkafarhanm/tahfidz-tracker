@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Award, Save, Trash2 } from "lucide-react";
-import { updateTasmiAction, deleteTasmiAction } from "../../actions";
+import { ArrowLeft, Award, Save } from "lucide-react";
+import { updateTasmiAction } from "../../actions";
 import { tasmiGradeOptions, tasmiStatusOptions, tasmiGradeLabels } from "@/lib/tasmi";
 import { getTasmiRecordForEdit } from "@/lib/tasmi";
 import { requireSessionScope } from "@/lib/session";
 import FormAlert from "@/components/FormAlert";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
-import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
 
@@ -26,7 +25,6 @@ export async function generateMetadata() {
 
 export default async function EditTasmiPage({ params, searchParams }: EditTasmiPageProps) {
   const t = await getTranslations("TasmiForm");
-  const tValidation = await getTranslations("Validation");
   const { id, tasmiId } = await params;
   const { teacherId } = await requireSessionScope();
   const error = (await searchParams)?.error;
@@ -37,7 +35,6 @@ export default async function EditTasmiPage({ params, searchParams }: EditTasmiP
   }
 
   const action = updateTasmiAction.bind(null, tasmiId, id);
-  const deleteAction = deleteTasmiAction.bind(null, tasmiId, id);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -178,26 +175,6 @@ export default async function EditTasmiPage({ params, searchParams }: EditTasmiP
             </button>
           </div>
         </form>
-
-        <section className="mt-8 rounded-2xl border border-red-200 bg-white p-4 shadow-sm dark:border-red-900/50 dark:bg-slate-900 dark:shadow-none">
-          <h2 className="font-semibold text-red-800 dark:text-red-300">{t("sectionDelete")}</h2>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {t("deleteConfirm", { juz: record.juz })}
-          </p>
-          <div className="mt-3">
-            <ConfirmActionDialogButton
-              cancelLabel={tValidation("cancel")}
-              confirmLabel={t("deleteButton")}
-              confirmMessage={t("deleteConfirm", { juz: record.juz })}
-              dialogTitle={t("sectionDelete")}
-              icon={<Trash2 aria-hidden="true" size={12} strokeWidth={2.2} />}
-              label={t("deleteButton")}
-              onAction={deleteAction}
-              pendingLabel={tValidation("deleting")}
-              tone="danger"
-            />
-          </div>
-        </section>
       </section>
     </main>
   );
