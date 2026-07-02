@@ -37,16 +37,25 @@ function withSelectedTimezoneOffset(value: DeviceDateTime) {
   };
 }
 
-function useDeviceDateTime(initialDateTimeIso?: string) {
-  const [value, setValue] = useState<DeviceDateTime>({
-    date: "",
-    time: "",
-    timezoneOffset: "",
-  });
+function resolveInitialValue(initialDateTimeIso?: string): DeviceDateTime {
+  const date = initialDateTimeIso ? new Date(initialDateTimeIso) : new Date();
+  return toInputDateTime(Number.isNaN(date.getTime()) ? new Date() : date);
+}
 
+function useDeviceDateTime(initialDateTimeIso?: string) {
+  // Initialize the date, time, and timezone atomically on the very first
+  // render (via a lazy initializer) so both fields are populated before the
+  // browser paints — this keeps date and time in sync across every form
+  // (create and edit) and removes the empty-state window that previously
+  // caused the two fields to appear inconsistently initialized.
+  const [value, setValue] = useState<DeviceDateTime>(() =>
+    resolveInitialValue(initialDateTimeIso),
+  );
+
+  // Keep the fields in sync if the source value changes after mount (e.g. a
+  // client-side navigation to a different record).
   useEffect(() => {
-    const date = initialDateTimeIso ? new Date(initialDateTimeIso) : new Date();
-    setValue(toInputDateTime(Number.isNaN(date.getTime()) ? new Date() : date));
+    setValue(resolveInitialValue(initialDateTimeIso));
   }, [initialDateTimeIso]);
 
   return [value, setValue] as const;

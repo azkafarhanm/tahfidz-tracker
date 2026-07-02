@@ -145,7 +145,6 @@ export default async function EditTasmiPage({ params, searchParams }: EditTasmiP
             <DeviceDateTimeFields
               dateLabel={t("labelDate")}
               timeLabel=""
-              initialDateTimeIso={record.date.toISOString()}
             />
           </section>
 
