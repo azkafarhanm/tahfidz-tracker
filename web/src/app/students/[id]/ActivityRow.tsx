@@ -16,6 +16,7 @@ type RecordItem = {
   type: string;
   range: string;
   date: string;
+  time?: string;
   status: string;
   score: number | null;
   needsReview: boolean;
@@ -67,12 +68,13 @@ export default function ActivityRow({
                 {isTasmi && record.grade ? ` - ${record.grade}` : ""}
               </p>
             </div>
-            <p className="shrink-0 text-[11px] font-medium text-slate-400 dark:text-slate-500">
-              {record.date}
-            </p>
+            <div className="shrink-0 text-right text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              <p>{record.date}</p>
+              {record.time ? <p className="mt-1">{record.time}</p> : null}
+            </div>
           </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
+          <div className="mt-3 flex w-full flex-wrap items-center justify-end gap-2">
+            <div className="mr-auto flex flex-wrap items-center gap-1.5">
               <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ${recordStatusClass(record)}`}>
                 {record.status}
               </span>
@@ -82,7 +84,7 @@ export default function ActivityRow({
                 </span>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-1.5">
               <Link
                 className={actionButtonClass("neutral")}
                 href={editHref}

@@ -11,6 +11,7 @@ import { cached } from "@/lib/cache";
 import { prisma, withRetry } from "@/lib/prisma";
 import {
   getDateFormatter,
+  getTimeFormatter,
   statusLabels,
   halaqahLevelLabels,
   formatRange,
@@ -56,6 +57,7 @@ function formatRecord(
   },
   type: "Hafalan" | "Murojaah",
   dateFormatter: Intl.DateTimeFormat,
+  timeFormatter: Intl.DateTimeFormat,
 ) {
   return {
     id: record.id,
@@ -63,6 +65,7 @@ function formatRecord(
     range: formatRange(record.surah, record.fromAyah, record.toAyah),
     dateTimeIso: record.date.toISOString(),
     date: dateFormatter.format(record.date),
+    time: timeFormatter.format(record.date),
     status: statusLabels[record.status],
     score: record.score,
     notes: record.notes,
@@ -316,6 +319,7 @@ export async function getStudentDetailData(studentId: string, teacherId?: string
 
 async function getStudentDetailDataInner(studentId: string, teacherId?: string | null, locale = "id") {
   const dateFormatter = getDateFormatter(locale);
+  const timeFormatter = getTimeFormatter(locale);
 
   const check = await prisma.student.findUnique({
     where: { id: studentId },
@@ -423,10 +427,10 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
   }
 
   const hafalanRecords = student.memorizationRecords.map((record) =>
-    formatRecord(record, "Hafalan", dateFormatter),
+    formatRecord(record, "Hafalan", dateFormatter, timeFormatter),
   );
   const murojaahRecords = student.revisionRecords.map((record) =>
-    formatRecord(record, "Murojaah", dateFormatter),
+    formatRecord(record, "Murojaah", dateFormatter, timeFormatter),
   );
 
   const tasmiRecords = student.tasmiRecords.map((record) => ({
@@ -435,6 +439,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     range: `Tasmi' Juz ${record.juz}`,
     dateTimeIso: record.date.toISOString(),
     date: dateFormatter.format(record.date),
+    time: timeFormatter.format(record.date),
     status: tasmiStatusLabel[record.status],
     grade: tasmiGradeLabels[record.grade],
     juz: record.juz,

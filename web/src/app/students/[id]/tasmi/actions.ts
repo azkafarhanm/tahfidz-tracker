@@ -15,6 +15,7 @@ import {
   readInt,
   createFailFn,
   parseDateInput,
+  parseRecordDateTime,
 } from "@/lib/form-helpers";
 
 const validGrades = new Set<string>(Object.values(TasmiGrade));
@@ -163,7 +164,11 @@ export async function updateTasmiAction(tasmiId: string, studentId: string, form
     return fail(t("tasmiExaminerRequired"));
   }
 
-  const date = parseDateInput(dateValue);
+  const date = parseRecordDateTime(
+    dateValue,
+    readString(formData, "time"),
+    readString(formData, "timezoneOffset"),
+  );
   if (!date) {
     return fail(t("dateInvalid"));
   }
