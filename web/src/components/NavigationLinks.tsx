@@ -8,6 +8,7 @@ import {
   navigationIcons,
   isNavigationItemActive,
 } from "@/lib/navigation";
+import { markPrimaryNavigation } from "@/hooks/usePanelScrollRestoration";
 
 const SCROLL_KEY = "bottomNavScrollX";
 
@@ -97,7 +98,10 @@ export default function NavigationLinks({
           }
           href={resolvedHref}
           key={key}
-          onClick={saveScroll}
+          onClick={() => {
+            saveScroll();
+            markPrimaryNavigation(pathname);
+          }}
         >
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
           <span className="text-[11px] font-medium leading-tight">
@@ -118,6 +122,7 @@ export default function NavigationLinks({
         }`}
         href={resolvedHref}
         key={key}
+        onClick={() => markPrimaryNavigation(pathname)}
       >
         <Icon aria-hidden="true" className="shrink-0" size={18} strokeWidth={active ? 2.3 : 2} />
         <span className="truncate">{labels[key] ?? key}</span>

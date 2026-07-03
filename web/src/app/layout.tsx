@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import ScopedIntlProvider from "@/components/ScopedIntlProvider";
 import ThemeProvider from "@/components/ThemeProvider";
 import RootClientEffects from "@/components/RootClientEffects";
+import ScrollRestoration from "@/components/ScrollRestoration";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <ScopedIntlProvider namespaces={["Error", "Export", "LogoutButton"]}>
             {children}
+            <ScrollRestoration />
             <RootClientEffects
               installPromptLabels={{
                 buttonInstall: installT("buttonInstall"),
