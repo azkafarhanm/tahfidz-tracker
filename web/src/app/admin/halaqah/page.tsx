@@ -162,7 +162,7 @@ export default async function AdminHalaqahPage({
           placeholder={t("searchPlaceholder")}
         />
 
-        <section className="mt-5 flex flex-1 flex-col">
+        <section className="mt-5 flex min-h-screen flex-1 flex-col">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
@@ -176,7 +176,9 @@ export default async function AdminHalaqahPage({
               {query ? (
                 <Link
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                  href="/admin/halaqah"
+                  href="/admin/halaqah?q="
+                  prefetch
+                  scroll={false}
                 >
                   {t("resetSearch")}
                 </Link>
@@ -330,6 +332,8 @@ export default async function AdminHalaqahPage({
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   href={buildPageHref(pagination.page - 1)}
+                  prefetch
+                  scroll={false}
                 >
                   <ChevronLeft aria-hidden="true" size={16} strokeWidth={2.2} />
                 </Link>
@@ -343,6 +347,8 @@ export default async function AdminHalaqahPage({
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   href={buildPageHref(pagination.page + 1)}
+                  prefetch
+                  scroll={false}
                 >
                   <ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
                 </Link>

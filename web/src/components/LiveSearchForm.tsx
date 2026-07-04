@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,17 @@ type LiveSearchFormProps = {
   placeholder: string;
 };
 
+type LocalNavigationIntent = {
+  epoch: number;
+  query: string;
+  revision: number;
+  token: number;
+};
+
+function normalizeQuery(value: string): string {
+  return value.trim();
+}
+
 export default function LiveSearchForm({
   action,
   buttonLabel,
@@ -24,50 +35,208 @@ export default function LiveSearchForm({
   placeholder,
 }: LiveSearchFormProps) {
   const router = useRouter();
-  const [query, setQuery] = useState(defaultValue);
+  const [draftQuery, setDraftQuery] = useState(defaultValue);
   const [isPending, startTransition] = useTransition();
+  const committedQuery = normalizeQuery(defaultValue);
+  const committedQueryRef = useRef(committedQuery);
+  const debounceTimerRef = useRef<number | null>(null);
+  const editRevisionRef = useRef(0);
+  const lastSentRevisionRef = useRef(0);
+  const lastConfirmedRevisionRef = useRef(0);
+  const nextNavigationTokenRef = useRef(0);
+  const localIntentsRef = useRef<Map<number, LocalNavigationIntent>>(new Map());
+  const navigationEpochRef = useRef(0);
+  const externalNavigationPendingRef = useRef(false);
+  const externalNavigationQueryRef = useRef<string | null>(null);
+  const externalNavigationRevisionRef = useRef(0);
+  const lastSeenCommittedQueryRef = useRef(committedQuery);
 
   const buildHref = useCallback((nextQuery: string) => {
     const url = new URL(action, window.location.origin);
     if (nextQuery) {
       url.searchParams.set("q", nextQuery);
     } else {
-      url.searchParams.delete("q");
+      // Keep an explicit empty query so production prefetching uses a
+      // query-specific cache entry instead of stale pathname-only search data.
+      url.searchParams.set("q", "");
     }
     const search = url.searchParams.toString();
     return search ? `${url.pathname}?${search}` : url.pathname;
   }, [action]);
 
-  useEffect(() => {
-    setQuery(defaultValue);
-  }, [defaultValue]);
-
-  useEffect(() => {
-    const nextQuery = query.trim();
-    const currentQuery = defaultValue.trim();
-
-    if (nextQuery === currentQuery) {
+  const sendLocalNavigation = useCallback((
+    nextQuery: string,
+    revision: number,
+    epoch: number,
+  ) => {
+    if (
+      revision !== editRevisionRef.current ||
+      epoch !== navigationEpochRef.current
+    ) {
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      const nextHref = buildHref(nextQuery);
-      startTransition(() => {
-        router.replace(nextHref, { scroll: false });
-      });
+    // A local navigation started after popstate is now the authoritative intent.
+    externalNavigationPendingRef.current = false;
+    externalNavigationQueryRef.current = null;
+
+    const token = ++nextNavigationTokenRef.current;
+    localIntentsRef.current.set(token, {
+      epoch,
+      query: nextQuery,
+      revision,
+      token,
+    });
+    lastSentRevisionRef.current = Math.max(
+      lastSentRevisionRef.current,
+      revision,
+    );
+
+    const nextHref = buildHref(nextQuery);
+    router.prefetch(nextHref);
+    startTransition(() => {
+      router.replace(nextHref, { scroll: false });
+    });
+  }, [buildHref, router]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+
+      navigationEpochRef.current += 1;
+      localIntentsRef.current.clear();
+
+      const nextQuery = new URL(window.location.href).searchParams.get("q") ?? "";
+      const normalizedQuery = normalizeQuery(nextQuery);
+      const nextRevision = editRevisionRef.current + 1;
+
+      editRevisionRef.current = nextRevision;
+      lastSentRevisionRef.current = nextRevision;
+      lastConfirmedRevisionRef.current = nextRevision;
+      externalNavigationRevisionRef.current = nextRevision;
+      externalNavigationQueryRef.current = normalizedQuery;
+      externalNavigationPendingRef.current =
+        normalizedQuery !== committedQueryRef.current;
+      committedQueryRef.current = normalizedQuery;
+      lastSeenCommittedQueryRef.current = normalizedQuery;
+      setDraftQuery(nextQuery);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (externalNavigationPendingRef.current) {
+      if (committedQuery !== externalNavigationQueryRef.current) {
+        return;
+      }
+
+      externalNavigationPendingRef.current = false;
+      externalNavigationQueryRef.current = null;
+      committedQueryRef.current = committedQuery;
+      lastSeenCommittedQueryRef.current = committedQuery;
+
+      if (editRevisionRef.current === externalNavigationRevisionRef.current) {
+        setDraftQuery(defaultValue);
+      }
+      return;
+    }
+
+    committedQueryRef.current = committedQuery;
+    if (committedQuery === lastSeenCommittedQueryRef.current) {
+      return;
+    }
+
+    lastSeenCommittedQueryRef.current = committedQuery;
+
+    const matchingIntent = Array.from(localIntentsRef.current.values())
+      .filter(
+        (intent) =>
+          intent.epoch === navigationEpochRef.current &&
+          intent.query === committedQuery,
+      )
+      .sort((left, right) => right.token - left.token)[0];
+
+    if (matchingIntent) {
+      lastConfirmedRevisionRef.current = Math.max(
+        lastConfirmedRevisionRef.current,
+        matchingIntent.revision,
+      );
+
+      for (const [token, intent] of localIntentsRef.current) {
+        if (
+          intent.epoch === matchingIntent.epoch &&
+          intent.query === matchingIntent.query &&
+          token <= matchingIntent.token
+        ) {
+          localIntentsRef.current.delete(token);
+        }
+      }
+
+      // A confirmation may canonicalize the draft only if no newer edit exists.
+      if (editRevisionRef.current === matchingIntent.revision) {
+        setDraftQuery(defaultValue);
+      }
+      return;
+    }
+
+    // A committed query without a local intent came from outside this search.
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    navigationEpochRef.current += 1;
+    localIntentsRef.current.clear();
+
+    const nextRevision = editRevisionRef.current + 1;
+    editRevisionRef.current = nextRevision;
+    lastSentRevisionRef.current = nextRevision;
+    lastConfirmedRevisionRef.current = nextRevision;
+    setDraftQuery(defaultValue);
+  }, [committedQuery, defaultValue]);
+
+  useEffect(() => {
+    const nextQuery = normalizeQuery(draftQuery);
+    const capturedRevision = editRevisionRef.current;
+    const capturedEpoch = navigationEpochRef.current;
+
+    if (nextQuery === committedQueryRef.current) {
+      return;
+    }
+
+    debounceTimerRef.current = window.setTimeout(() => {
+      debounceTimerRef.current = null;
+      if (nextQuery === committedQueryRef.current) {
+        return;
+      }
+      sendLocalNavigation(nextQuery, capturedRevision, capturedEpoch);
     }, debounceMs);
 
-    return () => window.clearTimeout(timeoutId);
-  }, [buildHref, debounceMs, defaultValue, query, router]);
+    return () => {
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [debounceMs, draftQuery, sendLocalNavigation]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const nextQuery = query.trim();
-    const nextHref = buildHref(nextQuery);
-    startTransition(() => {
-      router.replace(nextHref, { scroll: false });
-    });
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    sendLocalNavigation(
+      normalizeQuery(draftQuery),
+      editRevisionRef.current,
+      navigationEpochRef.current,
+    );
   };
 
   return (
@@ -87,11 +256,14 @@ export default function LiveSearchForm({
         className={inputClassName}
         enterKeyHint="search"
         name="q"
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => {
+          editRevisionRef.current += 1;
+          setDraftQuery(event.target.value);
+        }}
         placeholder={placeholder}
         spellCheck={false}
         type="search"
-        value={query}
+        value={draftQuery}
       />
       <button
         aria-busy={isPending}

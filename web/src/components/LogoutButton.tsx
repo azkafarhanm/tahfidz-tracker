@@ -99,6 +99,7 @@ export default function LogoutButton({
                   disabled={isLoading}
                   onClick={async () => {
                     setIsLoading(true);
+                    window.sessionStorage.clear();
                     await signOut({ callbackUrl: "/login", redirect: true });
                   }}
                   type="button"

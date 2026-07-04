@@ -360,6 +360,8 @@ export default async function FormativePage({
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   href={buildPageHref((overview.pagination?.page ?? 1) - 1)}
+                  prefetch
+                  scroll={false}
                 >
                   <ChevronLeft aria-hidden="true" size={16} strokeWidth={2.2} />
                 </Link>
@@ -373,6 +375,8 @@ export default async function FormativePage({
                 <Link
                   className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                   href={buildPageHref((overview.pagination?.page ?? 1) + 1)}
+                  prefetch
+                  scroll={false}
                 >
                   <ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
                 </Link>

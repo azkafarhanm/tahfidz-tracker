@@ -24,6 +24,25 @@ function appendProgramType(href: string, programType: string | null): string {
   return `${href}${separator}programType=${programType}`;
 }
 
+function mergeVisibleSearchFormContext(queryString: string): string {
+  const searchForm = document.querySelector<HTMLFormElement>(
+    'form[role="search"]',
+  );
+  if (!searchForm) return queryString;
+
+  const params = new URLSearchParams(queryString);
+  for (const [key, value] of new FormData(searchForm)) {
+    if (typeof value !== "string") continue;
+    const normalizedValue = value.trim();
+    if (normalizedValue) {
+      params.set(key, normalizedValue);
+    } else {
+      params.delete(key);
+    }
+  }
+  return params.toString();
+}
+
 type NavigationLinksProps = {
   items: readonly NavigationItem[];
   labels: Record<string, string>;
@@ -111,7 +130,10 @@ export default function NavigationLinks({
           onClick={() => {
             saveScroll();
             markPrimaryNavigation(pathname);
-            markNavigationContext(pathname, searchParams.toString());
+            markNavigationContext(
+              pathname,
+              mergeVisibleSearchFormContext(searchParams.toString()),
+            );
           }}
         >
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
@@ -135,7 +157,10 @@ export default function NavigationLinks({
         key={key}
         onClick={() => {
           markPrimaryNavigation(pathname);
-          markNavigationContext(pathname, searchParams.toString());
+          markNavigationContext(
+            pathname,
+            mergeVisibleSearchFormContext(searchParams.toString()),
+          );
         }}
       >
         <Icon aria-hidden="true" className="shrink-0" size={18} strokeWidth={active ? 2.3 : 2} />

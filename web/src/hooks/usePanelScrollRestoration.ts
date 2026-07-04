@@ -1,7 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   teacherNavigationItems,
   adminNavigationItems,
@@ -14,8 +14,8 @@ import {
  * - sessionStorage only (per-tab, cleared on tab close by the browser).
  * - Applies ONLY to top-level panels reached via primary navigation
  *   (sidebar / bottom nav). Detail, edit, and settings flows are excluded.
- * - Keyed by pathname only (never query string / search params), so changing
- *   datasets (search / filter / pagination) naturally resets scroll.
+ * - Keyed by the full route identity (pathname + canonical search params), so
+ *   pagination states keep independent positions.
  * - Save: synchronously in markPrimaryNavigation() (onClick), before Next.js
  *   resets window.scrollY during its commit-phase scroll-to-top.
  * - Restore: only when a "primary nav click" flag is set; gated so server
@@ -38,13 +38,20 @@ const WHITELIST = new Set<string>([
   "/reports",
 ]);
 
-function storageKey(pathname: string): string {
-  return `${STORAGE_PREFIX}${pathname}`;
+function routeIdentity(pathname: string, queryString: string): string {
+  const params = new URLSearchParams(queryString);
+  params.sort();
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
-function readSaved(pathname: string): number | null {
+function storageKey(identity: string): string {
+  return `${STORAGE_PREFIX}${identity}`;
+}
+
+function readSaved(identity: string): number | null {
   if (typeof window === "undefined") return null;
-  const raw = sessionStorage.getItem(storageKey(pathname));
+  const raw = sessionStorage.getItem(storageKey(identity));
   if (raw == null) return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
@@ -52,7 +59,85 @@ function readSaved(pathname: string): number | null {
 
 export function usePanelScrollRestoration(): void {
   const pathname = usePathname();
-  const prevPathname = useRef<string | null>(pathname);
+  const searchParams = useSearchParams();
+  const identity = routeIdentity(pathname, searchParams.toString());
+  const prevIdentity = useRef<string | null>(identity);
+
+  useEffect(() => {
+    const handlePaginationClick = (event: MouseEvent) => {
+      if (
+        event.button !== 0 ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey
+      ) {
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest<HTMLAnchorElement>("a[href]");
+      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) {
+        return;
+      }
+
+      const currentUrl = new URL(window.location.href);
+      const destinationUrl = new URL(anchor.href, currentUrl);
+      if (
+        destinationUrl.origin !== currentUrl.origin ||
+        destinationUrl.pathname !== currentUrl.pathname
+      ) {
+        return;
+      }
+
+      const currentPage = currentUrl.searchParams.get("page") ?? "1";
+      const destinationPage = destinationUrl.searchParams.get("page") ?? "1";
+      if (currentPage === destinationPage) return;
+
+      markPrimaryNavigation(currentUrl.pathname);
+
+      try {
+        const currentScrollY = String(Math.round(window.scrollY));
+
+        // Pagination links may add a resolved query parameter that was absent
+        // from the current URL (for example, a default programType). Save the
+        // outgoing page under that normalized route identity as well, because
+        // the reverse link will use the normalized URL.
+        const normalizedCurrentUrl = new URL(destinationUrl);
+        if (currentPage === "1") {
+          normalizedCurrentUrl.searchParams.delete("page");
+        } else {
+          normalizedCurrentUrl.searchParams.set("page", currentPage);
+        }
+        const normalizedCurrentIdentity = routeIdentity(
+          normalizedCurrentUrl.pathname,
+          normalizedCurrentUrl.search,
+        );
+        sessionStorage.setItem(
+          storageKey(normalizedCurrentIdentity),
+          currentScrollY,
+        );
+
+        // A pagination URL has no saved position on its first visit. Seed it
+        // with the outgoing viewport so the cold transition behaves like later
+        // visits while still allowing each page to diverge independently.
+        const destinationIdentity = routeIdentity(
+          destinationUrl.pathname,
+          destinationUrl.search,
+        );
+        const destinationKey = storageKey(destinationIdentity);
+        if (sessionStorage.getItem(destinationKey) === null) {
+          sessionStorage.setItem(destinationKey, currentScrollY);
+        }
+      } catch {
+        // sessionStorage may be unavailable — navigation continues normally.
+      }
+    };
+
+    document.addEventListener("click", handlePaginationClick, true);
+    return () => document.removeEventListener("click", handlePaginationClick, true);
+  }, []);
 
   useLayoutEffect(() => {
     // Save is performed synchronously in markPrimaryNavigation() (onClick),
@@ -65,7 +150,7 @@ export function usePanelScrollRestoration(): void {
     }
 
     if (viaPrimaryNav && WHITELIST.has(pathname)) {
-      const target = readSaved(pathname);
+      const target = readSaved(identity);
       if (target != null) {
         const docEl = document.documentElement;
 
@@ -74,18 +159,15 @@ export function usePanelScrollRestoration(): void {
 
         const tryRestore = () => {
           const max = maxScrollable();
-          if (max >= target) {
-            const clamped = Math.min(target, max);
-            window.scrollTo(0, clamped);
-            return true;
-          }
-          return false;
+          const clamped = Math.min(target, max);
+          window.scrollTo(0, clamped);
+          return max >= target;
         };
 
         // Fast path: if the document is already tall enough (e.g. no loading.tsx,
         // or content streamed before this effect), restore immediately.
         if (tryRestore()) {
-          prevPathname.current = pathname;
+          prevIdentity.current = identity;
           return;
         }
 
@@ -110,15 +192,18 @@ export function usePanelScrollRestoration(): void {
         observer.observe(docEl);
 
         // Safety: guarantee termination even if height never reaches target.
-        const safetyTimer = window.setTimeout(finish, 3000);
+        const safetyTimer = window.setTimeout(() => {
+          tryRestore();
+          finish();
+        }, 3000);
 
-        prevPathname.current = pathname;
+        prevIdentity.current = identity;
         return () => finish();
       }
     }
 
-    prevPathname.current = pathname;
-  }, [pathname]);
+    prevIdentity.current = identity;
+  }, [identity, pathname]);
 }
 
 /** Mark the current navigation as originating from primary navigation.
@@ -132,8 +217,12 @@ export function markPrimaryNavigation(outgoingPathname: string): void {
   if (typeof window === "undefined") return;
   try {
     if (WHITELIST.has(outgoingPathname)) {
+      const identity = routeIdentity(
+        outgoingPathname,
+        window.location.search,
+      );
       sessionStorage.setItem(
-        storageKey(outgoingPathname),
+        storageKey(identity),
         String(Math.round(window.scrollY)),
       );
     }
