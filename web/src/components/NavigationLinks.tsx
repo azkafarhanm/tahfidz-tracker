@@ -2,13 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import {
   type NavigationItem,
   navigationIcons,
   isNavigationItemActive,
 } from "@/lib/navigation";
 import { markPrimaryNavigation } from "@/hooks/usePanelScrollRestoration";
+import {
+  markNavigationContext,
+  readNavigationContext,
+  mergeContextParams,
+} from "@/hooks/useNavigationContext";
 
 const SCROLL_KEY = "bottomNavScrollX";
 
@@ -34,6 +39,9 @@ export default function NavigationLinks({
   const searchParams = useSearchParams();
   const programType = searchParams.get("programType");
   const activeRef = useRef<HTMLAnchorElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const saveScroll = useCallback(() => {
     if (variant !== "bottom") return;
@@ -84,7 +92,9 @@ export default function NavigationLinks({
   return items.map(({ key, href, iconKey }) => {
     const Icon = navigationIcons[iconKey];
     const active = isNavigationItemActive(pathname, href);
-    const resolvedHref = appendProgramType(href, programType);
+    const baseHref = appendProgramType(href, programType);
+    const storedContext = mounted ? readNavigationContext(href) : null;
+    const resolvedHref = mergeContextParams(baseHref, storedContext);
 
     if (variant === "bottom") {
       return (
@@ -101,6 +111,7 @@ export default function NavigationLinks({
           onClick={() => {
             saveScroll();
             markPrimaryNavigation(pathname);
+            markNavigationContext(pathname, searchParams.toString());
           }}
         >
           <Icon aria-hidden="true" size={18} strokeWidth={2.2} />
@@ -122,7 +133,10 @@ export default function NavigationLinks({
         }`}
         href={resolvedHref}
         key={key}
-        onClick={() => markPrimaryNavigation(pathname)}
+        onClick={() => {
+          markPrimaryNavigation(pathname);
+          markNavigationContext(pathname, searchParams.toString());
+        }}
       >
         <Icon aria-hidden="true" className="shrink-0" size={18} strokeWidth={active ? 2.3 : 2} />
         <span className="truncate">{labels[key] ?? key}</span>
