@@ -5,15 +5,10 @@ All notable changes to **TahfidzFlow** are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] — 2026-07-05
+## [Unreleased]
 
-### Summary
-
-Post-release quality and UX milestone. This release delivers **Navigation &
-Scroll Persistence** — a cross-cutting improvement that preserves scroll
-position, search context, and filter state across primary navigation on both
-Desktop and Android PWA. It also resolves timestamp consistency issues in record
-edit forms and removes redundant UI from the Tasmi edit page.
+Navigation & Scroll Persistence and workflow persistence across primary and
+detail navigation. Not yet released to production users.
 
 ### Added — Navigation & Scroll Persistence
 
@@ -45,6 +40,24 @@ edit forms and removes redundant UI from the Tasmi edit page.
 - **Canonical workflow context restoration** prevents implicit default filters
   from producing mismatched scroll-storage identities.
 
+### Added — Phase 3B Workflow Persistence
+
+#### Candidate 1
+
+- **Edited record is revealed after Save.** Teacher → Student Detail → Edit
+  Memorization/Revision Record → Save now returns to the edited record with the
+  row scrolled into view and highlighted, instead of landing at the top of the
+  activity table. Reuses the existing `highlight` machinery already used by the
+  create flow.
+
+#### Candidate 2
+
+- **Admin Students workflow persistence.** The Admin Students → Edit → Save/Back
+  workflow now preserves the originating directory context.
+- Preserved search, pagination, program type, and scroll after editing.
+- Added edited-student highlight after successful save.
+- Preserved detail-origin navigation when editing from Admin Student Detail.
+
 ### Fixed
 
 - **ProgramType remains active during live search** on Teacher Students and the
@@ -65,6 +78,12 @@ edit forms and removes redundant UI from the Tasmi edit page.
   `academicYear`, causing targets from previous years to appear on the Dashboard
   while the Student Detail page correctly rejected them (404). Fixed by adding
   `student.classGroup.academicYear` filter to both queries.
+- **Fixed loss of search query after Admin Student edit.** The server action now
+  rebuilds the directory redirect URL from hidden form inputs (`directoryQ`,
+  `directoryPage`) mirroring the existing `programType` pattern, so a server
+  redirect no longer drops the active search filter.
+- **Fixed loss of pagination after Admin Student edit.** The directory page
+  number is round-tripped through the edit form and re-applied on Save.
 
 ### Changed
 
@@ -99,5 +118,5 @@ Upstash Redis · next-intl · exceljs · pdfkit · lucide-react · sonner · nex
 See [`release/v1.0.0/CHANGELOG.md`](release/v1.0.0/CHANGELOG.md) for the full
 v1.0.0 release notes.
 
-[1.1.0]: https://github.com/azkafarhanm/tahfidz-tracker/compare/v1.0.0...v1.1.0
+[Unreleased]: https://github.com/azkafarhanm/tahfidz-tracker/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/azkafarhanm/tahfidz-tracker/releases/tag/v1.0.0
