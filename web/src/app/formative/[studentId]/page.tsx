@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowLeft, BookText } from "lucide-react";
 import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -6,6 +5,7 @@ import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import FormativeRecordsTable from "./FormativeRecordsTable";
 import { Semester } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
@@ -82,13 +82,16 @@ export default async function FormativeDetailPage({
       />
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link
+          <WorkflowContextLink
             className={backLink}
+            compatibilityKeys={["semester", "classLevel", "programType", "returnTo"]}
             href={`/formative?semester=${semesterValue}&classLevel=${detail.classLevel}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
+            preferStoredContext
+            restoreContext
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backToList")}
-          </Link>
+          </WorkflowContextLink>
           <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
             {detail.fullName}
           </h1>

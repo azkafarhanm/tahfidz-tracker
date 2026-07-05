@@ -20,6 +20,7 @@ import AppShell from "@/components/AppShell";
 import ExportSection from "@/components/ExportSection";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
@@ -131,12 +132,15 @@ export default async function StudentDetailPage({
               {t("accessDeniedHelp")}
             </p>
             <div className="mt-8">
-              <Link
+              <WorkflowContextLink
                 className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
+                compatibilityKeys={["programType"]}
                 href={studentsBackHref}
+                preferStoredContext
+                restoreContext
               >
                 {t("backToStudents")}
-              </Link>
+              </WorkflowContextLink>
             </div>
           </div>
         </div>
@@ -174,23 +178,29 @@ export default async function StudentDetailPage({
                   {t("inactiveOwnerHint")}
                 </p>
                 <div className="flex justify-center gap-3">
-                  <Link
+                  <WorkflowContextLink
                     className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                    compatibilityKeys={["programType"]}
                     href={studentsBackHref}
+                    preferStoredContext
+                    restoreContext
                   >
                     {t("cancelReactivateButton")}
-                  </Link>
+                  </WorkflowContextLink>
                   <ReactivateStudentButton studentId={student.id} studentName={student.fullName} />
                 </div>
               </div>
             ) : (
               <div className="mt-8">
-                <Link
+                <WorkflowContextLink
                   className="inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-emerald-900 dark:hover:bg-emerald-800"
+                  compatibilityKeys={["programType"]}
                   href={studentsBackHref}
+                  preferStoredContext
+                  restoreContext
                 >
                   {t("backToStudents")}
-                </Link>
+                </WorkflowContextLink>
               </div>
             )}
           </div>
@@ -206,13 +216,16 @@ export default async function StudentDetailPage({
             <div className="flex items-start gap-3 min-w-0">
               <InitialsAvatar name={student.fullName} size="lg" />
               <div className="min-w-0">
-             <Link
+             <WorkflowContextLink
                className={backLink}
+               compatibilityKeys={["programType"]}
                href={studentsBackHref}
+               preferStoredContext
+               restoreContext
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
                {t("backLink")}
-             </Link>
+             </WorkflowContextLink>
              <h1 className="mt-3 truncate text-2xl font-semibold text-slate-950 dark:text-white">
                {student.fullName}
              </h1>

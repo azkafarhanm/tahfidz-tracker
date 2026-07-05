@@ -14,6 +14,7 @@ import {
 } from "@/components/action-button-styles";
 import { ConfirmActionDialog } from "@/components/ConfirmActionDialogButton";
 import { dispatchStudentChange } from "@/lib/optimistic-events";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 
 type StudentCardActionsProps = {
   canManage: boolean;
@@ -98,12 +99,12 @@ export default function StudentCardActions({
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <Link
+      <WorkflowContextLink
         className={actionButtonClass("neutral")}
         href={`/students/${studentId}`}
       >
         {t("detailLink")}
-      </Link>
+      </WorkflowContextLink>
 
       {canManage ? (
         <div className="relative" ref={menuRef}>

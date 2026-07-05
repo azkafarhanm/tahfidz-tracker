@@ -159,7 +159,7 @@ export default async function AdminStudentsPage({
         </section>
 
         <LiveSearchForm
-          action="/admin/students"
+          action={`/admin/students?programType=${programType}`}
           buttonLabel={t("searchButton")}
           className="mt-5 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:focus-within:ring-emerald-400/20"
           defaultValue={query}

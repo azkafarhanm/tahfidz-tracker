@@ -9,6 +9,7 @@ import ActiveYearBadge from "@/components/ActiveYearBadge";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear, getSemesterForDate, getTeacherProgramContext } from "@/lib/academic-year";
 import { getTeacherFormativeOverview } from "@/lib/formative";
@@ -341,12 +342,18 @@ export default async function FormativePage({
                       </p>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <Link
+                      <WorkflowContextLink
                         className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+                        contextParams={{
+                          classLevel: classLevelValue,
+                          programType,
+                          returnTo: fromReports ? "reports" : null,
+                          semester: semesterValue,
+                        }}
                         href={`/formative/${student.id}?semester=${semesterValue}${programType ? `&programType=${programType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
                       >
                         {t("detailButton")}
-                      </Link>
+                      </WorkflowContextLink>
                     </td>
                   </tr>
                 ))}

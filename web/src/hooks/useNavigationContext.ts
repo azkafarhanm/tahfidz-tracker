@@ -47,6 +47,31 @@ export function markNavigationContext(
 }
 
 /**
+ * Include the latest visible search value when navigation happens before the
+ * debounced URL update has committed.
+ */
+export function mergeVisibleSearchFormContext(queryString: string): string {
+  if (typeof document === "undefined") return queryString;
+
+  const searchForm = document.querySelector<HTMLFormElement>(
+    'form[role="search"]',
+  );
+  if (!searchForm) return queryString;
+
+  const params = new URLSearchParams(queryString);
+  for (const [key, value] of new FormData(searchForm)) {
+    if (typeof value !== "string") continue;
+    const normalizedValue = value.trim();
+    if (normalizedValue) {
+      params.set(key, normalizedValue);
+    } else {
+      params.delete(key);
+    }
+  }
+  return params.toString();
+}
+
+/**
  * Read the stored query string for a destination pathname.
  * Called during href construction in NavigationLinks.
  * Returns null if no stored context exists for the destination.

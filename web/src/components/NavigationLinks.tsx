@@ -11,6 +11,7 @@ import {
 import { markPrimaryNavigation } from "@/hooks/usePanelScrollRestoration";
 import {
   markNavigationContext,
+  mergeVisibleSearchFormContext,
   readNavigationContext,
   mergeContextParams,
 } from "@/hooks/useNavigationContext";
@@ -22,25 +23,6 @@ function appendProgramType(href: string, programType: string | null): string {
   if (href.includes("programType=")) return href;
   const separator = href.includes("?") ? "&" : "?";
   return `${href}${separator}programType=${programType}`;
-}
-
-function mergeVisibleSearchFormContext(queryString: string): string {
-  const searchForm = document.querySelector<HTMLFormElement>(
-    'form[role="search"]',
-  );
-  if (!searchForm) return queryString;
-
-  const params = new URLSearchParams(queryString);
-  for (const [key, value] of new FormData(searchForm)) {
-    if (typeof value !== "string") continue;
-    const normalizedValue = value.trim();
-    if (normalizedValue) {
-      params.set(key, normalizedValue);
-    } else {
-      params.delete(key);
-    }
-  }
-  return params.toString();
 }
 
 type NavigationLinksProps = {

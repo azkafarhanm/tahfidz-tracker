@@ -103,7 +103,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   };
   const hasPreviousPage = studentPage.page > 1;
   const hasNextPage = studentPage.page < studentPage.totalPages;
-  const searchAction = isInactiveView ? "/students?status=inactive" : "/students";
+  const searchActionParams = new URLSearchParams();
+  if (isInactiveView) searchActionParams.set("status", "inactive");
+  if (programType) searchActionParams.set("programType", programType);
+  const searchAction = `/students?${searchActionParams.toString()}`;
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>

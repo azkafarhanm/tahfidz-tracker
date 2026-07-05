@@ -18,8 +18,8 @@ import {
  *   pagination states keep independent positions.
  * - Save: synchronously in markPrimaryNavigation() (onClick), before Next.js
  *   resets window.scrollY during its commit-phase scroll-to-top.
- * - Restore: only when a "primary nav click" flag is set; gated so server
- *   redirects (e.g. after mutations) and browser refresh do not restore.
+ * - Restore: only when an approved navigation trigger sets the one-shot flag;
+ *   gated so server redirects (e.g. after mutations) and refresh do not restore.
  * - Restore uses ResizeObserver to wait for the document to reach its final
  *   height (Server Component content resolves after loading.tsx skeleton).
  * - Restore is clamped to the live document height to handle content that
@@ -206,20 +206,23 @@ export function usePanelScrollRestoration(): void {
   }, [identity, pathname]);
 }
 
-/** Mark the current navigation as originating from primary navigation.
- *  Called from NavigationLinks onClick on both sidebar and bottom variants.
+/** Mark a navigation that may restore an eligible top-level panel.
+ *  Called from primary NavigationLinks and scoped workflow return links.
  *
  *  Saves the OUTGOING panel's scroll position SYNCHRONOUSLY here, in the
  *  click handler, BEFORE Next.js App Router resets window.scrollY to 0 during
  *  its commit-phase scroll-to-top. Saving in a post-navigation useEffect was
  *  too late (already 0); the click handler is the last reliable sync point. */
-export function markPrimaryNavigation(outgoingPathname: string): void {
+export function markPrimaryNavigation(
+  outgoingPathname: string,
+  queryString = typeof window === "undefined" ? "" : window.location.search,
+): void {
   if (typeof window === "undefined") return;
   try {
     if (WHITELIST.has(outgoingPathname)) {
       const identity = routeIdentity(
         outgoingPathname,
-        window.location.search,
+        queryString,
       );
       sessionStorage.setItem(
         storageKey(identity),
