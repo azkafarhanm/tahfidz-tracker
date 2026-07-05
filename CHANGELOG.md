@@ -60,6 +60,10 @@ detail navigation. Not yet released to production users.
 
 ### Fixed
 
+- Preserved sidebar scroll position across navigation for both Admin and Teacher.
+- Prevented unnecessary sidebar auto-scrolling when the active navigation item
+  was already visible.
+
 - **ProgramType remains active during live search** on Teacher Students and the
   Admin Students, Classes, and Halaqah pages. Search URLs now retain the selected
   Academic or Boarding program while continuing to reset pagination.
