@@ -32,7 +32,24 @@ edit forms and removes redundant UI from the Tasmi edit page.
 - **Desktop and Android PWA verification** — all persistence behaviors verified
   on both desktop browser and installed Android PWA.
 
+### Added — Phase 3A Workflow Persistence
+
+- **Context-aware workflow return links** reuse Navigation Context Persistence
+  and Scroll Persistence for frequent list → detail → Back workflows.
+- **Students → Student Detail → Back** now restores the originating search,
+  pagination, program, active/inactive tab, and scroll position.
+- **Formative → Student Detail → Back** now restores semester, class level,
+  program, pagination, reports origin when present, and scroll position.
+- **Summative → Student Detail → Back** now restores the equivalent assessment
+  context and scroll position.
+- **Canonical workflow context restoration** prevents implicit default filters
+  from producing mismatched scroll-storage identities.
+
 ### Fixed
+
+- **ProgramType remains active during live search** on Teacher Students and the
+  Admin Students, Classes, and Halaqah pages. Search URLs now retain the selected
+  Academic or Boarding program while continuing to reset pagination.
 
 - **Record edit forms now default to current device date/time.** Previously,
   `DeviceDateTimeFields` ignored the `initialDateTimeIso` prop on edit pages,

@@ -62,6 +62,7 @@ TahfidzFlow models this with a `ProgramType` enum on `AcademicClass` and `ClassG
 |---|---|
 | **Teacher Dashboard** | Daily stats, weekly target progress, recent activity with Tasmi' |
 | **Dual-Program System** | Academic + Boarding with context-aware filtering via ProgramSelector |
+| **Workflow Persistence** | Search, filters, pagination, and scroll restored across primary navigation and frequent Students/Formative/Summative detail round-trips |
 | **Full Hafalan Lifecycle** | Quick Log → Hafalan → Murojaah → Tasmi' → Formative recap → Summative |
 | **Flexible Summative** | Per-student, per-surah assessment with auto-passed surah detection |
 | **Admin Management** | Teachers, classes, halaqah, students, academic years with archive workflow |
@@ -128,6 +129,7 @@ Browser / PWA Client
 - Dashboard with daily stats, weekly target progress, and recent activity (includes Tasmi')
 - Program-aware filtering via ProgramSelector (Academic / Boarding)
 - Student list with search, pagination, latest records, Tasmi' badges, and review indicators
+- Students, Formative, and Summative detail round-trips restore the originating filters, pagination, and scroll position
 - Quick Log guided record entry
 - Hafalan and murojaah create/edit/delete with surah + ayah range input
 - Tasmi' module: create/edit/delete per-juz Tasmi' records with grade and examiner
@@ -154,7 +156,7 @@ Browser / PWA Client
 - `ProgramType` enum (`ACADEMIC`, `BOARDING`) on `AcademicClass` and `ClassGroup`
 - Teachers see only their program context (auto-detected from ClassGroups; selector shown for dual-program teachers)
 - Admins get a "Semua" (All) option in addition to per-program filtering
-- Program context persists across all navigation via URL params
+- Program context persists across navigation and program-filtered live search via URL params
 - Boarding-specific UI rules: level hidden, section hidden, grade cards hidden, class labels show numeric grade only
 - `ProgramBadge` display component on all list/detail pages
 - `ProgramSelector` context-switching control on all filtered pages
@@ -411,6 +413,8 @@ For rollback procedures, see [`docs/ROLLBACK.md`](docs/ROLLBACK.md).
 | [`docs/PWA_READINESS_REPORT.md`](docs/PWA_READINESS_REPORT.md) | PWA readiness assessment |
 | [`docs/PWA_BUGS.md`](docs/PWA_BUGS.md) | PWA bug inventory and severity |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | PWA release decision checklist |
+| [`docs/PERSISTENCE_ARCHITECTURE.md`](docs/PERSISTENCE_ARCHITECTURE.md) | Navigation context and scroll persistence design |
+| [`docs/WORKFLOW_PERSISTENCE_PHASE_3B_AUDIT.md`](docs/WORKFLOW_PERSISTENCE_PHASE_3B_AUDIT.md) | Phase 3B high-frequency workflow persistence candidates |
 | [`docs/ui-ux-speed-improvements-plan.md`](docs/ui-ux-speed-improvements-plan.md) | Performance optimization plan |
 | [`AI_CONTEXT.md`](AI_CONTEXT.md) | AI handoff context and architecture overview |
 | [`rules.md`](rules.md) | AI coding rules and engineering principles |
@@ -430,6 +434,14 @@ For rollback procedures, see [`docs/ROLLBACK.md`](docs/ROLLBACK.md).
 - [x] i18n: Indonesian, English, Arabic with RTL
 - [x] Security: role-based auth, rate limiting, IDOR protection, security headers
 - [x] Performance: in-memory TTL cache, withRetry, optimistic UI
+
+### v1.1 — Navigation and Workflow Persistence
+
+- [x] Primary-navigation search, filter, pagination, and scroll restoration
+- [x] Students → Detail → Back workflow persistence
+- [x] Formative → Detail → Back workflow persistence
+- [x] Summative → Detail → Back workflow persistence
+- [x] Program-aware live search on Students and Admin Students, Classes, and Halaqah
 
 ---
 

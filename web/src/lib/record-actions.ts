@@ -21,7 +21,7 @@ const validStatuses = new Set<string>(Object.values(RecordStatus));
 function resolveReturnPath(
   returnTo: string | undefined,
   fallbackPath: string,
-  params: { error?: string; success?: string } = {},
+  params: { error?: string; success?: string; highlight?: string } = {},
 ) {
   const basePath =
     returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
@@ -36,6 +36,10 @@ function resolveReturnPath(
 
   if (params.success) {
     searchParams.set("success", params.success);
+  }
+
+  if (params.highlight) {
+    searchParams.set("highlight", params.highlight);
   }
 
   const query = searchParams.toString();
@@ -148,7 +152,12 @@ export async function updateRecord(
   }
 
   revalidateRecordPaths(studentId);
-  redirect(resolveReturnPath(successPath, `/students/${studentId}`, { success: t("recordUpdated") }));
+  redirect(
+    resolveReturnPath(successPath, `/students/${studentId}`, {
+      success: t("recordUpdated"),
+      highlight: recordId,
+    }),
+  );
 }
 
 export async function deleteRecord(
