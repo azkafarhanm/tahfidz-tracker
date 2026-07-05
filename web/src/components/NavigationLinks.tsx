@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useCallback, useState } from "react";
 import {
   type NavigationItem,
   navigationIcons,
   isNavigationItemActive,
 } from "@/lib/navigation";
-import { markPrimaryNavigation } from "@/hooks/usePanelScrollRestoration";
+import {
+  markPrimaryNavigation,
+  markSidebarNavigation,
+  restoreSidebarScroll,
+} from "@/hooks/usePanelScrollRestoration";
 import {
   markNavigationContext,
   mergeVisibleSearchFormContext,
@@ -17,6 +21,30 @@ import {
 } from "@/hooks/useNavigationContext";
 
 const SCROLL_KEY = "bottomNavScrollX";
+
+function isFullyVisible(element: HTMLElement): boolean {
+  const elementRect = element.getBoundingClientRect();
+  let visibleTop = 0;
+  let visibleBottom = window.innerHeight;
+
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    const { overflowY } = window.getComputedStyle(parent);
+    if (!/(auto|scroll|hidden|clip)/.test(overflowY)) continue;
+
+    const parentRect = parent.getBoundingClientRect();
+    visibleTop = Math.max(visibleTop, parentRect.top);
+    visibleBottom = Math.min(visibleBottom, parentRect.bottom);
+  }
+
+  return (
+    elementRect.top >= visibleTop && elementRect.bottom <= visibleBottom
+  );
+}
+
+function revealIfNeeded(element: HTMLElement) {
+  if (isFullyVisible(element)) return;
+  element.scrollIntoView({ block: "nearest" });
+}
 
 function appendProgramType(href: string, programType: string | null): string {
   if (!programType) return href;
@@ -41,6 +69,9 @@ export default function NavigationLinks({
   const programType = searchParams.get("programType");
   const activeRef = useRef<HTMLAnchorElement>(null);
   const [mounted, setMounted] = useState(false);
+  const sidebarScope = items.some(({ href }) => href === "/admin")
+    ? "admin"
+    : "teacher";
 
   useEffect(() => setMounted(true), []);
 
@@ -64,18 +95,24 @@ export default function NavigationLinks({
     }
   }, [pathname, variant]);
 
+  useLayoutEffect(() => {
+    const el = activeRef.current;
+    if (variant !== "sidebar" || !el) return;
+    restoreSidebarScroll(sidebarScope, el);
+  }, [pathname, sidebarScope, variant]);
+
   useEffect(() => {
     const el = activeRef.current;
     if (!el) return;
 
     if (variant === "sidebar") {
-      el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      revealIfNeeded(el);
 
       const nav = el.closest("nav");
       if (!nav) return;
 
       const observer = new ResizeObserver(() => {
-        el.scrollIntoView({ block: "nearest" });
+        revealIfNeeded(el);
       });
       observer.observe(nav);
       return () => observer.disconnect();
@@ -137,7 +174,8 @@ export default function NavigationLinks({
         }`}
         href={resolvedHref}
         key={key}
-        onClick={() => {
+        onClick={(event) => {
+          markSidebarNavigation(sidebarScope, event.currentTarget);
           markPrimaryNavigation(pathname);
           markNavigationContext(
             pathname,

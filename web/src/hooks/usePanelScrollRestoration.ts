@@ -29,6 +29,70 @@ import {
 
 const STORAGE_PREFIX = "scroll:";
 const NAV_FLAG = "navScrollRestore";
+const SIDEBAR_STORAGE_PREFIX = "sidebarScroll:";
+const SIDEBAR_RESTORE_PREFIX = "sidebarScrollRestore:";
+
+type SidebarScope = "admin" | "teacher";
+
+function activeSidebarScroller(link: HTMLElement): HTMLElement | null {
+  const nav = link.closest<HTMLElement>("nav");
+  const aside = nav?.closest<HTMLElement>("aside");
+
+  for (const candidate of [nav, aside]) {
+    if (!candidate || candidate.getClientRects().length === 0) continue;
+    const { overflowY } = window.getComputedStyle(candidate);
+    if (
+      /(auto|scroll)/.test(overflowY) &&
+      candidate.scrollHeight > candidate.clientHeight
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+export function markSidebarNavigation(
+  scope: SidebarScope,
+  link: HTMLElement,
+): void {
+  try {
+    const scroller = activeSidebarScroller(link);
+    if (!scroller) return;
+    sessionStorage.setItem(
+      `${SIDEBAR_STORAGE_PREFIX}${scope}`,
+      String(Math.round(scroller.scrollTop)),
+    );
+    sessionStorage.setItem(`${SIDEBAR_RESTORE_PREFIX}${scope}`, "1");
+  } catch {
+    // sessionStorage may be unavailable — navigation continues normally.
+  }
+}
+
+export function restoreSidebarScroll(
+  scope: SidebarScope,
+  link: HTMLElement,
+): void {
+  try {
+    const restoreKey = `${SIDEBAR_RESTORE_PREFIX}${scope}`;
+    if (sessionStorage.getItem(restoreKey) !== "1") return;
+    sessionStorage.removeItem(restoreKey);
+
+    const saved = Number(
+      sessionStorage.getItem(`${SIDEBAR_STORAGE_PREFIX}${scope}`),
+    );
+    const scroller = activeSidebarScroller(link);
+    if (!Number.isFinite(saved) || !scroller) return;
+
+    const maxScrollable = Math.max(
+      0,
+      scroller.scrollHeight - scroller.clientHeight,
+    );
+    scroller.scrollTop = Math.min(saved, maxScrollable);
+  } catch {
+    // sessionStorage may be unavailable — active-link reveal remains the fallback.
+  }
+}
 
 // Whitelist = primary-nav panels (single source of truth) + teacher /reports
 // (reached via the Dashboard quick-action, not the bottom nav).
