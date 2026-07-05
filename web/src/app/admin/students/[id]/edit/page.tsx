@@ -30,6 +30,11 @@ type EditStudentPageProps = {
     isActive?: string;
     notes?: string;
     programType?: string;
+    returnTo?: string;
+    /** Directory search query, carried from the directory Edit link. */
+    q?: string;
+    /** Directory page number, carried from the directory Edit link. */
+    page?: string;
   }>;
 };
 
@@ -60,10 +65,26 @@ export default async function EditStudentPage({
   });
 
   const programType = query?.programType ?? data.student.programType ?? "";
-  const backHref = programType
-    ? `/admin/students?programType=${programType}`
-    : "/admin/students";
-  const action = updateStudent.bind(null, data.student.id);
+  // returnTo is set only when Edit is reached from the Student Detail page.
+  // Validated against open-redirect like the Teacher record-edit flow.
+  const rawReturnTo = query?.returnTo;
+  const returnTo =
+    rawReturnTo && rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//")
+      ? rawReturnTo
+      : undefined;
+  // Detail-origin Cancel/Back returns to the detail page; directory-origin
+  // returns to the directory (with restoreContext reapplying search/pagination).
+  const backHref = returnTo
+    ? returnTo
+    : programType
+      ? `/admin/students?programType=${programType}`
+      : "/admin/students";
+  const action = updateStudent.bind(null, data.student.id, returnTo);
+  // Directory working-set filters, carried from the directory Edit link so the
+  // server action can rebuild the directory URL on Save (server redirects cannot
+  // read client-side Navigation Context). Only meaningful for directory-origin.
+  const directoryQ = query?.q ?? "";
+  const directoryPage = query?.page ?? "";
 
   return (
     <StudentForm
@@ -79,6 +100,9 @@ export default async function EditStudentPage({
       title={t("editStudent")}
       programType={programType}
       initialLevel={data.student.classGroupLevel}
+      restoreContext
+      directoryQ={directoryQ}
+      directoryPage={directoryPage}
       halaqah={{
         classGroupId: data.student.classGroupId,
         name: data.student.classGroupName,

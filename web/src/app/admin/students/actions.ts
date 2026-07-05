@@ -117,9 +117,15 @@ function redirectAdminStudentsWithMessage(
   type: "success" | "error",
   message: string,
   programType?: string,
+  highlight?: string,
+  directoryQ?: string,
+  directoryPage?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
   if (programType) params.set("programType", programType);
+  if (highlight) params.set("highlight", highlight);
+  if (directoryQ) params.set("q", directoryQ);
+  if (directoryPage) params.set("page", directoryPage);
   redirect(`/admin/students?${params.toString()}`);
 }
 
@@ -294,11 +300,39 @@ export async function createStudent(formData: FormData) {
   redirectAdminStudentsWithMessage("success", t("adminStudentCreated"), input.programType);
 }
 
-export async function updateStudent(studentId: string, formData: FormData) {
+export async function updateStudent(
+  studentId: string,
+  returnTo: string | undefined,
+  formData: FormData,
+) {
   await requireAdminScope();
 
   const input = readStudentFormInput(formData);
-  const fail = createFailFn(`/admin/students/${studentId}/edit`);
+  // Directory working-set filters submitted as hidden inputs by the Edit form
+  // (mirroring the hidden programType input). The server rebuilds the directory
+  // URL from these on Save because a server redirect cannot read client-side
+  // Navigation Context. Absent on Create and on Detail-origin edits.
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  // Preserve the Detail-origin returnTo across validation-failure round-trips
+  // so the Back/Cancel destination stays consistent with the Save destination.
+  // returnTo is only set when Edit is reached from the Student Detail page.
+  const validatedReturnTo =
+    returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? returnTo
+      : undefined;
+  // Carry the directory filters on the fail path too, so a validation-failure
+  // round-trip repopulates the hidden inputs and a subsequent Save still
+  // returns to the same working set.
+  const failParams = new URLSearchParams();
+  if (validatedReturnTo) {
+    failParams.set("returnTo", validatedReturnTo);
+  }
+  if (directoryQ) failParams.set("q", directoryQ);
+  if (directoryPage) failParams.set("page", directoryPage);
+  const failBase =
+    `/admin/students/${studentId}/edit${failParams.toString() ? `?${failParams.toString()}` : ""}`;
+  const fail = createFailFn(failBase);
 
   await validateStudentInput(input, fail);
 
@@ -330,7 +364,26 @@ export async function updateStudent(studentId: string, formData: FormData) {
   });
 
   revalidateAdminStudentPaths(existingStudent.id);
-  redirectAdminStudentsWithMessage("success", t("adminStudentUpdated"), input.programType);
+
+  // Detail-origin Save returns to the detail page (its scroll position is not
+  // restored — admin detail routes are outside the persistence architecture by
+  // design). Directory-origin Save returns to the directory and reveals the
+  // edited student via the existing highlight machinery, mirroring the Teacher
+  // create flow.
+  if (validatedReturnTo) {
+    const [pathname, existingSearch = ""] = validatedReturnTo.split("?", 2);
+    const params = new URLSearchParams(existingSearch);
+    params.set("success", t("adminStudentUpdated"));
+    redirect(`${pathname}?${params.toString()}`);
+  }
+  redirectAdminStudentsWithMessage(
+    "success",
+    t("adminStudentUpdated"),
+    input.programType,
+    existingStudent.id,
+    directoryQ,
+    directoryPage,
+  );
 }
 
 export async function toggleStudentActive(

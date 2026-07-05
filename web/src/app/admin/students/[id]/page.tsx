@@ -12,6 +12,7 @@ import {
 import { getStudentProgressData } from "@/lib/reports";
 import { requireAdminScope } from "@/lib/session";
 import ExportSection from "@/components/ExportSection";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { badge, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
@@ -53,13 +54,16 @@ export default async function AdminStudentDetailPage({
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <Link
+            <WorkflowContextLink
               className={backLink}
+              compatibilityKeys={["programType"]}
               href={studentsBackHref}
+              preferStoredContext
+              restoreContext
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
-            </Link>
+            </WorkflowContextLink>
             <h1 className="mt-3 truncate text-2xl font-semibold">
               {data.fullName}
             </h1>
@@ -76,7 +80,7 @@ export default async function AdminStudentDetailPage({
           <div className="flex flex-wrap items-center gap-2">
             <Link
               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              href={`/admin/students/${id}/edit`}
+              href={`/admin/students/${id}/edit?returnTo=${encodeURIComponent(`/admin/students/${id}`)}`}
             >
               <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
               {t("editButton")}

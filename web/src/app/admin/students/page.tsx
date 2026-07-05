@@ -17,6 +17,8 @@ import AdminDeleteButton from "@/components/AdminDeleteButton";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import ProgramSelector from "@/components/ProgramSelector";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { actionButtonClass } from "@/components/action-button-styles";
@@ -74,11 +76,23 @@ export default async function AdminStudentsPage({
     const search = nextParams.toString();
     return search ? `/admin/students?${search}` : "/admin/students";
   };
+  // Carry the directory working-set filters onto the Edit link so the edit page
+  // (and the server action on Save) can rebuild the directory URL. programType,
+  // q, and page together define the current working set the admin returns to.
+  const buildEditHref = (studentId: string) => {
+    const params = new URLSearchParams();
+    if (programType) params.set("programType", programType);
+    if (query) params.set("q", query);
+    if (page > 1) params.set("page", String(page));
+    const search = params.toString();
+    return `/admin/students/${studentId}/edit${search ? `?${search}` : ""}`;
+  };
   const hasPreviousPage = pagination.page > 1;
   const hasNextPage = pagination.page < pagination.totalPages;
 
   return (
     <>
+        <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -209,18 +223,19 @@ export default async function AdminStudentsPage({
                 return (
                   <article
                     className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
+                    data-highlight={student.id}
                     key={student.id}
                   >
                   <div className="flex items-start justify-between gap-3">
                      <div className="min-w-0">
                        <div className="flex items-center gap-3">
                          <InitialsAvatar name={student.fullName} />
-                         <Link
+                         <WorkflowContextLink
                            className="truncate font-semibold text-slate-950 transition hover:text-emerald-800 dark:text-white dark:hover:text-emerald-300"
                            href={`/admin/students/${student.id}`}
                          >
                            {student.fullName}
-                         </Link>
+                         </WorkflowContextLink>
                        </div>
                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                          {student.gender} - {t("joinedLabel", { date: student.joinDate })}
@@ -303,9 +318,9 @@ export default async function AdminStudentsPage({
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <Link
+                    <WorkflowContextLink
                       className={actionButtonClass("neutral")}
-                      href={`/admin/students/${student.id}/edit`}
+                      href={buildEditHref(student.id)}
                     >
                       <PencilLine
                         aria-hidden="true"
@@ -313,7 +328,7 @@ export default async function AdminStudentsPage({
                         strokeWidth={2.2}
                       />
                       {t("editButton")}
-                    </Link>
+                    </WorkflowContextLink>
                     {student.isActive ? (
                       <ConfirmActionDialogButton
                         cancelLabel={t("cancelDeleteButton")}
