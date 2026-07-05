@@ -149,8 +149,14 @@ async function validateTeacherInput(
 function redirectAdminTeachersWithMessage(
   type: "success" | "error",
   message: string,
+  highlight?: string,
+  directoryQ?: string,
+  directoryPage?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
+  if (highlight) params.set("highlight", highlight);
+  if (directoryQ) params.set("q", directoryQ);
+  if (directoryPage) params.set("page", directoryPage);
   redirect(`/admin/teachers?${params.toString()}`);
 }
 
@@ -212,7 +218,14 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   await requireAdminScope();
 
   const input = readTeacherFormInput(formData);
-  const fail = createFailFn(`/admin/teachers/${teacherId}/edit`);
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const failParams = new URLSearchParams();
+  if (directoryQ) failParams.set("q", directoryQ);
+  if (directoryPage) failParams.set("page", directoryPage);
+  const failBase =
+    `/admin/teachers/${teacherId}/edit${failParams.toString() ? `?${failParams.toString()}` : ""}`;
+  const fail = createFailFn(failBase);
 
   const t = await getTranslations("Validation");
 
@@ -263,7 +276,13 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   });
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", t("teacherUpdated"));
+  redirectAdminTeachersWithMessage(
+    "success",
+    t("teacherUpdated"),
+    teacher.id,
+    directoryQ,
+    directoryPage,
+  );
 }
 
 export async function toggleTeacherActive(

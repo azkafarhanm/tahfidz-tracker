@@ -58,6 +58,12 @@ detail navigation. Not yet released to production users.
 - Added edited-student highlight after successful save.
 - Preserved detail-origin navigation when editing from Admin Student Detail.
 
+#### Candidate 3
+
+- **Admin Teachers workflow persistence.** The Admin Teachers directory now
+  preserves search, pagination, and scroll across Edit to Save/Cancel.
+- Added edited-teacher highlight after successful save.
+
 ### Fixed
 
 - Preserved sidebar scroll position across navigation for both Admin and Teacher.

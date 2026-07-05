@@ -24,6 +24,8 @@ type EditTeacherPageProps = {
     email?: string;
     phoneNumber?: string;
     isActive?: string;
+    q?: string;
+    page?: string;
   }>;
 };
 
@@ -60,6 +62,9 @@ export default async function EditTeacherPage({
         submitLabel={t("saveChanges")}
         title={t("editTeacher")}
         showUsername
+        restoreContext
+        directoryQ={query?.q ?? ""}
+        directoryPage={query?.page ?? ""}
         values={{
           fullName: query?.fullName ?? teacher.fullName,
           username: query?.username ?? teacher.username,

@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import CharacterCounter from "@/components/CharacterCounter";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { backLink } from "@/lib/colors";
 
 const iconMap = {
@@ -48,6 +49,9 @@ type TeacherFormProps = {
   title: string;
   values: TeacherFormValues;
   showUsername?: boolean;
+  restoreContext?: boolean;
+  directoryQ?: string;
+  directoryPage?: string;
 };
 
 export default function TeacherForm({
@@ -63,6 +67,9 @@ export default function TeacherForm({
   title,
   values,
   showUsername = false,
+  restoreContext = false,
+  directoryQ = "",
+  directoryPage = "",
 }: TeacherFormProps) {
   const t = useTranslations("AdminTeacherForm");
   const tc = useTranslations("CharacterCounter");
@@ -79,13 +86,25 @@ export default function TeacherForm({
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
          <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <Link
-              className={backLink}
-              href={backHref}
-            >
-              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
-              {backLabel}
-            </Link>
+            {restoreContext ? (
+              <WorkflowContextLink
+                className={backLink}
+                href={backHref}
+                preferStoredContext
+                restoreContext
+              >
+                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
+                {backLabel}
+              </WorkflowContextLink>
+            ) : (
+              <Link
+                className={backLink}
+                href={backHref}
+              >
+                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
+                {backLabel}
+              </Link>
+            )}
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {title}
             </h1>
@@ -99,6 +118,8 @@ export default function TeacherForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {directoryQ && <input type="hidden" name="directoryQ" value={directoryQ} />}
+          {directoryPage && <input type="hidden" name="directoryPage" value={directoryPage} />}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <UserRound
@@ -279,12 +300,23 @@ export default function TeacherForm({
           </section>
 
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            <Link
-              className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              href={backHref}
-            >
-              {t("cancel")}
-            </Link>
+            {restoreContext ? (
+              <WorkflowContextLink
+                className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                href={backHref}
+                preferStoredContext
+                restoreContext
+              >
+                {t("cancel")}
+              </WorkflowContextLink>
+            ) : (
+              <Link
+                className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                href={backHref}
+              >
+                {t("cancel")}
+              </Link>
+            )}
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
               type="submit"

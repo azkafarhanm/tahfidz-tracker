@@ -19,6 +19,8 @@ import LiveSearchForm from "@/components/LiveSearchForm";
 import { UserX, RotateCcw } from "lucide-react";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge, statCard, statValue, statLabel, widget, heroSummary, backLink } from "@/lib/colors";
 
@@ -67,11 +69,19 @@ export default async function AdminTeachersPage({
     const search = nextParams.toString();
     return search ? `/admin/teachers?${search}` : "/admin/teachers";
   };
+  const buildEditHref = (teacherId: string) => {
+    const editParams = new URLSearchParams();
+    if (query) editParams.set("q", query);
+    if (page > 1) editParams.set("page", String(page));
+    const search = editParams.toString();
+    return `/admin/teachers/${teacherId}/edit${search ? `?${search}` : ""}`;
+  };
   const hasPreviousPage = pagination.page > 1;
   const hasNextPage = pagination.page < pagination.totalPages;
 
   return (
     <>
+        <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -205,6 +215,7 @@ export default async function AdminTeachersPage({
                 return (
                   <article
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
+                  data-highlight={teacher.id}
                   key={teacher.id}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -270,9 +281,9 @@ export default async function AdminTeachersPage({
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <Link
+                    <WorkflowContextLink
                       className={actionButtonClass("neutral")}
-                      href={`/admin/teachers/${teacher.id}/edit`}
+                      href={buildEditHref(teacher.id)}
                     >
                       <PencilLine
                         aria-hidden="true"
@@ -280,7 +291,7 @@ export default async function AdminTeachersPage({
                         strokeWidth={2.2}
                       />
                       {t("editButton")}
-                    </Link>
+                    </WorkflowContextLink>
                     {teacher.isActive ? (
                       <ConfirmActionDialogButton
                         cancelLabel={t("cancelDeleteButton")}
