@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import FormativeRecordsTable from "./FormativeRecordsTable";
@@ -19,6 +20,7 @@ import { isSemesterValue, parseSemester } from "@/lib/summative";
 import { badge, backLink } from "@/lib/colors";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type FormativeDetailPageProps = {
   params: Promise<{
@@ -57,9 +59,17 @@ export default async function FormativeDetailPage({
     query?.semester && isSemesterValue(query.semester)
       ? query.semester
       : defaultSemester;
-  const returnTo = `/formative/${studentId}?semester=${semesterValue}`;
   const fromReports = query?.returnTo === "reports";
   const paramProgramType = query?.programType ?? "";
+  // Build the outbound returnTo with the SAME query params the live page URL
+  // carries (semester, programType, returnTo=reports). usePanelScrollRestoration
+  // keys scroll storage by the full sorted query string, so the departure
+  // identity and the return identity must match exactly — otherwise the saved
+  // vertical position is looked up under a different key and never restored.
+  const returnToParams = new URLSearchParams({ semester: semesterValue });
+  if (paramProgramType) returnToParams.set("programType", paramProgramType);
+  if (fromReports) returnToParams.set("returnTo", "reports");
+  const returnTo = `/formative/${studentId}?${returnToParams.toString()}`;
 
   const academicYear = await getActiveAcademicYear();
   const detail = await getStudentFormativeDetail(
@@ -76,6 +86,7 @@ export default async function FormativeDetailPage({
 
   return (
     <AppShell currentPath="/formative" userName={session.user.name} isAdmin={isAdmin}>
+      <ScrollToHighlightedItem />
       <FilterPreferenceSync
         cookieName={FORMATIVE_VIEW_COOKIE}
         value={`semester=${semesterValue}&classLevel=${detail.classLevel}`}

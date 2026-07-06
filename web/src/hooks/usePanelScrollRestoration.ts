@@ -259,17 +259,66 @@ export function usePanelScrollRestoration(): void {
           return max >= target;
         };
 
+        // Once restore succeeds, install a short-lived watchdog that re-asserts
+        // the target if Next.js App Router issues a late scroll-to-top after the
+        // streamed Server Component content commits. The watchdog:
+        //  - arms only within a brief window right after a successful restore;
+        //  - disarms the instant the user scrolls themselves (so we never fight
+        //    genuine user input);
+        //  - re-applies `scrollTo(0, target)` only when scrollY was driven to a
+        //    position other than the target by a non-user writer.
+        const WATCHDOG_MS = 600;
+        const armWatchdog = () => {
+          let disarmed = false;
+          const disarm = () => {
+            if (disarmed) return;
+            disarmed = true;
+            window.removeEventListener("scroll", onWatchdogScroll, true);
+            window.clearTimeout(watchdogTimer);
+          };
+          const onWatchdogScroll = () => {
+            // If the user moved the viewport themselves (programmatic scrollTo
+            // we just issued also lands here, but it sets to target, so it is a
+            // no-op; a different position implies an external writer or user).
+            if (window.scrollY !== target && window.scrollY !== 0) {
+              // Genuine user scroll (or acceptable position) — yield permanently.
+              disarm();
+            }
+          };
+          // Re-assert on the next macrotasks; App Router's scroll-to-top lands
+          // asynchronously after streamed content commits.
+          const reassert = () => {
+            if (disarmed) return;
+            if (window.scrollY === 0) {
+              window.scrollTo(0, target);
+            }
+          };
+          // Schedule a few reassertion passes within the watchdog window.
+          const passes = [0, 60, 160, 320];
+          const timers: number[] = passes.map((d) =>
+            window.setTimeout(reassert, d),
+          );
+          const watchdogTimer = window.setTimeout(() => {
+            disarm();
+            timers.forEach((t) => window.clearTimeout(t));
+          }, WATCHDOG_MS);
+          window.addEventListener("scroll", onWatchdogScroll, true);
+          return disarm;
+        };
+
         // Fast path: if the document is already tall enough (e.g. no loading.tsx,
         // or content streamed before this effect), restore immediately.
         if (tryRestore()) {
+          const disarm = armWatchdog();
           prevIdentity.current = identity;
-          return;
+          return disarm;
         }
 
         // Otherwise wait for the content to grow. The observer exists ONLY
         // while this restore is pending and disconnects the instant it succeeds
         // (or on the safety timeout). Exactly one successful restore per nav.
         let restored = false;
+        let watchdogDisarm: (() => void) | undefined;
 
         const finish = () => {
           if (restored) return;
@@ -281,6 +330,7 @@ export function usePanelScrollRestoration(): void {
         const observer = new ResizeObserver(() => {
           if (restored) return;
           if (tryRestore()) {
+            watchdogDisarm = armWatchdog();
             finish();
           }
         });
@@ -293,7 +343,10 @@ export function usePanelScrollRestoration(): void {
         }, 3000);
 
         prevIdentity.current = identity;
-        return () => finish();
+        return () => {
+          watchdogDisarm?.();
+          finish();
+        };
       }
     }
 

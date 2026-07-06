@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteRecordButton from "@/components/DeleteRecordButton";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import FormativeTableScroll from "../FormativeTableScroll";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge } from "@/lib/colors";
 
@@ -53,7 +54,7 @@ export default function FormativeRecordsTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <FormativeTableScroll storageKey="formative:detail:hscroll">
       <table className="w-full min-w-[860px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
@@ -91,6 +92,7 @@ export default function FormativeRecordsTable({
                 className={`border-b border-slate-100 dark:border-slate-800 ${
                   index % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/20" : ""
                 }`}
+                data-highlight={record.id}
               >
                 <td className="px-5 py-4">
                   <span className={`rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
@@ -116,13 +118,13 @@ export default function FormativeRecordsTable({
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Link
+                    <WorkflowContextLink
                       className={actionButtonClass("neutral")}
                       href={editHref}
                     >
                       <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
                       {t("editButton")}
-                    </Link>
+                    </WorkflowContextLink>
                     <DeleteRecordButton
                       compact
                       navigateOnSuccess={false}
@@ -148,6 +150,6 @@ export default function FormativeRecordsTable({
           })}
         </tbody>
       </table>
-    </div>
+    </FormativeTableScroll>
   );
 }
