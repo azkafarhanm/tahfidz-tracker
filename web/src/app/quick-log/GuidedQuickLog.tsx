@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useActionState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -22,6 +21,7 @@ import { toast } from "sonner";
 import type { RecentActivityItem } from "@/lib/quick-log";
 import { badge, backLink } from "@/lib/colors";
 import PanelScrollLink from "@/components/PanelScrollLink";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 
 type Student = {
   id: string;
@@ -98,7 +98,15 @@ export default function GuidedQuickLog({
   const [surahInputKey, setSurahInputKey] = useState(0);
   const studentListboxId = "quick-log-student-listbox";
 
-  const [activityExpanded, setActivityExpanded] = useState(false);
+  // Recent Activity expansion is part of Quick Log's working context. It is
+  // mirrored to the URL (`activity=1`) so the existing Navigation Context store
+  // (which persists the outgoing query string) carries it across navigations,
+  // and the Student Detail Back link restores it via mergeContextParams — no
+  // new persistence key required. Initialized from the URL so a return trip
+  // (Back/refresh) restores the prior expansion state.
+  const [activityExpanded, setActivityExpanded] = useState(
+    searchParams.get("activity") === "1",
+  );
   const [expandTrigger, setExpandTrigger] = useState(0);
 
   const formRef = useRef<HTMLFormElement>(null);
@@ -130,6 +138,25 @@ export default function GuidedQuickLog({
       setActivityExpanded(true);
     }
   }, [expandTrigger]);
+
+  // Mirror the expansion state to the URL via replaceState (no navigation, no
+  // re-render, no scroll reset) so the existing Navigation Context store and
+  // scroll identity capture the current UI state on the next departure.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (activityExpanded) {
+      params.set("activity", "1");
+    } else {
+      params.delete("activity");
+    }
+    const search = params.toString();
+    const nextUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+    // Only update if the value actually changed to avoid clobbering unrelated
+    // params or triggering redundant history entries.
+    if (nextUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [activityExpanded]);
 
   const filtered = query.length > 0
     ? students.filter((s) =>
@@ -499,7 +526,7 @@ export default function GuidedQuickLog({
             {activityExpanded ? (
               <ul className="mt-3 space-y-2">
                 {recentItems.map((item) => (
-                  <RecentActivityItemRow key={`${item.type}-${item.recordId}`} item={item} now={now} />
+                  <RecentActivityItemRow key={`${item.type}-${item.recordId}`} item={item} now={now} activityExpanded={activityExpanded} />
                 ))}
               </ul>
             ) : null}
@@ -509,8 +536,10 @@ export default function GuidedQuickLog({
    );
 }
 
-function RecentActivityItemRow({ item, now }: { item: RecentActivityItem; now: Date }) {
+function RecentActivityItemRow({ item, now, activityExpanded }: { item: RecentActivityItem; now: Date; activityExpanded: boolean }) {
   const t = useTranslations("QuickLog");
+  const searchParams = useSearchParams();
+  const programType = searchParams.get("programType");
   const Icon = item.type === "HAFALAN" ? BookOpen : RotateCcw;
   const typeLabel = item.type === "HAFALAN" ? t("typeHafalan") : t("typeMurojaah");
   const relativeKey = formatRelativeTime(item.date, now);
@@ -521,12 +550,19 @@ function RecentActivityItemRow({ item, now }: { item: RecentActivityItem; now: D
       : relativeKey.endsWith("h")
         ? t("relativeHoursAgo", { count: parseInt(relativeKey) })
         : t("relativeDaysAgo", { count: parseInt(relativeKey) });
-  const href = `/students/${item.studentId}?highlight=${item.recordId}`;
+  // Record Quick Log's working position on departure (WorkflowContextLink calls
+  // markPrimaryNavigation + markNavigationContext) and tag the destination with
+  // returnTo so Student Detail's Back can return here instead of /students.
+  const returnToParams = new URLSearchParams();
+  if (programType) returnToParams.set("programType", programType);
+  const returnTo = `/quick-log${returnToParams.toString() ? `?${returnToParams.toString()}` : ""}`;
+  const href = `/students/${item.studentId}?highlight=${item.recordId}&returnTo=${encodeURIComponent(returnTo)}`;
 
   return (
     <li>
-      <Link
+      <WorkflowContextLink
         className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/50 active:bg-black/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50 dark:active:bg-white/10"
+        contextParams={{ activity: activityExpanded ? "1" : null }}
         href={href}
         scroll={false}
       >
@@ -549,7 +585,7 @@ function RecentActivityItemRow({ item, now }: { item: RecentActivityItem; now: D
             </span>
           </div>
         </div>
-      </Link>
+      </WorkflowContextLink>
     </li>
   );
 }

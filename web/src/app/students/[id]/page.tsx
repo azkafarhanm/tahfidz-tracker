@@ -41,6 +41,7 @@ type StudentDetailPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams?: Promise<{ returnTo?: string }>;
 };
 
 function recordStatusClass(record: RecordItem) {
@@ -96,11 +97,13 @@ export async function generateMetadata({ params }: StudentDetailPageProps) {
 
 export default async function StudentDetailPage({
   params,
+  searchParams,
 }: StudentDetailPageProps) {
   const { id } = await params;
   const locale = await getLocale();
   const t = await getTranslations("StudentDetail");
   const { session, teacherId, isAdmin } = await requireSessionScope();
+  const query = await searchParams;
   const student = await getStudentDetailData(id, teacherId, locale);
 
   if (!student) {
@@ -109,9 +112,17 @@ export default async function StudentDetailPage({
 
   // Extract programType for back navigation (available when student is fully loaded)
   const programType = "programType" in student ? student.programType : undefined;
-  const studentsBackHref = programType
-    ? `/students?programType=${programType}`
-    : "/students";
+  // When the user arrived from Quick Log (Recent Activity), return there so the
+  // teacher keeps their Quick Log working position. Validated against open
+  // redirect like other returnTo uses; only /quick-log origins are honored so
+  // the normal list → detail → Back behavior is preserved otherwise.
+  const rawReturnTo = query?.returnTo;
+  const returnToHref =
+    rawReturnTo && rawReturnTo.startsWith("/quick-log") && !rawReturnTo.startsWith("//")
+      ? rawReturnTo
+      : undefined;
+  const studentsBackHref = returnToHref
+    ?? (programType ? `/students?programType=${programType}` : "/students");
 
   if ("isUnauthorized" in student) {
     return (
