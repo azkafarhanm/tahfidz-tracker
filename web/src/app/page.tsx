@@ -23,6 +23,7 @@ import { getLocaleTag, programTypeLabels } from "@/lib/format";
 import { badge, heroSummary } from "@/lib/colors";
 import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
 import { ProgramType } from "@/generated/prisma-next/enums";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 
 export const runtime = "nodejs";
 
@@ -57,16 +58,22 @@ export default async function DashboardPreview({
   const dashboard = await getDashboardData(teacherId, locale, programType);
   const userName = session?.user?.name ?? t("defaultUserName");
   const ptSuffix = programType ? `?programType=${programType}` : "";
+  const shortcutHref = (href: string, shortcut: string) => {
+    const [pathname, search = ""] = href.split("?", 2);
+    const shortcutParams = new URLSearchParams(search);
+    shortcutParams.set("dashboardShortcut", shortcut);
+    return `${pathname}?${shortcutParams.toString()}`;
+  };
   const quickActions = [
-    { label: t("quickActionHafalan"), href: `/students${ptSuffix}`, icon: BookOpen },
-    { label: t("quickActionMurojaah"), href: `/students${ptSuffix}`, icon: RotateCcw },
-    { label: t("quickActionQuickLog"), href: `/quick-log${ptSuffix}`, icon: PenLine },
-    { label: t("quickActionFormative"), href: `/formative${ptSuffix}`, icon: BookText },
-    { label: t("quickActionSummative"), href: `/summative${ptSuffix}`, icon: ClipboardList },
+    { label: t("quickActionHafalan"), href: shortcutHref(`/students${ptSuffix}`, "hafalan"), icon: BookOpen },
+    { label: t("quickActionMurojaah"), href: shortcutHref(`/students${ptSuffix}`, "murojaah"), icon: RotateCcw },
+    { label: t("quickActionQuickLog"), href: shortcutHref(`/quick-log${ptSuffix}`, "quick-log"), icon: PenLine },
+    { label: t("quickActionFormative"), href: shortcutHref(`/formative${ptSuffix}`, "formative"), icon: BookText },
+    { label: t("quickActionSummative"), href: shortcutHref(`/summative${ptSuffix}`, "summative"), icon: ClipboardList },
     ...(isAdmin
-      ? [{ label: t("quickActionAdmin"), href: "/admin", icon: ShieldCheck }]
+      ? [{ label: t("quickActionAdmin"), href: shortcutHref("/admin", "admin"), icon: ShieldCheck }]
       : []),
-    { label: t("quickActionLaporan"), href: isAdmin ? "/admin/reports" : "/reports", icon: BarChart3 },
+    { label: t("quickActionLaporan"), href: shortcutHref(isAdmin ? "/admin/reports" : "/reports", "reports"), icon: BarChart3 },
   ];
 
   return (
@@ -143,16 +150,17 @@ export default async function DashboardPreview({
 
         <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {quickActions.map((action) => (
-            <Link
+            <WorkflowContextLink
               className="flex min-h-20 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
               href={action.href}
               key={action.label}
+              restoreContext={!action.href.startsWith("/admin?")}
             >
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <action.icon aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
               <span className="min-w-0 flex-1 break-words">{action.label}</span>
-            </Link>
+            </WorkflowContextLink>
           ))}
         </section>
 

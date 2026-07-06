@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowLeft, Download, FileText, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getAdminReportData } from "@/lib/reports";
@@ -7,6 +6,7 @@ import ProgramSelector from "@/components/ProgramSelector";
 import { badge, statCard, statValue, statLabel, heroSummary, backLink } from "@/lib/colors";
 import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels, programTypeOptions } from "@/lib/format";
+import PanelScrollLink from "@/components/PanelScrollLink";
 
 
 export const runtime = "nodejs";
@@ -36,13 +36,13 @@ export default async function AdminReportsPage({
     <>
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link
+            <PanelScrollLink
               className={backLink}
               href="/admin"
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
-            </Link>
+            </PanelScrollLink>
             <h1 className="mt-3 text-2xl font-semibold">{t("heading")}</h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               {t("description")}

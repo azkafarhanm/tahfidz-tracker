@@ -21,6 +21,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { RecentActivityItem } from "@/lib/quick-log";
 import { badge, backLink } from "@/lib/colors";
+import PanelScrollLink from "@/components/PanelScrollLink";
 
 type Student = {
   id: string;
@@ -174,13 +175,13 @@ export default function GuidedQuickLog({
     <>
      <header className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-             <Link
+             <PanelScrollLink
                className={backLink}
                href={dashboardHref}
              >
                <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
                {t("backLink")}
-             </Link>
+             </PanelScrollLink>
              <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
                {t("heading")}
              </h1>

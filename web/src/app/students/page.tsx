@@ -22,6 +22,7 @@ import ActiveYearBadge from "@/components/ActiveYearBadge";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import PanelScrollLink from "@/components/PanelScrollLink";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
@@ -120,13 +121,13 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
            <div>
-            <Link
+            <PanelScrollLink
               className={backLink}
               href={`/${programType ? `?programType=${programType}` : ""}`}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
-            </Link>
+            </PanelScrollLink>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {t("heading")}
             </h1>

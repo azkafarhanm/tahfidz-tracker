@@ -17,6 +17,7 @@ import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import PanelScrollLink from "@/components/PanelScrollLink";
 import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear, getSemesterForDate, getTeacherProgramContext } from "@/lib/academic-year";
 import {
@@ -138,7 +139,7 @@ export default async function SummativePage({
       />
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link
+          <PanelScrollLink
             className={backLink}
             href={fromReports
               ? `/reports${programType ? `?programType=${programType}` : ""}`
@@ -146,7 +147,7 @@ export default async function SummativePage({
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {fromReports ? t("backToReports") : t("backLink")}
-          </Link>
+          </PanelScrollLink>
           <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
             {t("heading")}
           </h1>
