@@ -12,6 +12,8 @@ import { getTranslations } from "next-intl/server";
 import { deleteClassGroup, toggleClassGroupActive } from "./actions";
 import { getAdminClassGroupsData } from "@/lib/admin";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import LiveSearchForm from "@/components/LiveSearchForm";
 import ProgramSelector from "@/components/ProgramSelector";
 import { UserX, RotateCcw } from "lucide-react";
@@ -36,6 +38,7 @@ type AdminHalaqahPageProps = {
     error?: string;
     page?: string;
     programType?: string;
+    highlight?: string;
   }>;
 };
 
@@ -60,6 +63,7 @@ export default async function AdminHalaqahPage({
     page,
     PAGE_SIZE,
     programType,
+    params?.highlight,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
@@ -69,11 +73,18 @@ export default async function AdminHalaqahPage({
     const search = nextParams.toString();
     return search ? `/admin/halaqah?${search}` : "/admin/halaqah";
   };
+  const buildWorkflowHref = (path: string) => {
+    const context = new URLSearchParams({ programType });
+    if (query) context.set("q", query);
+    if (pagination.page > 1) context.set("page", String(pagination.page));
+    return `${path}?${context.toString()}`;
+  };
   const hasPreviousPage = pagination.page > 1;
   const hasNextPage = pagination.page < pagination.totalPages;
 
   return (
     <>
+        <ScrollToHighlightedItem />
         <header className="flex items-center justify-between gap-4">
           <div>
             <Link
@@ -166,22 +177,25 @@ export default async function AdminHalaqahPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
-              <Link
+              <WorkflowContextLink
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href={`/admin/halaqah/new${programType ? `?programType=${programType}` : ""}`}
+                href={buildWorkflowHref("/admin/halaqah/new")}
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                 {t("addButton")}
-              </Link>
+              </WorkflowContextLink>
               {query ? (
-                <Link
+                <WorkflowContextLink
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   href="/admin/halaqah?q="
+                  compatibilityKeys={["programType"]}
+                  preferStoredContext
+                  restoreContext
                   prefetch
                   scroll={false}
                 >
                   {t("resetSearch")}
-                </Link>
+                </WorkflowContextLink>
               ) : null}
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {classGroups.length}/{counts.filteredCount}
@@ -192,7 +206,8 @@ export default async function AdminHalaqahPage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {classGroups.length > 0 ? (
               classGroups.map((classGroup) => (
-                <article
+                  <article
+                    data-highlight={classGroup.id}
                   className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-800"
                   key={classGroup.id}
                 >
@@ -254,9 +269,9 @@ export default async function AdminHalaqahPage({
                   ) : null}
 
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <Link
+                    <WorkflowContextLink
                       className={actionButtonClass("neutral")}
-                      href={`/admin/halaqah/${classGroup.id}/edit${programType ? `?programType=${programType}` : ""}`}
+                      href={buildWorkflowHref(`/admin/halaqah/${classGroup.id}/edit`)}
                     >
                       <PencilLine
                         aria-hidden="true"
@@ -264,7 +279,7 @@ export default async function AdminHalaqahPage({
                         strokeWidth={2.2}
                       />
                       {t("editButton")}
-                    </Link>
+                    </WorkflowContextLink>
                     {classGroup.isActive ? (
                       <ConfirmActionDialogButton
                         cancelLabel={t("cancelDeleteButton")}

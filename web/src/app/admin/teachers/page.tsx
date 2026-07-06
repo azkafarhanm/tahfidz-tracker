@@ -37,6 +37,7 @@ type AdminTeachersPageProps = {
     success?: string;
     error?: string;
     page?: string;
+    highlight?: string;
   }>;
 };
 
@@ -61,6 +62,7 @@ export default async function AdminTeachersPage({
     locale,
     page,
     PAGE_SIZE,
+    params?.highlight,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
@@ -169,22 +171,24 @@ export default async function AdminTeachersPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
-              <Link
+              <WorkflowContextLink
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href="/admin/teachers/new"
+                href={`/admin/teachers/new${query || page > 1 ? `?${new URLSearchParams({ ...(query ? { q: query } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString()}` : ""}`}
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                 {t("addButton")}
-              </Link>
+              </WorkflowContextLink>
               {query ? (
-                <Link
+                <WorkflowContextLink
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   href="/admin/teachers?q="
+                  preferStoredContext
+                  restoreContext
                   prefetch
                   scroll={false}
                 >
                   {t("resetSearch")}
-                </Link>
+                </WorkflowContextLink>
               ) : null}
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                  {teachers.length}/{counts.filteredTeacherCount}

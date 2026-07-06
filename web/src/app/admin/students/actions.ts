@@ -274,9 +274,13 @@ export async function createStudent(formData: FormData) {
   await requireAdminScope();
 
   const input = readStudentFormInput(formData);
-  const failPath = input.programType
-    ? `/admin/students/new?programType=${input.programType}`
-    : "/admin/students/new";
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const failParams = new URLSearchParams();
+  if (input.programType) failParams.set("programType", input.programType);
+  if (directoryQ) failParams.set("q", directoryQ);
+  if (directoryPage) failParams.set("page", directoryPage);
+  const failPath = `/admin/students/new${failParams.size ? `?${failParams.toString()}` : ""}`;
   const fail = createFailFn(failPath);
 
   await validateStudentInput(input, fail);
@@ -297,7 +301,7 @@ export async function createStudent(formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidateAdminStudentPaths(student.id);
-  redirectAdminStudentsWithMessage("success", t("adminStudentCreated"), input.programType);
+  redirectAdminStudentsWithMessage("success", t("adminStudentCreated"), input.programType, student.id, directoryQ, directoryPage);
 }
 
 export async function updateStudent(

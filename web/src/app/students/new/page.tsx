@@ -28,6 +28,8 @@ type NewStudentPageProps = {
     joinDate?: string;
     notes?: string;
     programType?: string;
+    q?: string;
+    page?: string;
   }>;
 };
 
@@ -73,6 +75,9 @@ export default async function NewStudentPage({
       error={params?.error}
       options={options}
       defaultProgramType={defaultProgramType}
+      restoreContext
+      directoryQ={params?.q ?? ""}
+      directoryPage={params?.page ?? ""}
       values={{
         fullName: params?.fullName ?? "",
         classGroupId: params?.classGroupId ?? "",

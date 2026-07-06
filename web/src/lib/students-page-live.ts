@@ -49,6 +49,7 @@ export async function getLiveStudentsPageData(
   pageSize = PAGE_SIZE_FALLBACK,
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
+  highlightId?: string,
 ) {
   const cacheKey = [
     "students:list",
@@ -59,6 +60,7 @@ export async function getLiveStudentsPageData(
     programType,
     query.trim().toLowerCase(),
     academicYear ?? "active",
+    highlightId ?? "none",
   ].join(":");
 
   return cached(cacheKey, 15_000, () =>
@@ -70,6 +72,7 @@ export async function getLiveStudentsPageData(
       pageSize,
       programType,
       academicYear,
+      highlightId,
     ),
   );
 }
@@ -82,6 +85,7 @@ async function getLiveStudentsPageDataInner(
   pageSize = PAGE_SIZE_FALLBACK,
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
+  highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim().toLowerCase();
@@ -163,6 +167,21 @@ async function getLiveStudentsPageDataInner(
       take: safePageSize,
     }),
   ]));
+
+  if (highlightId && !students.some(({ id }) => id === highlightId)) {
+    const highlighted = await prisma.student.findFirst({
+      where: { id: highlightId, isActive: true, classGroup: { academicYear: year, programType }, ...scopeWhere(teacherId) },
+      include: {
+        classGroup: { select: { name: true, level: true, programType: true, grade: true } },
+        academicClass: { select: { name: true } },
+        memorizationRecords: { orderBy: { date: "desc" }, take: 1, select: { surah: true, fromAyah: true, toAyah: true, date: true, status: true } },
+        revisionRecords: { orderBy: { date: "desc" }, take: 1, select: { surah: true, fromAyah: true, toAyah: true, date: true, status: true } },
+        tasmiRecords: { orderBy: { createdAt: "desc" }, take: 5, select: { juz: true, grade: true, status: true, date: true } },
+        _count: { select: { targets: { where: { status: TargetStatus.ACTIVE } } } },
+      },
+    });
+    if (highlighted) students.push(highlighted);
+  }
 
   return {
     totalCount,

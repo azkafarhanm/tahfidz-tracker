@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MoreVertical, PencilLine, RotateCcw, UserX } from "lucide-react";
 import {
   deactivateTeacherStudent,
@@ -39,6 +38,7 @@ export default function StudentCardActions({
   const deactivateT = useTranslations("DeactivateStudent");
   const reactivateT = useTranslations("ReactivateStudent");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const menuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -134,13 +134,13 @@ export default function StudentCardActions({
                 </p>
               ) : null}
 
-              <Link
+              <WorkflowContextLink
                 className="flex min-h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                href={`/students/${studentId}/edit`}
+                href={`/students/${studentId}/edit?returnTo=${encodeURIComponent(`/students${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)}`}
               >
                 <PencilLine aria-hidden="true" size={15} strokeWidth={2.2} />
                 {t("editStudent")}
-              </Link>
+              </WorkflowContextLink>
 
               <button
                 className={`mt-1 flex min-h-10 w-full items-center gap-2 rounded-xl px-3 text-left text-sm font-semibold transition ${

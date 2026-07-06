@@ -26,6 +26,7 @@ type EditClassGroupPageProps = {
     grade?: string;
     isActive?: string;
     programType?: string;
+    q?: string; page?: string;
   }>;
 };
 
@@ -67,6 +68,7 @@ export default async function EditClassGroupPage({
       teachers={options.teachers}
       title={t("editHalaqah")}
       programType={programType}
+      restoreContext directoryQ={query?.q ?? ""} directoryPage={query?.page ?? ""}
       values={{
         description: query?.description ?? classGroup.description,
         level: query?.level ?? classGroup.level,

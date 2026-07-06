@@ -41,6 +41,7 @@ type AdminStudentsPageProps = {
     error?: string;
     page?: string;
     programType?: string;
+    highlight?: string;
   }>;
 };
 
@@ -67,6 +68,7 @@ export default async function AdminStudentsPage({
     page,
     PAGE_SIZE,
     programType,
+    params?.highlight,
   );
   const buildPageHref = (nextPage: number) => {
     const nextParams = new URLSearchParams();
@@ -86,6 +88,12 @@ export default async function AdminStudentsPage({
     if (page > 1) params.set("page", String(page));
     const search = params.toString();
     return `/admin/students/${studentId}/edit${search ? `?${search}` : ""}`;
+  };
+  const buildCreateHref = () => {
+    const createParams = new URLSearchParams({ programType });
+    if (query) createParams.set("q", query);
+    if (page > 1) createParams.set("page", String(page));
+    return `/admin/students/new?${createParams.toString()}`;
   };
   const hasPreviousPage = pagination.page > 1;
   const hasNextPage = pagination.page < pagination.totalPages;
@@ -185,22 +193,25 @@ export default async function AdminStudentsPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
             <div className="flex items-center gap-2">
-              <Link
+              <WorkflowContextLink
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
-                href={`/admin/students/new${programType ? `?programType=${programType}` : ""}`}
+                href={buildCreateHref()}
               >
                 <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                 {t("addButton")}
-              </Link>
+              </WorkflowContextLink>
               {query ? (
-                <Link
+                <WorkflowContextLink
                   className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   href={`/admin/students?programType=${programType}&q=`}
+                  compatibilityKeys={["programType"]}
+                  preferStoredContext
+                  restoreContext
                   prefetch
                   scroll={false}
                 >
                   {t("resetSearch")}
-                </Link>
+                </WorkflowContextLink>
               ) : null}
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {students.length}/{counts.filteredStudentCount}

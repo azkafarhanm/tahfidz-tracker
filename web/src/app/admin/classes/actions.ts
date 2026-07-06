@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import {
   createFailFn,
+  readOptionalString,
   readString,
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
@@ -62,9 +63,13 @@ function redirectAdminClassesWithMessage(
   type: "success" | "error",
   message: string,
   programType?: string,
+  highlight?: string, directoryQ?: string, directoryPage?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
   if (programType) params.set("programType", programType);
+  if (highlight) params.set("highlight", highlight);
+  if (directoryQ) params.set("q", directoryQ);
+  if (directoryPage) params.set("page", directoryPage);
   redirect(`/admin/classes?${params.toString()}`);
 }
 
@@ -89,7 +94,9 @@ export async function createAcademicClass(formData: FormData) {
   await requireAdminScope();
 
   const input = readAcademicClassFormInput(formData);
-  const fail = createFailFn("/admin/classes/new");
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const fail = createFailFn(`/admin/classes/new?programType=${input.programType}${directoryQ ? `&q=${encodeURIComponent(directoryQ)}` : ""}${directoryPage ? `&page=${directoryPage}` : ""}`);
   const t = await getTranslations("Validation");
   const academicYear = await getActiveAcademicYear();
 
@@ -118,7 +125,7 @@ export async function createAcademicClass(formData: FormData) {
     );
   }
 
-  await prisma.academicClass.create({
+  const academicClass = await prisma.academicClass.create({
     data: {
       grade,
       section,
@@ -130,7 +137,7 @@ export async function createAcademicClass(formData: FormData) {
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", t("classCreated"), input.programType);
+  redirectAdminClassesWithMessage("success", t("classCreated"), input.programType, academicClass.id, directoryQ, directoryPage);
 }
 
 export async function updateAcademicClass(
@@ -140,7 +147,9 @@ export async function updateAcademicClass(
   await requireAdminScope();
 
   const input = readAcademicClassFormInput(formData);
-  const fail = createFailFn(`/admin/classes/${academicClassId}/edit`);
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const fail = createFailFn(`/admin/classes/${academicClassId}/edit?programType=${input.programType}${directoryQ ? `&q=${encodeURIComponent(directoryQ)}` : ""}${directoryPage ? `&page=${directoryPage}` : ""}`);
   const academicYear = await getActiveAcademicYear();
 
   await validateAcademicClassInput(input, fail);
@@ -192,7 +201,7 @@ export async function updateAcademicClass(
   });
 
   revalidateAdminClassPaths();
-  redirectAdminClassesWithMessage("success", t("classUpdated"), input.programType);
+  redirectAdminClassesWithMessage("success", t("classUpdated"), input.programType, academicClassId, directoryQ, directoryPage);
 }
 
 export async function toggleAcademicClassActive(

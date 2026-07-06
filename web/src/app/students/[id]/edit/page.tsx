@@ -19,7 +19,7 @@ export async function generateMetadata() {
 
 type EditStudentPageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; returnTo?: string }>;
 };
 
 export default async function EditStudentPage({
@@ -70,12 +70,14 @@ export default async function EditStudentPage({
     },
   });
 
-  const boundAction = updateTeacherStudent.bind(null, id);
+  const returnTo = pageParams?.returnTo?.startsWith("/students") && !pageParams.returnTo.startsWith("//") ? pageParams.returnTo : undefined;
+  const boundAction = updateTeacherStudent.bind(null, id, returnTo);
 
   return (
     <EditStudentForm
       action={boundAction}
-      backHref={`/students/${id}`}
+      backHref={returnTo ?? `/students/${id}`}
+      restoreContext={Boolean(returnTo)}
       error={pageParams?.error}
       options={options}
       defaultProgramType={context.programType}

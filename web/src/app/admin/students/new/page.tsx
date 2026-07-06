@@ -25,6 +25,8 @@ type NewStudentPageProps = {
     isActive?: string;
     notes?: string;
     programType?: string;
+    q?: string;
+    page?: string;
   }>;
 };
 
@@ -57,6 +59,9 @@ export default async function NewStudentPage({
       submitLabel={t("saveStudent")}
       title={t("addStudent")}
       programType={programType}
+      restoreContext
+      directoryQ={params?.q ?? ""}
+      directoryPage={params?.page ?? ""}
       values={{
         fullName: params?.fullName ?? "",
         teacherId: params?.teacherId ?? "",

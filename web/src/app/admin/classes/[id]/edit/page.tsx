@@ -26,6 +26,7 @@ type EditAcademicClassPageProps = {
     section?: string;
     isActive?: string;
     programType?: string;
+    q?: string; page?: string;
   }>;
 };
 
@@ -78,6 +79,7 @@ export default async function EditAcademicClassPage({
       submitLabel={t("saveChanges")}
       title={isBoarding ? t("editBoardingClass") : t("editAcademicClass")}
       programType={programType}
+      restoreContext directoryQ={query?.q ?? ""} directoryPage={query?.page ?? ""}
       values={{
         grade: query?.grade ?? academicClass.grade,
         section: query?.section ?? academicClass.section,

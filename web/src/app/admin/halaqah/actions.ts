@@ -7,6 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { HalaqahLevel, ProgramType } from "@/generated/prisma-next/enums";
 import {
   createFailFn,
+  readOptionalString,
   readString,
 } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
@@ -78,9 +79,13 @@ function redirectAdminHalaqahWithMessage(
   type: "success" | "error",
   message: string,
   programType?: string,
+  highlight?: string, directoryQ?: string, directoryPage?: string,
 ): never {
   const params = new URLSearchParams({ [type]: message });
   if (programType) params.set("programType", programType);
+  if (highlight) params.set("highlight", highlight);
+  if (directoryQ) params.set("q", directoryQ);
+  if (directoryPage) params.set("page", directoryPage);
   redirect(`/admin/halaqah?${params.toString()}`);
 }
 
@@ -155,12 +160,14 @@ export async function createClassGroup(formData: FormData) {
   await requireAdminScope();
 
   const input = readClassGroupFormInput(formData);
-  const fail = createFailFn("/admin/halaqah/new");
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const fail = createFailFn(`/admin/halaqah/new?programType=${input.programType}${directoryQ ? `&q=${encodeURIComponent(directoryQ)}` : ""}${directoryPage ? `&page=${directoryPage}` : ""}`);
 
   await validateClassGroupInput(input, fail);
   const relations = await resolveClassGroupRelations(input, fail);
 
-  await prisma.classGroup.create({
+  const classGroup = await prisma.classGroup.create({
     data: {
       name: relations.teacherFullName,
       description: input.description || null,
@@ -175,7 +182,7 @@ export async function createClassGroup(formData: FormData) {
 
   const t = await getTranslations("Validation");
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", t("halaqahCreated"), input.programType);
+  redirectAdminHalaqahWithMessage("success", t("halaqahCreated"), input.programType, classGroup.id, directoryQ, directoryPage);
 }
 
 export async function updateClassGroup(
@@ -185,7 +192,9 @@ export async function updateClassGroup(
   await requireAdminScope();
 
   const input = readClassGroupFormInput(formData);
-  const fail = createFailFn(`/admin/halaqah/${classGroupId}/edit`);
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const fail = createFailFn(`/admin/halaqah/${classGroupId}/edit?programType=${input.programType}${directoryQ ? `&q=${encodeURIComponent(directoryQ)}` : ""}${directoryPage ? `&page=${directoryPage}` : ""}`);
 
   await validateClassGroupInput(input, fail);
 
@@ -251,7 +260,7 @@ export async function updateClassGroup(
   ]);
 
   revalidateAdminHalaqahPaths();
-  redirectAdminHalaqahWithMessage("success", t("halaqahUpdated"), input.programType);
+  redirectAdminHalaqahWithMessage("success", t("halaqahUpdated"), input.programType, classGroupId, directoryQ, directoryPage);
 }
 
 export async function toggleClassGroupActive(

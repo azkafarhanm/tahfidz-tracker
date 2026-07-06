@@ -14,6 +14,7 @@ import {
 import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { backLink } from "@/lib/colors";
 
 type ClassGroupOption = {
@@ -54,6 +55,9 @@ type TeacherStudentFormProps = {
     notes: string;
   };
   defaultProgramType?: string;
+  restoreContext?: boolean;
+  directoryQ?: string;
+  directoryPage?: string;
 };
 
 export default function TeacherStudentForm({
@@ -63,6 +67,9 @@ export default function TeacherStudentForm({
   options,
   values,
   defaultProgramType = "ACADEMIC",
+  restoreContext = false,
+  directoryQ = "",
+  directoryPage = "",
 }: TeacherStudentFormProps) {
   const t = useTranslations("StudentForm");
   const tc = useTranslations("CharacterCounter");
@@ -176,13 +183,15 @@ export default function TeacherStudentForm({
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <Link
+            {restoreContext ? <WorkflowContextLink className={backLink} compatibilityKeys={["programType"]} href={backHref} preferStoredContext restoreContext>
+              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />Santri
+            </WorkflowContextLink> : <Link
               className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               Santri
-            </Link>
+            </Link>}
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {t("title")}
             </h1>
@@ -198,6 +207,8 @@ export default function TeacherStudentForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {directoryQ && <input name="directoryQ" type="hidden" value={directoryQ} />}
+          {directoryPage && <input name="directoryPage" type="hidden" value={directoryPage} />}
           <input
             name="classGroupId"
             type="hidden"
@@ -423,12 +434,14 @@ export default function TeacherStudentForm({
           </section>
 
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            <Link
+            {restoreContext ? <WorkflowContextLink className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" compatibilityKeys={["programType"]} href={backHref} preferStoredContext restoreContext>
+              {t("buttonCancel")}
+            </WorkflowContextLink> : <Link
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
               {t("buttonCancel")}
-            </Link>
+            </Link>}
             <SubmitButton
               canSubmit={isBoarding ? Boolean(selectedAcademicClassId) : Boolean(selectedLevel && selectedGrade)}
               idleLabel={t("buttonSave")}

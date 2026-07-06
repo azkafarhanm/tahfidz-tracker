@@ -231,6 +231,7 @@ export async function getAdminTeachersData(
   locale = "id",
   page = 1,
   pageSize = 12,
+  highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
@@ -263,7 +264,7 @@ export async function getAdminTeachersData(
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [teachers, teacherCount, activeTeacherCount, filteredTeacherCount] = await withRetry(() => Promise.all([
+  const [teachers, teacherCount, activeTeacherCount, filteredTeacherCount, highlightedTeacher] = await withRetry(() => Promise.all([
     prisma.teacher.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -287,7 +288,9 @@ export async function getAdminTeachersData(
     prisma.teacher.count(),
     prisma.teacher.count({ where: { isActive: true } }),
     prisma.teacher.count({ where }),
+    highlightId ? prisma.teacher.findUnique({ where: { id: highlightId }, include: { user: { select: { email: true, isActive: true } }, _count: { select: { students: true, classes: true } } } }) : null,
   ]));
+  if (highlightedTeacher && !teachers.some(({ id }) => id === highlightedTeacher.id)) teachers.push(highlightedTeacher);
 
   return {
     counts: {
@@ -344,6 +347,7 @@ export async function getAdminStudentsData(
   page = 1,
   pageSize = 12,
   programType?: ProgramType,
+  highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = query.trim();
@@ -388,7 +392,7 @@ export async function getAdminStudentsData(
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [students, studentCount, activeStudentCount, filteredStudentCount] = await withRetry(() => Promise.all([
+  const [students, studentCount, activeStudentCount, filteredStudentCount, highlightedStudent] = await withRetry(() => Promise.all([
     prisma.student.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
@@ -428,7 +432,9 @@ export async function getAdminStudentsData(
     prisma.student.count({ where: programType ? { classGroup: { programType } } : undefined }),
     prisma.student.count({ where: { isActive: true, ...(programType ? { classGroup: { programType } } : {}) } }),
     prisma.student.count({ where }),
+    highlightId ? prisma.student.findFirst({ where: { id: highlightId, ...(programType ? { classGroup: { programType } } : {}) }, include: { teacher: { select: { fullName: true } }, classGroup: { select: { name: true, level: true, programType: true, grade: true } }, academicClass: { select: { name: true } }, _count: { select: { targets: { where: { status: TargetStatus.ACTIVE } }, memorizationRecords: true, revisionRecords: true, summativeScores: true } } } }) : null,
   ]));
+  if (highlightedStudent && !students.some(({ id }) => id === highlightedStudent.id)) students.push(highlightedStudent);
 
   return {
     counts: {
@@ -556,6 +562,7 @@ export async function getAdminAcademicClassesData(
   page = 1,
   pageSize = 12,
   programType?: ProgramType,
+  highlightId?: string,
 ) {
   const normalizedQuery = query.trim();
   const baseFilter = programType ? { programType } : {};
@@ -581,7 +588,7 @@ export async function getAdminAcademicClassesData(
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [academicClasses, totalCount, activeCount, filteredCount] = await withRetry(() => Promise.all([
+  const [academicClasses, totalCount, activeCount, filteredCount, highlightedClass] = await withRetry(() => Promise.all([
     prisma.academicClass.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { grade: "asc" }, { section: "asc" }],
@@ -598,7 +605,9 @@ export async function getAdminAcademicClassesData(
     prisma.academicClass.count({ where: programType ? { programType } : undefined }),
     prisma.academicClass.count({ where: { isActive: true, ...(programType ? { programType } : {}) } }),
     prisma.academicClass.count({ where }),
+    highlightId ? prisma.academicClass.findFirst({ where: { id: highlightId, ...baseFilter }, include: { _count: { select: { students: { where: { isActive: true } } } } } }) : null,
   ]));
+  if (highlightedClass && !academicClasses.some(({ id }) => id === highlightedClass.id)) academicClasses.push(highlightedClass);
 
   return {
     counts: {
@@ -674,6 +683,7 @@ export async function getAdminClassGroupsData(
   page = 1,
   pageSize = 12,
   programType?: ProgramType,
+  highlightId?: string,
 ) {
   const normalizedQuery = query.trim();
   const parsedGrade = Number.parseInt(normalizedQuery, 10);
@@ -727,7 +737,7 @@ export async function getAdminClassGroupsData(
 
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const [classGroups, totalCount, activeCount, filteredCount] = await withRetry(() => Promise.all([
+  const [classGroups, totalCount, activeCount, filteredCount, highlightedGroup] = await withRetry(() => Promise.all([
     prisma.classGroup.findMany({
       where,
       orderBy: [{ isActive: "desc" }, { name: "asc" }],
@@ -755,7 +765,9 @@ export async function getAdminClassGroupsData(
     prisma.classGroup.count({ where: programType ? { programType } : undefined }),
     prisma.classGroup.count({ where: { isActive: true, ...(programType ? { programType } : {}) } }),
     prisma.classGroup.count({ where }),
+    highlightId ? prisma.classGroup.findFirst({ where: { id: highlightId, ...programFilter }, include: { teacher: { select: { fullName: true, isActive: true, user: { select: { isActive: true } } } }, _count: { select: { students: { where: { isActive: true } } } } } }) : null,
   ]));
+  if (highlightedGroup && !classGroups.some(({ id }) => id === highlightedGroup.id)) classGroups.push(highlightedGroup);
 
   return {
     counts: {

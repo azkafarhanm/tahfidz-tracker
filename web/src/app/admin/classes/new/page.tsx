@@ -21,6 +21,7 @@ type NewAcademicClassPageProps = {
     section?: string;
     isActive?: string;
     programType?: string;
+    q?: string; page?: string;
   }>;
 };
 
@@ -52,6 +53,7 @@ export default async function NewAcademicClassPage({
       submitLabel={t("saveClass")}
       title={isBoarding ? t("addBoardingClass") : t("addAcademicClass")}
       programType={programType}
+      restoreContext directoryQ={params?.q ?? ""} directoryPage={params?.page ?? ""}
       values={{
         grade: params?.grade ?? "",
         section: params?.section ?? "",

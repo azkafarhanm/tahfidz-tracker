@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import {
   ArrowLeft,
   GraduationCap,
@@ -42,6 +43,9 @@ type AcademicClassFormProps = {
   title: string;
   values: AcademicClassFormValues;
   programType?: string;
+  restoreContext?: boolean;
+  directoryQ?: string;
+  directoryPage?: string;
 };
 
 export default function AcademicClassForm({
@@ -56,6 +60,7 @@ export default function AcademicClassForm({
   title,
   values,
   programType = "",
+  restoreContext = false, directoryQ = "", directoryPage = "",
 }: AcademicClassFormProps) {
   const t = useTranslations("AdminClassForm");
   const tc = useTranslations("CharacterCounter");
@@ -68,13 +73,15 @@ export default function AcademicClassForm({
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
          <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <Link
+            {restoreContext ? <WorkflowContextLink className={backLink} compatibilityKeys={["programType"]} href={backHref} preferStoredContext restoreContext>
+              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />{backLabel}
+            </WorkflowContextLink> : <Link
               className={backLink}
               href={backHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {backLabel}
-            </Link>
+            </Link>}
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {title}
             </h1>
@@ -88,6 +95,8 @@ export default function AcademicClassForm({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {directoryQ && <input name="directoryQ" type="hidden" value={directoryQ} />}
+          {directoryPage && <input name="directoryPage" type="hidden" value={directoryPage} />}
           {programType && <input type="hidden" name="programType" value={programType} />}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
@@ -198,12 +207,14 @@ export default function AcademicClassForm({
           </section>
 
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            <Link
+            {restoreContext ? <WorkflowContextLink className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" compatibilityKeys={["programType"]} href={backHref} preferStoredContext restoreContext>
+              {t("cancel")}
+            </WorkflowContextLink> : <Link
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
               {t("cancel")}
-            </Link>
+            </Link>}
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
               type="submit"

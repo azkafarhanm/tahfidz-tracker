@@ -28,7 +28,8 @@ export async function createTeacherStudent(formData: FormData) {
     redirect(`/students?error=${encodeURIComponent(t("teacherOnly"))}`);
   }
 
-  const fail = createFailFn("/students/new");
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
 
   const fullName = readString(formData, "fullName");
   const classGroupId = readOptionalString(formData, "classGroupId");
@@ -37,6 +38,10 @@ export async function createTeacherStudent(formData: FormData) {
   const submittedGrade = gradeRaw ? parseInt(gradeRaw, 10) : 0;
   const academicClassId = readString(formData, "academicClassId");
   const programType = (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC;
+  const failParams = new URLSearchParams({ programType });
+  if (directoryQ) failParams.set("q", directoryQ);
+  if (directoryPage) failParams.set("page", directoryPage);
+  const fail = createFailFn(`/students/new?${failParams.toString()}`);
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
   const parsedJoinDate = joinDate ? parseDateInput(joinDate) : new Date();
@@ -200,5 +205,8 @@ export async function createTeacherStudent(formData: FormData) {
   revalidatePath("/formative");
   revalidatePath("/summative");
   revalidatePath("/reports");
-  redirect(`/students?success=${encodeURIComponent(t("studentAdded", { name: fullName }))}&highlight=${newStudent.id}&programType=${programType}`);
+  const resultParams = new URLSearchParams({ success: t("studentAdded", { name: fullName }), highlight: newStudent.id, programType });
+  if (directoryQ) resultParams.set("q", directoryQ);
+  if (directoryPage) resultParams.set("page", directoryPage);
+  redirect(`/students?${resultParams.toString()}`);
 }

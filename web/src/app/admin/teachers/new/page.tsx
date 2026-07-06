@@ -19,6 +19,8 @@ type NewTeacherPageProps = {
     email?: string;
     phoneNumber?: string;
     isActive?: string;
+    q?: string;
+    page?: string;
   }>;
 };
 
@@ -33,6 +35,9 @@ export default async function NewTeacherPage({
     <TeacherForm
       action={createTeacher}
       backHref="/admin/teachers"
+      restoreContext
+      directoryQ={params?.q ?? ""}
+      directoryPage={params?.page ?? ""}
       backLabel={t("backTeacherDirectory")}
       description={t("addTeacherDescription")}
       error={params?.error}

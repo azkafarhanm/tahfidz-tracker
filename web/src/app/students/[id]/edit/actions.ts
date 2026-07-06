@@ -38,6 +38,7 @@ function buildDeleteBlockerItems(
 
 export async function updateTeacherStudent(
   studentId: string,
+  returnTo: string | undefined,
   formData: FormData,
 ) {
   const t = await getTranslations("Validation");
@@ -47,7 +48,7 @@ export async function updateTeacherStudent(
     redirect(`/students?error=${encodeURIComponent(t("teacherOnlyEdit"))}`);
   }
 
-  const fail = createFailFn(`/students/${studentId}/edit`);
+  const fail = createFailFn(`/students/${studentId}/edit${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`);
 
   const fullName = readString(formData, "fullName");
   const classGroupId = readOptionalString(formData, "classGroupId");
@@ -250,6 +251,13 @@ export async function updateTeacherStudent(
   revalidatePath("/students");
   revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
+  if (returnTo) {
+    const [pathname, search = ""] = returnTo.split("?", 2);
+    const params = new URLSearchParams(search);
+    params.set("success", t("studentUpdated"));
+    params.set("highlight", studentId);
+    redirect(`${pathname}?${params.toString()}`);
+  }
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}&programType=${updatedStudent.classGroup.programType}`);
 }
 

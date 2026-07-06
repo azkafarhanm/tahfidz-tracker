@@ -21,6 +21,7 @@ import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
 import ActiveYearBadge from "@/components/ActiveYearBadge";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
@@ -43,6 +44,7 @@ type StudentsPageProps = {
     page?: string;
     status?: string;
     programType?: string;
+    highlight?: string;
   }>;
 };
 
@@ -72,7 +74,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     ? (requestedProgramType as ProgramType)
     : programContext.resolvedProgramType;
 
-  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear);
+  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear, params?.highlight);
   // Only fetch inactive students when viewing the inactive tab
   const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear) : [];
   const filteredInactiveStudents = query
@@ -107,6 +109,10 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   if (isInactiveView) searchActionParams.set("status", "inactive");
   if (programType) searchActionParams.set("programType", programType);
   const searchAction = `/students?${searchActionParams.toString()}`;
+  const workflowParams = new URLSearchParams();
+  if (query) workflowParams.set("q", query);
+  if (page > 1) workflowParams.set("page", String(page));
+  if (programType) workflowParams.set("programType", programType);
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -227,15 +233,15 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             <div className="flex items-center gap-2">
               {!isAdmin && !isInactiveView ? (
                 <>
-                  <Link
+                  <WorkflowContextLink
                     className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
                     href={programContext.programs.length === 0
                       ? "/students/program-select"
-                      : `/students/new${programType ? `?programType=${programType}` : ""}`}
+                      : `/students/new?${workflowParams.toString()}`}
                   >
                     <PlusCircle aria-hidden="true" size={16} strokeWidth={2.2} />
                     {t("addButton")}
-                  </Link>
+                  </WorkflowContextLink>
                   {programContext.programs.length === 1 && (
                     <Link
                       className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-600"

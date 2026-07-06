@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  markNavigationContext,
+  readNavigationContext,
+} from "@/hooks/useNavigationContext";
 
 type LiveSearchFormProps = {
   action: string;
@@ -35,6 +39,7 @@ export default function LiveSearchForm({
   placeholder,
 }: LiveSearchFormProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [draftQuery, setDraftQuery] = useState(defaultValue);
   const [isPending, startTransition] = useTransition();
   const committedQuery = normalizeQuery(defaultValue);
@@ -50,6 +55,7 @@ export default function LiveSearchForm({
   const externalNavigationQueryRef = useRef<string | null>(null);
   const externalNavigationRevisionRef = useRef(0);
   const lastSeenCommittedQueryRef = useRef(committedQuery);
+  const searchOriginCapturedRef = useRef(false);
 
   const buildHref = useCallback((nextQuery: string) => {
     const url = new URL(action, window.location.origin);
@@ -59,10 +65,17 @@ export default function LiveSearchForm({
       // Keep an explicit empty query so production prefetching uses a
       // query-specific cache entry instead of stale pathname-only search data.
       url.searchParams.set("q", "");
+      if (searchOriginCapturedRef.current) {
+        const origin = readNavigationContext(pathname);
+        const originPage = origin
+          ? new URLSearchParams(origin).get("page")
+          : null;
+        if (originPage) url.searchParams.set("page", originPage);
+      }
     }
     const search = url.searchParams.toString();
     return search ? `${url.pathname}?${search}` : url.pathname;
-  }, [action]);
+  }, [action, pathname]);
 
   const sendLocalNavigation = useCallback((
     nextQuery: string,
@@ -92,12 +105,19 @@ export default function LiveSearchForm({
       revision,
     );
 
+    if (!committedQueryRef.current && nextQuery) {
+      const originParams = new URLSearchParams(window.location.search);
+      originParams.delete("q");
+      markNavigationContext(pathname, originParams.toString());
+      searchOriginCapturedRef.current = true;
+    }
+
     const nextHref = buildHref(nextQuery);
     router.prefetch(nextHref);
     startTransition(() => {
       router.replace(nextHref, { scroll: false });
     });
-  }, [buildHref, router]);
+  }, [buildHref, pathname, router]);
 
   useEffect(() => {
     const handlePopState = () => {

@@ -23,6 +23,7 @@ type NewClassGroupPageProps = {
     grade?: string;
     isActive?: string;
     programType?: string;
+    q?: string; page?: string;
   }>;
 };
 
@@ -55,6 +56,7 @@ export default async function NewClassGroupPage({
       teachers={options.teachers}
       title={t("addHalaqah")}
       programType={programType}
+      restoreContext directoryQ={params?.q ?? ""} directoryPage={params?.page ?? ""}
       values={{
         description: params?.description ?? "",
         level: params?.level ?? "LOW",

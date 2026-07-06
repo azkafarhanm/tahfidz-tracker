@@ -174,7 +174,12 @@ export async function createTeacher(formData: FormData) {
   await requireAdminScope();
 
   const input = readTeacherFormInput(formData);
-  const fail = createFailFn("/admin/teachers/new");
+  const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
+  const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const failParams = new URLSearchParams();
+  if (directoryQ) failParams.set("q", directoryQ);
+  if (directoryPage) failParams.set("page", directoryPage);
+  const fail = createFailFn(`/admin/teachers/new${failParams.size ? `?${failParams.toString()}` : ""}`);
 
   await validateTeacherInput(input, fail, { passwordRequired: true });
 
@@ -187,7 +192,7 @@ export async function createTeacher(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(input.password, 10);
 
-  await prisma.$transaction(async (tx) => {
+  const createdTeacher = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
         name: input.fullName,
@@ -200,7 +205,7 @@ export async function createTeacher(formData: FormData) {
       },
     });
 
-    await tx.teacher.create({
+    return tx.teacher.create({
       data: {
         userId: user.id,
         fullName: input.fullName,
@@ -211,7 +216,7 @@ export async function createTeacher(formData: FormData) {
   });
 
   revalidateAdminTeacherPaths();
-  redirectAdminTeachersWithMessage("success", t("teacherCreated"));
+  redirectAdminTeachersWithMessage("success", t("teacherCreated"), createdTeacher.id, directoryQ, directoryPage);
 }
 
 export async function updateTeacher(teacherId: string, formData: FormData) {
