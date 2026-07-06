@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { CalendarDays, PencilLine } from "lucide-react";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge } from "@/lib/colors";
 import TargetActions from "@/components/TargetActions";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 
 type TargetItem = {
   id: string;
@@ -44,14 +44,14 @@ export default function TargetCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Link
+          <WorkflowContextLink
             className={actionButtonClass("neutral")}
             href={`/students/${studentId}/targets/${target.id}/edit`}
             title={t("editTargetTitle")}
           >
             <PencilLine aria-hidden="true" size={13} strokeWidth={2.2} />
             {t("editButton")}
-          </Link>
+          </WorkflowContextLink>
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               target.isOverdue ? badge.error : badge.success

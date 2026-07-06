@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import Link from "next/link";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import {
   ArrowLeft,
@@ -17,6 +16,7 @@ import { useTranslations } from "next-intl";
 import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
 import HalaqahLevelDialog from "@/components/HalaqahLevelDialog";
+import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
 import { backLink } from "@/lib/colors";
 
 type ClassGroupOption = {
@@ -50,7 +50,6 @@ type HalaqahInfo = {
 type EditStudentFormProps = {
   action: (formData: FormData) => Promise<void>;
   backHref: string;
-  restoreContext?: boolean;
   error?: string;
   options: {
     classGroups: ClassGroupOption[];
@@ -72,7 +71,6 @@ type EditStudentFormProps = {
 export default function EditStudentForm({
   action,
   backHref,
-  restoreContext = false,
   error,
   options,
   halaqah,
@@ -276,6 +274,13 @@ export default function EditStudentForm({
     formData.set("halaqahLevel", isBoarding ? (effectiveSelectedLevel || "LOW") : effectiveSelectedLevel);
     formData.set("grade", selectedGrade);
     formData.set("programType", resolvedProgramType);
+    // The server action redirects back to the Student Detail page. A server
+    // redirect cannot call markPrimaryNavigation, so arm the one-shot NAV_FLAG
+    // here (before the action) so the detail page's restore effect runs against
+    // the scroll saved on the Detail → Edit departure. The detail page consumes
+    // neither `success` nor `highlight`, and the redirect targets the bare
+    // pathname, so the saved identity matches exactly.
+    markServerActionReturn();
     startTransition(async () => {
       await action(formData);
     });
@@ -286,13 +291,10 @@ export default function EditStudentForm({
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            {restoreContext ? <WorkflowContextLink className={backLink} href={backHref} preferStoredContext restoreContext><ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />{values.fullName}</WorkflowContextLink> : <Link
-              className={backLink}
-              href={backHref}
-            >
+            <WorkflowContextLink className={backLink} href={backHref}>
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {values.fullName}
-            </Link>}
+            </WorkflowContextLink>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {t("titleEdit")}
             </h1>
@@ -587,12 +589,12 @@ export default function EditStudentForm({
           </section>
 
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            {restoreContext ? <WorkflowContextLink className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" href={backHref} preferStoredContext restoreContext>{t("buttonCancel")}</WorkflowContextLink> : <Link
+            <WorkflowContextLink
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={backHref}
             >
               {t("buttonCancel")}
-            </Link>}
+            </WorkflowContextLink>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:opacity-60"
               disabled={isPending || !(isBoarding ? selectedGrade : (effectiveSelectedLevel && selectedGrade))}

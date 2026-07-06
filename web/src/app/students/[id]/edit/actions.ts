@@ -252,11 +252,14 @@ export async function updateTeacherStudent(
   revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
   if (returnTo) {
-    const [pathname, search = ""] = returnTo.split("?", 2);
-    const params = new URLSearchParams(search);
-    params.set("success", t("studentUpdated"));
-    params.set("highlight", studentId);
-    redirect(`${pathname}?${params.toString()}`);
+    // Detail-origin Save returns to the Student Detail page. The detail page
+    // does not consume `success` (no toast wired) and student-level highlight
+    // is intentionally not used (highlight is reserved for list-item workflows:
+    // memorization/revision/tasmi/target). Redirect to the bare detail pathname
+    // so the saved scroll identity (pathname only, no query) matches exactly
+    // and scroll restoration can fire on return.
+    const [pathname] = returnTo.split("?", 2);
+    redirect(pathname);
   }
   redirect(`/students/${studentId}?success=${encodeURIComponent(t("studentUpdated"))}&programType=${updatedStudent.classGroup.programType}`);
 }

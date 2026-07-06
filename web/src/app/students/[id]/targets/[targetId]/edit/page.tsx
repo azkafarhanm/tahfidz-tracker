@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,6 +11,7 @@ import { requireSessionScope } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { TargetStatus } from "@/generated/prisma-next/enums";
 import SurahInput from "@/components/SurahInput";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
 
@@ -72,13 +72,13 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
-          <Link
+          <WorkflowContextLink
             className={backLink}
             href={`/students/${studentId}`}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {student.fullName}
-          </Link>
+          </WorkflowContextLink>
           <div className="mt-4 flex items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <Target aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -224,12 +224,12 @@ export default async function EditTargetPage({ params, searchParams }: EditTarge
           </section>
 
           <div className="sticky bottom-0 -mx-4 flex items-center gap-3 bg-[#f7f4ee]/90 px-4 pb-5 pt-3 backdrop-blur-sm sm:-mx-8 sm:px-8 dark:bg-[#0c0f1a]/90">
-            <Link
+            <WorkflowContextLink
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:hover:border-emerald-600 dark:hover:text-emerald-400"
               href={`/students/${studentId}`}
             >
               {t("buttonCancel")}
-            </Link>
+            </WorkflowContextLink>
             <button
               className="flex-1 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-950 active:scale-[0.98]"
               type="submit"

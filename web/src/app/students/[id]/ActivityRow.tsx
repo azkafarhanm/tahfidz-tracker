@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { BookOpen, PencilLine, RotateCcw, Trash2, Award } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { deleteRecord } from "@/lib/record-actions";
@@ -9,6 +8,7 @@ import { deleteTasmiAction } from "./tasmi/actions";
 import { actionButtonClass } from "@/components/action-button-styles";
 import { badge } from "@/lib/colors";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { useScrollPreservingRefresh } from "@/hooks/useScrollPreservingRefresh";
 
 type RecordItem = {
@@ -85,13 +85,13 @@ export default function ActivityRow({
               ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
-              <Link
+              <WorkflowContextLink
                 className={actionButtonClass("neutral")}
                 href={editHref}
               >
                 <PencilLine aria-hidden="true" size={12} strokeWidth={2.2} />
                 {t("editButton")}
-              </Link>
+              </WorkflowContextLink>
               <ConfirmActionDialogButton
                 cancelLabel={tDel("cancel")}
                 confirmLabel={tDel("confirmDelete")}

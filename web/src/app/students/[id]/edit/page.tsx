@@ -77,7 +77,6 @@ export default async function EditStudentPage({
     <EditStudentForm
       action={boundAction}
       backHref={returnTo ?? `/students/${id}`}
-      restoreContext={Boolean(returnTo)}
       error={pageParams?.error}
       options={options}
       defaultProgramType={context.programType}

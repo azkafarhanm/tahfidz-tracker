@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -240,13 +239,13 @@ export default async function StudentDetailPage({
               </div>
             </div>
            <div className="flex flex-wrap items-center gap-2">
-             <Link
-               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-               href={`/students/${student.id}/edit`}
+             <WorkflowContextLink
+               className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+               href={`/students/${student.id}/edit?returnTo=${encodeURIComponent(`/students/${student.id}`)}`}
              >
                <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
                {t("editButton")}
-             </Link>
+             </WorkflowContextLink>
               <ExportSection
                 excelHref={`/api/reports/export-student?studentId=${student.id}`}
                 excelClassName="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950"
@@ -307,7 +306,7 @@ export default async function StudentDetailPage({
         </section>
 
         <section className="mt-5 grid grid-cols-3 gap-3">
-          <Link
+          <WorkflowContextLink
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/hafalan/new`}
           >
@@ -315,8 +314,8 @@ export default async function StudentDetailPage({
               <BookOpen aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             {t("hafalanButton")}
-          </Link>
-          <Link
+          </WorkflowContextLink>
+          <WorkflowContextLink
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/murojaah/new`}
           >
@@ -324,8 +323,8 @@ export default async function StudentDetailPage({
               <RotateCcw aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             {t("murojaahButton")}
-          </Link>
-          <Link
+          </WorkflowContextLink>
+          <WorkflowContextLink
             className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-violet-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
             href={`/students/${student.id}/tasmi/new`}
           >
@@ -333,7 +332,7 @@ export default async function StudentDetailPage({
               <Award aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
             {t("tasmiButton")}
-          </Link>
+          </WorkflowContextLink>
         </section>
 
         <section className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -361,13 +360,13 @@ export default async function StudentDetailPage({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">{t("targetActiveHeading")}</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
+              <WorkflowContextLink
                 className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950"
                 href={`/students/${student.id}/targets/new`}
               >
                 <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                 {t("addTargetButton")}
-              </Link>
+              </WorkflowContextLink>
               <span className={`inline-flex items-center gap-2 rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                 <Target aria-hidden="true" size={15} strokeWidth={2.2} />
                 {student.activeTargets.length}
@@ -387,13 +386,13 @@ export default async function StudentDetailPage({
                 <p className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-100">
                   {t("emptyTargets")}
                 </p>
-                <Link
+                <WorkflowContextLink
                   className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
                   href={`/students/${student.id}/targets/new`}
                 >
                   <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                   {t("addTargetButton")}
-                </Link>
+                </WorkflowContextLink>
               </div>
             )}
           </div>
@@ -419,13 +418,13 @@ export default async function StudentDetailPage({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold">{t("tasmiHeading")}</h2>
               <div className="flex flex-wrap items-center gap-2">
-                <Link
+                <WorkflowContextLink
                   className="inline-flex items-center gap-1.5 rounded-xl bg-violet-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-950"
                   href={`/students/${student.id}/tasmi/new`}
                 >
                   <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                   {t("tasmiButton")}
-                </Link>
+                </WorkflowContextLink>
                 <span className={`inline-flex items-center gap-2 rounded-full ${badge.neutral} px-3 py-1 text-xs font-medium`}>
                   <Award aria-hidden="true" size={15} strokeWidth={2.2} />
                   {student.tasmiJuzSummary || student.tasmiRecords.length}
@@ -490,20 +489,20 @@ export default async function StudentDetailPage({
                   {t("emptyActivity")}
                 </p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  <Link
+                  <WorkflowContextLink
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
                     href={`/students/${student.id}/hafalan/new`}
                   >
                     <BookOpen aria-hidden="true" size={14} strokeWidth={2.2} />
                     {t("hafalanButton")}
-                  </Link>
-                  <Link
+                  </WorkflowContextLink>
+                  <WorkflowContextLink
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                     href={`/students/${student.id}/murojaah/new`}
                   >
                     <RotateCcw aria-hidden="true" size={14} strokeWidth={2.2} />
                     {t("murojaahButton")}
-                  </Link>
+                  </WorkflowContextLink>
                 </div>
               </div>
             )}

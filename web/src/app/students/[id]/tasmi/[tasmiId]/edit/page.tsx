@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Award, Save } from "lucide-react";
 import { updateTasmiAction } from "../../actions";
@@ -7,6 +6,7 @@ import { getTasmiRecordForEdit } from "@/lib/tasmi";
 import { requireSessionScope } from "@/lib/session";
 import FormAlert from "@/components/FormAlert";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
 
@@ -41,10 +41,10 @@ export default async function EditTasmiPage({ params, searchParams }: EditTasmiP
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <Link className={backLink} href={`/students/${id}`}>
+            <WorkflowContextLink className={backLink} href={`/students/${id}`}>
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
-            </Link>
+            </WorkflowContextLink>
             <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
               {t("titleEdit")}
             </h1>
@@ -159,12 +159,12 @@ export default async function EditTasmiPage({ params, searchParams }: EditTasmiP
           </section>
 
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            <Link
+            <WorkflowContextLink
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               href={`/students/${id}`}
             >
               {t("buttonCancel")}
-            </Link>
+            </WorkflowContextLink>
             <button
               className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
               type="submit"
