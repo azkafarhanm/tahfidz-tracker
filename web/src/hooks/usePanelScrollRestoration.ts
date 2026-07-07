@@ -433,11 +433,13 @@ export function markPrimaryNavigation(
   if (typeof window === "undefined") return;
   try {
     if (isRestorable(outgoingPathname)) {
-      const identity = routeIdentity(
-        outgoingPathname,
-        queryString,
-      );
-      saveScroll(identity);
+      const identities = new Set([
+        routeIdentity(outgoingPathname, window.location.search),
+        routeIdentity(outgoingPathname, queryString),
+      ]);
+      for (const identity of identities) {
+        saveScroll(identity);
+      }
     }
     sessionStorage.setItem(NAV_FLAG, "1");
   } catch {
