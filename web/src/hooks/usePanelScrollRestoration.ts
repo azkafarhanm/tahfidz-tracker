@@ -341,19 +341,17 @@ export function usePanelScrollRestoration(): void {
             disarm();
           };
           const onWatchdogScroll = () => {
-            // If the user moved the viewport themselves (programmatic scrollTo
-            // we just issued also lands here, but it sets to target, so it is a
-            // no-op; a different position implies an external writer or user).
-            if (pathname !== "/" && window.scrollY !== target && window.scrollY !== 0) {
-              // Genuine user scroll (or acceptable position) — yield permanently.
+            if (userInteracted && window.scrollY !== target) {
               disarm();
             }
           };
           // Re-assert on the next macrotasks; App Router's scroll-to-top lands
-          // asynchronously after streamed content commits.
+          // asynchronously after streamed content commits. On cold routes it can
+          // also land at a non-zero anchored position, so any non-user drift is
+          // corrected within the watchdog window.
           const reassert = () => {
             if (disarmed) return;
-            if (window.scrollY === 0 || (pathname === "/" && !userInteracted && window.scrollY !== target)) {
+            if (!userInteracted && window.scrollY !== target) {
               window.scrollTo(0, target);
             }
           };
