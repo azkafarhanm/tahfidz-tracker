@@ -21,6 +21,7 @@ import { badge, heroSummary, backLink } from "@/lib/colors";
 import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels } from "@/lib/format";
 import PanelScrollLink from "@/components/PanelScrollLink";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 
 export const runtime = "nodejs";
 
@@ -180,8 +181,12 @@ export default async function ReportsPage({
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Link
+            <WorkflowContextLink
               className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+              contextParams={{
+                dashboardShortcut: null,
+                programType,
+              }}
               href={`/formative?returnTo=reports${programType ? `&programType=${programType}` : ""}`}
             >
               <div className="flex items-center gap-3">
@@ -197,9 +202,13 @@ export default async function ReportsPage({
                   </p>
                 </div>
               </div>
-            </Link>
-            <Link
+            </WorkflowContextLink>
+            <WorkflowContextLink
               className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+              contextParams={{
+                dashboardShortcut: null,
+                programType,
+              }}
               href={`/summative?returnTo=reports${programType ? `&programType=${programType}` : ""}`}
             >
               <div className="flex items-center gap-3">
@@ -215,7 +224,7 @@ export default async function ReportsPage({
                   </p>
                 </div>
               </div>
-            </Link>
+            </WorkflowContextLink>
           </div>
         </section>
 
