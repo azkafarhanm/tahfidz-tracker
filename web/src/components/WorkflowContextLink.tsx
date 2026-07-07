@@ -55,6 +55,23 @@ function isUnmodifiedPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
   );
 }
 
+function isSamePageScrollPreservingNavigation(
+  href: string,
+  pathname: string,
+  scroll: ComponentProps<typeof Link>["scroll"],
+) {
+  if (scroll !== false || typeof window === "undefined") return false;
+
+  const currentUrl = new URL(window.location.href);
+  const destinationUrl = new URL(href, currentUrl.origin);
+
+  return (
+    destinationUrl.origin === currentUrl.origin &&
+    destinationUrl.pathname === pathname &&
+    destinationUrl.hash === currentUrl.hash
+  );
+}
+
 export default function WorkflowContextLink({
   compatibilityKeys = [],
   contextParams,
@@ -62,6 +79,7 @@ export default function WorkflowContextLink({
   onClick,
   preferStoredContext = false,
   restoreContext = false,
+  scroll,
   target,
   ...props
 }: WorkflowContextLinkProps) {
@@ -98,6 +116,8 @@ export default function WorkflowContextLink({
           return;
         }
 
+        const isSamePageQueryNavigation =
+          isSamePageScrollPreservingNavigation(resolvedHref, pathname, scroll);
         const outgoingParams = new URLSearchParams(
           mergeVisibleSearchFormContext(searchParams.toString()),
         );
@@ -110,7 +130,9 @@ export default function WorkflowContextLink({
         }
         const outgoingContext = outgoingParams.toString();
 
-        markPrimaryNavigation(pathname, outgoingContext);
+        if (!isSamePageQueryNavigation) {
+          markPrimaryNavigation(pathname, outgoingContext);
+        }
         const returnQuery = typeof window === "undefined"
           ? null
           : samePageReturnQuery(
@@ -120,6 +142,7 @@ export default function WorkflowContextLink({
               pathname,
             );
         if (
+          !isSamePageQueryNavigation &&
           returnQuery !== null &&
           normalizeQuery(returnQuery) !== normalizeQuery(outgoingContext)
         ) {
@@ -130,6 +153,7 @@ export default function WorkflowContextLink({
           outgoingContext,
         );
       }}
+      scroll={scroll}
       target={target}
     />
   );
