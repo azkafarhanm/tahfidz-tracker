@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { PencilLine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import DeleteSummativeButton from "@/components/DeleteSummativeButton";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { actionButtonClass } from "@/components/action-button-styles";
+import FormativeTableScroll from "../../formative/FormativeTableScroll";
 
 type SummativeAssessment = {
   id: string;
@@ -22,6 +23,7 @@ type SummativeAssessmentsTableProps = {
   emptyDescription: string;
   emptyHeading: string;
   assessments: SummativeAssessment[];
+  returnTo: string;
   semesterValue: string;
   studentId: string;
 };
@@ -30,6 +32,7 @@ export default function SummativeAssessmentsTable({
   emptyDescription,
   emptyHeading,
   assessments,
+  returnTo,
   semesterValue,
   studentId,
 }: SummativeAssessmentsTableProps) {
@@ -51,7 +54,7 @@ export default function SummativeAssessmentsTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <FormativeTableScroll storageKey="summative:detail:hscroll">
       <table className="w-full min-w-[900px] text-sm">
         <thead>
           <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
@@ -82,6 +85,7 @@ export default function SummativeAssessmentsTable({
               className={`border-b border-slate-100 dark:border-slate-800 ${
                 index % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/20" : ""
               }`}
+              data-highlight={assessment.id}
             >
               <td className="px-5 py-4">
                 <p className="font-semibold text-slate-950 dark:text-white">
@@ -107,13 +111,13 @@ export default function SummativeAssessmentsTable({
               </td>
               <td className="px-5 py-4 text-right">
                 <div className="flex flex-wrap justify-end gap-2">
-                  <Link
+                  <WorkflowContextLink
                     className={actionButtonClass("neutral")}
-                    href={`/summative/${studentId}/${assessment.id}/edit?semester=${semesterValue}`}
+                    href={`/summative/${studentId}/${assessment.id}/edit?semester=${semesterValue}&returnTo=${encodeURIComponent(returnTo)}`}
                   >
                     <PencilLine aria-hidden="true" size={16} strokeWidth={2.2} />
                     {t("editButton")}
-                  </Link>
+                  </WorkflowContextLink>
                   <DeleteSummativeButton
                     compact
                     assessmentId={assessment.id}
@@ -137,6 +141,6 @@ export default function SummativeAssessmentsTable({
           ))}
         </tbody>
       </table>
-    </div>
+    </FormativeTableScroll>
   );
 }

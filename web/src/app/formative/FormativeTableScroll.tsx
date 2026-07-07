@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 
 /**
  * Horizontal-only scroll persistence for Formative tables.
@@ -41,11 +42,24 @@ export default function FormativeTableScroll({
   children,
 }: FormativeTableScrollProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const hasHighlight = searchParams.get("highlight") !== null;
 
   // Restore on mount: apply saved scrollLeft once content is laid out.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    if (hasHighlight) {
+      el.scrollLeft = 0;
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        // sessionStorage unavailable — ignore.
+      }
+      return;
+    }
+
     let saved: number | null = null;
     try {
       const raw = sessionStorage.getItem(storageKey);
@@ -105,7 +119,7 @@ export default function FormativeTableScroll({
     }
 
     return () => finish();
-  }, [storageKey]);
+  }, [hasHighlight, storageKey]);
 
   // Save on scroll: persist the LIVE scrollLeft while the element is still
   // connected. This is the only persistence write — it captures the value the

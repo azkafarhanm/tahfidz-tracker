@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ArrowLeft,
   ClipboardList,
@@ -11,6 +10,7 @@ import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import ExportSection from "@/components/ExportSection";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
+import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { Semester } from "@/generated/prisma-next/enums";
@@ -70,6 +70,10 @@ export default async function SummativeDetailPage({
       : defaultSemester;
   const fromReports = query?.returnTo === "reports";
   const paramProgramType = query?.programType ?? "";
+  const returnToParams = new URLSearchParams({ semester: semesterValue });
+  if (paramProgramType) returnToParams.set("programType", paramProgramType);
+  if (fromReports) returnToParams.set("returnTo", "reports");
+  const returnTo = `/summative/${studentId}?${returnToParams.toString()}`;
 
   const academicYear = await getActiveAcademicYear();
   const detail = await getStudentSummativeDetail(
@@ -86,6 +90,7 @@ export default async function SummativeDetailPage({
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
+      <ScrollToHighlightedItem />
       <FilterPreferenceSync
         cookieName={SUMMATIVE_VIEW_COOKIE}
         value={`semester=${semesterValue}&classLevel=${detail.classLevel}`}
@@ -138,13 +143,13 @@ export default async function SummativeDetailPage({
             </>
           }
         />
-        <Link
+        <WorkflowContextLink
           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
-          href={`/summative/${studentId}/new?semester=${semesterValue}`}
+          href={`/summative/${studentId}/new?semester=${semesterValue}${paramProgramType ? `&programType=${paramProgramType}` : ""}${fromReports ? "&returnTo=reports" : ""}`}
         >
           <FilePlus2 aria-hidden="true" size={16} strokeWidth={2.2} />
           {t("addButton")}
-        </Link>
+        </WorkflowContextLink>
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -182,6 +187,7 @@ export default async function SummativeDetailPage({
           assessments={detail.assessments}
           emptyDescription={t("emptyAssessmentsDescription")}
           emptyHeading={t("emptyAssessmentsHeading")}
+          returnTo={returnTo}
           semesterValue={semesterValue}
           studentId={studentId}
         />

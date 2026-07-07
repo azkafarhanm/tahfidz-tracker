@@ -22,12 +22,18 @@ function buildSummativeRedirectPath(
   studentId: string,
   semester: string,
   params: Record<string, string>,
+  returnTo?: string,
 ) {
-  const searchParams = new URLSearchParams({
-    semester,
-    ...params,
-  });
-  return `/summative/${studentId}?${searchParams.toString()}`;
+  const basePath = returnTo && returnTo.startsWith(`/summative/${studentId}`) && !returnTo.startsWith("//")
+    ? returnTo
+    : `/summative/${studentId}`;
+  const [pathname, existingSearch = ""] = basePath.split("?", 2);
+  const searchParams = new URLSearchParams(existingSearch);
+  searchParams.set("semester", semester);
+  for (const [key, value] of Object.entries(params)) {
+    searchParams.set(key, value);
+  }
+  return `${pathname}?${searchParams.toString()}`;
 }
 
 export async function createSummativeAssessmentAction(formData: FormData) {
@@ -51,11 +57,20 @@ export async function createSummativeAssessmentAction(formData: FormData) {
     redirect("/summative");
   }
 
+  const returnTo = readSummativeReturnTo(formData, payload.studentId);
+  let record: Awaited<ReturnType<typeof saveSummativeAssessment>>;
   try {
-    await saveSummativeAssessment(payload);
+    record = await saveSummativeAssessment(payload);
   } catch (error) {
     if (isUniqueSummativeError(error)) {
-      redirect(`/summative/${payload.studentId}?error=${encodeURIComponent(t("summativeDuplicate"))}`);
+      redirect(
+        buildSummativeRedirectPath(
+          payload.studentId,
+          payload.semester,
+          { error: t("summativeDuplicate") },
+          returnTo,
+        ),
+      );
     }
     throw error;
   }
@@ -70,9 +85,15 @@ export async function createSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(payload.studentId);
   redirect(
-    `/summative/${payload.studentId}?semester=${payload.semester}&success=${encodeURIComponent(
-      tSummative("savedSuccess"),
-    )}`,
+    buildSummativeRedirectPath(
+      payload.studentId,
+      payload.semester,
+      {
+        highlight: record.id,
+        success: tSummative("savedSuccess"),
+      },
+      returnTo,
+    ),
   );
 }
 
@@ -97,11 +118,20 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
     redirect(`/summative/${payload.studentId}`);
   }
 
+  const returnTo = readSummativeReturnTo(formData, payload.studentId);
+  let record: Awaited<ReturnType<typeof updateSummativeAssessment>>;
   try {
-    await updateSummativeAssessment(assessmentId, payload);
+    record = await updateSummativeAssessment(assessmentId, payload);
   } catch (error) {
     if (isUniqueSummativeError(error)) {
-      redirect(`/summative/${payload.studentId}?error=${encodeURIComponent(t("summativeDuplicate"))}`);
+      redirect(
+        buildSummativeRedirectPath(
+          payload.studentId,
+          payload.semester,
+          { error: t("summativeDuplicate") },
+          returnTo,
+        ),
+      );
     }
     throw error;
   }
@@ -116,9 +146,15 @@ export async function updateSummativeAssessmentAction(formData: FormData) {
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(payload.studentId);
   redirect(
-    `/summative/${payload.studentId}?semester=${payload.semester}&success=${encodeURIComponent(
-      tSummative("savedSuccess"),
-    )}`,
+    buildSummativeRedirectPath(
+      payload.studentId,
+      payload.semester,
+      {
+        highlight: record.id,
+        success: tSummative("savedSuccess"),
+      },
+      returnTo,
+    ),
   );
 }
 
@@ -236,4 +272,11 @@ function isUniqueSummativeError(error: unknown) {
     error instanceof Prisma.PrismaClientKnownRequestError &&
     error.code === "P2002"
   );
+}
+
+function readSummativeReturnTo(formData: FormData, studentId: string) {
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
+  return returnTo.startsWith(`/summative/${studentId}`) && !returnTo.startsWith("//")
+    ? returnTo
+    : undefined;
 }

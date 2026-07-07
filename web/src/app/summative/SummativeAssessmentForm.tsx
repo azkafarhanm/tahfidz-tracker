@@ -1,15 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { Loader2, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useFormStatus } from "react-dom";
 import { Semester } from "@/generated/prisma-next/enums";
 import SurahInput from "@/components/SurahInput";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
 
 type SummativeAssessmentFormProps = {
   action: (formData: FormData) => Promise<void>;
   cancelHref: string;
+  returnTo?: string;
   studentId: string;
   academicYear: string;
   defaultSemester: Semester;
@@ -22,6 +24,7 @@ type SummativeAssessmentFormProps = {
 export default function SummativeAssessmentForm({
   action,
   cancelHref,
+  returnTo,
   studentId,
   academicYear,
   defaultSemester,
@@ -33,9 +36,12 @@ export default function SummativeAssessmentForm({
   const t = useTranslations("Summative");
 
   return (
-    <form action={action} className="space-y-5">
+    <form action={action} className="space-y-5" onSubmit={() => markServerActionReturn()}>
       <input type="hidden" name="studentId" value={studentId} />
       <input type="hidden" name="academicYear" value={academicYear} />
+      {returnTo ? (
+        <input type="hidden" name="returnTo" value={returnTo} />
+      ) : null}
       {assessmentId ? (
         <input type="hidden" name="assessmentId" value={assessmentId} />
       ) : null}
@@ -118,12 +124,12 @@ export default function SummativeAssessmentForm({
       </section>
 
       <div className="flex flex-wrap items-center justify-end gap-3">
-        <Link
+        <WorkflowContextLink
           className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
           href={cancelHref}
         >
           {t("cancelButton")}
-        </Link>
+        </WorkflowContextLink>
         <SubmitButton />
       </div>
     </form>

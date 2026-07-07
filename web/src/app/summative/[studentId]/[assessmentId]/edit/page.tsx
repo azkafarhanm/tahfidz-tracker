@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { ArrowLeft, PencilLine } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { requireSessionScope } from "@/lib/session";
 import {
   getStudentSummativeAssessmentForEdit,
@@ -22,6 +22,7 @@ type SummativeEditPageProps = {
   }>;
   searchParams?: Promise<{
     semester?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -52,18 +53,25 @@ export default async function SummativeEditPage({
   const semester = query?.semester && isSemesterValue(query.semester)
     ? query.semester
     : assessment.semester;
+  const returnTo =
+    query?.returnTo &&
+    query.returnTo.startsWith(`/summative/${studentId}`) &&
+    !query.returnTo.startsWith("//")
+      ? query.returnTo
+      : undefined;
+  const detailHref = returnTo ?? `/summative/${studentId}?semester=${semester}`;
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link
+          <WorkflowContextLink
             className={backLink}
-            href={`/summative/${studentId}?semester=${semester}`}
+            href={detailHref}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backToDetail")}
-          </Link>
+          </WorkflowContextLink>
           <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
             {t("editAssessmentHeading")}
           </h1>
@@ -81,11 +89,12 @@ export default async function SummativeEditPage({
           action={updateSummativeAssessmentAction}
           academicYear={assessment.academicYear}
           assessmentId={assessment.id}
-          cancelHref={`/summative/${studentId}?semester=${semester}`}
+          cancelHref={detailHref}
           defaultNotes={assessment.notes}
           defaultScore={assessment.score}
           defaultSemester={assessment.semester}
           defaultSurah={assessment.surah.name}
+          returnTo={returnTo}
           studentId={studentId}
         />
       </div>

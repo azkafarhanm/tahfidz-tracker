@@ -34,6 +34,7 @@ import {
 } from "@/lib/summative";
 import { badge, statCard, statValue, statLabel, backLink } from "@/lib/colors";
 import { programTypeLabels } from "@/lib/format";
+import FormativeTableScroll from "../formative/FormativeTableScroll";
 
 export const runtime = "nodejs";
 
@@ -258,7 +259,7 @@ export default async function SummativePage({
             ) : null}
           </div>
 
-          <div className="overflow-x-auto">
+          <FormativeTableScroll storageKey="summative:list:hscroll">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-700 dark:bg-slate-800">
@@ -347,7 +348,7 @@ export default async function SummativePage({
                 ))}
               </tbody>
             </table>
-          </div>
+          </FormativeTableScroll>
 
           {overview.pagination && overview.pagination.totalPages > 1 ? (
             <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-700">

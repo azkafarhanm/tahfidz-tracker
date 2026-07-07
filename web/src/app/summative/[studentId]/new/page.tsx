@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { ArrowLeft, FilePlus2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
@@ -20,6 +20,8 @@ type SummativeNewPageProps = {
   }>;
   searchParams?: Promise<{
     semester?: string;
+    programType?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -67,19 +69,25 @@ export default async function SummativeNewPage({
     query?.semester && isSemesterValue(query.semester)
       ? query.semester
       : getSemesterForDate(new Date());
+  const fromReports = query?.returnTo === "reports";
+  const paramProgramType = query?.programType ?? "";
+  const returnToParams = new URLSearchParams({ semester });
+  if (paramProgramType) returnToParams.set("programType", paramProgramType);
+  if (fromReports) returnToParams.set("returnTo", "reports");
+  const returnTo = `/summative/${studentId}?${returnToParams.toString()}`;
   const academicYear = await getActiveAcademicYear();
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <Link
+          <WorkflowContextLink
             className={backLink}
-            href={`/summative/${studentId}?semester=${semester}`}
+            href={returnTo}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backToDetail")}
-          </Link>
+          </WorkflowContextLink>
           <h1 className="mt-3 text-2xl font-semibold text-slate-950 dark:text-white">
             {t("addAssessmentHeading")}
           </h1>
@@ -96,8 +104,9 @@ export default async function SummativeNewPage({
         <SummativeAssessmentForm
           action={createSummativeAssessmentAction}
           academicYear={academicYear}
-          cancelHref={`/summative/${studentId}?semester=${semester}`}
+          cancelHref={returnTo}
           defaultSemester={semester}
+          returnTo={returnTo}
           studentId={studentId}
         />
       </div>
