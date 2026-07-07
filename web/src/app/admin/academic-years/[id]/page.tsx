@@ -165,7 +165,7 @@ export default async function ArchivedYearPage({ params, searchParams }: Archive
 
         {/* Danger Zone */}
         <section className="mt-10">
-          <div className="rounded-2xl border-2 border-red-200 bg-white p-4 shadow-sm dark:border-red-900/50 dark:bg-slate-900 dark:shadow-none sm:p-5">
+          <div className="admin-danger-zone rounded-2xl border-2 border-red-200 bg-white p-4 shadow-sm dark:border-red-900/50 dark:bg-slate-900 dark:shadow-none sm:p-5">
             <div className="flex items-start gap-3">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300">
                 <AlertTriangle aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -182,8 +182,8 @@ export default async function ArchivedYearPage({ params, searchParams }: Archive
 
             <div className="mt-5 space-y-4">
               {/* Bulk Delete Students */}
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/20">
-                <div>
+              <div className="admin-danger-action-row flex justify-between gap-4 rounded-xl border border-red-100 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/20">
+                <div className="admin-danger-action-copy">
                   <p className="text-sm font-semibold text-slate-950 dark:text-white">
                     {t("bulkDelete")}
                   </p>
@@ -194,13 +194,15 @@ export default async function ArchivedYearPage({ params, searchParams }: Archive
                   </p>
                 </div>
                 {bulkImpact && (
-                  <BulkDeleteStudentsButton yearId={id} impact={bulkImpact} />
+                  <div className="admin-danger-action-control">
+                    <BulkDeleteStudentsButton yearId={id} impact={bulkImpact} />
+                  </div>
                 )}
               </div>
 
               {/* Delete Academic Year */}
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-red-100 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/20">
-                <div>
+              <div className="admin-danger-action-row flex justify-between gap-4 rounded-xl border border-red-100 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/20">
+                <div className="admin-danger-action-copy">
                   <p className="text-sm font-semibold text-slate-950 dark:text-white">
                     {t("deleteYear")}
                   </p>
@@ -211,11 +213,13 @@ export default async function ArchivedYearPage({ params, searchParams }: Archive
                   </p>
                 </div>
                 {yearCheck && (
-                  <DeleteAcademicYearButton
-                    yearId={id}
-                    yearName={data.year.year}
-                    check={yearCheck}
-                  />
+                  <div className="admin-danger-action-control">
+                    <DeleteAcademicYearButton
+                      yearId={id}
+                      yearName={data.year.year}
+                      check={yearCheck}
+                    />
+                  </div>
                 )}
               </div>
             </div>

@@ -152,3 +152,67 @@ aside nav::-webkit-scrollbar-thumb {
 .dark aside nav::-webkit-scrollbar-thumb {
   background: rgb(51 65 85 / 0.5);
 }
+
+.admin-danger-zone {
+  container-type: inline-size;
+}
+
+.admin-danger-action-row {
+  align-items: center;
+  min-width: 0;
+}
+
+.admin-danger-action-copy {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.admin-danger-action-control {
+  flex: 0 1 max-content;
+  min-width: 0;
+  max-width: min(100%, 20rem);
+}
+
+.admin-danger-action-control > button,
+.admin-danger-action-control > div,
+.admin-danger-action-control button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@container (max-width: 38rem) {
+  .admin-danger-action-row {
+    gap: 0.75rem;
+  }
+
+  .admin-danger-action-copy {
+    flex-basis: 7rem;
+  }
+
+  .admin-danger-action-control {
+    max-width: 55%;
+  }
+
+  .admin-danger-action-control > button,
+  .admin-danger-action-control > div,
+  .admin-danger-action-control button {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+}
+
+@container (max-width: 30rem) {
+  .admin-danger-action-row {
+    gap: 0.5rem;
+  }
+
+  .admin-danger-action-control {
+    max-width: 50%;
+  }
+
+  .admin-danger-action-control button {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
+}
