@@ -1,28 +1,5 @@
+import AppRouteTransitionSkeleton from "@/components/RouteTransitionSkeleton";
+
 export default function Loading() {
-  return (
-    <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-5xl sm:px-8">
-        <div className="space-y-6 motion-safe:animate-pulse">
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-3">
-              <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />
-              <div className="h-7 w-40 rounded bg-slate-200 dark:bg-slate-800" />
-              <div className="h-4 w-48 rounded bg-slate-200 dark:bg-slate-800" />
-            </div>
-            <div className="h-12 w-12 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-          </div>
-          <div className="h-44 rounded-[1.75rem] bg-slate-200 dark:bg-slate-800 p-5" />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="h-20 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-            <div className="h-20 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-          </div>
-          <div className="space-y-3">
-            <div className="h-5 w-36 rounded bg-slate-200 dark:bg-slate-800" />
-            <div className="h-28 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-            <div className="h-28 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+  return <AppRouteTransitionSkeleton kind="dashboard" wide />;
 }

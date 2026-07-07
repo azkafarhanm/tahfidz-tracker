@@ -81,6 +81,7 @@ function createDnsFallbackStream() {
 const TRANSIENT_ERROR_PATTERNS = [
   "Connection terminated unexpectedly",
   "connection was terminated",
+  "Connection terminated due to connection timeout",
   "ECONNRESET",
   "EPIPE",
   "ETIMEDOUT",

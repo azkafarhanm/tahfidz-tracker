@@ -1,1 +1,5 @@
-export { default } from "@/app/loading";
+import AppRouteTransitionSkeleton from "@/components/RouteTransitionSkeleton";
+
+export default function ReportsLoading() {
+  return <AppRouteTransitionSkeleton kind="dashboard" />;
+}

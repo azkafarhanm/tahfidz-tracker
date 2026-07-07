@@ -95,6 +95,21 @@ option {
   }
 }
 
+@keyframes delayed-skeleton-reveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.route-transition-skeleton {
+  opacity: 0;
+  animation: delayed-skeleton-reveal 120ms ease-out 120ms forwards;
+}
+
 @keyframes highlight-pulse {
   0% {
     outline-color: rgb(4, 120, 87);
