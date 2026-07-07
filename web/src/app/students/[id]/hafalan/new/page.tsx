@@ -28,6 +28,7 @@ type NewHafalanPageProps = {
   }>;
   searchParams?: Promise<{
     error?: string;
+    programType?: string;
   }>;
 };
 
@@ -44,12 +45,18 @@ export default async function NewHafalanPage({
   const { id } = await params;
   const { teacherId } = await requireSessionScope();
   const student = await getStudentFormContext(id, teacherId);
-  const error = (await searchParams)?.error;
+  const query = await searchParams;
+  const error = query?.error;
+  const programType =
+    query?.programType === "ACADEMIC" || query?.programType === "BOARDING"
+      ? query.programType
+      : undefined;
 
   if (!student) {
     notFound();
   }
 
+  const detailHref = `/students/${student.id}${programType ? `?programType=${programType}` : ""}`;
   const action = createHafalanRecord.bind(null, student.id);
 
   return (
@@ -59,7 +66,7 @@ export default async function NewHafalanPage({
           <div className="min-w-0">
             <WorkflowContextLink
               className={backLink}
-              href={`/students/${student.id}`}
+              href={detailHref}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
@@ -79,6 +86,7 @@ export default async function NewHafalanPage({
         {error ? <FormAlert message={error} /> : null}
 
         <form action={action} className="mt-6 space-y-4">
+          {programType ? <input name="programType" type="hidden" value={programType} /> : null}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <BookOpen
@@ -216,7 +224,7 @@ export default async function NewHafalanPage({
           <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
             <WorkflowContextLink
               className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-              href={`/students/${student.id}`}
+              href={detailHref}
             >
               {t("buttonCancel")}
             </WorkflowContextLink>

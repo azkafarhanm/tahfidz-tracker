@@ -11,6 +11,7 @@ import {
   mergeVisibleSearchFormContext,
   readNavigationContext,
 } from "@/hooks/useNavigationContext";
+import { normalizeQuery, samePageReturnQuery } from "@/lib/workflow-return";
 
 type WorkflowContextLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
   compatibilityKeys?: string[];
@@ -109,8 +110,20 @@ export default function WorkflowContextLink({
         }
         const outgoingContext = outgoingParams.toString();
 
-        if (!restoreContext || storedContext !== null) {
-          markPrimaryNavigation(pathname, outgoingContext);
+        markPrimaryNavigation(pathname, outgoingContext);
+        const returnQuery = typeof window === "undefined"
+          ? null
+          : samePageReturnQuery(
+              resolvedHref,
+              window.location.href,
+              window.location.origin,
+              pathname,
+            );
+        if (
+          returnQuery !== null &&
+          normalizeQuery(returnQuery) !== normalizeQuery(outgoingContext)
+        ) {
+          markPrimaryNavigation(pathname, returnQuery);
         }
         markNavigationContext(
           pathname,

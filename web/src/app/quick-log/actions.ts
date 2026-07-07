@@ -99,11 +99,10 @@ export async function createGuidedRecord(formData: FormData) {
     semester,
   };
 
-  if ((typeValue as QuickLogRecordType) === "MUROJAAH") {
-    await prisma.revisionRecord.create({ data });
-  } else {
-    await prisma.memorizationRecord.create({ data });
-  }
+  const record =
+    (typeValue as QuickLogRecordType) === "MUROJAAH"
+      ? await prisma.revisionRecord.create({ data })
+      : await prisma.memorizationRecord.create({ data });
 
   revalidatePath("/");
   revalidatePath("/students");
@@ -112,5 +111,5 @@ export async function createGuidedRecord(formData: FormData) {
   revalidatePath("/formative");
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
-  return { ok: true as const, success: t("recordSaved") };
+  return { ok: true as const, recordId: record.id, success: t("recordSaved") };
 }

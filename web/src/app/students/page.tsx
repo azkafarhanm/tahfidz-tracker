@@ -18,6 +18,7 @@ import LiveSearchForm from "@/components/LiveSearchForm";
 import OptimisticNumber from "@/components/OptimisticNumber";
 import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import StudentsPageAutoRefresh from "@/components/StudentsPageAutoRefresh";
+import StudentsStatusTabs from "@/components/StudentsStatusTabs";
 import ActiveYearBadge from "@/components/ActiveYearBadge";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
@@ -45,6 +46,7 @@ type StudentsPageProps = {
     page?: string;
     status?: string;
     programType?: string;
+    dashboardShortcut?: string;
     highlight?: string;
     returnTo?: string;
   }>;
@@ -66,6 +68,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const status = params?.status === "inactive" && !isAdmin ? "inactive" : "active";
   const isInactiveView = status === "inactive";
   const fromProfile = params?.returnTo === "profile";
+  const dashboardShortcut = params?.dashboardShortcut;
 
   // Program resolution
   const academicYear = await getActiveAcademicYear();
@@ -95,15 +98,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     if (programType) nextParams.set("programType", programType);
-    if (fromProfile) nextParams.set("returnTo", "profile");
-    const search = nextParams.toString();
-    return search ? `/students?${search}` : "/students";
-  };
-  const buildStatusHref = (nextStatus: "active" | "inactive") => {
-    const nextParams = new URLSearchParams();
-    if (nextStatus === "inactive") nextParams.set("status", "inactive");
-    if (query) nextParams.set("q", query);
-    if (programType) nextParams.set("programType", programType);
+    if (dashboardShortcut) nextParams.set("dashboardShortcut", dashboardShortcut);
     if (fromProfile) nextParams.set("returnTo", "profile");
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
@@ -113,8 +108,16 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const searchActionParams = new URLSearchParams();
   if (isInactiveView) searchActionParams.set("status", "inactive");
   if (programType) searchActionParams.set("programType", programType);
+  if (dashboardShortcut) searchActionParams.set("dashboardShortcut", dashboardShortcut);
   if (fromProfile) searchActionParams.set("returnTo", "profile");
   const searchAction = `/students?${searchActionParams.toString()}`;
+  const resetSearchParams = new URLSearchParams();
+  if (page > 1) resetSearchParams.set("page", String(page));
+  if (isInactiveView) resetSearchParams.set("status", "inactive");
+  if (programType) resetSearchParams.set("programType", programType);
+  if (dashboardShortcut) resetSearchParams.set("dashboardShortcut", dashboardShortcut);
+  if (fromProfile) resetSearchParams.set("returnTo", "profile");
+  const resetSearchHref = `/students?${resetSearchParams.toString()}`;
   const workflowParams = new URLSearchParams();
   if (query) workflowParams.set("q", query);
   if (page > 1) workflowParams.set("page", String(page));
@@ -147,6 +150,9 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   programs={programContext.programs}
                   programTypeLabels={programTypeLabels}
                   currentProgramType={programType}
+                  isolateParamsByProgram={["q", "page"]}
+                  isolateScopeKey="studentsWorkspace"
+                  isolateScopeSuffix={status}
                 />
               )}
             </div>
@@ -196,30 +202,14 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
         </section>
 
         {!isAdmin ? (
-          <div className="mt-5 inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-            <Link
-              className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition ${
-                !isInactiveView
-                  ? "bg-emerald-900 text-white"
-                  : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-              href={buildStatusHref("active")}
-              scroll={false}
-            >
-              {t("activeTab")}
-            </Link>
-            <Link
-              className={`inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition ${
-                isInactiveView
-                  ? "bg-emerald-900 text-white"
-                  : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-              href={buildStatusHref("inactive")}
-              scroll={false}
-            >
-              {t("inactiveTab")}
-            </Link>
-          </div>
+          <StudentsStatusTabs
+            activeLabel={t("activeTab")}
+            currentStatus={status}
+            dashboardShortcut={dashboardShortcut}
+            inactiveLabel={t("inactiveTab")}
+            programType={programType}
+            returnToProfile={fromProfile}
+          />
         ) : null}
 
         <LiveSearchForm
@@ -258,6 +248,17 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                     </Link>
                   )}
                 </>
+              ) : null}
+              {query ? (
+                <WorkflowContextLink
+                  className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                  contextParams={{ q: null }}
+                  href={resetSearchHref}
+                  prefetch
+                  scroll={false}
+                >
+                  {t("resetSearch")}
+                </WorkflowContextLink>
               ) : null}
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                 {isInactiveView

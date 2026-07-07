@@ -38,8 +38,17 @@ function withSelectedTimezoneOffset(value: DeviceDateTime) {
 }
 
 function resolveInitialValue(initialDateTimeIso?: string): DeviceDateTime {
-  const date = initialDateTimeIso ? new Date(initialDateTimeIso) : new Date();
-  return toInputDateTime(Number.isNaN(date.getTime()) ? new Date() : date);
+  const now = new Date();
+  const initialDate = initialDateTimeIso ? new Date(initialDateTimeIso) : now;
+  const dateValue = Number.isNaN(initialDate.getTime()) ? now : initialDate;
+  const date = toInputDateTime(dateValue);
+  const time = toInputDateTime(now);
+
+  return withSelectedTimezoneOffset({
+    date: date.date,
+    time: time.time,
+    timezoneOffset: time.timezoneOffset,
+  });
 }
 
 function useDeviceDateTime(initialDateTimeIso?: string) {

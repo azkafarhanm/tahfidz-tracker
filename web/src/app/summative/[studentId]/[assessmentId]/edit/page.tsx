@@ -90,6 +90,7 @@ export default async function SummativeEditPage({
           academicYear={assessment.academicYear}
           assessmentId={assessment.id}
           cancelHref={detailHref}
+          defaultDateTimeIso={assessment.createdAt.toISOString()}
           defaultNotes={assessment.notes}
           defaultScore={assessment.score}
           defaultSemester={assessment.semester}

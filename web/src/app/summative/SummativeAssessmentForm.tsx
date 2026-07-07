@@ -4,6 +4,7 @@ import { Loader2, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useFormStatus } from "react-dom";
 import { Semester } from "@/generated/prisma-next/enums";
+import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import SurahInput from "@/components/SurahInput";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
@@ -18,6 +19,7 @@ type SummativeAssessmentFormProps = {
   defaultSurah?: string;
   defaultScore?: number;
   defaultNotes?: string | null;
+  defaultDateTimeIso?: string;
   assessmentId?: string;
 };
 
@@ -31,6 +33,7 @@ export default function SummativeAssessmentForm({
   defaultSurah,
   defaultScore,
   defaultNotes,
+  defaultDateTimeIso,
   assessmentId,
 }: SummativeAssessmentFormProps) {
   const t = useTranslations("Summative");
@@ -118,6 +121,14 @@ export default function SummativeAssessmentForm({
               id="notes"
               name="notes"
               placeholder={t("notesPlaceholder")}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <DeviceDateTimeFields
+              dateLabel={t("dateLabel")}
+              initialDateTimeIso={defaultDateTimeIso}
+              timeLabel={t("timeLabel")}
             />
           </div>
         </div>

@@ -31,9 +31,11 @@ function recordStatusClass(record: RecordItem) {
 }
 
 export default function ActivityRow({
+  detailHref,
   record,
   studentId,
 }: {
+  detailHref: string;
   record: RecordItem;
   studentId: string;
 }) {
@@ -45,9 +47,12 @@ export default function ActivityRow({
 
   const isTasmi = record.type === "Tasmi'";
   const Icon = isTasmi ? Award : record.type === "Hafalan" ? BookOpen : RotateCcw;
+  const [, detailQuery = ""] = detailHref.split("?", 2);
+  const detailParams = new URLSearchParams(detailQuery);
+  const programType = detailParams.get("programType");
   const editHref = isTasmi
-    ? `/students/${studentId}/tasmi/${record.id}/edit`
-    : `/students/${studentId}/records/${record.type === "Hafalan" ? "hafalan" : "murojaah"}/${record.id}/edit?returnTo=${encodeURIComponent(`/students/${studentId}`)}`;
+    ? `/students/${studentId}/tasmi/${record.id}/edit${programType ? `?programType=${programType}` : ""}`
+    : `/students/${studentId}/records/${record.type === "Hafalan" ? "hafalan" : "murojaah"}/${record.id}/edit?returnTo=${encodeURIComponent(detailHref)}`;
 
   if (deleted) return null;
 
@@ -109,7 +114,7 @@ export default function ActivityRow({
                     }
                     return { ok: result.ok, error: result.error, success: result.message };
                   }
-                  const result = await deleteRecord(studentId, record.type === "Hafalan" ? "hafalan" : "murojaah", record.id, `/students/${studentId}`);
+                  const result = await deleteRecord(studentId, record.type === "Hafalan" ? "hafalan" : "murojaah", record.id, detailHref);
                   if (result.ok) {
                     setDeleted(true);
                     refresh();

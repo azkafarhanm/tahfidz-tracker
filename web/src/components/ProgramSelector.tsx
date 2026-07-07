@@ -2,23 +2,38 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useTransition } from "react";
+import {
+  markScopedNavigationContext,
+  mergeVisibleSearchFormContext,
+  readScopedNavigationContext,
+} from "@/hooks/useNavigationContext";
 
 type ProgramSelectorProps = {
   programs: string[];
   programTypeLabels: Record<string, string>;
   currentProgramType: string;
+  isolateParamsByProgram?: string[];
+  isolateScopeKey?: string;
+  isolateScopeSuffix?: string;
 };
 
 export default function ProgramSelector({
   programs,
   programTypeLabels,
   currentProgramType,
+  isolateParamsByProgram = [],
+  isolateScopeKey = "programType",
+  isolateScopeSuffix,
 }: ProgramSelectorProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const searchParamString = searchParams.toString();
+  const shouldIsolateParams = isolateParamsByProgram.length > 0;
+  const scopedValue = useCallback((value: string) => (
+    isolateScopeSuffix ? `${value}:${isolateScopeSuffix}` : value
+  ), [isolateScopeSuffix]);
 
   const buildHref = useCallback((value: string) => {
     const params = new URLSearchParams(searchParamString);
@@ -27,9 +42,28 @@ export default function ProgramSelector({
     } else {
       params.delete("programType");
     }
+    if (shouldIsolateParams) {
+      const storedContext = readScopedNavigationContext(
+        pathname,
+        isolateScopeKey,
+        scopedValue(value),
+      );
+      const storedParams = storedContext
+        ? new URLSearchParams(storedContext)
+        : null;
+
+      for (const key of isolateParamsByProgram) {
+        const storedValue = storedParams?.get(key);
+        if (storedValue) {
+          params.set(key, storedValue);
+        } else {
+          params.delete(key);
+        }
+      }
+    }
     const nextSearch = params.toString();
     return nextSearch ? `${pathname}?${nextSearch}` : pathname;
-  }, [pathname, searchParamString]);
+  }, [isolateParamsByProgram, isolateScopeKey, pathname, scopedValue, searchParamString, shouldIsolateParams]);
 
   const prefetchHrefs = useMemo(
     () => programs.map((program) => buildHref(program)),
@@ -44,6 +78,23 @@ export default function ProgramSelector({
 
   function handleChange(value: string) {
     if (value === currentProgramType) return;
+
+    if (shouldIsolateParams) {
+      const outgoingParams = new URLSearchParams(
+        mergeVisibleSearchFormContext(searchParamString),
+      );
+      const scopedParams = new URLSearchParams();
+      for (const key of isolateParamsByProgram) {
+        const scopedValue = outgoingParams.get(key);
+        if (scopedValue) scopedParams.set(key, scopedValue);
+      }
+      markScopedNavigationContext(
+        pathname,
+        isolateScopeKey,
+        scopedValue(currentProgramType),
+        scopedParams.toString(),
+      );
+    }
 
     const href = buildHref(value);
     startTransition(() => {

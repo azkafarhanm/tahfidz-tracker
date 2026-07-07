@@ -16,6 +16,7 @@ import {
 } from "@/lib/summative";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
+import { parseRecordDateTime } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 
 function buildSummativeRedirectPath(
@@ -234,8 +235,11 @@ async function parseSummativePayload(formData: FormData) {
     String(formData.get("academicYear") ?? "").trim() || await getActiveAcademicYear();
   const scoreValue = String(formData.get("score") ?? "").trim();
   const notesValue = String(formData.get("notes") ?? "").trim();
+  const dateValue = String(formData.get("date") ?? "").trim();
+  const timeValue = String(formData.get("time") ?? "").trim();
+  const timezoneOffsetValue = String(formData.get("timezoneOffset") ?? "").trim();
 
-  if (!studentId || !surahQuery || !semesterValue || !scoreValue) {
+  if (!studentId || !surahQuery || !semesterValue || !scoreValue || !dateValue || !timeValue) {
     throw new Error(t("allFieldsRequired"));
   }
 
@@ -257,6 +261,15 @@ async function parseSummativePayload(formData: FormData) {
     throw new Error(t("notesTooLong"));
   }
 
+  const createdAt = parseRecordDateTime(
+    dateValue,
+    timeValue,
+    timezoneOffsetValue,
+  );
+  if (!createdAt) {
+    throw new Error(t("dateInvalid"));
+  }
+
   return {
     studentId,
     surahId: surah.id,
@@ -264,6 +277,7 @@ async function parseSummativePayload(formData: FormData) {
     academicYear,
     score,
     notes: notesValue || null,
+    createdAt,
   };
 }
 

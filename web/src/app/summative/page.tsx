@@ -335,13 +335,13 @@ export default async function SummativePage({
                         >
                           {t("detailButton")}
                         </WorkflowContextLink>
-                        <Link
+                        <WorkflowContextLink
                           className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"
                           href={`/summative/${student.id}/new?semester=${semesterValue}${programType ? `&programType=${programType}` : ""}`}
                         >
                           <FilePlus2 aria-hidden="true" size={16} strokeWidth={2.2} />
                           {t("addButton")}
-                        </Link>
+                        </WorkflowContextLink>
                       </div>
                     </td>
                   </tr>

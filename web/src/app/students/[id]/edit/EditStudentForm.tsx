@@ -277,9 +277,9 @@ export default function EditStudentForm({
     // The server action redirects back to the Student Detail page. A server
     // redirect cannot call markPrimaryNavigation, so arm the one-shot NAV_FLAG
     // here (before the action) so the detail page's restore effect runs against
-    // the scroll saved on the Detail → Edit departure. The detail page consumes
-    // neither `success` nor `highlight`, and the redirect targets the bare
-    // pathname, so the saved identity matches exactly.
+    // the scroll saved on the Detail -> Edit departure. The detail page consumes
+    // neither `success` nor `highlight`, and the redirect targets the full
+    // return URL, so the saved identity matches exactly.
     markServerActionReturn();
     startTransition(async () => {
       await action(formData);

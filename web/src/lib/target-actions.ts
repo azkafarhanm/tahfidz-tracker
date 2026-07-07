@@ -87,6 +87,11 @@ async function parseTargetForm(formData: FormData): Promise<ParseTargetResult> {
 
 export async function createTarget(studentId: string, formData: FormData) {
   const { teacherId, isAdmin } = await requireSessionScope();
+  const programType = readOptionalString(formData, "programType");
+  const programTypeParam =
+    programType === "ACADEMIC" || programType === "BOARDING"
+      ? `?programType=${programType}`
+      : "";
 
   const student = await prisma.student.findUnique({
     where: { id: studentId },
@@ -98,7 +103,7 @@ export async function createTarget(studentId: string, formData: FormData) {
     redirect("/students");
   }
 
-  const fail = createFailFn(`/students/${studentId}/targets/new`);
+  const fail = createFailFn(`/students/${studentId}/targets/new${programTypeParam}`);
   const result = await parseTargetForm(formData);
 
   if (!result.ok) {
@@ -125,7 +130,12 @@ export async function createTarget(studentId: string, formData: FormData) {
   const t = await getTranslations("Validation");
   revalidatePath(`/students/${studentId}`);
   invalidateStudentRelatedCaches(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("targetCreated"))}&highlight=${target.id}`);
+  const redirectParams = new URLSearchParams({
+    success: t("targetCreated"),
+    highlight: target.id,
+  });
+  if (programTypeParam) redirectParams.set("programType", programType!);
+  redirect(`/students/${studentId}?${redirectParams.toString()}`);
 }
 
 export async function updateTarget(targetId: string, formData: FormData) {

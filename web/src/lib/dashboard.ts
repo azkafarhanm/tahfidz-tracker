@@ -165,7 +165,13 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
         fromAyah: true,
         toAyah: true,
         endDate: true,
-        student: { select: { id: true, fullName: true } },
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            classGroup: { select: { programType: true } },
+          },
+        },
       },
       take: 5,
     }),
@@ -231,6 +237,7 @@ async function getDashboardDataInner(teacherId?: string | null, locale = "id", t
       id: t.id,
       studentId: t.student.id,
       studentName: t.student.fullName,
+      programType: t.student.classGroup.programType,
       range: formatRange(t.surah, t.fromAyah, t.toAyah),
       endDate: dateFormatter.format(t.endDate),
     })),

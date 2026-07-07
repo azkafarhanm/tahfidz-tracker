@@ -47,6 +47,10 @@ export default function StudentCardActions({
   const [horizontalOffset, setHorizontalOffset] = useState(0);
   const [dialogAction, setDialogAction] = useState<DialogAction>(null);
   const [error, setError] = useState<string | null>(null);
+  const currentQuery = searchParams.toString();
+  const detailHref = currentQuery
+    ? `/students/${studentId}?${currentQuery}`
+    : `/students/${studentId}`;
 
   useEffect(() => {
     if (!isOpen) {
@@ -101,7 +105,7 @@ export default function StudentCardActions({
     <div className="flex shrink-0 items-center gap-2">
       <WorkflowContextLink
         className={actionButtonClass("neutral")}
-        href={`/students/${studentId}`}
+        href={detailHref}
       >
         {t("detailLink")}
       </WorkflowContextLink>

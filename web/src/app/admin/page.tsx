@@ -163,8 +163,8 @@ export default async function AdminDashboardPage() {
                       <area.icon aria-hidden="true" size={18} strokeWidth={2.2} />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="break-words font-semibold text-slate-950 dark:text-white">{area.title}</p>
-                      <p className="mt-1 break-words text-sm text-slate-600 dark:text-slate-400">
+                      <p className="break-normal font-semibold text-slate-950 dark:text-white">{area.title}</p>
+                      <p className="mt-1 break-normal text-sm text-slate-600 dark:text-slate-400">
                         {area.description}
                       </p>
                     </div>

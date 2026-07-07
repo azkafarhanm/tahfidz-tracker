@@ -17,6 +17,7 @@ import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
+import ServerActionReturnForm from "@/components/ServerActionReturnForm";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
@@ -104,7 +105,7 @@ export default async function EditRecordPage({
 
         {query?.error ? <FormAlert message={query.error} /> : null}
 
-        <form action={action} className="mt-6 space-y-4">
+        <ServerActionReturnForm action={action} className="mt-6 space-y-4">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Icon
@@ -220,6 +221,7 @@ export default async function EditRecordPage({
 
             <DeviceDateTimeFields
               dateLabel={t("labelDate")}
+              initialDateTimeIso={record.dateTimeIso}
               timeLabel={t("labelTime")}
             />
           </section>
@@ -258,7 +260,7 @@ export default async function EditRecordPage({
               {t("buttonSave")}
             </button>
           </div>
-        </form>
+        </ServerActionReturnForm>
       </section>
     </main>
   );

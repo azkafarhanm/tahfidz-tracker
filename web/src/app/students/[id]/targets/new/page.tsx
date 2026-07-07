@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 type NewTargetPageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; programType?: string }>;
 };
 
 export default async function NewTargetPage({ params, searchParams }: NewTargetPageProps) {
@@ -35,6 +35,11 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
   }
 
   const action = createTarget.bind(null, id);
+  const programType =
+    query?.programType === "ACADEMIC" || query?.programType === "BOARDING"
+      ? query.programType
+      : undefined;
+  const detailHref = `/students/${id}${programType ? `?programType=${programType}` : ""}`;
   const today = todayInputValue();
   const defaultEnd = (() => {
     const d = new Date();
@@ -51,7 +56,7 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
         <header>
           <WorkflowContextLink
             className={backLink}
-            href={`/students/${id}`}
+            href={detailHref}
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {ctx.fullName}
@@ -77,6 +82,7 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
           action={action}
           className="mt-5 space-y-5"
         >
+          {programType ? <input name="programType" type="hidden" value={programType} /> : null}
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
               <Target aria-hidden="true" className="text-emerald-800 dark:text-emerald-400" size={17} strokeWidth={2.2} />
@@ -188,7 +194,7 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
           <div className="sticky bottom-0 -mx-4 flex items-center gap-3 bg-[#f7f4ee]/90 px-4 pb-5 pt-3 backdrop-blur-sm sm:-mx-8 sm:px-8 dark:bg-[#0c0f1a]/90">
             <WorkflowContextLink
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:hover:border-emerald-600 dark:hover:text-emerald-400"
-              href={`/students/${id}`}
+              href={detailHref}
             >
               {t("buttonCancel")}
             </WorkflowContextLink>

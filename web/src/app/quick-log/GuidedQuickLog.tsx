@@ -30,7 +30,7 @@ type Student = {
 };
 
 type ActionResult =
-  | { ok: true; success: string }
+  | { ok: true; recordId?: string; success: string }
   | { ok: false; error: string };
 
 type GuidedQuickLogProps = {
@@ -95,6 +95,7 @@ export default function GuidedQuickLog({
   const [status, setStatus] = useState("CUKUP");
   const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
+  const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const [surahInputKey, setSurahInputKey] = useState(0);
   const studentListboxId = "quick-log-student-listbox";
 
@@ -125,6 +126,7 @@ export default function GuidedQuickLog({
   useEffect(() => {
     if (result.ok && result.success) {
       toast.success(result.success);
+      setHighlightedRecordId(result.recordId ?? null);
       handleReset();
       setExpandTrigger((n) => n + 1);
     }
@@ -132,6 +134,18 @@ export default function GuidedQuickLog({
       toast.error(result.error);
     }
   }, [result]);
+
+  useEffect(() => {
+    if (!highlightedRecordId) return;
+
+    const timer = window.setTimeout(() => {
+      setHighlightedRecordId((current) =>
+        current === highlightedRecordId ? null : current,
+      );
+    }, 2000);
+
+    return () => window.clearTimeout(timer);
+  }, [highlightedRecordId]);
 
   useEffect(() => {
     if (expandTrigger > 0) {
@@ -526,7 +540,13 @@ export default function GuidedQuickLog({
             {activityExpanded ? (
               <ul className="mt-3 space-y-2">
                 {recentItems.map((item) => (
-                  <RecentActivityItemRow key={`${item.type}-${item.recordId}`} item={item} now={now} activityExpanded={activityExpanded} />
+                  <RecentActivityItemRow
+                    activityExpanded={activityExpanded}
+                    highlighted={item.recordId === highlightedRecordId}
+                    item={item}
+                    key={`${item.type}-${item.recordId}`}
+                    now={now}
+                  />
                 ))}
               </ul>
             ) : null}
@@ -536,7 +556,17 @@ export default function GuidedQuickLog({
    );
 }
 
-function RecentActivityItemRow({ item, now, activityExpanded }: { item: RecentActivityItem; now: Date; activityExpanded: boolean }) {
+function RecentActivityItemRow({
+  activityExpanded,
+  highlighted,
+  item,
+  now,
+}: {
+  activityExpanded: boolean;
+  highlighted: boolean;
+  item: RecentActivityItem;
+  now: Date;
+}) {
   const t = useTranslations("QuickLog");
   const searchParams = useSearchParams();
   const programType = searchParams.get("programType");
@@ -556,10 +586,15 @@ function RecentActivityItemRow({ item, now, activityExpanded }: { item: RecentAc
   const returnToParams = new URLSearchParams();
   if (programType) returnToParams.set("programType", programType);
   const returnTo = `/quick-log${returnToParams.toString() ? `?${returnToParams.toString()}` : ""}`;
-  const href = `/students/${item.studentId}?highlight=${item.recordId}&returnTo=${encodeURIComponent(returnTo)}`;
+  const detailParams = new URLSearchParams({
+    highlight: item.recordId,
+    returnTo,
+  });
+  if (programType) detailParams.set("programType", programType);
+  const href = `/students/${item.studentId}?${detailParams.toString()}`;
 
   return (
-    <li>
+    <li data-highlight={item.recordId} data-highlight-active={highlighted ? "" : undefined}>
       <WorkflowContextLink
         className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/50 active:bg-black/5 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700 dark:hover:bg-emerald-950/50 dark:active:bg-white/10"
         contextParams={{ activity: activityExpanded ? "1" : null }}

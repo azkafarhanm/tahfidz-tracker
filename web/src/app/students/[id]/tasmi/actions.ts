@@ -14,7 +14,6 @@ import {
   readOptionalString,
   readInt,
   createFailFn,
-  parseDateInput,
   parseRecordDateTime,
 } from "@/lib/form-helpers";
 
@@ -55,7 +54,12 @@ function revalidateTasmiPaths(studentId: string) {
 export async function createTasmiAction(studentId: string, formData: FormData) {
   const { session } = await requireSessionScope();
   const t = await getTranslations("Validation");
-  const fail = createFailFn(`/students/${studentId}/tasmi/new`);
+  const programType = readOptionalString(formData, "programType");
+  const programTypeParam =
+    programType === "ACADEMIC" || programType === "BOARDING"
+      ? `?programType=${programType}`
+      : "";
+  const fail = createFailFn(`/students/${studentId}/tasmi/new${programTypeParam}`);
 
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
@@ -74,7 +78,6 @@ export async function createTasmiAction(studentId: string, formData: FormData) {
   const gradeValue = readString(formData, "grade");
   const statusValue = readString(formData, "status");
   const examinerName = readString(formData, "examinerName");
-  const dateValue = readString(formData, "date");
   const notes = readOptionalString(formData, "notes");
 
   if (juz === null || juz < 1 || juz > 30) {
@@ -93,7 +96,11 @@ export async function createTasmiAction(studentId: string, formData: FormData) {
     return fail(t("tasmiExaminerRequired"));
   }
 
-  const date = parseDateInput(dateValue);
+  const date = parseRecordDateTime(
+    readString(formData, "date"),
+    readString(formData, "time"),
+    readString(formData, "timezoneOffset"),
+  );
   if (!date) {
     return fail(t("dateInvalid"));
   }
@@ -120,13 +127,23 @@ export async function createTasmiAction(studentId: string, formData: FormData) {
   });
 
   revalidateTasmiPaths(student.id);
-  redirect(`/students/${student.id}?success=${encodeURIComponent(t("tasmiCreated"))}&highlight=${record.id}`);
+  const redirectParams = new URLSearchParams({
+    success: t("tasmiCreated"),
+    highlight: record.id,
+  });
+  if (programTypeParam) redirectParams.set("programType", programType!);
+  redirect(`/students/${student.id}?${redirectParams.toString()}`);
 }
 
 export async function updateTasmiAction(tasmiId: string, studentId: string, formData: FormData) {
   const { session, teacherId } = await requireSessionScope();
   const t = await getTranslations("Validation");
-  const fail = createFailFn(`/students/${studentId}/tasmi/${tasmiId}/edit`);
+  const programType = readOptionalString(formData, "programType");
+  const programTypeParam =
+    programType === "ACADEMIC" || programType === "BOARDING"
+      ? `?programType=${programType}`
+      : "";
+  const fail = createFailFn(`/students/${studentId}/tasmi/${tasmiId}/edit${programTypeParam}`);
 
   const existing = await prisma.tasmiRecord.findFirst({
     where: {
@@ -193,7 +210,12 @@ export async function updateTasmiAction(tasmiId: string, studentId: string, form
   });
 
   revalidateTasmiPaths(studentId);
-  redirect(`/students/${studentId}?success=${encodeURIComponent(t("tasmiUpdated"))}`);
+  const redirectParams = new URLSearchParams({
+    success: t("tasmiUpdated"),
+    highlight: tasmiId,
+  });
+  if (programTypeParam) redirectParams.set("programType", programType!);
+  redirect(`/students/${studentId}?${redirectParams.toString()}`);
 }
 
 export async function deleteTasmiAction(tasmiId: string, studentId: string) {

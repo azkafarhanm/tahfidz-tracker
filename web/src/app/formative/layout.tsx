@@ -7,7 +7,7 @@ export default function FormativeLayout({
   children: ReactNode;
 }) {
   return (
-    <ScopedIntlProvider namespaces={["DeleteRecord", "Export", "Formative", "LogoutButton"]}>
+    <ScopedIntlProvider namespaces={["DeleteRecord", "Error", "Export", "Formative", "LogoutButton"]}>
       {children}
     </ScopedIntlProvider>
   );

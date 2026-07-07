@@ -81,7 +81,13 @@ async function getTeacherProgramContextInner(
     distinct: ["programType"],
   });
 
-  const programs = classGroups.map((cg) => cg.programType);
+  const programOrder: Record<ProgramType, number> = {
+    [ProgramType.ACADEMIC]: 0,
+    [ProgramType.BOARDING]: 1,
+  };
+  const programs = classGroups
+    .map((cg) => cg.programType)
+    .sort((a, b) => programOrder[a] - programOrder[b]);
   const hasMultiple = programs.length > 1;
   const resolvedProgramType = programs[0] ?? ProgramType.ACADEMIC;
 

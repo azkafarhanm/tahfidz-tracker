@@ -125,6 +125,10 @@ function isRestorable(pathname: string): boolean {
 
 function routeIdentity(pathname: string, queryString: string): string {
   const params = new URLSearchParams(queryString);
+  params.delete("dashboardShortcut");
+  if (pathname === "/") {
+    params.delete("programType");
+  }
   params.sort();
   const query = params.toString();
   return query ? `${pathname}?${query}` : pathname;
@@ -142,12 +146,64 @@ function readSaved(identity: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function saveScroll(identity: string): void {
+  if (typeof window === "undefined") return;
+  sessionStorage.setItem(
+    storageKey(identity),
+    String(Math.round(window.scrollY)),
+  );
+}
+
 export function usePanelScrollRestoration(): void {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const identity = routeIdentity(pathname, searchParams.toString());
   const hasHighlight = searchParams.get("highlight") !== null;
   const prevIdentity = useRef<string | null>(identity);
+  const currentIdentity = useRef(identity);
+  const currentPathname = useRef(pathname);
+
+  currentIdentity.current = identity;
+  currentPathname.current = pathname;
+
+  useEffect(() => {
+    if (!("scrollRestoration" in window.history)) return;
+
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+
+    return () => {
+      window.history.scrollRestoration = previous;
+    };
+  }, []);
+
+  useEffect(() => {
+    const saveCurrentRoute = () => {
+      try {
+        if (isRestorable(currentPathname.current)) {
+          saveScroll(currentIdentity.current);
+        }
+      } catch {
+        // sessionStorage may be unavailable - native navigation continues.
+      }
+    };
+
+    const handlePopState = () => {
+      try {
+        saveCurrentRoute();
+        sessionStorage.setItem(NAV_FLAG, "1");
+      } catch {
+        // sessionStorage may be unavailable - browser history continues.
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("pagehide", saveCurrentRoute);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("pagehide", saveCurrentRoute);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePaginationClick = (event: MouseEvent) => {
@@ -270,17 +326,25 @@ export function usePanelScrollRestoration(): void {
         const WATCHDOG_MS = 600;
         const armWatchdog = () => {
           let disarmed = false;
+          let userInteracted = false;
           const disarm = () => {
             if (disarmed) return;
             disarmed = true;
             window.removeEventListener("scroll", onWatchdogScroll, true);
+            window.removeEventListener("wheel", onUserInput, true);
+            window.removeEventListener("touchmove", onUserInput, true);
+            window.removeEventListener("keydown", onUserInput, true);
             window.clearTimeout(watchdogTimer);
+          };
+          const onUserInput = () => {
+            userInteracted = true;
+            disarm();
           };
           const onWatchdogScroll = () => {
             // If the user moved the viewport themselves (programmatic scrollTo
             // we just issued also lands here, but it sets to target, so it is a
             // no-op; a different position implies an external writer or user).
-            if (window.scrollY !== target && window.scrollY !== 0) {
+            if (pathname !== "/" && window.scrollY !== target && window.scrollY !== 0) {
               // Genuine user scroll (or acceptable position) — yield permanently.
               disarm();
             }
@@ -289,7 +353,7 @@ export function usePanelScrollRestoration(): void {
           // asynchronously after streamed content commits.
           const reassert = () => {
             if (disarmed) return;
-            if (window.scrollY === 0) {
+            if (window.scrollY === 0 || (pathname === "/" && !userInteracted && window.scrollY !== target)) {
               window.scrollTo(0, target);
             }
           };
@@ -303,6 +367,9 @@ export function usePanelScrollRestoration(): void {
             timers.forEach((t) => window.clearTimeout(t));
           }, WATCHDOG_MS);
           window.addEventListener("scroll", onWatchdogScroll, true);
+          window.addEventListener("wheel", onUserInput, true);
+          window.addEventListener("touchmove", onUserInput, true);
+          window.addEventListener("keydown", onUserInput, true);
           return disarm;
         };
 
@@ -372,10 +439,7 @@ export function markPrimaryNavigation(
         outgoingPathname,
         queryString,
       );
-      sessionStorage.setItem(
-        storageKey(identity),
-        String(Math.round(window.scrollY)),
-      );
+      saveScroll(identity);
     }
     sessionStorage.setItem(NAV_FLAG, "1");
   } catch {
@@ -388,7 +452,7 @@ export function markPrimaryNavigation(
  * redirect (which, unlike a WorkflowContextLink click, cannot call
  * markPrimaryNavigation itself). Sets only the one-shot NAV_FLAG so the
  * destination's restore effect runs against whatever scroll was saved on the
- * prior departure (e.g. the Detail → Edit departure). Does NOT save the
+ * prior departure (e.g. the Detail -> Edit departure). Does NOT save the
  * current page's scroll — the destination uses the previously saved value.
  *
  * Call from a client form's submit handler, immediately before invoking the

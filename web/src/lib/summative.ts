@@ -711,6 +711,7 @@ export async function saveSummativeAssessment(input: {
   semester: Semester;
   academicYear: string;
   score: number;
+  createdAt: Date;
   notes?: string | null;
 }) {
   if (input.score < 0 || input.score > 100) {
@@ -729,6 +730,7 @@ export async function saveSummativeAssessment(input: {
     update: {
       score: input.score,
       notes: input.notes ?? null,
+      createdAt: input.createdAt,
     },
     create: {
       studentId: input.studentId,
@@ -736,6 +738,7 @@ export async function saveSummativeAssessment(input: {
       semester: input.semester,
       academicYear: input.academicYear,
       score: input.score,
+      createdAt: input.createdAt,
       notes: input.notes ?? null,
     },
   });
@@ -752,6 +755,7 @@ export async function updateSummativeAssessment(
     semester: Semester;
     academicYear: string;
     score: number;
+    createdAt: Date;
     notes?: string | null;
   },
 ) {
@@ -769,6 +773,7 @@ export async function updateSummativeAssessment(
       semester: input.semester,
       academicYear: input.academicYear,
       score: input.score,
+      createdAt: input.createdAt,
       notes: input.notes ?? null,
     },
   });

@@ -64,6 +64,26 @@ detail navigation. Not yet released to production users.
   preserves search, pagination, and scroll across Edit to Save/Cancel.
 - Added edited-teacher highlight after successful save.
 
+#### Teacher module closeout
+
+- **Teacher workflow persistence finalized.** Teacher Dashboard, Students,
+  Student Detail, Quick Log, Formative, Summative, and record-entry flows now
+  preserve the teacher's working context across detail, edit, save, cancel, and
+  browser back/forward navigation.
+- **Program-aware Teacher workspace state.** Academic and Boarding student-list
+  searches, pages, and active/inactive tabs are isolated so switching programs
+  no longer leaks the previous program's search or pagination state.
+- **Server-action return restoration.** Teacher edit forms arm scroll
+  restoration before server redirects, allowing Save to return to the correct
+  detail position without adding a second navigation.
+- **Quick Log record highlight.** Newly created Quick Log records now return
+  the created record id, expand recent activity, and briefly highlight the new
+  row before linking onward to Student Detail.
+- **Responsive Teacher polish.** Student Detail quick actions, dashboard
+  shortcuts, action buttons, and Teacher-facing helper text were adjusted to
+  preserve readable labels across small mobile widths without changing desktop
+  behavior.
+
 ### Fixed
 
 - Preserved sidebar scroll position across navigation for both Admin and Teacher.
@@ -83,6 +103,16 @@ detail navigation. Not yet released to production users.
   action was using `parseDateInput` (date-only, midnight UTC) instead of
   `parseRecordDateTime` (date + time + timezone), discarding the time component.
   Fixed to use `parseRecordDateTime`, matching the Hafalan/Murojaah edit flow.
+- **Summative assessment timestamps are editable.** Summative forms now include
+  date and time fields and persist `createdAt` during create/update, matching
+  the rest of the Teacher record-entry workflow.
+- **Teacher detail returns retain program context.** Student Detail edit,
+  Hafalan, Murojaah, Tasmi, Target, dashboard target, and recent activity links
+  now carry `programType` through cancel, validation failure, save, and delete
+  paths.
+- **Search reset keeps the Teacher workspace.** Resetting Students search now
+  preserves the active page, tab, program, dashboard shortcut, and profile return
+  context instead of falling back to a bare `/students` URL.
 - **Dashboard target queries scoped to active Academic Year.** The
   `overdueTargets` and `weeklyCompletedTargets` queries were not filtering by
   `academicYear`, causing targets from previous years to appear on the Dashboard

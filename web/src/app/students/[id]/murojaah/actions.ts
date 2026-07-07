@@ -26,7 +26,12 @@ export async function createMurojaahRecord(
   const { session } = await requireSessionScope();
 
   const t = await getTranslations("Validation");
-  const fail = createFailFn(`/students/${studentId}/murojaah/new`);
+  const programType = readOptionalString(formData, "programType");
+  const programTypeParam =
+    programType === "ACADEMIC" || programType === "BOARDING"
+      ? `?programType=${programType}`
+      : "";
+  const fail = createFailFn(`/students/${studentId}/murojaah/new${programTypeParam}`);
 
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
@@ -83,5 +88,10 @@ export async function createMurojaahRecord(
   revalidatePath("/formative");
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
-  redirect(`/students/${student.id}?success=${encodeURIComponent(t("murojaahCreated"))}&highlight=${record.id}`);
+  const redirectParams = new URLSearchParams({
+    success: t("murojaahCreated"),
+    highlight: record.id,
+  });
+  if (programTypeParam) redirectParams.set("programType", programType!);
+  redirect(`/students/${student.id}?${redirectParams.toString()}`);
 }

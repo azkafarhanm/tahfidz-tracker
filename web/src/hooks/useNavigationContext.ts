@@ -32,6 +32,14 @@ function contextKey(pathname: string): string {
   return `${CONTEXT_PREFIX}${pathname}`;
 }
 
+function scopedContextKey(
+  pathname: string,
+  scopeKey: string,
+  scopeValue: string,
+): string {
+  return `${contextKey(pathname)}:${scopeKey}=${scopeValue}`;
+}
+
 /**
  * Save the current page's query string to sessionStorage.
  * Called from NavigationLinks onClick, alongside markPrimaryNavigation.
@@ -84,6 +92,38 @@ export function readNavigationContext(pathname: string): string | null {
   if (!CONTEXT_WHITELIST.has(pathname)) return null;
   try {
     return sessionStorage.getItem(contextKey(pathname));
+  } catch {
+    return null;
+  }
+}
+
+export function markScopedNavigationContext(
+  pathname: string,
+  scopeKey: string,
+  scopeValue: string | null,
+  queryString: string,
+): void {
+  if (typeof window === "undefined") return;
+  if (!CONTEXT_WHITELIST.has(pathname) || !scopeValue) return;
+  try {
+    sessionStorage.setItem(
+      scopedContextKey(pathname, scopeKey, scopeValue),
+      queryString,
+    );
+  } catch {
+    // sessionStorage may be unavailable (private mode) - fail silently.
+  }
+}
+
+export function readScopedNavigationContext(
+  pathname: string,
+  scopeKey: string,
+  scopeValue: string | null,
+): string | null {
+  if (typeof window === "undefined") return null;
+  if (!CONTEXT_WHITELIST.has(pathname) || !scopeValue) return null;
+  try {
+    return sessionStorage.getItem(scopedContextKey(pathname, scopeKey, scopeValue));
   } catch {
     return null;
   }

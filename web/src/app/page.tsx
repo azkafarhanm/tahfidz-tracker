@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   ClipboardList,
 } from "lucide-react";
-import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getDashboardData } from "@/lib/dashboard";
 import AppShell from "@/components/AppShell";
@@ -79,7 +78,7 @@ export default async function DashboardPreview({
     ...(isAdmin
       ? [{ label: t("quickActionAdmin"), href: shortcutHref("/admin", "admin"), icon: ShieldCheck }]
       : []),
-    { label: t("quickActionLaporan"), href: shortcutHref(isAdmin ? "/admin/reports" : "/reports", "reports"), icon: BarChart3 },
+    { label: t("quickActionLaporan"), href: shortcutHref(isAdmin ? "/admin/reports" : `/reports${ptSuffix}`, "reports"), icon: BarChart3 },
   ];
 
   return (
@@ -154,7 +153,7 @@ export default async function DashboardPreview({
           </div>
         </section>
 
-        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]">
           {quickActions.map((action) => (
             <WorkflowContextLink
               className="flex min-h-20 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
@@ -165,7 +164,7 @@ export default async function DashboardPreview({
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                 <action.icon aria-hidden="true" size={18} strokeWidth={2.2} />
               </span>
-              <span className="min-w-0 flex-1 break-words">{action.label}</span>
+              <span className="min-w-0 flex-1 break-normal">{action.label}</span>
             </WorkflowContextLink>
           ))}
         </section>
@@ -180,9 +179,9 @@ export default async function DashboardPreview({
             </div>
             <div className="mt-3 space-y-3">
               {dashboard.overdueTargets.map((ot) => (
-                <Link
+                <WorkflowContextLink
                   className="block rounded-2xl border border-red-200 bg-white p-4 shadow-sm transition hover:border-red-300 hover:shadow-md dark:border-red-900 dark:bg-slate-900 dark:shadow-none"
-                  href={`/students/${ot.studentId}`}
+                  href={`/students/${ot.studentId}?programType=${ot.programType}&returnTo=${encodeURIComponent(dashboardReturnTo)}`}
                   key={ot.id}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -199,7 +198,7 @@ export default async function DashboardPreview({
                      </span>
                   </div>
                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("overdueDeadlineLabel")} {ot.endDate}</p>
-                </Link>
+                </WorkflowContextLink>
               ))}
             </div>
           </section>
@@ -247,7 +246,7 @@ export default async function DashboardPreview({
                      </span>
                     <WorkflowContextLink
                        className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
-                      href={`/students/${record.studentId}?returnTo=${encodeURIComponent(dashboardReturnTo)}`}
+                      href={`/students/${record.studentId}?programType=${record.programType}&returnTo=${encodeURIComponent(dashboardReturnTo)}`}
                     >
                        {t("detailLink")}
                     </WorkflowContextLink>

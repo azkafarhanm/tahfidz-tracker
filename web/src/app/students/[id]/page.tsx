@@ -41,7 +41,7 @@ type StudentDetailPageProps = {
   params: Promise<{
     id: string;
   }>;
-  searchParams?: Promise<{ returnTo?: string }>;
+  searchParams?: Promise<{ programType?: string; returnTo?: string }>;
 };
 
 function recordStatusClass(record: RecordItem) {
@@ -117,6 +117,11 @@ export default async function StudentDetailPage({
   // other returnTo uses; only known teacher origins are honored so the normal
   // list → detail → Back behavior is preserved otherwise.
   const rawReturnTo = query?.returnTo;
+  const paramProgramType =
+    query?.programType === "ACADEMIC" || query?.programType === "BOARDING"
+      ? query.programType
+      : undefined;
+  const detailHref = `/students/${student.id}${paramProgramType ? `?programType=${paramProgramType}` : ""}`;
   const isDashboardReturn =
     rawReturnTo === "/" || rawReturnTo?.startsWith("/?") === true;
   const returnToHref =
@@ -256,7 +261,7 @@ export default async function StudentDetailPage({
            <div className="flex flex-wrap items-center gap-2">
              <WorkflowContextLink
                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-               href={`/students/${student.id}/edit?returnTo=${encodeURIComponent(`/students/${student.id}`)}`}
+               href={`/students/${student.id}/edit?returnTo=${encodeURIComponent(detailHref)}`}
              >
                <PencilLine aria-hidden="true" size={14} strokeWidth={2.2} />
                {t("editButton")}
@@ -320,33 +325,33 @@ export default async function StudentDetailPage({
           </div>
         </section>
 
-        <section className="mt-5 grid grid-cols-3 gap-3">
+        <section className="mt-5 grid grid-cols-1 gap-2 min-[390px]:grid-cols-3 sm:gap-3">
           <WorkflowContextLink
-            className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
-            href={`/students/${student.id}/hafalan/new`}
+            className="flex min-h-16 items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] min-[390px]:px-2.5 sm:gap-3 sm:px-4 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
+            href={`/students/${student.id}/hafalan/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
           >
-            <span className={`grid h-9 w-9 place-items-center rounded-xl ${badge.success}`}>
+            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl sm:h-9 sm:w-9 ${badge.success}`}>
               <BookOpen aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
-            {t("hafalanButton")}
+            <span className="whitespace-nowrap leading-tight">{t("hafalanButton")}</span>
           </WorkflowContextLink>
           <WorkflowContextLink
-            className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
-            href={`/students/${student.id}/murojaah/new`}
+            className="flex min-h-16 items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-emerald-300 hover:shadow-md active:scale-[0.98] min-[390px]:px-2.5 sm:gap-3 sm:px-4 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
+            href={`/students/${student.id}/murojaah/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
           >
-            <span className={`grid h-9 w-9 place-items-center rounded-xl ${badge.success}`}>
+            <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl sm:h-9 sm:w-9 ${badge.success}`}>
               <RotateCcw aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
-            {t("murojaahButton")}
+            <span className="whitespace-nowrap leading-tight">{t("murojaahButton")}</span>
           </WorkflowContextLink>
           <WorkflowContextLink
-            className="flex min-h-16 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-violet-300 hover:shadow-md active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
-            href={`/students/${student.id}/tasmi/new`}
+            className="flex min-h-16 items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-2 text-left text-sm font-semibold text-slate-900 shadow-sm transition duration-200 hover:border-violet-300 hover:shadow-md active:scale-[0.98] min-[390px]:px-2.5 sm:gap-3 sm:px-4 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none"
+            href={`/students/${student.id}/tasmi/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-700 sm:h-9 sm:w-9 dark:bg-violet-950 dark:text-violet-400">
               <Award aria-hidden="true" size={18} strokeWidth={2.2} />
             </span>
-            {t("tasmiButton")}
+            <span className="whitespace-nowrap leading-tight">{t("tasmiButton")}</span>
           </WorkflowContextLink>
         </section>
 
@@ -377,7 +382,7 @@ export default async function StudentDetailPage({
             <div className="flex flex-wrap items-center gap-2">
               <WorkflowContextLink
                 className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-950"
-                href={`/students/${student.id}/targets/new`}
+                href={`/students/${student.id}/targets/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
               >
                 <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                 {t("addTargetButton")}
@@ -403,7 +408,7 @@ export default async function StudentDetailPage({
                 </p>
                 <WorkflowContextLink
                   className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
-                  href={`/students/${student.id}/targets/new`}
+                  href={`/students/${student.id}/targets/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
                 >
                   <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                   {t("addTargetButton")}
@@ -435,7 +440,7 @@ export default async function StudentDetailPage({
               <div className="flex flex-wrap items-center gap-2">
                 <WorkflowContextLink
                   className="inline-flex items-center gap-1.5 rounded-xl bg-violet-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-950"
-                  href={`/students/${student.id}/tasmi/new`}
+                  href={`/students/${student.id}/tasmi/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
                 >
                   <PlusCircle aria-hidden="true" size={14} strokeWidth={2.2} />
                   {t("tasmiButton")}
@@ -490,6 +495,7 @@ export default async function StudentDetailPage({
             {student.recentActivity.length > 0 ? (
               student.recentActivity.map((record) => (
                 <ActivityRow
+                  detailHref={detailHref}
                   key={`${record.type}-${record.id}`}
                   record={record}
                   studentId={student.id}
@@ -506,14 +512,14 @@ export default async function StudentDetailPage({
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   <WorkflowContextLink
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
-                    href={`/students/${student.id}/hafalan/new`}
+                    href={`/students/${student.id}/hafalan/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
                   >
                     <BookOpen aria-hidden="true" size={14} strokeWidth={2.2} />
                     {t("hafalanButton")}
                   </WorkflowContextLink>
                   <WorkflowContextLink
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                    href={`/students/${student.id}/murojaah/new`}
+                    href={`/students/${student.id}/murojaah/new${paramProgramType ? `?programType=${paramProgramType}` : ""}`}
                   >
                     <RotateCcw aria-hidden="true" size={14} strokeWidth={2.2} />
                     {t("murojaahButton")}

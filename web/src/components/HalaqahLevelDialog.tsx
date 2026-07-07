@@ -103,7 +103,7 @@ export default function HalaqahLevelDialog({
         </button>
 
         {success ? (
-          <p className="break-words text-sm text-emerald-600 dark:text-emerald-400">{success}</p>
+          <p className="break-normal text-sm text-emerald-600 dark:text-emerald-400">{success}</p>
         ) : null}
       </div>
 

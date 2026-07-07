@@ -22,6 +22,7 @@ The storage namespaces are intentionally separate:
 
 - Scroll positions: `scroll:<pathname>`
 - Navigation contexts: `ctx:<pathname>`
+- Scoped navigation contexts: `ctx:<pathname>:<scopeKey>=<scopeValue>`
 - One-shot scroll-navigation flag: `navScrollRestore`
 
 All persistence uses `sessionStorage`. State is therefore isolated per browser
@@ -34,8 +35,9 @@ and the scroll save operation treat storage write failures as non-fatal.
 
 Scroll Persistence restores a user's vertical position when they leave a
 top-level application panel through primary navigation and later return through
-primary navigation. It does not preserve query parameters or restore detail,
-edit, settings, refresh, redirect, or mutation flows.
+primary navigation. It also supports approved Teacher workflow returns where a
+server action redirects back to the same detail context after Save. It does not
+preserve query parameters by itself.
 
 The implementation lives in:
 
@@ -57,6 +59,9 @@ The implementation lives in:
 6. On the incoming pathname, the hook consumes and immediately removes the
    one-shot flag. Restoration runs only when that flag was present and the
    destination is eligible.
+7. For browser back/forward navigation, the hook saves the current route on
+   `popstate`/`pagehide`, sets the same one-shot flag, and uses
+   `history.scrollRestoration = "manual"` while the app shell is mounted.
 
 Saving in the click handler is required. Saving in a post-navigation effect is
 too late because Next.js may already have reset `window.scrollY` to zero.
@@ -66,12 +71,13 @@ too late because Next.js may already have reset `window.scrollY` to zero.
 Each eligible panel is stored as:
 
 ```text
-scroll:<pathname> = <rounded window.scrollY>
+scroll:<route identity> = <rounded window.scrollY>
 ```
 
-The key excludes the query string. Scroll position and navigation context are
-separate concerns, and changing a dataset through search, filters, or pagination
-must not create a second scroll-storage namespace.
+The route identity includes sorted query parameters for restorable routes, with
+ephemeral shortcut parameters removed before storage. Scroll position and
+navigation context are separate concerns, but Teacher workflow returns must keep
+their return URL and saved scroll identity aligned.
 
 The eligible panel set is derived from the shared teacher and admin navigation
 items, with `/reports` included explicitly because it is reached through a
@@ -146,6 +152,17 @@ Consequently, every query parameter present at the time of the navigation click
 is part of the saved context. Adding a new URL-based state parameter to an
 already eligible page does not require a persistence-code change.
 
+Some Teacher workspaces also use scoped context keys:
+
+```text
+ctx:<pathname>:<scopeKey>=<scopeValue> = <raw scoped query string>
+```
+
+Scoped context is used when one route has independent workspaces inside it, for
+example Academic vs Boarding students and active vs inactive student tabs. Only
+the explicitly isolated parameters are saved in the scoped entry; the regular
+route context remains available for broad navigation.
+
 ### Merge strategy
 
 `mergeContextParams()` parses the base and stored query strings generically with
@@ -178,6 +195,21 @@ For this feature, `router.replace()` is therefore an architectural anti-pattern.
 The restored query string must be part of the link before the original
 navigation begins.
 
+## Teacher Workflow Returns
+
+Teacher workflow links use `WorkflowContextLink` so the outgoing detail or list
+context is saved before navigation. When a link points to an edit/create route
+with a same-page `returnTo`, the link also records the canonical return query so
+Save and Cancel land on the same route identity that was saved before leaving.
+
+Server-action forms that redirect back after Save call `markServerActionReturn`
+before submit. This arms the one-shot restore flag without overwriting the saved
+scroll position from the earlier detail-to-edit departure.
+
+Highlight behavior remains URL-driven: workflows pass `highlight=<id>` and the
+destination row/card exposes a matching `data-highlight=<id>`. This keeps
+scroll restoration and visual reveal independent.
+
 ## Maintenance rules
 
 - Do not make either persistence module import or call the other.
@@ -186,7 +218,9 @@ navigation begins.
 - Do not add pathname-specific branching to `NavigationLinks`.
 - Add a route to `CONTEXT_WHITELIST` only when its query string represents UI
   context that should survive primary navigation.
-- Keep scroll keys pathname-only and navigation-context keys separate.
+- Keep scroll keys and navigation-context keys separate.
+- For Teacher server-action returns, keep the `returnTo` query and saved scroll
+  route identity in sync.
 - Preserve the one-shot observer cleanup and safety timeout.
 - Verify changes with lint, typecheck, build, desktop navigation, and Android
   PWA navigation for both teacher and admin roles.

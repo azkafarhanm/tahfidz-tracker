@@ -77,7 +77,7 @@ export default function ChangeEmailPage() {
                 maxLength={120}
                 name="newEmail"
                 onChange={(e) => setNewEmailLen(e.target.value.length)}
-                placeholder="guru@tahfidzflow.local"
+                placeholder="guru@tahfidzflow.com"
                 required
                 type="email"
               />
@@ -95,7 +95,7 @@ export default function ChangeEmailPage() {
                 maxLength={120}
                 name="confirmEmail"
                 onChange={(e) => setConfirmEmailLen(e.target.value.length)}
-                placeholder="guru@tahfidzflow.local"
+                placeholder="guru@tahfidzflow.com"
                 required
                 type="email"
               />

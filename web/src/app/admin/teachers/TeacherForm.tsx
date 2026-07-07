@@ -184,7 +184,7 @@ export default function TeacherForm({
                   maxLength={120}
                   name="email"
                   onChange={(e) => setEmailLength(e.target.value.length)}
-                  placeholder="guru@tahfidzflow.local"
+                  placeholder="guru@tahfidzflow.com"
                   required
                   type="email"
                 />
