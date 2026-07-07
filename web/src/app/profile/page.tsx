@@ -14,6 +14,7 @@ import InstallAppButton from "@/components/InstallAppButton";
 import LogoutButton from "@/components/LogoutButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
 import { heroSummary, backLink } from "@/lib/colors";
@@ -157,33 +158,33 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                  {t("openAdminPanelButton")}
               </Link>
             ) : null}
-            <Link
+            <WorkflowContextLink
               className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
-              href={studentsHref}
+              href={`${studentsHref}${studentsHref.includes("?") ? "&" : "?"}returnTo=profile`}
             >
                {t("viewStudentsButton")}
-            </Link>
-            <Link
+            </WorkflowContextLink>
+            <WorkflowContextLink
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
               href="/profile/change-email"
             >
               <MailCheck aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changeEmailButton")}
-            </Link>
-            <Link
+            </WorkflowContextLink>
+            <WorkflowContextLink
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
               href="/profile/change-username"
             >
               <UserRound aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changeUsernameButton")}
-            </Link>
-            <Link
+            </WorkflowContextLink>
+            <WorkflowContextLink
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
               href="/profile/change-password"
             >
               <KeyRound aria-hidden="true" size={15} strokeWidth={2.2} />
                {t("changePasswordButton")}
-            </Link>
+            </WorkflowContextLink>
             <InstallAppButton />
             <LogoutButton label={logoutT("label")} />
           </div>

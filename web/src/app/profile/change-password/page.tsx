@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { ArrowLeft, KeyRound } from "lucide-react";
 import { changePassword } from "./actions";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import CharacterCounter from "@/components/CharacterCounter";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
 import { backLink } from "@/lib/colors";
 
 export default function ChangePasswordPage() {
@@ -22,13 +23,13 @@ export default function ChangePasswordPage() {
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
-          <Link
+          <WorkflowContextLink
               className={backLink}
               href="/profile"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backLink")}
-          </Link>
+          </WorkflowContextLink>
           <div className="mt-4 flex items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <KeyRound aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -44,6 +45,7 @@ export default function ChangePasswordPage() {
         <form
           className="mt-5 space-y-4"
           action={(formData) => {
+            markServerActionReturn();
             startTransition(async () => {
               await changePassword(formData);
             });

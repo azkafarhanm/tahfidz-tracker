@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useTransition, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
 import { changeEmail } from "./actions";
 import CharacterCounter from "@/components/CharacterCounter";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
 import { backLink } from "@/lib/colors";
 
 export default function ChangeEmailPage() {
@@ -19,13 +20,13 @@ export default function ChangeEmailPage() {
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
       <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8">
         <header>
-          <Link
+          <WorkflowContextLink
             className={backLink}
             href="/profile"
           >
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
             {t("backLink")}
-          </Link>
+          </WorkflowContextLink>
           <div className="mt-4 flex items-center gap-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-900 text-white shadow-lg shadow-emerald-900/20">
               <Mail aria-hidden="true" size={20} strokeWidth={2.2} />
@@ -43,6 +44,7 @@ export default function ChangeEmailPage() {
 
         <form
           action={(formData) => {
+            markServerActionReturn();
             startTransition(async () => {
               await changeEmail(formData);
             });

@@ -78,5 +78,5 @@ export async function changeEmail(formData: FormData) {
   });
 
   revalidatePath("/profile");
-  redirect(`/profile?success=${encodeURIComponent(t("emailChanged"))}`);
+  redirect("/profile");
 }

@@ -46,6 +46,7 @@ type StudentsPageProps = {
     status?: string;
     programType?: string;
     highlight?: string;
+    returnTo?: string;
   }>;
 };
 
@@ -64,6 +65,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const status = params?.status === "inactive" && !isAdmin ? "inactive" : "active";
   const isInactiveView = status === "inactive";
+  const fromProfile = params?.returnTo === "profile";
 
   // Program resolution
   const academicYear = await getActiveAcademicYear();
@@ -93,6 +95,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     if (programType) nextParams.set("programType", programType);
+    if (fromProfile) nextParams.set("returnTo", "profile");
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
   };
@@ -101,6 +104,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     if (nextStatus === "inactive") nextParams.set("status", "inactive");
     if (query) nextParams.set("q", query);
     if (programType) nextParams.set("programType", programType);
+    if (fromProfile) nextParams.set("returnTo", "profile");
     const search = nextParams.toString();
     return search ? `/students?${search}` : "/students";
   };
@@ -109,6 +113,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const searchActionParams = new URLSearchParams();
   if (isInactiveView) searchActionParams.set("status", "inactive");
   if (programType) searchActionParams.set("programType", programType);
+  if (fromProfile) searchActionParams.set("returnTo", "profile");
   const searchAction = `/students?${searchActionParams.toString()}`;
   const workflowParams = new URLSearchParams();
   if (query) workflowParams.set("q", query);
@@ -123,7 +128,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
            <div>
             <PanelScrollLink
               className={backLink}
-              href={`/${programType ? `?programType=${programType}` : ""}`}
+              href={fromProfile ? "/profile" : `/${programType ? `?programType=${programType}` : ""}`}
             >
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}

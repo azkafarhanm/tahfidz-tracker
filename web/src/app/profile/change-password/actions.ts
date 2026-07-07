@@ -61,5 +61,5 @@ export async function changePassword(formData: FormData) {
   });
 
   revalidatePath("/profile");
-  redirect(`/profile?success=${encodeURIComponent(t("passwordChanged"))}`);
+  redirect("/profile");
 }

@@ -37,5 +37,5 @@ export async function changeUsername(formData: FormData) {
   });
 
   revalidatePath("/profile");
-  redirect(`/profile?success=${encodeURIComponent(t("usernameChanged"))}`);
+  redirect("/profile");
 }
