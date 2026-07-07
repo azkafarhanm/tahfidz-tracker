@@ -112,13 +112,17 @@ export default async function StudentDetailPage({
 
   // Extract programType for back navigation (available when student is fully loaded)
   const programType = "programType" in student ? student.programType : undefined;
-  // When the user arrived from Quick Log (Recent Activity), return there so the
-  // teacher keeps their Quick Log working position. Validated against open
-  // redirect like other returnTo uses; only /quick-log origins are honored so
-  // the normal list → detail → Back behavior is preserved otherwise.
+  // When the user arrived from an explicit workflow origin, return there so the
+  // teacher keeps that working position. Validated against open redirect like
+  // other returnTo uses; only known teacher origins are honored so the normal
+  // list → detail → Back behavior is preserved otherwise.
   const rawReturnTo = query?.returnTo;
+  const isDashboardReturn =
+    rawReturnTo === "/" || rawReturnTo?.startsWith("/?") === true;
   const returnToHref =
-    rawReturnTo && rawReturnTo.startsWith("/quick-log") && !rawReturnTo.startsWith("//")
+    rawReturnTo &&
+    (rawReturnTo.startsWith("/quick-log") || isDashboardReturn) &&
+    !rawReturnTo.startsWith("//")
       ? rawReturnTo
       : undefined;
   const studentsBackHref = returnToHref

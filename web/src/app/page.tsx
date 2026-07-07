@@ -58,6 +58,12 @@ export default async function DashboardPreview({
   const dashboard = await getDashboardData(teacherId, locale, programType);
   const userName = session?.user?.name ?? t("defaultUserName");
   const ptSuffix = programType ? `?programType=${programType}` : "";
+  const dashboardReturnParams = new URLSearchParams();
+  if (programType) dashboardReturnParams.set("programType", programType);
+  if (typeof params?.dashboardShortcut === "string") {
+    dashboardReturnParams.set("dashboardShortcut", params.dashboardShortcut);
+  }
+  const dashboardReturnTo = `/${dashboardReturnParams.toString() ? `?${dashboardReturnParams.toString()}` : ""}`;
   const shortcutHref = (href: string, shortcut: string) => {
     const [pathname, search = ""] = href.split("?", 2);
     const shortcutParams = new URLSearchParams(search);
@@ -239,12 +245,12 @@ export default async function DashboardPreview({
                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
                        {record.status}
                      </span>
-                    <Link
+                    <WorkflowContextLink
                        className="text-sm font-semibold text-emerald-800 transition hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300"
-                      href={`/students/${record.studentId}`}
+                      href={`/students/${record.studentId}?returnTo=${encodeURIComponent(dashboardReturnTo)}`}
                     >
                        {t("detailLink")}
-                    </Link>
+                    </WorkflowContextLink>
                   </div>
                 </article>
               ))
