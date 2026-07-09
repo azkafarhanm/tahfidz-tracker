@@ -90,6 +90,13 @@ a loading skeleton means the document is not yet tall enough, a
 `ResizeObserver` watches `document.documentElement` until the requested scroll
 position becomes reachable.
 
+Route loading skeletons are centralized in
+`web/src/components/RouteTransitionSkeleton.tsx`. They intentionally use the
+`route-transition-skeleton` delayed-reveal class from `web/src/app/globals.css`
+so fast App Router transitions can complete without showing an avoidable flash.
+This is only a visual loading behavior; scroll restoration still depends on the
+one-shot navigation flag and the document-height observer described here.
+
 Restoration is one-shot. The target is clamped to the live maximum scroll range
 so a page that has become shorter cannot receive an invalid position. There is
 no polling and no `MutationObserver`.
@@ -222,5 +229,7 @@ scroll restoration and visual reveal independent.
 - For Teacher server-action returns, keep the `returnTo` query and saved scroll
   route identity in sync.
 - Preserve the one-shot observer cleanup and safety timeout.
+- Keep route-loading skeletons layout-stable enough for scroll restoration to
+  reach the saved target after Server Component content streams in.
 - Verify changes with lint, typecheck, build, desktop navigation, and Android
   PWA navigation for both teacher and admin roles.

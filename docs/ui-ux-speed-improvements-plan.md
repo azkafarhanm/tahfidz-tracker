@@ -2,6 +2,21 @@
 
 Status: implementation completed in the current dirty worktree; retain this as the execution and rollback reference.
 
+## Current Loading And Resilience Notes
+
+- Route loading states now share `web/src/components/RouteTransitionSkeleton.tsx`
+  for dashboard, directory, detail, form, table, app chrome, admin chrome, and
+  bare profile-form skeletons.
+- `web/src/app/globals.css` defines `route-transition-skeleton` with a short
+  delayed reveal. This keeps fast App Router transitions from flashing a
+  skeleton while preserving visible feedback for slower Server Component loads.
+- Admin dashboard and directory data reads use sequential Prisma tasks on the
+  affected paths to reduce connection-pool pressure during route transitions.
+- `web/src/lib/prisma.ts` treats Neon "Connection terminated due to connection
+  timeout" as transient, so existing retry handling covers that failure mode.
+- No permanent route-loading probes are required; use browser network panels or
+  local-only measurements when validating this area.
+
 ## Repository Facts
 
 - App framework: Next.js App Router under `web/src/app`.

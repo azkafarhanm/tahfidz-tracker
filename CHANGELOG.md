@@ -89,6 +89,15 @@ detail navigation. Not yet released to production users.
 - Preserved sidebar scroll position across navigation for both Admin and Teacher.
 - Prevented unnecessary sidebar auto-scrolling when the active navigation item
   was already visible.
+- **Route loading is less jarring during App Router transitions.** Teacher,
+  Admin, profile, login, reports, formative, and summative loading routes now
+  use shared route-transition skeleton primitives with a short delayed reveal,
+  reducing skeleton flash on fast transitions while keeping long data loads
+  visible.
+- **Admin data loading is more resilient to transient database timeouts.** Admin
+  dashboard and directory loaders now avoid bursty parallel Prisma reads on the
+  affected paths, and the Prisma retry classifier recognizes Neon connection
+  timeout terminations as transient.
 
 - **ProgramType remains active during live search** on Teacher Students and the
   Admin Students, Classes, and Halaqah pages. Search URLs now retain the selected
@@ -134,6 +143,11 @@ detail navigation. Not yet released to production users.
 
 ### Internal
 
+- **`RouteTransitionSkeleton` component** - shared route-loading skeleton
+  primitives for app chrome, admin chrome, bare profile forms, dashboards,
+  directories, details, forms, and tables.
+- **Delayed skeleton reveal CSS** - `route-transition-skeleton` waits briefly
+  before appearing so fast navigations do not show an avoidable loading flash.
 - **`usePanelScrollRestoration` hook** — core scroll persistence logic using
   `sessionStorage`, pathname-based keys, whitelist gating, and synchronous save
   in the click handler. Uses `useLayoutEffect` for flicker-free restore.
