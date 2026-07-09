@@ -1,0 +1,285 @@
+"use client";
+
+import { Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
+import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
+import SurahInput from "@/components/SurahInput";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { Semester } from "@/generated/prisma-next/enums";
+import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
+import type {
+  ExistingSummativeScore,
+  SummativeInputTargetGroup,
+} from "@/lib/summative";
+
+type SummativeBulkScoreFormProps = {
+  action: (formData: FormData) => Promise<void>;
+  academicYear: string;
+  cancelHref: string;
+  defaultSemester: Semester;
+  enableAdditionalMemorization?: boolean;
+  existingScores: ExistingSummativeScore[];
+  returnTo?: string;
+  studentId: string;
+  targetGroups: SummativeInputTargetGroup[];
+};
+
+export default function SummativeBulkScoreForm({
+  action,
+  academicYear,
+  cancelHref,
+  defaultSemester,
+  enableAdditionalMemorization = false,
+  existingScores,
+  returnTo,
+  studentId,
+  targetGroups,
+}: SummativeBulkScoreFormProps) {
+  const t = useTranslations("Summative");
+  const [additionalRows, setAdditionalRows] = useState([0]);
+  const scoreBySurahId = useMemo(
+    () => new Map(existingScores.map((score) => [score.surahId, score.score])),
+    [existingScores],
+  );
+
+  return (
+    <form action={action} className="space-y-5" onSubmit={() => markServerActionReturn()}>
+      <input type="hidden" name="studentId" value={studentId} />
+      <input type="hidden" name="academicYear" value={academicYear} />
+      <input type="hidden" name="semester" value={defaultSemester} />
+      {returnTo ? (
+        <input type="hidden" name="returnTo" value={returnTo} />
+      ) : null}
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none sm:p-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              {t("semesterLabel")}
+            </p>
+            <p className="mt-1 text-base font-semibold text-slate-950 dark:text-white">
+              {defaultSemester === Semester.GANJIL ? t("ganjil") : t("genap")}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              {t("academicYearLabel")}
+            </p>
+            <p className="mt-1 text-base font-semibold text-slate-950 dark:text-white">
+              {academicYear}
+            </p>
+          </div>
+          <div className="sm:col-span-3">
+            <DeviceDateTimeFields
+              dateLabel={t("dateLabel")}
+              timeLabel={t("timeLabel")}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+        <div className="border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+          <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+            {t("targetInputHeading")}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            {t("targetInputDescription")}
+          </p>
+        </div>
+
+        <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          {targetGroups.map((group) => (
+            <div key={group.label} className="px-5 py-5 sm:px-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-emerald-900 dark:text-emerald-300">
+                {group.label}
+              </h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {group.targets.map((target) => (
+                  <label
+                    className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 dark:border-slate-700 dark:bg-slate-800/70"
+                    key={target.surahId}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-slate-950 dark:text-white">
+                        {target.name}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                        {target.number} - {target.totalAyahs} ayat
+                      </span>
+                    </span>
+                    <input
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                      defaultValue={scoreBySurahId.get(target.surahId) ?? ""}
+                      inputMode="numeric"
+                      max={100}
+                      min={0}
+                      name={`score:${target.surahId}`}
+                      placeholder={t("scoreInputPlaceholder")}
+                      type="number"
+                    />
+                  </label>
+                ))}
+                {group.choices?.map((choice) => {
+                  const selectedOption =
+                    choice.options.find((option) => scoreBySurahId.has(option.surahId)) ??
+                    choice.options[0];
+
+                  return (
+                    <div
+                      className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 dark:border-slate-700 dark:bg-slate-800/70 sm:grid-cols-[minmax(0,1fr)_6.5rem]"
+                      key={choice.id}
+                    >
+                      <div className="min-w-0">
+                        <label
+                          className="block text-sm font-semibold text-slate-950 dark:text-white"
+                          htmlFor={`choice:${choice.id}`}
+                        >
+                          {choice.label}
+                        </label>
+                        <select
+                          className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                          defaultValue={selectedOption?.surahId}
+                          id={`choice:${choice.id}`}
+                          name={`choice:${choice.id}`}
+                        >
+                          {choice.options.map((option) => (
+                            <option key={option.surahId} value={option.surahId}>
+                              {option.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <label className="self-end">
+                        <span className="sr-only">{t("scoreLabel")}</span>
+                        <input
+                          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                          defaultValue={
+                            selectedOption
+                              ? scoreBySurahId.get(selectedOption.surahId) ?? ""
+                              : ""
+                          }
+                          inputMode="numeric"
+                          max={100}
+                          min={0}
+                          name={`choiceScore:${choice.id}`}
+                          placeholder={t("scoreInputPlaceholder")}
+                          type="number"
+                        />
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {enableAdditionalMemorization ? (
+        <section className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700 sm:px-6">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+                {t("additionalMemorizationHeading")}
+              </h2>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                {t("additionalMemorizationDescription")}
+              </p>
+            </div>
+            <button
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:text-emerald-400"
+              onClick={() =>
+                setAdditionalRows((rows) => [...rows, Math.max(...rows) + 1])
+              }
+              type="button"
+            >
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              {t("addAdditionalSurahButton")}
+            </button>
+          </div>
+
+          <div className="grid gap-3 px-5 py-5 sm:px-6">
+            {additionalRows.map((rowId) => (
+              <div
+                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-700 dark:bg-slate-800/70 sm:grid-cols-[minmax(0,1fr)_6.5rem_2.75rem]"
+                key={rowId}
+              >
+                <div>
+                  <label
+                    className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    htmlFor={`additional-surah-${rowId}`}
+                  >
+                    {t("surahLabel")}
+                  </label>
+                  <SurahInput
+                    id={`additional-surah-${rowId}`}
+                    name={`additionalSurah:${rowId}`}
+                    required={false}
+                  />
+                </div>
+                <label>
+                  <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {t("scoreLabel")}
+                  </span>
+                  <input
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                    inputMode="numeric"
+                    max={100}
+                    min={0}
+                    name={`additionalScore:${rowId}`}
+                    placeholder={t("scoreInputPlaceholder")}
+                    type="number"
+                  />
+                </label>
+                <button
+                  aria-label={t("removeAdditionalSurahButton")}
+                  className="inline-grid h-11 w-11 place-items-center self-end rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-red-800 dark:hover:text-red-400"
+                  disabled={additionalRows.length === 1}
+                  onClick={() =>
+                    setAdditionalRows((rows) => rows.filter((id) => id !== rowId))
+                  }
+                  type="button"
+                >
+                  <Trash2 aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <WorkflowContextLink
+          className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:text-white"
+          href={cancelHref}
+        >
+          {t("cancelButton")}
+        </WorkflowContextLink>
+        <SubmitButton />
+      </div>
+    </form>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  const t = useTranslations("Summative");
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-5 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? (
+        <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+      ) : (
+        <Save aria-hidden="true" className="h-4 w-4" />
+      )}
+      {pending ? t("savingButton") : t("saveAllButton")}
+    </button>
+  );
+}

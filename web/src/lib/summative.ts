@@ -15,6 +15,34 @@ export type ClassTargetSurah = {
   isRequired: boolean;
 };
 
+export type SummativeInputTargetGroup = {
+  label: string;
+  targets: ClassTargetSurah[];
+  choices?: SummativeInputChoiceTarget[];
+};
+
+export type SummativeInputChoiceTarget = {
+  id: string;
+  label: string;
+  options: ClassTargetSurah[];
+};
+
+export type ExistingSummativeScore = {
+  id: string;
+  surahId: string;
+  score: number;
+};
+
+type AcademicSummativeTargetNumberGroup = {
+  label: string;
+  surahNumbers: number[];
+  choices?: Array<{
+    id: string;
+    label: string;
+    surahNumbers: number[];
+  }>;
+};
+
 export type SummativeScoreRow = {
   id: string;
   surahId: string;
@@ -120,6 +148,160 @@ export async function getClassTargets(
   return cached(cacheKey, 30_000, () =>
     getClassTargetsInner(classLevel, semester, year),
   );
+}
+
+export async function getAcademicSummativeInputTargets(
+  classLevel: number,
+): Promise<SummativeInputTargetGroup[]> {
+  const groups = getAcademicSummativeTargetNumbers(classLevel);
+  if (groups.length === 0) {
+    return [];
+  }
+
+  const surahNumbers = groups.flatMap((group) => [
+    ...group.surahNumbers,
+    ...(group.choices?.flatMap((choice) => choice.surahNumbers) ?? []),
+  ]);
+  const surahs = await prisma.surah.findMany({
+    where: {
+      number: {
+        in: surahNumbers,
+      },
+    },
+    select: {
+      id: true,
+      number: true,
+      name: true,
+      arabicName: true,
+      totalAyahs: true,
+      juz: true,
+    },
+    orderBy: {
+      number: "asc",
+    },
+  });
+  const surahByNumber = new Map(surahs.map((surah) => [surah.number, surah]));
+
+  return groups
+    .map((group) => ({
+      label: group.label,
+      targets: group.surahNumbers
+        .map((number) => surahByNumber.get(number))
+        .filter((surah): surah is NonNullable<typeof surah> => Boolean(surah))
+        .map((surah) => ({
+          surahId: surah.id,
+          number: surah.number,
+          name: surah.name,
+          arabicName: surah.arabicName,
+          totalAyahs: surah.totalAyahs,
+          juz: surah.juz,
+          isRequired: true,
+        })),
+      choices: group.choices
+        ?.map((choice) => ({
+          id: choice.id,
+          label: choice.label,
+          options: choice.surahNumbers
+            .map((number) => surahByNumber.get(number))
+            .filter((surah): surah is NonNullable<typeof surah> => Boolean(surah))
+            .map((surah) => ({
+              surahId: surah.id,
+              number: surah.number,
+              name: surah.name,
+              arabicName: surah.arabicName,
+              totalAyahs: surah.totalAyahs,
+              juz: surah.juz,
+              isRequired: true,
+            })),
+        }))
+        .filter((choice) => choice.options.length > 0),
+    }))
+    .filter((group) => group.targets.length > 0 || (group.choices?.length ?? 0) > 0);
+}
+
+function getAcademicSummativeTargetNumbers(
+  classLevel: number,
+): AcademicSummativeTargetNumberGroup[] {
+  const juz30 = range(78, 114);
+  const juz29 = range(67, 77);
+
+  if (classLevel === 7) {
+    return [{ label: "Juz 30", surahNumbers: juz30 }];
+  }
+
+  if (classLevel === 8) {
+    return [
+      { label: "Juz 30", surahNumbers: juz30 },
+      { label: "Juz 29", surahNumbers: juz29 },
+    ];
+  }
+
+  if (classLevel === 9) {
+    return [
+      { label: "Juz 30", surahNumbers: juz30 },
+      { label: "Juz 29", surahNumbers: juz29 },
+      {
+        label: "Surat Pilihan",
+        surahNumbers: [36],
+        choices: [
+          {
+            id: "grade-9-surat-pilihan",
+            label: "Al-Jumu'ah / As-Saff",
+            surahNumbers: [62, 61],
+          },
+        ],
+      },
+    ];
+  }
+
+  return [];
+}
+
+function range(from: number, to: number) {
+  return Array.from({ length: to - from + 1 }, (_, index) => from + index);
+}
+
+export async function getBoardingSummativeInputTargets(
+  classLevel: number,
+  semester: Semester,
+  academicYear?: string,
+): Promise<SummativeInputTargetGroup[]> {
+  const targets = await getClassTargets(classLevel, semester, academicYear);
+  if (targets.length === 0) {
+    return [];
+  }
+
+  const grouped = new Map<string, ClassTargetSurah[]>();
+  for (const target of targets) {
+    const label = `Juz ${target.juz}`;
+    grouped.set(label, [...(grouped.get(label) ?? []), target]);
+  }
+
+  return [...grouped.entries()].map(([label, groupTargets]) => ({
+    label,
+    targets: groupTargets,
+  }));
+}
+
+export async function getExistingSummativeScores(
+  studentId: string,
+  semester: Semester,
+  academicYear: string,
+  surahIds?: string[],
+): Promise<ExistingSummativeScore[]> {
+  return prisma.summativeScore.findMany({
+    where: {
+      studentId,
+      semester,
+      academicYear,
+      ...(surahIds && surahIds.length > 0 ? { surahId: { in: surahIds } } : {}),
+    },
+    select: {
+      id: true,
+      surahId: true,
+      score: true,
+    },
+  });
 }
 
 async function getClassTargetsInner(
@@ -745,6 +927,56 @@ export async function saveSummativeAssessment(input: {
 
   invalidateSummativeCache(record.studentId);
   return record;
+}
+
+export async function saveSummativeAssessments(
+  inputs: Array<{
+    studentId: string;
+    surahId: string;
+    semester: Semester;
+    academicYear: string;
+    score: number;
+    createdAt: Date;
+  }>,
+) {
+  if (inputs.length === 0) {
+    return [];
+  }
+
+  for (const input of inputs) {
+    if (input.score < 0 || input.score > 100) {
+      throw new Error("Score must be between 0 and 100");
+    }
+  }
+
+  const records = await prisma.$transaction(
+    inputs.map((input) =>
+      prisma.summativeScore.upsert({
+        where: {
+          studentId_surahId_semester_academicYear: {
+            studentId: input.studentId,
+            surahId: input.surahId,
+            semester: input.semester,
+            academicYear: input.academicYear,
+          },
+        },
+        update: {
+          score: input.score,
+        },
+        create: {
+          studentId: input.studentId,
+          surahId: input.surahId,
+          semester: input.semester,
+          academicYear: input.academicYear,
+          score: input.score,
+          createdAt: input.createdAt,
+        },
+      }),
+    ),
+  );
+
+  invalidateSummativeCache(inputs[0]?.studentId);
+  return records;
 }
 
 export async function updateSummativeAssessment(

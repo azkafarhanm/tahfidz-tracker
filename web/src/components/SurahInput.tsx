@@ -7,9 +7,13 @@ import { useTranslations } from "next-intl";
 export default function SurahInput({
   defaultValue,
   id,
+  name = "surah",
+  required = true,
 }: {
   defaultValue?: string;
   id?: string;
+  name?: string;
+  required?: boolean;
 }) {
   const t = useTranslations("SurahInput");
   const [query, setQuery] = useState(defaultValue ?? "");
@@ -74,7 +78,7 @@ export default function SurahInput({
         autoComplete="off"
         className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400"
         id={id}
-        name="surah"
+        name={name}
         onChange={(e) => {
           setQuery(e.target.value);
           setIsOpen(true);
@@ -101,7 +105,7 @@ export default function SurahInput({
         }}
         placeholder={t("placeholder")}
         ref={inputRef}
-        required
+        required={required}
         role="combobox"
         spellCheck={false}
         type="text"

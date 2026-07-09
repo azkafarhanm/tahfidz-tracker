@@ -3,12 +3,22 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { ProgramType } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { createSummativeAssessmentAction } from "@/app/summative/actions";
-import { isSemesterValue } from "@/lib/summative";
+import {
+  createSummativeAssessmentAction,
+  saveSummativeAssessmentsAction,
+} from "@/app/summative/actions";
+import {
+  getAcademicSummativeInputTargets,
+  getBoardingSummativeInputTargets,
+  getExistingSummativeScores,
+  isSemesterValue,
+} from "@/lib/summative";
 import { backLink } from "@/lib/colors";
+import SummativeBulkScoreForm from "@/app/summative/SummativeBulkScoreForm";
 import SummativeAssessmentForm from "@/app/summative/SummativeAssessmentForm";
 
 export const runtime = "nodejs";
@@ -55,7 +65,9 @@ export default async function SummativeNewPage({
       },
       classGroup: {
         select: {
+          grade: true,
           name: true,
+          programType: true,
         },
       },
     },
@@ -76,6 +88,31 @@ export default async function SummativeNewPage({
   if (fromReports) returnToParams.set("returnTo", "reports");
   const returnTo = `/summative/${studentId}?${returnToParams.toString()}`;
   const academicYear = await getActiveAcademicYear();
+  const targetGroups =
+    student.classGroup.programType === ProgramType.ACADEMIC
+      ? await getAcademicSummativeInputTargets(student.classGroup.grade)
+      : await getBoardingSummativeInputTargets(
+          student.classGroup.grade,
+          semester,
+          academicYear,
+        );
+  const targetSurahIds = targetGroups.flatMap((group) =>
+    [
+      ...group.targets.map((target) => target.surahId),
+      ...(group.choices?.flatMap((choice) =>
+        choice.options.map((option) => option.surahId),
+      ) ?? []),
+    ],
+  );
+  const existingScores =
+    targetSurahIds.length > 0
+      ? await getExistingSummativeScores(
+          studentId,
+          semester,
+          academicYear,
+          targetSurahIds,
+        )
+      : [];
 
   return (
     <AppShell currentPath="/summative" userName={session.user.name} isAdmin={isAdmin}>
@@ -101,14 +138,30 @@ export default async function SummativeNewPage({
       </header>
 
       <div className="mt-6">
-        <SummativeAssessmentForm
-          action={createSummativeAssessmentAction}
-          academicYear={academicYear}
-          cancelHref={returnTo}
-          defaultSemester={semester}
-          returnTo={returnTo}
-          studentId={studentId}
-        />
+        {targetGroups.length > 0 ? (
+          <SummativeBulkScoreForm
+            action={saveSummativeAssessmentsAction}
+            academicYear={academicYear}
+            cancelHref={returnTo}
+            defaultSemester={semester}
+            enableAdditionalMemorization={
+              student.classGroup.programType === ProgramType.ACADEMIC
+            }
+            existingScores={existingScores}
+            returnTo={returnTo}
+            studentId={studentId}
+            targetGroups={targetGroups}
+          />
+        ) : (
+          <SummativeAssessmentForm
+            action={createSummativeAssessmentAction}
+            academicYear={academicYear}
+            cancelHref={returnTo}
+            defaultSemester={semester}
+            returnTo={returnTo}
+            studentId={studentId}
+          />
+        )}
       </div>
     </AppShell>
   );
