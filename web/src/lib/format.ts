@@ -34,9 +34,9 @@ export function getTimeFormatter(locale?: string) {
 }
 
 export const statusLabels: Record<RecordStatus, string> = {
-  [RecordStatus.LANCAR]: "Lancar",
-  [RecordStatus.CUKUP]: "Cukup",
-  [RecordStatus.PERLU_MUROJAAH]: "Perlu murojaah",
+  [RecordStatus.LANCAR]: "LANCAR",
+  [RecordStatus.CUKUP]: "CUKUP",
+  [RecordStatus.PERLU_MUROJAAH]: "PERLU MURAJA'AH",
 };
 
 export const recordStatusOptions = [

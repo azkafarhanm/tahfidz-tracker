@@ -7,6 +7,7 @@ import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { requireSessionScope } from "@/lib/session";
+import { deriveRecordStatusFromScore } from "@/lib/record-status";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -117,8 +118,8 @@ export async function updateRecord(
     readString(formData, "time"),
     readString(formData, "timezoneOffset"),
   );
-  const statusValue = readString(formData, "status");
   const score = readInt(formData, "score");
+  const statusValue = deriveRecordStatusFromScore(score);
   const notes = readOptionalString(formData, "notes");
 
   await validateRecordFields({

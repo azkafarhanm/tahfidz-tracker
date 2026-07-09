@@ -7,12 +7,11 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
-import { RecordStatus } from "@/generated/prisma-next/enums";
 import { getStudentFormContext } from "@/lib/students";
 import { createMurojaahRecord } from "../actions";
-import { recordStatusOptions } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
 import SurahInput from "@/components/SurahInput";
+import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
@@ -164,37 +163,11 @@ export default async function NewMurojaahPage({
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelStatus")}
-                </span>
-                <select
-                  className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
-                  defaultValue={RecordStatus.CUKUP}
-                  name="status"
-                  required
-                >
-                  {recordStatusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {t("labelScore")}
-                </span>
-                <input
-                  className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
-                  max={100}
-                  min={0}
-                  name="score"
-                  placeholder={t("placeholderOptional")}
-                  type="number"
-                />
-              </label>
+              <AutoRecordStatusField
+                placeholder={t("placeholderOptional")}
+                scoreLabel={t("labelScore")}
+                statusLabel={t("labelStatus")}
+              />
             </div>
 
             <DeviceDateTimeFields

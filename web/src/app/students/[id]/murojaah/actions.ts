@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { RecordStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
+import { deriveRecordStatusFromScore } from "@/lib/record-status";
 import { validateRecordFields } from "@/lib/validate-record";
 import { requireSessionScope } from "@/lib/session";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
@@ -54,8 +55,8 @@ export async function createMurojaahRecord(
     readString(formData, "time"),
     readString(formData, "timezoneOffset"),
   );
-  const statusValue = readString(formData, "status");
   const score = readInt(formData, "score");
+  const statusValue = deriveRecordStatusFromScore(score);
   const notes = readOptionalString(formData, "notes");
 
   await validateRecordFields({
