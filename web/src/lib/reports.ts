@@ -572,9 +572,7 @@ function summarizeTeacherFormativeExport(
 
     return {
       fullName: student.fullName,
-      halaqahName: student.classGroup.programType === "BOARDING"
-        ? student.classGroup.name
-        : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+      halaqahName: student.classGroup.name,
       halaqahLevel: student.classGroup.programType === "BOARDING" ? "" : halaqahLevelLabels[student.classGroup.level],
       academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
       hafalanCount: summary?.hafalanCount ?? 0,

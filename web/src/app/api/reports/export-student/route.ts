@@ -48,7 +48,6 @@ export async function GET(request: Request) {
       { metric: "Program", value: programLabel },
       { metric: "Nama Santri", value: data.fullName },
       { metric: "Halaqah", value: data.halaqahName },
-      ...(!isBoarding ? [{ metric: "Level", value: data.halaqahLevel }] : []),
       { metric: "Kelas", value: data.academicClassName },
       { metric: "Total Hafalan", value: data.hafalanCount },
       { metric: "Total Murojaah", value: data.murojaahCount },

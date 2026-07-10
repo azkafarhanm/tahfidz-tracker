@@ -45,7 +45,6 @@ export async function GET(request: Request) {
           items: [
             { label: "PROGRAM", value: programLabel },
             { label: "HALAQAH", value: data.halaqahName },
-            ...(!isBoarding ? [{ label: "LEVEL", value: data.halaqahLevel }] : []),
             { label: "KELAS", value: data.academicClassName },
             { label: "HAFALAN", value: data.hafalanCount },
             { label: "MUROJAAH", value: data.murojaahCount },

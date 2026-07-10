@@ -5,7 +5,6 @@ import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
   formatRange,
-  halaqahLevelLabels,
   statusLabels,
 } from "@/lib/format";
 import { getRequestSessionScope } from "@/lib/session";
@@ -134,7 +133,6 @@ export async function GET(request: Request) {
       { header: "Nama Santri", key: "studentName", width: 28 },
       { header: isBoarding ? "Kelas Boarding" : "Kelas Akademik", key: "academicClassName", width: 18 },
       { header: "Halaqah", key: "halaqahName", width: 24 },
-      ...(!isBoarding ? [{ header: "Level", key: "halaqahLevel", width: 12 }] : []),
       { header: "Hafalan", key: "hafalanCount", width: 12 },
       { header: "Murojaah", key: "murojaahCount", width: 12 },
       { header: "Total Catatan", key: "totalCount", width: 14 },
@@ -156,7 +154,6 @@ export async function GET(request: Request) {
         studentName: student.fullName,
         academicClassName: student.academicClass?.name ?? "-",
         halaqahName: student.classGroup.name,
-        ...(!isBoarding ? { halaqahLevel: halaqahLevelLabels[student.classGroup.level] } : {}),
         hafalanCount: summary?.hafalanCount ?? 0,
         murojaahCount: summary?.murojaahCount ?? 0,
         totalCount: summary?.totalCount ?? 0,

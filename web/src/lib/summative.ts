@@ -789,9 +789,7 @@ async function getTeacherSummativeExportDataInner(
       student.id,
       {
         academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
-        halaqahName: student.classGroup.programType === "BOARDING"
-          ? student.classGroup.name
-          : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        halaqahName: student.classGroup.name,
         classLevel: student.classGroup.grade,
       },
     ]),
@@ -836,9 +834,7 @@ async function getTeacherSummativeExportDataInner(
         id: student.id,
         fullName: student.fullName,
         academicClassName: student.classGroup.programType === "BOARDING" ? String(student.classGroup.grade) : (student.academicClass?.name ?? "-"),
-        halaqahName: student.classGroup.programType === "BOARDING"
-          ? student.classGroup.name
-          : `${student.classGroup.name} (${halaqahLevelLabels[student.classGroup.level]})`,
+        halaqahName: student.classGroup.name,
         classLevel: student.classGroup.grade,
         totalAssessments: summary?.totalAssessments ?? 0,
         averageScore:

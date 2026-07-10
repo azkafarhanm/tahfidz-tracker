@@ -74,7 +74,6 @@ export async function GET(request: Request) {
       sheet.columns = [
         { header: "Nama Santri", key: "name", width: 25 },
         { header: "Halaqah", key: "halaqah", width: 20 },
-        ...(!isBoarding ? [{ header: "Level", key: "level", width: 10 }] : []),
         { header: "Hafalan", key: "hafalanCount", width: 10 },
         { header: "Murojaah", key: "murojaahCount", width: 10 },
         { header: "Skor", key: "avgScore", width: 10 },
@@ -87,7 +86,6 @@ export async function GET(request: Request) {
         sheet.addRow({
           name: s.fullName,
           halaqah: s.halaqahName,
-          ...(!isBoarding ? { level: s.halaqahLevel } : {}),
           hafalanCount: s.hafalanCount,
           murojaahCount: s.murojaahCount,
           avgScore: s.avgScore || "-",

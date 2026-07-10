@@ -27,7 +27,6 @@ function addProgramSheets(
   workbook: ExcelJS.Workbook,
   bundle: ExportBundle,
   programLabel: string,
-  isBoarding: boolean,
 ) {
   const summary = bundle.summary;
   const suffix = ` (${programLabel})`;
@@ -54,7 +53,6 @@ function addProgramSheets(
   progressSheet.columns = [
     { header: "Nama", key: "name", width: 25 },
     { header: "Halaqah", key: "halaqah", width: 20 },
-    ...(!isBoarding ? [{ header: "Level", key: "level", width: 10 }] : []),
     { header: "Kelas", key: "className", width: 12 },
     { header: "Hafalan", key: "hafalanCount", width: 10 },
     { header: "Murojaah", key: "murojaahCount", width: 10 },
@@ -67,7 +65,6 @@ function addProgramSheets(
     progressSheet.addRow({
       name: student.fullName,
       halaqah: student.halaqahName,
-      ...(!isBoarding ? { level: student.halaqahLevel } : {}),
       className: student.academicClassName,
       hafalanCount: student.hafalanCount,
       murojaahCount: student.murojaahCount,
@@ -288,7 +285,7 @@ export async function GET(request: Request) {
       ].forEach((row) => infoSheet.addRow(row));
       finalizeTableSheet(infoSheet);
 
-      addProgramSheets(workbook, bundle, programLabel, isBoarding);
+      addProgramSheets(workbook, bundle, programLabel);
 
       return createWorkbookStreamResponse(
         workbook,
@@ -322,10 +319,10 @@ export async function GET(request: Request) {
     finalizeTableSheet(infoSheet);
 
     if (hasAcademic) {
-      addProgramSheets(workbook, academicBundle, "Akademik", false);
+      addProgramSheets(workbook, academicBundle, "Akademik");
     }
     if (hasBoarding) {
-      addProgramSheets(workbook, boardingBundle, "Boarding", true);
+      addProgramSheets(workbook, boardingBundle, "Boarding");
     }
 
     if (!hasAcademic && !hasBoarding) {

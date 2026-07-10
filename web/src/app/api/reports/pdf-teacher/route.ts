@@ -40,8 +40,6 @@ function buildProgramSection(
     },
   ];
 
-  const isBoarding = programLabel === "Boarding";
-
   // Students by grade
   for (const grade of [7, 8, 9]) {
     const gradeStudents = summary.students.filter((s) => s.grade === grade);
@@ -54,7 +52,7 @@ function buildProgramSection(
         rows: gradeStudents.map((student) => [
           student.fullName,
           student.academicClassName,
-          isBoarding ? student.halaqahName : `${student.halaqahName} (${student.halaqahLevel})`,
+          student.halaqahName,
           String(student.hafalanCount),
           String(student.murojaahCount),
           String(student.avgScore ?? "-"),
