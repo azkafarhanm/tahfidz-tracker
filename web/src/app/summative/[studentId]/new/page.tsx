@@ -3,7 +3,6 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
-import { ProgramType } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
@@ -13,7 +12,6 @@ import {
 } from "@/app/summative/actions";
 import {
   getAcademicSummativeInputTargets,
-  getBoardingSummativeInputTargets,
   getExistingSummativeScores,
   isSemesterValue,
 } from "@/lib/summative";
@@ -88,14 +86,9 @@ export default async function SummativeNewPage({
   if (fromReports) returnToParams.set("returnTo", "reports");
   const returnTo = `/summative/${studentId}?${returnToParams.toString()}`;
   const academicYear = await getActiveAcademicYear();
-  const targetGroups =
-    student.classGroup.programType === ProgramType.ACADEMIC
-      ? await getAcademicSummativeInputTargets(student.classGroup.grade)
-      : await getBoardingSummativeInputTargets(
-          student.classGroup.grade,
-          semester,
-          academicYear,
-        );
+  const targetGroups = await getAcademicSummativeInputTargets(
+    student.classGroup.grade,
+  );
   const targetSurahIds = targetGroups.flatMap((group) =>
     [
       ...group.targets.map((target) => target.surahId),
@@ -144,13 +137,8 @@ export default async function SummativeNewPage({
             academicYear={academicYear}
             cancelHref={returnTo}
             defaultSemester={semester}
-            enableAdditionalMemorization={
-              student.classGroup.programType === ProgramType.ACADEMIC
-            }
+            enableAdditionalMemorization
             existingScores={existingScores}
-            highlightExistingScores={
-              student.classGroup.programType === ProgramType.ACADEMIC
-            }
             returnTo={returnTo}
             studentId={studentId}
             targetGroups={targetGroups}

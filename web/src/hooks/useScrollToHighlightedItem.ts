@@ -4,27 +4,37 @@ import { useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 const HIGHLIGHT_PARAM = "highlight";
+const HIGHLIGHTS_PARAM = "highlights";
 const ACTIVE_ATTR = "data-highlight-active";
 const HIGHLIGHT_DURATION_MS = 2000;
 
 export function useScrollToHighlightedItem() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const highlightId = searchParams.get(HIGHLIGHT_PARAM);
+  const highlightId = searchParams.get(HIGHLIGHT_PARAM) ?? "";
+  const highlightIds = searchParams.get(HIGHLIGHTS_PARAM) ?? "";
+  const highlightKey = `${highlightId}|${highlightIds}`;
   const appliedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!highlightId || appliedRef.current === highlightId) return;
-
-    const el = document.querySelector(
-      `[data-highlight="${CSS.escape(highlightId)}"]`,
+    const ids = new Set(
+      [highlightId, ...highlightIds.split(",")].filter(Boolean),
     );
-    if (!el) return;
+    if (ids.size === 0 || appliedRef.current === highlightKey) return;
 
-    appliedRef.current = highlightId;
+    const elements = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-highlight]"),
+    ).filter((element) =>
+      ids.has(element.getAttribute("data-highlight") ?? ""),
+    );
+    if (elements.length === 0) return;
 
-    el.scrollIntoView({ behavior: "instant", block: "center" });
-    el.setAttribute(ACTIVE_ATTR, "");
+    appliedRef.current = highlightKey;
+
+    elements[0].scrollIntoView({ behavior: "instant", block: "center" });
+    for (const element of elements) {
+      element.setAttribute(ACTIVE_ATTR, "");
+    }
 
     let observer: MutationObserver | null = null;
 
@@ -34,7 +44,7 @@ export function useScrollToHighlightedItem() {
     };
 
     const cancelIfHighlightRemoved = () => {
-      if (el.isConnected) return;
+      if (elements.some((element) => element.isConnected)) return;
       cleanup();
     };
 
@@ -44,18 +54,21 @@ export function useScrollToHighlightedItem() {
     const timeout = setTimeout(() => {
       observer?.disconnect();
 
-      if (!el.isConnected) {
+      if (!elements.some((element) => element.isConnected)) {
         appliedRef.current = null;
         return;
       }
 
-      el.removeAttribute(ACTIVE_ATTR);
+      for (const element of elements) {
+        element.removeAttribute(ACTIVE_ATTR);
+      }
       appliedRef.current = null;
 
       // Use history.replaceState to update URL without triggering React re-render
       // router.replace() would cause a re-render that resets scroll position
       const params = new URLSearchParams(searchParams.toString());
       params.delete(HIGHLIGHT_PARAM);
+      params.delete(HIGHLIGHTS_PARAM);
       const query = params.toString();
       const newUrl = query ? `${pathname}?${query}` : pathname;
       window.history.replaceState(null, "", newUrl);
@@ -65,5 +78,5 @@ export function useScrollToHighlightedItem() {
       clearTimeout(timeout);
       cleanup();
     };
-  }, [highlightId, searchParams, pathname]);
+  }, [highlightId, highlightIds, highlightKey, searchParams, pathname]);
 }

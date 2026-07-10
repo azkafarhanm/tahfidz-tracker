@@ -155,6 +155,18 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
       ? [...targetScores, ...additionalScores]
       : targetScores;
   const records = await saveSummativeAssessments(scores);
+  const changedSurahIds = new Set(
+    [
+      ...formData
+        .getAll("changedSurahId")
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+      ...payload.additionalScores.map((score) => score.surahId),
+    ],
+  );
+  const highlightedRecordIds = records
+    .filter((record) => changedSurahIds.has(record.surahId))
+    .map((record) => record.id);
 
   revalidatePath("/");
   revalidatePath("/students");
@@ -167,10 +179,11 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
   invalidateStudentRelatedCaches(payload.studentId);
 
   const params: Record<string, string> = {};
-  const lastRecord = records.at(-1);
-  if (lastRecord) {
+  if (records.length > 0) {
     params.success = tSummative("savedSuccess");
-    params.highlight = lastRecord.id;
+  }
+  if (highlightedRecordIds.length > 0) {
+    params.highlights = highlightedRecordIds.join(",");
   }
 
   redirect(

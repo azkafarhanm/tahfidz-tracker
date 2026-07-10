@@ -2,7 +2,7 @@
 
 import { CircleCheck, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import SurahInput from "@/components/SurahInput";
@@ -21,7 +21,6 @@ type SummativeBulkScoreFormProps = {
   defaultSemester: Semester;
   enableAdditionalMemorization?: boolean;
   existingScores: ExistingSummativeScore[];
-  highlightExistingScores?: boolean;
   returnTo?: string;
   studentId: string;
   targetGroups: SummativeInputTargetGroup[];
@@ -34,13 +33,18 @@ export default function SummativeBulkScoreForm({
   defaultSemester,
   enableAdditionalMemorization = false,
   existingScores,
-  highlightExistingScores = false,
   returnTo,
   studentId,
   targetGroups,
 }: SummativeBulkScoreFormProps) {
   const t = useTranslations("Summative");
   const [additionalRows, setAdditionalRows] = useState([0]);
+  const [enteredScoreKeys, setEnteredScoreKeys] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [changedSurahIds, setChangedSurahIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const scoreBySurahId = useMemo(
     () => new Map(existingScores.map((score) => [score.surahId, score.score])),
     [existingScores],
@@ -49,12 +53,76 @@ export default function SummativeBulkScoreForm({
     () => new Set(existingScores.map((score) => score.surahId)),
     [existingScores],
   );
+  const updateEnteredScore = (key: string, value: string) => {
+    setEnteredScoreKeys((current) => {
+      const next = new Set(current);
+      if (value === "") {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+  const updateChangedSurahIds = (event: FormEvent<HTMLFormElement>) => {
+    const form = event.currentTarget;
+    const next = new Set<string>();
+
+    for (const group of targetGroups) {
+      for (const target of group.targets) {
+        const input = form.elements.namedItem(`score:${target.surahId}`);
+        if (
+          input instanceof HTMLInputElement &&
+          input.value !== String(scoreBySurahId.get(target.surahId) ?? "")
+        ) {
+          next.add(target.surahId);
+        }
+      }
+
+      for (const choice of group.choices ?? []) {
+        const initialOption =
+          choice.options.find((option) => scoreBySurahId.has(option.surahId)) ??
+          choice.options[0];
+        const select = form.elements.namedItem(`choice:${choice.id}`);
+        const input = form.elements.namedItem(`choiceScore:${choice.id}`);
+        if (!(select instanceof HTMLSelectElement) || !(input instanceof HTMLInputElement)) {
+          continue;
+        }
+
+        const initialSurahId = initialOption?.surahId ?? "";
+        const initialScore = String(
+          initialOption ? scoreBySurahId.get(initialOption.surahId) ?? "" : "",
+        );
+        if (
+          select.value !== initialSurahId ||
+          input.value !== initialScore
+        ) {
+          next.add(select.value);
+        }
+      }
+    }
+
+    setChangedSurahIds(next);
+  };
 
   return (
-    <form action={action} className="space-y-5" onSubmit={() => markServerActionReturn()}>
+    <form
+      action={action}
+      className="space-y-5"
+      onChange={updateChangedSurahIds}
+      onSubmit={() => markServerActionReturn()}
+    >
       <input type="hidden" name="studentId" value={studentId} />
       <input type="hidden" name="academicYear" value={academicYear} />
       <input type="hidden" name="semester" value={defaultSemester} />
+      {[...changedSurahIds].map((surahId) => (
+        <input
+          key={surahId}
+          type="hidden"
+          name="changedSurahId"
+          value={surahId}
+        />
+      ))}
       {returnTo ? (
         <input type="hidden" name="returnTo" value={returnTo} />
       ) : null}
@@ -105,7 +173,8 @@ export default function SummativeBulkScoreForm({
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {group.targets.map((target) => {
                   const isHighlighted =
-                    highlightExistingScores && savedScoreSurahIds.has(target.surahId);
+                    savedScoreSurahIds.has(target.surahId) ||
+                    enteredScoreKeys.has(target.surahId);
 
                   return (
                     <label
@@ -137,6 +206,9 @@ export default function SummativeBulkScoreForm({
                         max={100}
                         min={0}
                         name={`score:${target.surahId}`}
+                        onChange={(event) => {
+                          updateEnteredScore(target.surahId, event.target.value);
+                        }}
                         placeholder={t("scoreInputPlaceholder")}
                         type="number"
                       />
@@ -148,8 +220,9 @@ export default function SummativeBulkScoreForm({
                     choice.options.find((option) => scoreBySurahId.has(option.surahId)) ??
                     choice.options[0];
                   const isHighlighted =
-                    highlightExistingScores &&
-                    choice.options.some((option) => savedScoreSurahIds.has(option.surahId));
+                    choice.options.some((option) =>
+                      savedScoreSurahIds.has(option.surahId),
+                    ) || enteredScoreKeys.has(choice.id);
 
                   return (
                     <div
@@ -199,6 +272,9 @@ export default function SummativeBulkScoreForm({
                           max={100}
                           min={0}
                           name={`choiceScore:${choice.id}`}
+                          onChange={(event) => {
+                            updateEnteredScore(choice.id, event.target.value);
+                          }}
                           placeholder={t("scoreInputPlaceholder")}
                           type="number"
                         />
