@@ -47,6 +47,7 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
     <AppShell currentPath="/quick-log" userName={userName} isAdmin={isAdmin}>
       <GuidedQuickLog
         action={createGuidedRecord}
+        isAcademic={programType === ProgramType.ACADEMIC}
         students={students}
         recentItems={recentItems}
         programBadge={<ProgramBadge programType={programType} />}

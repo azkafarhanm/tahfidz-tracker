@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { RecordStatus } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
 import {
   QuickLogRecordType,
   quickLogTypeLabels,
@@ -12,6 +12,7 @@ import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { requireSessionScope } from "@/lib/session";
 import { validateRecordFields } from "@/lib/validate-record";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import { deriveRecordStatusFromScore } from "@/lib/record-status";
 import {
   readString,
   readOptionalString,
@@ -42,7 +43,7 @@ export async function createGuidedRecord(formData: FormData) {
     readString(formData, "time"),
     readString(formData, "timezoneOffset"),
   );
-  const statusValue = readString(formData, "status");
+  const submittedStatusValue = readOptionalString(formData, "status") ?? "";
   const score = readInt(formData, "score");
   const notes = readOptionalString(formData, "notes");
 
@@ -52,7 +53,11 @@ export async function createGuidedRecord(formData: FormData) {
 
   const student = await prisma.student.findFirst({
     where: { id: studentId, isActive: true },
-    select: { id: true, teacherId: true },
+    select: {
+      id: true,
+      teacherId: true,
+      classGroup: { select: { programType: true } },
+    },
   });
 
   if (!student) {
@@ -66,6 +71,11 @@ export async function createGuidedRecord(formData: FormData) {
   if (!validTypes.has(typeValue)) {
     return { ok: false as const, error: t("recordTypeInvalid") };
   }
+
+  const statusValue =
+    student.classGroup.programType === ProgramType.ACADEMIC
+      ? deriveRecordStatusFromScore(score)
+      : submittedStatusValue;
 
   try {
     await validateRecordFields({

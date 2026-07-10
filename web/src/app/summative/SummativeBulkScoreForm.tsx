@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { CircleCheck, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -21,6 +21,7 @@ type SummativeBulkScoreFormProps = {
   defaultSemester: Semester;
   enableAdditionalMemorization?: boolean;
   existingScores: ExistingSummativeScore[];
+  highlightExistingScores?: boolean;
   returnTo?: string;
   studentId: string;
   targetGroups: SummativeInputTargetGroup[];
@@ -33,6 +34,7 @@ export default function SummativeBulkScoreForm({
   defaultSemester,
   enableAdditionalMemorization = false,
   existingScores,
+  highlightExistingScores = false,
   returnTo,
   studentId,
   targetGroups,
@@ -41,6 +43,10 @@ export default function SummativeBulkScoreForm({
   const [additionalRows, setAdditionalRows] = useState([0]);
   const scoreBySurahId = useMemo(
     () => new Map(existingScores.map((score) => [score.surahId, score.score])),
+    [existingScores],
+  );
+  const savedScoreSurahIds = useMemo(
+    () => new Set(existingScores.map((score) => score.surahId)),
     [existingScores],
   );
 
@@ -97,47 +103,75 @@ export default function SummativeBulkScoreForm({
                 {group.label}
               </h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {group.targets.map((target) => (
-                  <label
-                    className="grid grid-cols-[minmax(0,1fr)_6.5rem] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 dark:border-slate-700 dark:bg-slate-800/70"
-                    key={target.surahId}
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-slate-950 dark:text-white">
-                        {target.name}
+                {group.targets.map((target) => {
+                  const isHighlighted =
+                    highlightExistingScores && savedScoreSurahIds.has(target.surahId);
+
+                  return (
+                    <label
+                      className={`grid grid-cols-[minmax(0,1fr)_6.5rem] items-center gap-3 rounded-2xl border px-3.5 py-3 ${
+                        isHighlighted
+                          ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40"
+                          : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/70"
+                      }`}
+                      key={target.surahId}
+                    >
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-950 dark:text-white">
+                          <span className="truncate">{target.name}</span>
+                          {isHighlighted ? (
+                            <CircleCheck
+                              aria-hidden="true"
+                              className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                            />
+                          ) : null}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                          {target.number} - {target.totalAyahs} ayat
+                        </span>
                       </span>
-                      <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                        {target.number} - {target.totalAyahs} ayat
-                      </span>
-                    </span>
-                    <input
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                      defaultValue={scoreBySurahId.get(target.surahId) ?? ""}
-                      inputMode="numeric"
-                      max={100}
-                      min={0}
-                      name={`score:${target.surahId}`}
-                      placeholder={t("scoreInputPlaceholder")}
-                      type="number"
-                    />
-                  </label>
-                ))}
+                      <input
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                        defaultValue={scoreBySurahId.get(target.surahId) ?? ""}
+                        inputMode="numeric"
+                        max={100}
+                        min={0}
+                        name={`score:${target.surahId}`}
+                        placeholder={t("scoreInputPlaceholder")}
+                        type="number"
+                      />
+                    </label>
+                  );
+                })}
                 {group.choices?.map((choice) => {
                   const selectedOption =
                     choice.options.find((option) => scoreBySurahId.has(option.surahId)) ??
                     choice.options[0];
+                  const isHighlighted =
+                    highlightExistingScores &&
+                    choice.options.some((option) => savedScoreSurahIds.has(option.surahId));
 
                   return (
                     <div
-                      className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 dark:border-slate-700 dark:bg-slate-800/70 sm:grid-cols-[minmax(0,1fr)_6.5rem]"
+                      className={`grid gap-3 rounded-2xl border px-3.5 py-3 sm:grid-cols-[minmax(0,1fr)_6.5rem] ${
+                        isHighlighted
+                          ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950/40"
+                          : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/70"
+                      }`}
                       key={choice.id}
                     >
                       <div className="min-w-0">
                         <label
-                          className="block text-sm font-semibold text-slate-950 dark:text-white"
+                          className="flex items-center gap-1.5 text-sm font-semibold text-slate-950 dark:text-white"
                           htmlFor={`choice:${choice.id}`}
                         >
-                          {choice.label}
+                          <span className="truncate">{choice.label}</span>
+                          {isHighlighted ? (
+                            <CircleCheck
+                              aria-hidden="true"
+                              className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                            />
+                          ) : null}
                         </label>
                         <select
                           className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"

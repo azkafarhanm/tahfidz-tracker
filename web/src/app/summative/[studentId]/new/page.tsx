@@ -148,6 +148,9 @@ export default async function SummativeNewPage({
               student.classGroup.programType === ProgramType.ACADEMIC
             }
             existingScores={existingScores}
+            highlightExistingScores={
+              student.classGroup.programType === ProgramType.ACADEMIC
+            }
             returnTo={returnTo}
             studentId={studentId}
             targetGroups={targetGroups}
