@@ -22,6 +22,7 @@ import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels } from "@/lib/format";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { groupProgressStudentsByGradeAndClass } from "@/lib/report-presentation";
 
 export const runtime = "nodejs";
 
@@ -84,6 +85,76 @@ export default async function ReportsPage({
   const isBoarding = programType === ProgramType.BOARDING;
 
   const data = await getTeacherReportData(teacherId, locale, programType, academicYear);
+  const academicProgressGroups = isBoarding
+    ? []
+    : groupProgressStudentsByGradeAndClass(data.students);
+
+  const renderProgressTable = (students: typeof data.students) => (
+    <div className="mt-3 overflow-x-auto">
+      <table className="w-full min-w-[700px] text-sm">
+        <thead>
+          <tr className="border-b border-slate-200 text-left dark:border-slate-700">
+            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableName")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableClass")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableHalaqah")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableHafalan")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableMurojaah")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableSkor")}</th>
+            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableLast")}</th>
+            <th className="pb-3 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableStatus")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {students.map((s) => (
+            <tr
+              className="border-b border-slate-100 dark:border-slate-800"
+              key={s.id}
+            >
+              <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
+                {s.fullName}
+              </td>
+              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.academicClassName}</td>
+              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.halaqahName}</td>
+              <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
+                {s.hafalanCount}
+              </td>
+              <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
+                {s.murojaahCount}
+              </td>
+              <td className="py-3 pr-4 text-center">
+                <span
+                  className={
+                    s.avgScore >= 85
+                      ? "font-semibold text-emerald-700"
+                      : s.avgScore >= 70
+                        ? "font-semibold text-amber-700"
+                        : s.avgScore > 0
+                          ? "font-semibold text-red-700"
+                          : "text-slate-400"
+                  }
+                >
+                  {s.avgScore ?? "-"}
+                </span>
+              </td>
+              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>
+              <td className="py-3 text-center">
+                {s.needsReview ? (
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
+                    <AlertTriangle aria-hidden="true" size={10} />
+                    {t("badgeCek")}
+                  </span>
+                ) : (
+                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
+                    {s.lastStatus}
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   return (
     <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>
@@ -256,83 +327,40 @@ export default async function ReportsPage({
           </section>
         ) : null}
 
-        {/* Group students by grade */}
-        {[7, 8, 9].map((grade) => {
-          const gradeStudents = data.students.filter((s) => s.grade === grade);
-          if (gradeStudents.length === 0) return null;
-          return (
-            <section key={grade} className="mt-6">
-              <h2 className="text-lg font-semibold">{t("progressGradeHeading", { grade })}</h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {t("progressGradeCount", { count: gradeStudents.length })}
-              </p>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full min-w-[700px] text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-left dark:border-slate-700">
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableName")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableClass")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableHalaqah")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableHafalan")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableMurojaah")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableSkor")}</th>
-                      <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableLast")}</th>
-                      <th className="pb-3 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableStatus")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gradeStudents.map((s) => (
-                      <tr
-                        className="border-b border-slate-100 dark:border-slate-800"
-                        key={s.id}
-                      >
-                        <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
-                          {s.fullName}
-                        </td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.academicClassName}</td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.halaqahName}</td>
-                        <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
-                          {s.hafalanCount}
-                        </td>
-                        <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
-                          {s.murojaahCount}
-                        </td>
-                        <td className="py-3 pr-4 text-center">
-                          <span
-                            className={
-                              s.avgScore >= 85
-                                ? "font-semibold text-emerald-700"
-                                : s.avgScore >= 70
-                                  ? "font-semibold text-amber-700"
-                                  : s.avgScore > 0
-                                    ? "font-semibold text-red-700"
-                                    : "text-slate-400"
-                            }
-                          >
-                            {s.avgScore ?? "-"}
-                          </span>
-                        </td>
-                        <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>
-                        <td className="py-3 text-center">
-                          {s.needsReview ? (
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
-                              <AlertTriangle aria-hidden="true" size={10} />
-                              {t("badgeCek")}
-                            </span>
-                          ) : (
-                            <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
-                              {s.lastStatus}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          );
-        })}
+        {isBoarding
+          ? [7, 8, 9].map((grade) => {
+              const gradeStudents = data.students.filter((student) => student.grade === grade);
+              if (gradeStudents.length === 0) return null;
+              return (
+                <section key={grade} className="mt-6">
+                  <h2 className="text-lg font-semibold">{t("progressGradeHeading", { grade })}</h2>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    {t("progressGradeCount", { count: gradeStudents.length })}
+                  </p>
+                  {renderProgressTable(gradeStudents)}
+                </section>
+              );
+            })
+          : academicProgressGroups.map((gradeGroup) => (
+              <section key={gradeGroup.grade} className="mt-6">
+                <h2 className="text-lg font-semibold">
+                  {t("progressGradeHeading", { grade: gradeGroup.grade })}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {t("progressGradeCount", { count: gradeGroup.studentCount })}
+                </p>
+                <div className="mt-4 space-y-6">
+                  {gradeGroup.classes.map((parallelClass) => (
+                    <section key={parallelClass.className}>
+                      <h3 className="text-base font-semibold text-slate-950 dark:text-white">
+                        {parallelClass.className}
+                      </h3>
+                      {renderProgressTable(parallelClass.students)}
+                    </section>
+                  ))}
+                </div>
+              </section>
+            ))}
 
       </AppShell>
   );
