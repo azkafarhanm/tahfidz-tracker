@@ -50,6 +50,7 @@ export type FormativeTableWorkbookInput = {
 
 export type BoardingFormativeProgressWorkbookInput = {
   exportData: FormativeExportData;
+  sheetNamePrefix?: string;
 };
 
 export function buildAcademicFormativeWorkbook(
@@ -244,8 +245,32 @@ export function buildBoardingFormativeProgressWorkbook(
   workbook: ExcelJS.Workbook,
   input: BoardingFormativeProgressWorkbookInput,
 ) {
-  const rowsByStudent = groupRowsByStudent(input.exportData.rows);
-  const sheet = workbook.addWorksheet("Progress Boarding");
+  for (const classLevel of [7, 8, 9]) {
+    const studentIds = new Set(
+      input.exportData.students
+        .filter((student) => student.classGroup.grade === classLevel)
+        .map((student) => student.id),
+    );
+
+    addBoardingProgressSheet(workbook, {
+      students: input.exportData.students.filter((student) =>
+        studentIds.has(student.id),
+      ),
+      rows: input.exportData.rows.filter((row) => studentIds.has(row.studentId)),
+      sheetName: uniqueSheetName(
+        workbook,
+        `${input.sheetNamePrefix ?? ""}Kelas ${classLevel}`,
+      ),
+    });
+  }
+}
+
+function addBoardingProgressSheet(
+  workbook: ExcelJS.Workbook,
+  input: FormativeExportData & { sheetName: string },
+) {
+  const rowsByStudent = groupRowsByStudent(input.rows);
+  const sheet = workbook.addWorksheet(input.sheetName);
 
   sheet.columns = [
     { header: "No", key: "no", width: 6 },
@@ -260,7 +285,7 @@ export function buildBoardingFormativeProgressWorkbook(
     { header: "Tanggal Terakhir", key: "latestDate", width: 18 },
   ];
 
-  input.exportData.students.forEach((student, index) => {
+  input.students.forEach((student, index) => {
     const studentRows = rowsByStudent.get(student.id) ?? [];
     const hafalanRows = filterRowsByType(studentRows, "Hafalan");
     const murojaahRows = filterRowsByType(studentRows, "Murojaah");

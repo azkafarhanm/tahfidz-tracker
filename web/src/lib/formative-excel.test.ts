@@ -25,6 +25,14 @@ const boardingClassGroup = {
   programType: ProgramType.BOARDING,
 };
 
+function makeBoardingClassGroup(grade: number, name = `Halaqah ${grade}`) {
+  return {
+    ...boardingClassGroup,
+    grade,
+    name,
+  };
+}
+
 function makeRow(
   overrides: Partial<ExportRow> & Pick<ExportRow, "id" | "studentId" | "studentName" | "type" | "surah" | "fromAyah" | "toAyah" | "date">,
 ): ExportRow {
@@ -42,7 +50,7 @@ function makeRow(
 }
 
 describe("buildBoardingFormativeProgressWorkbook", () => {
-  it("creates a single Boarding progress worksheet without academic score sheets", () => {
+  it("creates Boarding progress worksheets for classes 7, 8, and 9 without academic score sheets", () => {
     const workbook = new ExcelJS.Workbook();
 
     buildBoardingFormativeProgressWorkbook(workbook, {
@@ -60,10 +68,12 @@ describe("buildBoardingFormativeProgressWorkbook", () => {
     });
 
     expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
-      "Progress Boarding",
+      "Kelas 7",
+      "Kelas 8",
+      "Kelas 9",
     ]);
 
-    const sheet = workbook.getWorksheet("Progress Boarding");
+    const sheet = workbook.getWorksheet("Kelas 7");
     expect(sheet).toBeDefined();
     expect((sheet!.getRow(1).values as ExcelJS.CellValue[]).slice(1)).toEqual([
       "No",
@@ -84,6 +94,102 @@ describe("buildBoardingFormativeProgressWorkbook", () => {
     expect(sheet!.getCell("H2").value).toBe("0 Ayat");
     expect(sheet!.getCell("I2").value).toBe("-");
     expect(sheet!.getCell("J2").value).toBe("-");
+    expect(workbook.getWorksheet("Kelas 8")!.rowCount).toBe(1);
+    expect(workbook.getWorksheet("Kelas 9")!.rowCount).toBe(1);
+  });
+
+  it("keeps each Boarding class worksheet scoped to its own students", () => {
+    const workbook = new ExcelJS.Workbook();
+
+    buildBoardingFormativeProgressWorkbook(workbook, {
+      exportData: {
+        students: [
+          {
+            id: "student-7",
+            fullName: "Santri Tujuh",
+            classGroup: makeBoardingClassGroup(7),
+            academicClass: null,
+          },
+          {
+            id: "student-8",
+            fullName: "Santri Delapan",
+            classGroup: makeBoardingClassGroup(8),
+            academicClass: null,
+          },
+          {
+            id: "student-9",
+            fullName: "Santri Sembilan",
+            classGroup: makeBoardingClassGroup(9),
+            academicClass: null,
+          },
+        ],
+        rows: [
+          makeRow({
+            id: "hafalan-7",
+            studentId: "student-7",
+            studentName: "Santri Tujuh",
+            type: "Hafalan",
+            surah: "Al-Fatihah",
+            fromAyah: 1,
+            toAyah: 7,
+            date: new Date("2026-07-09T08:00:00+07:00"),
+          }),
+          makeRow({
+            id: "murojaah-8",
+            studentId: "student-8",
+            studentName: "Santri Delapan",
+            type: "Murojaah",
+            surah: "Al-Baqarah",
+            fromAyah: 1,
+            toAyah: 3,
+            date: new Date("2026-07-10T08:00:00+07:00"),
+          }),
+          makeRow({
+            id: "hafalan-9",
+            studentId: "student-9",
+            studentName: "Santri Sembilan",
+            type: "Hafalan",
+            surah: "Al-Ikhlas",
+            fromAyah: 1,
+            toAyah: 4,
+            date: new Date("2026-07-11T08:00:00+07:00"),
+          }),
+        ],
+      },
+    });
+
+    expect(workbook.getWorksheet("Kelas 7")!.getCell("B2").value).toBe("Santri Tujuh");
+    expect(workbook.getWorksheet("Kelas 7")!.getCell("E2").value).toBe(1);
+    expect(workbook.getWorksheet("Kelas 8")!.getCell("B2").value).toBe("Santri Delapan");
+    expect(workbook.getWorksheet("Kelas 8")!.getCell("F2").value).toBe(1);
+    expect(workbook.getWorksheet("Kelas 9")!.getCell("B2").value).toBe("Santri Sembilan");
+    expect(workbook.getWorksheet("Kelas 9")!.getCell("E2").value).toBe(1);
+  });
+
+  it("supports prefixed sheet names for combined teacher reports", () => {
+    const workbook = new ExcelJS.Workbook();
+
+    buildBoardingFormativeProgressWorkbook(workbook, {
+      exportData: {
+        students: [
+          {
+            id: "student-7",
+            fullName: "Santri Tujuh",
+            classGroup: boardingClassGroup,
+            academicClass: null,
+          },
+        ],
+        rows: [],
+      },
+      sheetNamePrefix: "Brd Fmt Ganjil ",
+    });
+
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      "Brd Fmt Ganjil Kelas 7",
+      "Brd Fmt Ganjil Kelas 8",
+      "Brd Fmt Ganjil Kelas 9",
+    ]);
+    expect(workbook.getWorksheet("Brd Fmt Ganjil Kelas 7")!.getCell("B2").value).toBe("Santri Tujuh");
   });
 
   it("summarizes completed surah and partial ayah Hafalan without decimal juz values", () => {
@@ -134,7 +240,7 @@ describe("buildBoardingFormativeProgressWorkbook", () => {
       },
     });
 
-    const sheet = workbook.getWorksheet("Progress Boarding")!;
+    const sheet = workbook.getWorksheet("Kelas 7")!;
     expect(sheet.getCell("E2").value).toBe(3);
     expect(sheet.getCell("G2").value).toBe("1 Surah + 15 Ayat");
     expect(sheet.getCell("I2").value).toBe("Ali Imran 10-15");
@@ -198,7 +304,7 @@ describe("buildBoardingFormativeProgressWorkbook", () => {
       },
     });
 
-    const sheet = workbook.getWorksheet("Progress Boarding")!;
+    const sheet = workbook.getWorksheet("Kelas 7")!;
     expect(sheet.getCell("G2").value).toBe("1 Juz + 2 Surah + 18 Ayat");
   });
 
@@ -240,7 +346,7 @@ describe("buildBoardingFormativeProgressWorkbook", () => {
       },
     });
 
-    const sheet = workbook.getWorksheet("Progress Boarding")!;
+    const sheet = workbook.getWorksheet("Kelas 7")!;
     expect(sheet.getCell("F2").value).toBe(2);
     expect(sheet.getCell("H2").value).toBe("2 Surah");
   });

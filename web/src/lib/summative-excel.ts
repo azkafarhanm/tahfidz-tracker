@@ -34,6 +34,7 @@ export type BoardingSummativeWorkbookInput = {
     halaqahName: string;
   }>;
   rows: SummativeExportRow[];
+  sheetNamePrefix?: string;
 };
 
 export type FormativeWorkbookInput = {
@@ -168,6 +169,7 @@ export function buildBoardingSummativeWorkbook(
       classLevel,
       rowsByStudent,
       students,
+      sheetNamePrefix: input.sheetNamePrefix,
     });
   }
 }
@@ -245,7 +247,9 @@ function addBoardingSummativeInfoSheet(
   const coveredClassLevels = [7, 8, 9].filter((classLevel) =>
     input.students.some((student) => student.classLevel === classLevel),
   );
-  const sheet = workbook.addWorksheet("Info");
+  const sheet = workbook.addWorksheet(
+    safeSheetName(`${input.sheetNamePrefix ?? ""}Info`),
+  );
 
   sheet.columns = [
     { header: "Keterangan", key: "key", width: 28 },
@@ -270,9 +274,12 @@ function addBoardingSummativeClassSheet(
     classLevel: number;
     students: BoardingSummativeWorkbookInput["students"];
     rowsByStudent: Map<string, SummativeExportRow[]>;
+    sheetNamePrefix?: string;
   },
 ) {
-  const sheet = workbook.addWorksheet(`Kelas ${input.classLevel}`);
+  const sheet = workbook.addWorksheet(
+    safeSheetName(`${input.sheetNamePrefix ?? ""}Kelas ${input.classLevel}`),
+  );
   sheet.columns = [
     { key: "label", width: 34 },
     { key: "value", width: 16 },

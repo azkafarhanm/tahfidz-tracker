@@ -44,14 +44,6 @@ export async function GET(request: Request) {
 
     const semester = parseSemester(semesterValue);
     const academicYear = await getActiveAcademicYear();
-    const exportData = await getTeacherFormativeExportData(
-      teacherId,
-      semester,
-      academicYear,
-      classLevel,
-      programType,
-    );
-
     const isBoarding = programType === "BOARDING";
     const programLabel = isBoarding ? "Boarding" : "Akademik";
 
@@ -60,6 +52,14 @@ export async function GET(request: Request) {
     workbook.created = new Date();
 
     if (!isBoarding) {
+      const exportData = await getTeacherFormativeExportData(
+        teacherId,
+        semester,
+        academicYear,
+        classLevel,
+        programType,
+      );
+
       buildAcademicFormativeWorkbook(workbook, {
         academicYear,
         classLevel,
@@ -74,6 +74,14 @@ export async function GET(request: Request) {
         `rekap-formatif-akademik-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
       );
     }
+
+    const exportData = await getTeacherFormativeExportData(
+      teacherId,
+      semester,
+      academicYear,
+      undefined,
+      "BOARDING",
+    );
 
     buildBoardingFormativeProgressWorkbook(workbook, { exportData });
 

@@ -178,4 +178,30 @@ describe("buildBoardingSummativeWorkbook", () => {
     expect(classSheet.getCell("A11").value).toBe("Surat Terakhir :");
     expect(classSheet.getCell("B11").value).toBe("Abasa");
   });
+
+  it("supports prefixed sheet names for combined teacher reports", () => {
+    const workbook = new ExcelJS.Workbook();
+
+    buildBoardingSummativeWorkbook(workbook, {
+      academicYear: "2026/2027",
+      semester: Semester.GANJIL,
+      schoolName: "TahfidzFlow",
+      students: [
+        {
+          id: "student-7",
+          fullName: "Santri Kelas Tujuh",
+          classLevel: 7,
+          halaqahName: "Halaqah Ali",
+        },
+      ],
+      rows: [],
+      sheetNamePrefix: "Brd Sum Ganjil ",
+    });
+
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      "Brd Sum Ganjil Info",
+      "Brd Sum Ganjil Kelas 7",
+    ]);
+    expect(workbook.getWorksheet("Brd Sum Ganjil Kelas 7")!.getCell("B2").value).toBe("Santri Kelas Tujuh");
+  });
 });

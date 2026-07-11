@@ -30,6 +30,13 @@ type GroupedPdfRow = {
   cells: string[];
 };
 
+type PdfTableGrouping = "none" | "parallelClass" | "grade";
+
+const pdfRowCollator = new Intl.Collator("id", {
+  numeric: true,
+  sensitivity: "base",
+});
+
 async function getLatestSummativeAssessmentByStudent(
   teacherId: string,
   academicYear: string,
@@ -85,14 +92,14 @@ function appendPdfTableSection(
   title: string,
   headers: string[],
   semesterSections: Array<{ semester: Semester; rows: GroupedPdfRow[] }>,
-  groupByParallelClass: boolean,
+  grouping: PdfTableGrouping,
 ) {
   const populatedSemesters = semesterSections.filter(({ rows }) => rows.length > 0);
   if (populatedSemesters.length === 0) return;
 
   items.push({ type: "subtitle", text: title });
 
-  if (!groupByParallelClass) {
+  if (grouping === "none") {
     items.push({
       type: "table",
       headers,
@@ -101,20 +108,46 @@ function appendPdfTableSection(
     return;
   }
 
-  for (const { semester, rows } of populatedSemesters) {
-    items.push({ type: "subtitle", text: `Semester ${semesterLabel(semester)}` });
-    for (const gradeGroup of groupProgressStudentsByGradeAndClass(rows)) {
-      items.push({ type: "subtitle", text: `Kelas ${gradeGroup.grade}` });
-      for (const parallelClass of gradeGroup.classes) {
-        items.push(
-          { type: "text", text: parallelClass.className },
-          {
-            type: "table",
-            headers,
-            rows: parallelClass.students.map((row) => row.cells),
-          },
-        );
+  if (grouping === "parallelClass") {
+    for (const { semester, rows } of populatedSemesters) {
+      items.push({ type: "subtitle", text: `Semester ${semesterLabel(semester)}` });
+      for (const gradeGroup of groupProgressStudentsByGradeAndClass(rows)) {
+        items.push({ type: "subtitle", text: `Kelas ${gradeGroup.grade}` });
+        for (const parallelClass of gradeGroup.classes) {
+          items.push(
+            { type: "text", text: parallelClass.className },
+            {
+              type: "table",
+              headers,
+              rows: parallelClass.students.map((row) => row.cells),
+            },
+          );
+        }
       }
+    }
+    return;
+  }
+
+  for (const grade of [7, 8, 9]) {
+    const gradeRows = populatedSemesters.flatMap(({ rows }) =>
+      rows
+        .filter((row) => row.grade === grade)
+        .toSorted(
+          (left, right) =>
+            pdfRowCollator.compare(left.fullName, right.fullName) ||
+            left.id.localeCompare(right.id),
+        ),
+    );
+
+    if (gradeRows.length > 0) {
+      items.push(
+        { type: "subtitle", text: `Kelas ${grade}` },
+        {
+          type: "table",
+          headers,
+          rows: gradeRows.map((row) => row.cells),
+        },
+      );
     }
   }
 }
@@ -180,7 +213,8 @@ async function buildProgramSection(
     }
   }
 
-  const groupRemainingSections = programType === ProgramType.ACADEMIC;
+  const remainingSectionGrouping: PdfTableGrouping =
+    programType === ProgramType.ACADEMIC ? "parallelClass" : "grade";
   const semesters = [Semester.GANJIL, Semester.GENAP];
 
   appendPdfTableSection(
@@ -210,7 +244,7 @@ async function buildProgramSection(
         }),
       };
     }),
-    groupRemainingSections,
+    remainingSectionGrouping,
   );
 
   appendPdfTableSection(
@@ -243,7 +277,7 @@ async function buildProgramSection(
         })),
       };
     }),
-    groupRemainingSections,
+    remainingSectionGrouping,
   );
 
   appendPdfTableSection(
@@ -255,7 +289,7 @@ async function buildProgramSection(
       "Kelas",
       "Jumlah",
       "Rata-rata",
-      groupRemainingSections ? "Catatan Terakhir" : "Catatan",
+      "Catatan Terakhir",
     ],
     semesters.map((semester) => {
       const summative = bundle.summative[semester];
@@ -284,7 +318,7 @@ async function buildProgramSection(
         }),
       };
     }),
-    groupRemainingSections,
+    remainingSectionGrouping,
   );
 
   appendPdfTableSection(
@@ -308,7 +342,7 @@ async function buildProgramSection(
         ],
       })),
     })),
-    groupRemainingSections,
+    remainingSectionGrouping,
   );
 
   return items;

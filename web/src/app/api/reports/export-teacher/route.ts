@@ -5,12 +5,15 @@ import { getActiveAcademicYear } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import {
   buildAcademicFormativeWorkbook,
-  buildFormativeTableWorkbook,
+  buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
 import { prisma } from "@/lib/prisma";
 import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
-import { buildSummativeWorkbook } from "@/lib/summative-excel";
+import {
+  buildBoardingSummativeWorkbook,
+  buildSummativeWorkbook,
+} from "@/lib/summative-excel";
 import { semesterLabel } from "@/lib/summative";
 import { locales, defaultLocale } from "@/i18n/request";
 import type { Locale } from "@/i18n/request";
@@ -42,10 +45,7 @@ function addProgramSheets(
         });
       }
     } else {
-      buildFormativeTableWorkbook(workbook, {
-        academicYear: bundle.academicYear,
-        semester,
-        programLabel,
+      buildBoardingFormativeProgressWorkbook(workbook, {
         exportData,
         sheetNamePrefix,
       });
@@ -54,6 +54,20 @@ function addProgramSheets(
 
   for (const semester of [Semester.GANJIL, Semester.GENAP]) {
     const exportData = bundle.summative[semester].exportData;
+    const sheetNamePrefix = `${programSheetPrefix(programLabel)} Sum ${semesterLabel(semester)} `;
+
+    if (programLabel === "Boarding") {
+      buildBoardingSummativeWorkbook(workbook, {
+        academicYear: bundle.academicYear,
+        semester,
+        schoolName: resolveSchoolName(),
+        students: exportData.students,
+        rows: exportData.rows,
+        sheetNamePrefix,
+      });
+      continue;
+    }
+
     for (const classLevel of getSummativeClassLevels(exportData)) {
       buildSummativeWorkbook(workbook, {
         academicYear: bundle.academicYear,
@@ -65,7 +79,7 @@ function addProgramSheets(
         ),
         rows: exportData.rows.filter((row) => row.classLevel === classLevel),
         targets: [],
-        sheetNamePrefix: `${programSheetPrefix(programLabel)} Sum ${semesterLabel(semester)} `,
+        sheetNamePrefix,
       });
     }
   }
