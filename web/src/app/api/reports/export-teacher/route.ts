@@ -3,10 +3,14 @@ import { NextResponse } from "next/server";
 import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
-import { statusLabels, formatRange } from "@/lib/format";
+import {
+  buildAcademicFormativeWorkbook,
+  buildFormativeTableWorkbook,
+} from "@/lib/formative-excel";
 import { prisma } from "@/lib/prisma";
 import { getTeacherExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
+import { buildSummativeWorkbook } from "@/lib/summative-excel";
 import { semesterLabel } from "@/lib/summative";
 import { locales, defaultLocale } from "@/i18n/request";
 import type { Locale } from "@/i18n/request";
@@ -14,204 +18,96 @@ import type { Locale } from "@/i18n/request";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-  timeZone: "Asia/Jakarta",
-});
-
 type ExportBundle = Awaited<ReturnType<typeof getTeacherExportBundle>>;
+type FormativeExportData = ExportBundle["formative"]["GANJIL"]["exportData"];
+type SummativeExportData = ExportBundle["summative"]["GANJIL"]["exportData"];
 
 function addProgramSheets(
   workbook: ExcelJS.Workbook,
   bundle: ExportBundle,
   programLabel: string,
 ) {
-  const summary = bundle.summary;
-  const suffix = ` (${programLabel})`;
-
-  // Summary sheet
-  const summarySheet = workbook.addWorksheet(`Ringkasan${suffix}`);
-  summarySheet.columns = [
-    { header: "Metrik", key: "metric", width: 28 },
-    { header: "Nilai", key: "value", width: 20 },
-  ];
-  [
-    { metric: "Program", value: programLabel },
-    { metric: "Jumlah Santri Aktif", value: summary.studentCount },
-    { metric: "Total Hafalan", value: summary.totalHafalan },
-    { metric: "Total Murojaah", value: summary.totalMurojaah },
-    { metric: "Rata-rata Skor Harian", value: summary.avgScore ?? "-" },
-    { metric: "Perlu Cek / Murojaah", value: summary.needsReviewCount },
-    { metric: "Target Aktif", value: summary.activeTargetCount },
-  ].forEach((row) => summarySheet.addRow(row));
-  finalizeTableSheet(summarySheet);
-
-  // Progress sheet
-  const progressSheet = workbook.addWorksheet(`Progres${suffix}`);
-  progressSheet.columns = [
-    { header: "Nama", key: "name", width: 25 },
-    { header: "Halaqah", key: "halaqah", width: 20 },
-    { header: "Kelas", key: "className", width: 12 },
-    { header: "Hafalan", key: "hafalanCount", width: 10 },
-    { header: "Murojaah", key: "murojaahCount", width: 10 },
-    { header: "Skor Rata-rata", key: "avgScore", width: 15 },
-    { header: "Ayat Terakhir", key: "lastRange", width: 22 },
-    { header: "Tanggal Terakhir", key: "lastActivity", width: 18 },
-    { header: "Status", key: "lastStatus", width: 16 },
-  ];
-  summary.students.forEach((student) => {
-    progressSheet.addRow({
-      name: student.fullName,
-      halaqah: student.halaqahName,
-      className: student.academicClassName,
-      hafalanCount: student.hafalanCount,
-      murojaahCount: student.murojaahCount,
-      avgScore: student.avgScore ?? "-",
-      lastRange: student.lastRange,
-      lastActivity: student.lastActivity,
-      lastStatus: student.needsReview ? "Perlu Cek" : student.lastStatus,
-    });
-  });
-  finalizeTableSheet(progressSheet, {
-    wrapColumns: ["name", "halaqah", "lastRange", "lastStatus"],
-    centerColumns: ["hafalanCount", "murojaahCount", "avgScore"],
-  });
-
-  // Formative recap
-  const formativeRecapSheet = workbook.addWorksheet(`Rekap Formatif${suffix}`);
-  formativeRecapSheet.columns = [
-    { header: "Semester", key: "semester", width: 12 },
-    { header: "Nama Santri", key: "studentName", width: 28 },
-    { header: "Halaqah", key: "halaqah", width: 24 },
-    { header: "Kelas", key: "className", width: 16 },
-    { header: "Hafalan", key: "hafalanCount", width: 12 },
-    { header: "Murojaah", key: "murojaahCount", width: 12 },
-    { header: "Total", key: "total", width: 10 },
-    { header: "Rata-rata", key: "average", width: 12 },
-  ];
-  for (const [label, overview] of [
-    [semesterLabel(Semester.GANJIL), bundle.formative[Semester.GANJIL].recap],
-    [semesterLabel(Semester.GENAP), bundle.formative[Semester.GENAP].recap],
-  ] as const) {
-    overview.forEach((student) => {
-      formativeRecapSheet.addRow({
-        semester: label,
-        studentName: student.fullName,
-        halaqah: student.halaqahName,
-        className: student.academicClassName,
-        hafalanCount: student.hafalanCount,
-        murojaahCount: student.murojaahCount,
-        total: student.totalAssessments,
-        average: student.averageScore ?? "-",
+  for (const semester of [Semester.GANJIL, Semester.GENAP]) {
+    const exportData = bundle.formative[semester].exportData;
+    const sheetNamePrefix = `${programSheetPrefix(programLabel)} Fmt ${semesterLabel(semester)} `;
+    if (programLabel === "Akademik") {
+      for (const classLevel of getFormativeClassLevels(exportData)) {
+        buildAcademicFormativeWorkbook(workbook, {
+          academicYear: bundle.academicYear,
+          classLevel,
+          semester,
+          schoolName: resolveSchoolName(),
+          exportData: filterFormativeClassLevel(exportData, classLevel),
+          sheetNamePrefix,
+        });
+      }
+    } else {
+      buildFormativeTableWorkbook(workbook, {
+        academicYear: bundle.academicYear,
+        semester,
+        programLabel,
+        exportData,
+        sheetNamePrefix,
       });
-    });
+    }
   }
-  finalizeTableSheet(formativeRecapSheet, {
-    wrapColumns: ["studentName", "halaqah"],
-    centerColumns: ["semester", "hafalanCount", "murojaahCount", "total", "average"],
-  });
 
-  // Formative detail
-  const formativeDetailSheet = workbook.addWorksheet(`Detail Formatif${suffix}`);
-  formativeDetailSheet.columns = [
-    { header: "Semester", key: "semester", width: 12 },
-    { header: "Nama Santri", key: "studentName", width: 28 },
-    { header: "Kelas", key: "className", width: 16 },
-    { header: "Jenis", key: "type", width: 12 },
-    { header: "Materi", key: "range", width: 30 },
-    { header: "Nilai", key: "score", width: 10 },
-    { header: "Status", key: "status", width: 18 },
-    { header: "Tanggal", key: "date", width: 16 },
-    { header: "Catatan", key: "notes", width: 30 },
-  ];
-  for (const [label, detail] of [
-    [semesterLabel(Semester.GANJIL), bundle.formative[Semester.GANJIL].exportData],
-    [semesterLabel(Semester.GENAP), bundle.formative[Semester.GENAP].exportData],
-  ] as const) {
-    detail.rows.forEach((row) => {
-      formativeDetailSheet.addRow({
-        semester: label,
-        studentName: row.studentName,
-        className: row.academicClassName,
-        type: row.type,
-        range: formatRange(row.surah, row.fromAyah, row.toAyah),
-        score: row.score ?? "",
-        status: statusLabels[row.status],
-        date: jakartaDateFormatter.format(row.date),
-        notes: row.notes ?? "",
+  for (const semester of [Semester.GANJIL, Semester.GENAP]) {
+    const exportData = bundle.summative[semester].exportData;
+    for (const classLevel of getSummativeClassLevels(exportData)) {
+      buildSummativeWorkbook(workbook, {
+        academicYear: bundle.academicYear,
+        classLevel,
+        semester,
+        schoolName: resolveSchoolName(),
+        students: exportData.students.filter(
+          (student) => student.classLevel === classLevel,
+        ),
+        rows: exportData.rows.filter((row) => row.classLevel === classLevel),
+        targets: [],
+        sheetNamePrefix: `${programSheetPrefix(programLabel)} Sum ${semesterLabel(semester)} `,
       });
-    });
+    }
   }
-  finalizeTableSheet(formativeDetailSheet, {
-    wrapColumns: ["studentName", "range", "status", "notes"],
-    centerColumns: ["semester", "score"],
-  });
+}
 
-  // Summative recap
-  const summativeRecapSheet = workbook.addWorksheet(`Rekap Sumatif${suffix}`);
-  summativeRecapSheet.columns = [
-    { header: "Semester", key: "semester", width: 12 },
-    { header: "Nama Santri", key: "studentName", width: 28 },
-    { header: "Halaqah", key: "halaqah", width: 24 },
-    { header: "Kelas", key: "className", width: 16 },
-    { header: "Total Penilaian", key: "total", width: 16 },
-    { header: "Rata-rata", key: "average", width: 12 },
-  ];
-  for (const [label, overview] of [
-    [semesterLabel(Semester.GANJIL), bundle.summative[Semester.GANJIL].recap],
-    [semesterLabel(Semester.GENAP), bundle.summative[Semester.GENAP].recap],
-  ] as const) {
-    overview.forEach((student) => {
-      summativeRecapSheet.addRow({
-        semester: label,
-        studentName: student.fullName,
-        halaqah: student.halaqahName,
-        className: student.academicClassName,
-        total: student.totalAssessments,
-        average: student.averageScore ?? "-",
-      });
-    });
-  }
-  finalizeTableSheet(summativeRecapSheet, {
-    wrapColumns: ["studentName", "halaqah"],
-    centerColumns: ["semester", "total", "average"],
-  });
+function getFormativeClassLevels(exportData: FormativeExportData) {
+  return [
+    ...new Set(
+      exportData.students
+        .map((student) => student.classGroup.grade)
+        .filter((classLevel) => [7, 8, 9].includes(classLevel)),
+    ),
+  ].sort((left, right) => left - right);
+}
 
-  // Summative detail
-  const summativeDetailSheet = workbook.addWorksheet(`Detail Sumatif${suffix}`);
-  summativeDetailSheet.columns = [
-    { header: "Semester", key: "semester", width: 12 },
-    { header: "Nama Santri", key: "studentName", width: 28 },
-    { header: "Kelas", key: "className", width: 16 },
-    { header: "Surah", key: "surah", width: 24 },
-    { header: "Arab", key: "arabic", width: 20 },
-    { header: "Nilai", key: "score", width: 10 },
-    { header: "Catatan", key: "notes", width: 30 },
-    { header: "Tanggal", key: "createdAt", width: 16 },
-  ];
-  for (const [label, detail] of [
-    [semesterLabel(Semester.GANJIL), bundle.summative[Semester.GANJIL].exportData],
-    [semesterLabel(Semester.GENAP), bundle.summative[Semester.GENAP].exportData],
-  ] as const) {
-    detail.rows.forEach((row) => {
-      summativeDetailSheet.addRow({
-        semester: label,
-        studentName: row.studentName,
-        className: row.academicClassName,
-        surah: `${row.surahNumber}. ${row.surahName}`,
-        arabic: row.surahArabicName,
-        score: row.score,
-        notes: row.notes ?? "",
-        createdAt: jakartaDateFormatter.format(row.createdAt),
-      });
-    });
-  }
-  finalizeTableSheet(summativeDetailSheet, {
-    wrapColumns: ["studentName", "surah", "arabic", "notes"],
-    centerColumns: ["semester", "score"],
-  });
+function filterFormativeClassLevel(
+  exportData: FormativeExportData,
+  classLevel: number,
+): FormativeExportData {
+  const students = exportData.students.filter(
+    (student) => student.classGroup.grade === classLevel,
+  );
+  const studentIds = new Set(students.map((student) => student.id));
+
+  return {
+    students,
+    rows: exportData.rows.filter((row) => studentIds.has(row.studentId)),
+  };
+}
+
+function getSummativeClassLevels(exportData: SummativeExportData) {
+  return [
+    ...new Set(
+      exportData.students
+        .map((student) => student.classLevel)
+        .filter((classLevel) => [7, 8, 9].includes(classLevel)),
+    ),
+  ].sort((left, right) => left - right);
+}
+
+function programSheetPrefix(programLabel: string) {
+  return programLabel === "Boarding" ? "Brd" : "Akd";
 }
 
 export async function GET(request: Request) {
@@ -343,4 +239,12 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
+}
+
+function resolveSchoolName() {
+  return (
+    process.env.SCHOOL_NAME?.trim() ||
+    process.env.NEXT_PUBLIC_SCHOOL_NAME?.trim() ||
+    "TahfidzFlow"
+  );
 }

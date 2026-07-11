@@ -19,6 +19,7 @@ export type SummativeWorkbookInput = {
   students: AssessmentExportStudent[];
   rows: SummativeExportRow[];
   targets: ClassTargetSurah[];
+  sheetNamePrefix?: string;
 };
 
 export type FormativeWorkbookInput = {
@@ -30,6 +31,7 @@ export type FormativeWorkbookInput = {
   rows: Array<{ studentId: string; notes: string | null }>;
   scoresByStudent: Map<string, Array<number | "">>;
   meetingCount: number;
+  sheetNamePrefix?: string;
 };
 
 type TargetSection = {
@@ -54,6 +56,7 @@ type AssessmentWorkbookInput = {
   sections: TargetSection[];
   notesByStudent: Map<string, string>;
   scoreByStudentAndTarget: Map<string, number>;
+  sheetNamePrefix?: string;
 };
 
 const titleFont: Partial<ExcelJS.Font> = {
@@ -106,6 +109,7 @@ export function buildSummativeWorkbook(
     sections: groupTargetsBySection(input.targets, input.classLevel),
     notesByStudent: mapNotes(input.rows),
     scoreByStudentAndTarget: mapScores(input.rows),
+    sheetNamePrefix: input.sheetNamePrefix,
   });
 }
 
@@ -144,6 +148,7 @@ export function buildFormativeWorkbook(
     ],
     notesByStudent: mapNotes(input.rows),
     scoreByStudentAndTarget,
+    sheetNamePrefix: input.sheetNamePrefix,
   });
 }
 
@@ -192,7 +197,10 @@ function addAssessmentClassSheet(
   const lastColumn = notesColumn;
   const titleEndColumn = Math.max(lastColumn, 8);
   const sheet = workbook.addWorksheet(
-    uniqueSheetName(safeSheetName(input.className), input.usedSheetNames),
+    uniqueSheetName(
+      safeSheetName(`${input.sheetNamePrefix ?? ""}${input.className}`),
+      input.usedSheetNames,
+    ),
   );
 
   sheet.properties.defaultRowHeight = 18;
