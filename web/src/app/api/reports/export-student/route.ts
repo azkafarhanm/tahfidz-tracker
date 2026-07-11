@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
+import {
+  addStudentDetailSheet,
+  createWorkbookStreamResponse,
+  finalizeTableSheet,
+} from "@/lib/excel";
+import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getStudentExportBundle } from "@/lib/reports";
 import { getRequestSessionScope } from "@/lib/session";
 
@@ -34,6 +39,13 @@ export async function GET(request: Request) {
 
     const isBoarding = data.programType === "BOARDING";
     const programLabel = isBoarding ? "Boarding" : "Akademik";
+    const studentIdentity = {
+      studentName: data.fullName,
+      academicClass: data.academicClassName,
+      program: isBoarding ? "Boarding" : "Academic",
+      academicYear: await getActiveAcademicYear(),
+      semester: "Ganjil / Genap",
+    };
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
@@ -56,14 +68,19 @@ export async function GET(request: Request) {
     ].forEach((row) => summarySheet.addRow(row));
     finalizeTableSheet(summarySheet);
 
-    const historySheet = workbook.addWorksheet("Riwayat");
-    historySheet.columns = [
-      { header: "Tanggal", key: "date", width: 18 },
-      { header: "Tipe", key: "type", width: 12 },
-      { header: "Ayat", key: "range", width: 22 },
-      { header: "Skor", key: "score", width: 10 },
-      { header: "Status", key: "status", width: 16 },
-    ];
+    const { sheet: historySheet, tableHeaderRow: historyHeaderRow } =
+      addStudentDetailSheet(
+        workbook,
+        "Riwayat Setoran",
+        [
+          { header: "Tanggal", key: "date", width: 18 },
+          { header: "Tipe", key: "type", width: 12 },
+          { header: "Ayat", key: "range", width: 22 },
+          { header: "Skor", key: "score", width: 10 },
+          { header: "Status", key: "status", width: 16 },
+        ],
+        studentIdentity,
+      );
     data.records.forEach((r) => {
       const row = historySheet.addRow({
         date: r.date,
@@ -81,21 +98,27 @@ export async function GET(request: Request) {
       }
     });
     finalizeTableSheet(historySheet, {
+      headerRow: historyHeaderRow,
       wrapColumns: ["range", "status"],
       centerColumns: ["score"],
     });
 
     if (tasmiRecords.length > 0) {
-      const tasmiSheet = workbook.addWorksheet("Tasmi");
-      tasmiSheet.columns = [
-        { header: "Tanggal", key: "date", width: 18 },
-        { header: "Semester", key: "semester", width: 12 },
-        { header: "Juz", key: "juz", width: 8 },
-        { header: "Nilai", key: "grade", width: 15 },
-        { header: "Status", key: "status", width: 12 },
-        { header: "Penguji", key: "examinerName", width: 25 },
-        { header: "Catatan", key: "notes", width: 30 },
-      ];
+      const { sheet: tasmiSheet, tableHeaderRow: tasmiHeaderRow } =
+        addStudentDetailSheet(
+          workbook,
+          "Tasmi",
+          [
+            { header: "Tanggal", key: "date", width: 18 },
+            { header: "Semester", key: "semester", width: 12 },
+            { header: "Juz", key: "juz", width: 8 },
+            { header: "Nilai", key: "grade", width: 15 },
+            { header: "Status", key: "status", width: 12 },
+            { header: "Penguji", key: "examinerName", width: 25 },
+            { header: "Catatan", key: "notes", width: 30 },
+          ],
+          studentIdentity,
+        );
       tasmiRecords.forEach((t) =>
         tasmiSheet.addRow({
           date: t.date,
@@ -108,35 +131,47 @@ export async function GET(request: Request) {
         }),
       );
       finalizeTableSheet(tasmiSheet, {
+        headerRow: tasmiHeaderRow,
         wrapColumns: ["examinerName", "notes"],
         centerColumns: ["semester", "juz"],
       });
     }
 
     if (data.activeTargets.length > 0) {
-      const targetSheet = workbook.addWorksheet("Target Aktif");
-      targetSheet.columns = [
-        { header: "Tipe", key: "type", width: 12 },
-        { header: "Ayat", key: "range", width: 22 },
-        { header: "Mulai", key: "startDate", width: 18 },
-        { header: "Target Selesai", key: "endDate", width: 18 },
-        { header: "Catatan", key: "notes", width: 30 },
-      ];
+      const { sheet: targetSheet, tableHeaderRow: targetHeaderRow } =
+        addStudentDetailSheet(
+          workbook,
+          "Target Aktif",
+          [
+            { header: "Tipe", key: "type", width: 12 },
+            { header: "Ayat", key: "range", width: 22 },
+            { header: "Mulai", key: "startDate", width: 18 },
+            { header: "Target Selesai", key: "endDate", width: 18 },
+            { header: "Catatan", key: "notes", width: 30 },
+          ],
+          studentIdentity,
+        );
       data.activeTargets.forEach((t) => targetSheet.addRow(t));
       finalizeTableSheet(targetSheet, {
+        headerRow: targetHeaderRow,
         wrapColumns: ["range", "notes"],
       });
     }
 
     if (summativeScores.length > 0) {
-      const summativeSheet = workbook.addWorksheet("Nilai Sumatif");
-      summativeSheet.columns = [
-        { header: "Semester", key: "semester", width: 12 },
-        { header: "No. Surah", key: "surahNumber", width: 10 },
-        { header: "Surah", key: "surahName", width: 22 },
-        { header: "Nilai", key: "score", width: 10 },
-        { header: "Catatan", key: "notes", width: 30 },
-      ];
+      const { sheet: summativeSheet, tableHeaderRow: summativeHeaderRow } =
+        addStudentDetailSheet(
+          workbook,
+          "Nilai Sumatif",
+          [
+            { header: "Semester", key: "semester", width: 12 },
+            { header: "No. Surah", key: "surahNumber", width: 10 },
+            { header: "Surah", key: "surahName", width: 22 },
+            { header: "Nilai", key: "score", width: 10 },
+            { header: "Catatan", key: "notes", width: 30 },
+          ],
+          studentIdentity,
+        );
       summativeScores.forEach((s) =>
         summativeSheet.addRow({
           semester: s.semester === "GANJIL" ? "Ganjil" : "Genap",
@@ -147,6 +182,7 @@ export async function GET(request: Request) {
         }),
       );
       finalizeTableSheet(summativeSheet, {
+        headerRow: summativeHeaderRow,
         wrapColumns: ["surahName", "notes"],
         centerColumns: ["semester", "surahNumber", "score"],
       });

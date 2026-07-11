@@ -12,6 +12,59 @@ const headerFont: Partial<ExcelJS.Font> = {
   color: { argb: "FFFFFFFF" },
 };
 
+export type StudentSheetIdentity = {
+  studentName: string;
+  academicClass: string;
+  program: string;
+  academicYear: string;
+  semester: string;
+};
+
+export function addStudentDetailSheet(
+  workbook: ExcelJS.Workbook,
+  name: string,
+  columns: Partial<ExcelJS.Column>[],
+  identity: StudentSheetIdentity,
+) {
+  const sheet = workbook.addWorksheet(name);
+  sheet.columns = columns;
+
+  const identityRows = [
+    ["Nama Santri", identity.studentName],
+    ["Kelas", identity.academicClass],
+    ["Program", identity.program],
+    ["Tahun Ajaran", identity.academicYear],
+    ["Semester", identity.semester],
+  ];
+  const tableHeaderRow = identityRows.length + 2;
+
+  sheet.spliceRows(
+    1,
+    0,
+    ...identityRows.map(([label, value]) => [`${label} : ${value}`]),
+    [],
+  );
+
+  for (let rowNumber = 1; rowNumber < tableHeaderRow - 1; rowNumber += 1) {
+    sheet.mergeCells(rowNumber, 1, rowNumber, columns.length);
+    const cell = sheet.getCell(rowNumber, 1);
+    const [label, value] = identityRows[rowNumber - 1];
+    cell.value = {
+      richText: [
+        {
+          font: { bold: true, color: { argb: "FF064E3B" } },
+          text: `${label} : `,
+        },
+        { text: value },
+      ],
+    };
+    cell.alignment = { vertical: "middle" };
+    sheet.getRow(rowNumber).height = 20;
+  }
+
+  return { sheet, tableHeaderRow };
+}
+
 function toColumnLetter(index: number) {
   let current = index;
   let output = "";
