@@ -22,6 +22,8 @@ type FormativeRow = {
   status: RecordStatus;
   notes: string | null;
   date: Date;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type FormativeOverviewStudent = {
@@ -463,6 +465,8 @@ async function getTeacherFormativeRows(
         status: true,
         notes: true,
         date: true,
+        createdAt: true,
+        updatedAt: true,
         student: {
           select: {
             fullName: true,
@@ -492,6 +496,8 @@ async function getTeacherFormativeRows(
         status: true,
         notes: true,
         date: true,
+        createdAt: true,
+        updatedAt: true,
         student: {
           select: {
             fullName: true,
@@ -519,6 +525,8 @@ async function getTeacherFormativeRows(
     status: record.status,
     notes: record.notes,
     date: record.date,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
   }));
 
   const murojaahRows: FormativeRow[] = murojaah.map((record) => ({
@@ -534,6 +542,8 @@ async function getTeacherFormativeRows(
     status: record.status,
     notes: record.notes,
     date: record.date,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
   }));
 
   return [...hafalanRows, ...murojaahRows]

@@ -4,7 +4,7 @@ import type { ClassTargetSurah, SummativeExportRow } from "@/lib/summative";
 import { semesterLabel } from "@/lib/summative";
 import { surahList } from "@/lib/surahs";
 
-type SummativeExportStudent = {
+type AssessmentExportStudent = {
   id: string;
   fullName: string;
   academicClassName: string;
@@ -16,20 +16,44 @@ export type SummativeWorkbookInput = {
   classLevel: number;
   semester: Semester;
   schoolName: string;
-  students: SummativeExportStudent[];
+  students: AssessmentExportStudent[];
   rows: SummativeExportRow[];
   targets: ClassTargetSurah[];
+};
+
+export type FormativeWorkbookInput = {
+  academicYear: string;
+  classLevel: number;
+  semester: Semester;
+  schoolName: string;
+  students: AssessmentExportStudent[];
+  rows: Array<{ studentId: string; notes: string | null }>;
+  scoresByStudent: Map<string, Array<number | "">>;
+  meetingCount: number;
 };
 
 type TargetSection = {
   label: string;
   targets: DisplayTarget[];
+  mergeTargetsAcrossHeaderRows?: boolean;
 };
 
 type DisplayTarget = {
   number: number;
   scoreNumbers?: number[];
   name: string;
+};
+
+type AssessmentWorkbookInput = {
+  academicYear: string;
+  classLevel: number;
+  semester: Semester;
+  schoolName: string;
+  students: AssessmentExportStudent[];
+  title: string;
+  sections: TargetSection[];
+  notesByStudent: Map<string, string>;
+  scoreByStudentAndTarget: Map<string, number>;
 };
 
 const titleFont: Partial<ExcelJS.Font> = {
@@ -72,45 +96,92 @@ export function buildSummativeWorkbook(
   workbook: ExcelJS.Workbook,
   input: SummativeWorkbookInput,
 ) {
+  buildAssessmentWorkbook(workbook, {
+    academicYear: input.academicYear,
+    classLevel: input.classLevel,
+    semester: input.semester,
+    schoolName: input.schoolName,
+    students: input.students,
+    title: "DAFTAR NILAI SUMATIF TAHFIDZ",
+    sections: groupTargetsBySection(input.targets, input.classLevel),
+    notesByStudent: mapNotes(input.rows),
+    scoreByStudentAndTarget: mapScores(input.rows),
+  });
+}
+
+export function buildFormativeWorkbook(
+  workbook: ExcelJS.Workbook,
+  input: FormativeWorkbookInput,
+) {
+  const scoreByStudentAndTarget = new Map<string, number>();
+  for (const [studentId, scores] of input.scoresByStudent) {
+    scores.forEach((score, index) => {
+      if (score !== "") {
+        scoreByStudentAndTarget.set(scoreKey(studentId, index + 1), score);
+      }
+    });
+  }
+
+  buildAssessmentWorkbook(workbook, {
+    academicYear: input.academicYear,
+    classLevel: input.classLevel,
+    semester: input.semester,
+    schoolName: input.schoolName,
+    students: input.students,
+    title: "DAFTAR NILAI FORMATIF TAHFIDZ",
+    sections: [
+      {
+        label: "PERTEMUAN",
+        mergeTargetsAcrossHeaderRows: true,
+        targets: Array.from(
+          { length: Math.max(1, input.meetingCount) },
+          (_, index) => ({
+            number: index + 1,
+            name: `Pertemuan ${index + 1}`,
+          }),
+        ),
+      },
+    ],
+    notesByStudent: mapNotes(input.rows),
+    scoreByStudentAndTarget,
+  });
+}
+
+function buildAssessmentWorkbook(
+  workbook: ExcelJS.Workbook,
+  input: AssessmentWorkbookInput,
+) {
   const usedSheetNames = new Set<string>();
   const classGroups = groupStudentsByClass(input.students);
-  const scoreByStudentAndSurah = mapScores(input.rows);
-  const notesByStudent = mapNotes(input.rows);
 
   if (classGroups.length === 0) {
-    addSummativeClassSheet(workbook, {
+    addAssessmentClassSheet(workbook, {
       ...input,
       className: `Kelas ${input.classLevel}`,
       students: [],
-      notesByStudent,
-      scoreByStudentAndSurah,
       usedSheetNames,
     });
     return;
   }
 
   for (const group of classGroups) {
-    addSummativeClassSheet(workbook, {
+    addAssessmentClassSheet(workbook, {
       ...input,
       className: group.className,
       students: group.students,
-      notesByStudent,
-      scoreByStudentAndSurah,
       usedSheetNames,
     });
   }
 }
 
-function addSummativeClassSheet(
+function addAssessmentClassSheet(
   workbook: ExcelJS.Workbook,
-  input: SummativeWorkbookInput & {
+  input: AssessmentWorkbookInput & {
     className: string;
-    notesByStudent: Map<string, string>;
-    scoreByStudentAndSurah: Map<string, number>;
     usedSheetNames: Set<string>;
   },
 ) {
-  const sections = groupTargetsBySection(input.targets, input.classLevel);
+  const sections = input.sections;
   const targetColumns = sections.reduce(
     (count, section) => count + section.targets.length + 2,
     0,
@@ -150,7 +221,7 @@ function addSummativeClassSheet(
     cell.font = rowNumber === 1 ? titleFont : metaFont;
   }
 
-  sheet.getCell(1, 1).value = "DAFTAR NILAI SUMATIF TAHFIDZ";
+  sheet.getCell(1, 1).value = input.title;
   sheet.getCell(2, 1).value = input.schoolName;
   sheet.getCell(3, 1).value = `TAHUN AJARAN ${input.academicYear}`;
   sheet.getCell(4, 1).value =
@@ -180,10 +251,18 @@ function addSummativeClassSheet(
   for (const section of sections) {
     const sectionStart = currentColumn;
     const sectionEnd = currentColumn + section.targets.length - 1;
-    mergeHeaderCell(sheet, 7, sectionStart, 7, sectionEnd, section.label);
+    if (!section.mergeTargetsAcrossHeaderRows) {
+      mergeHeaderCell(sheet, 7, sectionStart, 7, sectionEnd, section.label);
+    }
 
     for (const target of section.targets) {
-      const cell = sheet.getCell(8, currentColumn);
+      if (section.mergeTargetsAcrossHeaderRows) {
+        sheet.mergeCells(7, currentColumn, 8, currentColumn);
+      }
+      const cell = sheet.getCell(
+        section.mergeTargetsAcrossHeaderRows ? 7 : 8,
+        currentColumn,
+      );
       cell.value = target.name;
       cell.font = { ...headerFont, size: 8 };
       cell.fill = headerFill;
@@ -243,7 +322,7 @@ function addSummativeClassSheet(
       const sectionScores: number[] = [];
       for (const target of section.targets) {
         const score = resolveTargetScore(
-          input.scoreByStudentAndSurah,
+          input.scoreByStudentAndTarget,
           student.id,
           target,
         );
@@ -340,8 +419,8 @@ function applyBodyAlignment(
   }
 }
 
-function groupStudentsByClass(students: SummativeExportStudent[]) {
-  const grouped = new Map<string, SummativeExportStudent[]>();
+function groupStudentsByClass(students: AssessmentExportStudent[]) {
+  const grouped = new Map<string, AssessmentExportStudent[]>();
   for (const student of students) {
     const className = student.academicClassName?.trim() || "Tanpa Kelas";
     const group = grouped.get(className) ?? [];
@@ -395,7 +474,7 @@ function mapScores(rows: SummativeExportRow[]) {
   return scores;
 }
 
-function mapNotes(rows: SummativeExportRow[]) {
+function mapNotes(rows: Array<{ studentId: string; notes: string | null }>) {
   const notes = new Map<string, string[]>();
   for (const row of rows) {
     const note = row.notes?.trim();

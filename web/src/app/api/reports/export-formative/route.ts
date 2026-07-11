@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
+import { buildFormativeWorkbook } from "@/lib/summative-excel";
 import {
   formatRange,
   statusLabels,
@@ -19,6 +20,73 @@ const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
   timeZone: "Asia/Jakarta",
 });
+const jakartaDayFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "2-digit",
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+});
+
+type FormativeExportRow = Awaited<
+  ReturnType<typeof getTeacherFormativeExportData>
+>["rows"][number];
+type ScoredFormativeExportRow = FormativeExportRow & { score: number };
+
+function getJakartaDayKey(date: Date) {
+  const parts = new Map(
+    jakartaDayFormatter
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+  return `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
+}
+
+function isLaterScoredRecord(
+  candidate: ScoredFormativeExportRow,
+  current: ScoredFormativeExportRow,
+) {
+  return (
+    candidate.updatedAt.getTime() - current.updatedAt.getTime() ||
+    candidate.createdAt.getTime() - current.createdAt.getTime() ||
+    candidate.date.getTime() - current.date.getTime() ||
+    candidate.id.localeCompare(current.id)
+  ) > 0;
+}
+
+function buildMeetingScores(rows: FormativeExportRow[]) {
+  const meetingsByStudentAndDay = new Map<
+    string,
+    Map<string, ScoredFormativeExportRow | null>
+  >();
+
+  for (const row of rows) {
+    const dayKey = getJakartaDayKey(row.date);
+    const byDay = meetingsByStudentAndDay.get(row.studentId) ?? new Map();
+    if (!byDay.has(dayKey)) {
+      byDay.set(dayKey, null);
+    }
+    meetingsByStudentAndDay.set(row.studentId, byDay);
+    if (row.score === null) continue;
+
+    const scoredRow: ScoredFormativeExportRow = { ...row, score: row.score };
+    const current = byDay.get(dayKey);
+    if (!current || isLaterScoredRecord(scoredRow, current)) {
+      byDay.set(dayKey, scoredRow);
+    }
+  }
+
+  const scoresByStudent = new Map<string, Array<number | "">>();
+  let meetingCount = 0;
+  for (const [studentId, byDay] of meetingsByStudentAndDay) {
+    const scores = [...byDay.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([, row]) => row?.score ?? "");
+    scoresByStudent.set(studentId, scores);
+    meetingCount = Math.max(meetingCount, scores.length);
+  }
+
+  return { meetingCount, scoresByStudent };
+}
 
 export async function GET(request: Request) {
   try {
@@ -111,6 +179,41 @@ export async function GET(request: Request) {
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
     workbook.created = new Date();
+
+    if (!isBoarding) {
+      const { meetingCount, scoresByStudent } = buildMeetingScores(
+        exportData.rows,
+      );
+      buildFormativeWorkbook(workbook, {
+        academicYear,
+        classLevel,
+        semester,
+        schoolName: resolveSchoolName(),
+        students: exportData.students.map((student) => {
+          const summary = studentSummary.get(student.id);
+          return {
+            id: student.id,
+            fullName: student.fullName,
+            academicClassName: student.academicClass?.name ?? "-",
+            averageScore:
+              summary && summary.scoredCount > 0
+                ? Math.round(
+                    (summary.totalScore / summary.scoredCount) * 10,
+                  ) / 10
+                : null,
+          };
+        }),
+        rows: exportData.rows,
+        scoresByStudent,
+        meetingCount,
+      });
+
+      const date = new Date().toISOString().split("T")[0];
+      return createWorkbookStreamResponse(
+        workbook,
+        `rekap-formatif-akademik-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
+      );
+    }
 
     const infoSheet = workbook.addWorksheet("Info");
     infoSheet.columns = [
@@ -256,4 +359,12 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
+}
+
+function resolveSchoolName() {
+  return (
+    process.env.SCHOOL_NAME?.trim() ||
+    process.env.NEXT_PUBLIC_SCHOOL_NAME?.trim() ||
+    "TahfidzFlow"
+  );
 }
