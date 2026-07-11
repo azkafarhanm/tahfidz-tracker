@@ -33,7 +33,7 @@ export type ExistingSummativeScore = {
   score: number;
 };
 
-type AcademicSummativeTargetNumberGroup = {
+type SummativeTargetNumberGroup = {
   label: string;
   surahNumbers: number[];
   choices?: Array<{
@@ -153,7 +153,14 @@ export async function getClassTargets(
 export async function getAcademicSummativeInputTargets(
   classLevel: number,
 ): Promise<SummativeInputTargetGroup[]> {
-  const groups = getAcademicSummativeTargetNumbers(classLevel);
+  return getSummativeInputTargetsFromNumberGroups(
+    getAcademicSummativeTargetNumbers(classLevel),
+  );
+}
+
+async function getSummativeInputTargetsFromNumberGroups(
+  groups: SummativeTargetNumberGroup[],
+): Promise<SummativeInputTargetGroup[]> {
   if (groups.length === 0) {
     return [];
   }
@@ -221,7 +228,7 @@ export async function getAcademicSummativeInputTargets(
 
 function getAcademicSummativeTargetNumbers(
   classLevel: number,
-): AcademicSummativeTargetNumberGroup[] {
+): SummativeTargetNumberGroup[] {
   const juz30 = range(78, 114);
   const juz29 = range(67, 77);
 
@@ -257,30 +264,45 @@ function getAcademicSummativeTargetNumbers(
   return [];
 }
 
+function getBoardingSummativeTargetNumbers(
+  classLevel: number,
+): SummativeTargetNumberGroup[] {
+  const juz30 = range(78, 114);
+  const juz29 = range(67, 77);
+  const juz28 = range(58, 66);
+
+  if (classLevel === 7) {
+    return [{ label: "Juz 30", surahNumbers: juz30 }];
+  }
+
+  if (classLevel === 8) {
+    return [
+      { label: "Juz 30", surahNumbers: juz30 },
+      { label: "Juz 29", surahNumbers: juz29 },
+    ];
+  }
+
+  if (classLevel === 9) {
+    return [
+      { label: "Juz 30", surahNumbers: juz30 },
+      { label: "Juz 29", surahNumbers: juz29 },
+      { label: "Juz 28", surahNumbers: juz28 },
+    ];
+  }
+
+  return [];
+}
+
 function range(from: number, to: number) {
   return Array.from({ length: to - from + 1 }, (_, index) => from + index);
 }
 
 export async function getBoardingSummativeInputTargets(
   classLevel: number,
-  semester: Semester,
-  academicYear?: string,
 ): Promise<SummativeInputTargetGroup[]> {
-  const targets = await getClassTargets(classLevel, semester, academicYear);
-  if (targets.length === 0) {
-    return [];
-  }
-
-  const grouped = new Map<string, ClassTargetSurah[]>();
-  for (const target of targets) {
-    const label = `Juz ${target.juz}`;
-    grouped.set(label, [...(grouped.get(label) ?? []), target]);
-  }
-
-  return [...grouped.entries()].map(([label, groupTargets]) => ({
-    label,
-    targets: groupTargets,
-  }));
+  return getSummativeInputTargetsFromNumberGroups(
+    getBoardingSummativeTargetNumbers(classLevel),
+  );
 }
 
 export async function getExistingSummativeScores(

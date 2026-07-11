@@ -1,10 +1,15 @@
 import ExcelJS from "exceljs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Semester } from "@/generated/prisma-next/enums";
 import {
+  buildBoardingSummativeWorkbook,
   buildFormativeWorkbook,
   buildSummativeWorkbook,
 } from "@/lib/summative-excel";
+
+vi.mock("@/lib/summative", () => ({
+  semesterLabel: () => "Ganjil",
+}));
 
 describe("buildFormativeWorkbook", () => {
   it("reuses the assessment template with meeting columns", () => {
@@ -92,5 +97,85 @@ describe("buildFormativeWorkbook", () => {
     expect(sheet!.getCell("D7").value).toBe("JUZ 30");
     expect(sheet!.getCell("D8").value).toBe("An-Naba");
     expect(sheet!.getCell("D9").value).toBe(88);
+  });
+});
+
+describe("buildBoardingSummativeWorkbook", () => {
+  it("renders ordered class sheets with vertical student assessment blocks", () => {
+    const workbook = new ExcelJS.Workbook();
+
+    buildBoardingSummativeWorkbook(workbook, {
+      academicYear: "2026/2027",
+      semester: Semester.GANJIL,
+      schoolName: "TahfidzFlow",
+      students: [
+        {
+          id: "student-8",
+          fullName: "Santri Kelas Delapan",
+          classLevel: 8,
+          halaqahName: "Halaqah Umar",
+        },
+        {
+          id: "student-7",
+          fullName: "Santri Kelas Tujuh",
+          classLevel: 7,
+          halaqahName: "Halaqah Ali",
+        },
+      ],
+      rows: [
+        {
+          studentId: "student-7",
+          studentName: "Santri Kelas Tujuh",
+          academicClassName: "7",
+          halaqahName: "Halaqah Ali",
+          classLevel: 7,
+          semester: Semester.GANJIL,
+          surahNumber: 80,
+          surahName: "Abasa",
+          surahArabicName: "Abasa",
+          score: 85,
+          notes: null,
+          createdAt: new Date("2026-07-10T08:00:00+07:00"),
+        },
+        {
+          studentId: "student-7",
+          studentName: "Santri Kelas Tujuh",
+          academicClassName: "7",
+          halaqahName: "Halaqah Ali",
+          classLevel: 7,
+          semester: Semester.GANJIL,
+          surahNumber: 78,
+          surahName: "An-Naba",
+          surahArabicName: "An-Naba",
+          score: 90,
+          notes: null,
+          createdAt: new Date("2026-07-09T08:00:00+07:00"),
+        },
+      ],
+    });
+
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual([
+      "Info",
+      "Kelas 7",
+      "Kelas 8",
+    ]);
+
+    const classSheet = workbook.getWorksheet("Kelas 7")!;
+    expect(classSheet.columnCount).toBe(2);
+    expect(classSheet.getCell("A1").value).toBe("Data Santri");
+    expect(classSheet.getCell("A2").value).toBe("Nama Santri :");
+    expect(classSheet.getCell("B2").value).toBe("Santri Kelas Tujuh");
+    expect(classSheet.getCell("A3").value).toBe("Kelas :");
+    expect(classSheet.getCell("B3").value).toBe("7");
+    expect(classSheet.getCell("A6").value).toBe("Surat");
+    expect(classSheet.getCell("B6").value).toBe("Nilai");
+    expect(classSheet.getCell("A7").value).toBe("An-Naba");
+    expect(classSheet.getCell("B7").value).toBe(90);
+    expect(classSheet.getCell("A8").value).toBe("Abasa");
+    expect(classSheet.getCell("B8").value).toBe(85);
+    expect(classSheet.getCell("A10").value).toBe("Total Penilaian :");
+    expect(classSheet.getCell("B10").value).toBe("2");
+    expect(classSheet.getCell("A11").value).toBe("Surat Terakhir :");
+    expect(classSheet.getCell("B11").value).toBe("Abasa");
   });
 });

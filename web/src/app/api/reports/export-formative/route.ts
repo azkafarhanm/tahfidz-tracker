@@ -4,7 +4,7 @@ import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { createWorkbookStreamResponse } from "@/lib/excel";
 import {
   buildAcademicFormativeWorkbook,
-  buildFormativeTableWorkbook,
+  buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import { getRequestSessionScope } from "@/lib/session";
@@ -75,13 +75,7 @@ export async function GET(request: Request) {
       );
     }
 
-    buildFormativeTableWorkbook(workbook, {
-      academicYear,
-      classLevel,
-      semester,
-      programLabel,
-      exportData,
-    });
+    buildBoardingFormativeProgressWorkbook(workbook, { exportData });
 
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(

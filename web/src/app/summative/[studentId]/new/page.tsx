@@ -12,6 +12,7 @@ import {
 } from "@/app/summative/actions";
 import {
   getAcademicSummativeInputTargets,
+  getBoardingSummativeInputTargets,
   getExistingSummativeScores,
   isSemesterValue,
 } from "@/lib/summative";
@@ -86,9 +87,10 @@ export default async function SummativeNewPage({
   if (fromReports) returnToParams.set("returnTo", "reports");
   const returnTo = `/summative/${studentId}?${returnToParams.toString()}`;
   const academicYear = await getActiveAcademicYear();
-  const targetGroups = await getAcademicSummativeInputTargets(
-    student.classGroup.grade,
-  );
+  const targetGroups =
+    student.classGroup.programType === "BOARDING"
+      ? await getBoardingSummativeInputTargets(student.classGroup.grade)
+      : await getAcademicSummativeInputTargets(student.classGroup.grade);
   const targetSurahIds = targetGroups.flatMap((group) =>
     [
       ...group.targets.map((target) => target.surahId),

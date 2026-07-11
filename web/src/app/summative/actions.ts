@@ -131,11 +131,7 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
   const targetGroups =
     student.classGroup.programType === "ACADEMIC"
       ? await getAcademicSummativeInputTargets(student.classGroup.grade)
-      : await getBoardingSummativeInputTargets(
-          student.classGroup.grade,
-          parseSemester(payload.semester),
-          payload.academicYear,
-        );
+      : await getBoardingSummativeInputTargets(student.classGroup.grade);
   const allowedSurahIds = new Set(
     targetGroups.flatMap((group) => [
       ...group.targets.map((target) => target.surahId),

@@ -2,7 +2,10 @@ import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { createWorkbookStreamResponse } from "@/lib/excel";
-import { buildSummativeWorkbook } from "@/lib/summative-excel";
+import {
+  buildBoardingSummativeWorkbook,
+  buildSummativeWorkbook,
+} from "@/lib/summative-excel";
 import {
   getClassTargets,
   getTeacherSummativeExportData,
@@ -43,40 +46,49 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid class level" }, { status: 400 });
     }
 
-    const semester = parseSemester(semesterValue);
-    const academicYear = await getActiveAcademicYear();
-    const [exportData, targets] = await Promise.all([
-      getTeacherSummativeExportData(
-        teacherId,
-        semester,
-        academicYear,
-        classLevel,
-        programType,
-      ),
-      getClassTargets(classLevel, semester, academicYear),
-    ]);
-
     const isBoarding = programType === "BOARDING";
     const programLabel = isBoarding ? "Boarding" : "Akademik";
+    const semester = parseSemester(semesterValue);
+    const academicYear = await getActiveAcademicYear();
+    const exportData = await getTeacherSummativeExportData(
+      teacherId,
+      semester,
+      academicYear,
+      isBoarding ? undefined : classLevel,
+      programType,
+    );
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "TahfidzFlow";
     workbook.created = new Date();
 
-    buildSummativeWorkbook(workbook, {
-      academicYear,
-      classLevel,
-      semester,
-      schoolName: resolveSchoolName(),
-      students: exportData.students,
-      rows: exportData.rows,
-      targets,
-    });
+    if (isBoarding) {
+      buildBoardingSummativeWorkbook(workbook, {
+        academicYear,
+        semester,
+        schoolName: resolveSchoolName(),
+        students: exportData.students,
+        rows: exportData.rows,
+      });
+    } else {
+      const targets = await getClassTargets(classLevel, semester, academicYear);
+
+      buildSummativeWorkbook(workbook, {
+        academicYear,
+        classLevel,
+        semester,
+        schoolName: resolveSchoolName(),
+        students: exportData.students,
+        rows: exportData.rows,
+        targets,
+      });
+    }
 
     const date = new Date().toISOString().split("T")[0];
+    const fileScope = isBoarding ? "" : `-${classLevel}`;
     return createWorkbookStreamResponse(
       workbook,
-      `nilai-sumatif-${programLabel.toLowerCase()}-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
+      `nilai-sumatif-${programLabel.toLowerCase()}${fileScope}-${semesterValue.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export summative Excel report", error);

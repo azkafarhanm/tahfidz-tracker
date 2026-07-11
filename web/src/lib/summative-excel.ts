@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import type { Semester } from "@/generated/prisma-next/enums";
+import { finalizeTableSheet } from "@/lib/excel";
 import type { ClassTargetSurah, SummativeExportRow } from "@/lib/summative";
 import { semesterLabel } from "@/lib/summative";
 import { surahList } from "@/lib/surahs";
@@ -20,6 +21,19 @@ export type SummativeWorkbookInput = {
   rows: SummativeExportRow[];
   targets: ClassTargetSurah[];
   sheetNamePrefix?: string;
+};
+
+export type BoardingSummativeWorkbookInput = {
+  academicYear: string;
+  semester: Semester;
+  schoolName: string;
+  students: Array<{
+    id: string;
+    fullName: string;
+    classLevel: number;
+    halaqahName: string;
+  }>;
+  rows: SummativeExportRow[];
 };
 
 export type FormativeWorkbookInput = {
@@ -82,6 +96,13 @@ const bodyFont: Partial<ExcelJS.Font> = {
   name: "Calibri",
 };
 
+const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Jakarta",
+});
+
 const thinBorder: Partial<ExcelJS.Borders> = {
   top: { style: "thin", color: { argb: "FF000000" } },
   left: { style: "thin", color: { argb: "FF000000" } },
@@ -93,6 +114,19 @@ const headerFill: ExcelJS.FillPattern = {
   type: "pattern",
   pattern: "solid",
   fgColor: { argb: "FFF8FAFC" },
+};
+
+const boardingHeaderFill: ExcelJS.FillPattern = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF064E3B" },
+};
+
+const boardingHeaderFont: Partial<ExcelJS.Font> = {
+  bold: true,
+  color: { argb: "FFFFFFFF" },
+  name: "Calibri",
+  size: 10,
 };
 
 export function buildSummativeWorkbook(
@@ -111,6 +145,31 @@ export function buildSummativeWorkbook(
     scoreByStudentAndTarget: mapScores(input.rows),
     sheetNamePrefix: input.sheetNamePrefix,
   });
+}
+
+export function buildBoardingSummativeWorkbook(
+  workbook: ExcelJS.Workbook,
+  input: BoardingSummativeWorkbookInput,
+) {
+  const rowsByStudent = groupSummativeRowsByStudent(input.rows);
+
+  addBoardingSummativeInfoSheet(workbook, input);
+
+  for (const classLevel of [7, 8, 9]) {
+    const students = input.students
+      .filter((student) => student.classLevel === classLevel)
+      .sort((left, right) => left.fullName.localeCompare(right.fullName, "id"));
+
+    if (students.length === 0) {
+      continue;
+    }
+
+    addBoardingSummativeClassSheet(workbook, {
+      classLevel,
+      rowsByStudent,
+      students,
+    });
+  }
 }
 
 export function buildFormativeWorkbook(
@@ -177,6 +236,159 @@ function buildAssessmentWorkbook(
       usedSheetNames,
     });
   }
+}
+
+function addBoardingSummativeInfoSheet(
+  workbook: ExcelJS.Workbook,
+  input: BoardingSummativeWorkbookInput,
+) {
+  const coveredClassLevels = [7, 8, 9].filter((classLevel) =>
+    input.students.some((student) => student.classLevel === classLevel),
+  );
+  const sheet = workbook.addWorksheet("Info");
+
+  sheet.columns = [
+    { header: "Keterangan", key: "key", width: 28 },
+    { header: "Nilai", key: "value", width: 36 },
+  ];
+  [
+    { key: "Program", value: "Boarding" },
+    { key: "Sekolah", value: input.schoolName },
+    { key: "Tahun ajaran", value: input.academicYear },
+    { key: "Semester", value: semesterLabel(input.semester) },
+    { key: "Kelas", value: coveredClassLevels.map((level) => `Kelas ${level}`).join(", ") || "-" },
+    { key: "Jumlah santri", value: input.students.length },
+    { key: "Jumlah penilaian", value: input.rows.length },
+  ].forEach((row) => sheet.addRow(row));
+
+  finalizeTableSheet(sheet);
+}
+
+function addBoardingSummativeClassSheet(
+  workbook: ExcelJS.Workbook,
+  input: {
+    classLevel: number;
+    students: BoardingSummativeWorkbookInput["students"];
+    rowsByStudent: Map<string, SummativeExportRow[]>;
+  },
+) {
+  const sheet = workbook.addWorksheet(`Kelas ${input.classLevel}`);
+  sheet.columns = [
+    { key: "label", width: 34 },
+    { key: "value", width: 16 },
+  ];
+  sheet.properties.defaultRowHeight = 18;
+  sheet.pageSetup = {
+    orientation: "portrait",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    paperSize: 9,
+    margins: {
+      left: 0.35,
+      right: 0.35,
+      top: 0.45,
+      bottom: 0.45,
+      header: 0.15,
+      footer: 0.15,
+    },
+  };
+
+  let rowNumber = 1;
+  for (const student of input.students) {
+    const rows = input.rowsByStudent.get(student.id) ?? [];
+    rowNumber = addBoardingStudentBlock(sheet, {
+      rowNumber,
+      student,
+      rows,
+    });
+  }
+}
+
+function addBoardingStudentBlock(
+  sheet: ExcelJS.Worksheet,
+  input: {
+    rowNumber: number;
+    student: BoardingSummativeWorkbookInput["students"][number];
+    rows: SummativeExportRow[];
+  },
+) {
+  const sortedRows = [...input.rows].sort(
+    (left, right) => left.surahNumber - right.surahNumber,
+  );
+  const latestRow = getLatestSummativeRow(input.rows);
+  const blockStartRow = input.rowNumber;
+
+  sheet.mergeCells(input.rowNumber, 1, input.rowNumber, 2);
+  styleBoardingSectionHeader(sheet.getCell(input.rowNumber, 1), "Data Santri");
+  input.rowNumber += 1;
+
+  [
+    ["Nama Santri :", input.student.fullName],
+    ["Kelas :", String(input.student.classLevel)],
+    ["Halaqah :", input.student.halaqahName],
+  ].forEach(([label, value]) => {
+    const row = sheet.getRow(input.rowNumber);
+    row.getCell(1).value = label;
+    row.getCell(2).value = value;
+    row.getCell(1).font = { ...bodyFont, bold: true };
+    row.getCell(2).font = bodyFont;
+    input.rowNumber += 1;
+  });
+
+  input.rowNumber += 1;
+
+  const tableHeader = sheet.getRow(input.rowNumber);
+  tableHeader.getCell(1).value = "Surat";
+  tableHeader.getCell(2).value = "Nilai";
+  for (let column = 1; column <= 2; column += 1) {
+    const cell = tableHeader.getCell(column);
+    cell.fill = boardingHeaderFill;
+    cell.font = boardingHeaderFont;
+    cell.border = thinBorder;
+    cell.alignment = { horizontal: column === 2 ? "center" : "left", vertical: "middle" };
+  }
+  input.rowNumber += 1;
+
+  if (sortedRows.length === 0) {
+    const row = sheet.getRow(input.rowNumber);
+    row.getCell(1).value = "Belum ada penilaian";
+    row.getCell(2).value = "";
+    row.getCell(1).font = bodyFont;
+    row.getCell(2).font = bodyFont;
+    input.rowNumber += 1;
+  } else {
+    for (const assessment of sortedRows) {
+      const row = sheet.getRow(input.rowNumber);
+      row.getCell(1).value = assessment.surahName;
+      row.getCell(2).value = assessment.score;
+      row.getCell(1).font = bodyFont;
+      row.getCell(2).font = bodyFont;
+      row.getCell(2).alignment = { horizontal: "center", vertical: "middle" };
+      input.rowNumber += 1;
+    }
+  }
+
+  input.rowNumber += 1;
+
+  [
+    ["Total Penilaian :", String(sortedRows.length)],
+    ["Surat Terakhir :", latestRow?.surahName ?? "-"],
+    ["Tanggal Terakhir :", latestRow ? jakartaDateFormatter.format(latestRow.createdAt) : "-"],
+  ].forEach(([label, value]) => {
+    const row = sheet.getRow(input.rowNumber);
+    row.getCell(1).value = label;
+    row.getCell(2).value = value;
+    row.getCell(1).font = { ...bodyFont, bold: true };
+    row.getCell(2).font = bodyFont;
+    input.rowNumber += 1;
+  });
+
+  const blockEndRow = input.rowNumber - 1;
+  applyBoardingBlockBorders(sheet, blockStartRow, blockEndRow);
+  input.rowNumber += 2;
+
+  return input.rowNumber;
 }
 
 function addAssessmentClassSheet(
@@ -424,6 +636,64 @@ function applyBodyAlignment(
       vertical: "top",
       wrapText: true,
     };
+  }
+}
+
+function groupSummativeRowsByStudent(rows: SummativeExportRow[]) {
+  const grouped = new Map<string, SummativeExportRow[]>();
+
+  for (const row of rows) {
+    grouped.set(row.studentId, [...(grouped.get(row.studentId) ?? []), row]);
+  }
+
+  return grouped;
+}
+
+function getLatestSummativeRow(rows: SummativeExportRow[]) {
+  return rows.reduce<SummativeExportRow | null>((latest, row) => {
+    if (!latest) return row;
+    if (row.createdAt.getTime() > latest.createdAt.getTime()) return row;
+    if (
+      row.createdAt.getTime() === latest.createdAt.getTime() &&
+      row.surahNumber > latest.surahNumber
+    ) {
+      return row;
+    }
+    return latest;
+  }, null);
+}
+
+function styleBoardingSectionHeader(cell: ExcelJS.Cell, value: string) {
+  cell.value = value;
+  cell.fill = boardingHeaderFill;
+  cell.font = boardingHeaderFont;
+  cell.border = thinBorder;
+  cell.alignment = { horizontal: "left", vertical: "middle" };
+}
+
+function applyBoardingBlockBorders(
+  sheet: ExcelJS.Worksheet,
+  startRow: number,
+  endRow: number,
+) {
+  for (let rowNumber = startRow; rowNumber <= endRow; rowNumber += 1) {
+    const row = sheet.getRow(rowNumber);
+    row.height = rowNumber === startRow ? 22 : 18;
+    for (let column = 1; column <= 2; column += 1) {
+      const cell = row.getCell(column);
+      cell.border = cell.border ?? {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } },
+        left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+        right: { style: "thin", color: { argb: "FFE2E8F0" } },
+      };
+      cell.alignment = {
+        vertical: "middle",
+        ...(column === 2 && typeof cell.value === "number"
+          ? { horizontal: "center" as const }
+          : {}),
+      };
+    }
   }
 }
 

@@ -67,7 +67,7 @@ export async function GET(request: Request) {
               },
             ]
           : []),
-        { type: "subtitle", text: "Riwayat Pembelajaran" },
+        { type: "subtitle", text: "Riwayat Setoran" },
         ...(data.records.length > 0
           ? [
               {

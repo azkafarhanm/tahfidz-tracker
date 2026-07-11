@@ -3,6 +3,8 @@ import { Semester } from "@/generated/prisma-next/enums";
 import { finalizeTableSheet } from "@/lib/excel";
 import type { getTeacherFormativeExportData } from "@/lib/formative";
 import { formatRange, statusLabels } from "@/lib/format";
+import { getJuz } from "@/lib/juz";
+import { surahList } from "@/lib/surahs";
 import { buildFormativeWorkbook } from "@/lib/summative-excel";
 import { semesterLabel } from "@/lib/summative";
 
@@ -25,6 +27,8 @@ type FormativeExportData = Awaited<
 
 type FormativeExportRow = FormativeExportData["rows"][number];
 type ScoredFormativeExportRow = FormativeExportRow & { score: number };
+type FormativeRecordType = FormativeExportRow["type"];
+type ProgressUnit = "juz" | "surah";
 
 export type AcademicFormativeWorkbookInput = {
   academicYear: string;
@@ -42,6 +46,10 @@ export type FormativeTableWorkbookInput = {
   programLabel: string;
   exportData: FormativeExportData;
   sheetNamePrefix?: string;
+};
+
+export type BoardingFormativeProgressWorkbookInput = {
+  exportData: FormativeExportData;
 };
 
 export function buildAcademicFormativeWorkbook(
@@ -232,6 +240,64 @@ export function buildFormativeTableWorkbook(
   });
 }
 
+export function buildBoardingFormativeProgressWorkbook(
+  workbook: ExcelJS.Workbook,
+  input: BoardingFormativeProgressWorkbookInput,
+) {
+  const rowsByStudent = groupRowsByStudent(input.exportData.rows);
+  const sheet = workbook.addWorksheet("Progress Boarding");
+
+  sheet.columns = [
+    { header: "No", key: "no", width: 6 },
+    { header: "Nama Santri", key: "studentName", width: 30 },
+    { header: "Kelas", key: "classLevel", width: 10 },
+    { header: "Halaqah", key: "halaqahName", width: 24 },
+    { header: "Total Setoran Hafalan", key: "hafalanCount", width: 22 },
+    { header: "Total Setoran Murojaah", key: "murojaahCount", width: 24 },
+    { header: "Progress Hafalan", key: "hafalanProgress", width: 24 },
+    { header: "Progress Murojaah", key: "murojaahProgress", width: 24 },
+    { header: "Setoran Terakhir", key: "latestRange", width: 28 },
+    { header: "Tanggal Terakhir", key: "latestDate", width: 18 },
+  ];
+
+  input.exportData.students.forEach((student, index) => {
+    const studentRows = rowsByStudent.get(student.id) ?? [];
+    const hafalanRows = filterRowsByType(studentRows, "Hafalan");
+    const murojaahRows = filterRowsByType(studentRows, "Murojaah");
+    const latestRow = studentRows[0];
+
+    sheet.addRow({
+      no: index + 1,
+      studentName: student.fullName,
+      classLevel: student.classGroup.grade,
+      halaqahName: student.classGroup.name,
+      hafalanCount: hafalanRows.length,
+      murojaahCount: murojaahRows.length,
+      hafalanProgress: formatProgress(hafalanRows, { deduplicate: true }),
+      murojaahProgress: formatProgress(murojaahRows, { deduplicate: false }),
+      latestRange: latestRow ? formatSetoranRange(latestRow) : "-",
+      latestDate: latestRow ? jakartaDateFormatter.format(latestRow.date) : "-",
+    });
+  });
+
+  finalizeTableSheet(sheet, {
+    wrapColumns: [
+      "studentName",
+      "halaqahName",
+      "hafalanProgress",
+      "murojaahProgress",
+      "latestRange",
+    ],
+    centerColumns: [
+      "no",
+      "classLevel",
+      "hafalanCount",
+      "murojaahCount",
+      "latestDate",
+    ],
+  });
+}
+
 function getJakartaDayKey(date: Date) {
   const parts = new Map(
     jakartaDayFormatter
@@ -337,6 +403,144 @@ function summarizeFormativeRows(rows: FormativeExportRow[]) {
 
   return studentSummary;
 }
+
+function groupRowsByStudent(rows: FormativeExportRow[]) {
+  const grouped = new Map<string, FormativeExportRow[]>();
+
+  for (const row of rows) {
+    const studentRows = grouped.get(row.studentId) ?? [];
+    studentRows.push(row);
+    grouped.set(row.studentId, studentRows);
+  }
+
+  for (const studentRows of grouped.values()) {
+    studentRows.sort(compareNewestRecord);
+  }
+
+  return grouped;
+}
+
+function filterRowsByType(rows: FormativeExportRow[], type: FormativeRecordType) {
+  return rows.filter((row) => row.type === type);
+}
+
+function compareNewestRecord(left: FormativeExportRow, right: FormativeExportRow) {
+  return (
+    right.date.getTime() - left.date.getTime() ||
+    right.updatedAt.getTime() - left.updatedAt.getTime() ||
+    right.createdAt.getTime() - left.createdAt.getTime() ||
+    right.id.localeCompare(left.id)
+  );
+}
+
+function formatSetoranRange(row: FormativeExportRow) {
+  return row.fromAyah === row.toAyah
+    ? `${row.surah} ${row.fromAyah}`
+    : `${row.surah} ${row.fromAyah}-${row.toAyah}`;
+}
+
+function formatProgress(
+  rows: FormativeExportRow[],
+  options: { deduplicate: boolean },
+) {
+  const ayahCounts = buildAyahCounts(rows, options);
+  const counts = summarizeAyahCounts(ayahCounts);
+  const parts = [
+    counts.juz > 0 ? `${counts.juz} Juz` : null,
+    counts.surah > 0 ? `${counts.surah} Surah` : null,
+    counts.ayah > 0 ? `${counts.ayah} Ayat` : null,
+  ].filter((part): part is string => Boolean(part));
+
+  return parts.length > 0 ? parts.join(" + ") : "0 Ayat";
+}
+
+function buildAyahCounts(
+  rows: FormativeExportRow[],
+  options: { deduplicate: boolean },
+) {
+  const counts = new Map<string, number>();
+
+  for (const row of rows) {
+    const maxAyah = surahAyahCountByName.get(row.surah) ?? row.toAyah;
+    const fromAyah = Math.max(1, Math.min(row.fromAyah, maxAyah));
+    const toAyah = Math.max(fromAyah, Math.min(row.toAyah, maxAyah));
+
+    for (let ayah = fromAyah; ayah <= toAyah; ayah += 1) {
+      const key = ayahKey(row.surah, ayah);
+      counts.set(key, options.deduplicate ? 1 : (counts.get(key) ?? 0) + 1);
+    }
+  }
+
+  return counts;
+}
+
+function summarizeAyahCounts(ayahCounts: Map<string, number>) {
+  const remaining = new Map(ayahCounts);
+  const result = { juz: 0, surah: 0, ayah: 0 };
+
+  for (const piece of progressPieces) {
+    let availableCount = getAvailablePieceCount(remaining, piece.keys);
+    while (availableCount > 0) {
+      for (const key of piece.keys) {
+        const nextCount = (remaining.get(key) ?? 0) - 1;
+        if (nextCount > 0) {
+          remaining.set(key, nextCount);
+        } else {
+          remaining.delete(key);
+        }
+      }
+      result[piece.unit] += 1;
+      availableCount -= 1;
+    }
+  }
+
+  result.ayah = [...remaining.values()].reduce((total, count) => total + count, 0);
+  return result;
+}
+
+function getAvailablePieceCount(counts: Map<string, number>, keys: string[]) {
+  return keys.reduce((available, key) => Math.min(available, counts.get(key) ?? 0), Number.POSITIVE_INFINITY);
+}
+
+function buildProgressPieces() {
+  const juzKeys = new Map<number, string[]>();
+  for (const surah of surahList) {
+    for (let ayah = 1; ayah <= surah.ayahs; ayah += 1) {
+      const juz = getJuz(surah.name, ayah);
+      if (!juz) continue;
+      const keys = juzKeys.get(juz) ?? [];
+      keys.push(ayahKey(surah.name, ayah));
+      juzKeys.set(juz, keys);
+    }
+  }
+
+  const pieces: Array<{ unit: ProgressUnit; keys: string[] }> = [
+    ...[...juzKeys.values()].map((keys) => ({ unit: "juz" as const, keys })),
+    ...surahList.map((surah) => ({
+      unit: "surah" as const,
+      keys: Array.from({ length: surah.ayahs }, (_, index) =>
+        ayahKey(surah.name, index + 1),
+      ),
+    })),
+  ];
+
+  return pieces.sort((left, right) => {
+    const lengthDifference = right.keys.length - left.keys.length;
+    if (lengthDifference !== 0) return lengthDifference;
+    if (left.unit === right.unit) return 0;
+    return left.unit === "juz" ? -1 : 1;
+  });
+}
+
+function ayahKey(surah: string, ayah: number) {
+  return `${surah}:${ayah}`;
+}
+
+const surahAyahCountByName = new Map(
+  surahList.map((surah) => [surah.name, surah.ayahs]),
+);
+
+const progressPieces = buildProgressPieces();
 
 function uniqueSheetName(workbook: ExcelJS.Workbook, rawName: string) {
   const baseName = safeSheetName(rawName);
