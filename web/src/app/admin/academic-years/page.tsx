@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAdminScope } from "@/lib/session";
-import { Calendar, CheckCircle2, Eye, PlusCircle, XCircle, Archive, RotateCcw } from "lucide-react";
-import { getAdminAcademicYearsData, setActiveAcademicYear } from "./actions";
+import { Calendar, CheckCircle2, ChevronsUp, Eye, PlusCircle, XCircle, Archive, RotateCcw } from "lucide-react";
+import {
+  advanceFormativeMeeting,
+  getAdminAcademicYearsData,
+  resetFormativeMeeting,
+  setActiveAcademicYear,
+} from "./actions";
 import { archiveAcademicYear, restoreAcademicYear } from "./archive-actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { badge, alert } from "@/lib/colors";
@@ -161,6 +166,50 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                     ) : null}
                   </div>
                 </div>
+                {year.isActive ? (
+                  <section className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold">
+                          {t("formativeMeetingTitle")}
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {t("formativeMeetingSemester", {
+                            semester:
+                              year.currentSemester === "GANJIL"
+                                ? t("semesterGanjil")
+                                : t("semesterGenap"),
+                          })}
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                          {t("formativeMeetingCurrent", {
+                            meeting: year.formativeMeeting,
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <form action={advanceFormativeMeeting.bind(null, year.id)}>
+                          <button
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
+                            type="submit"
+                          >
+                            <ChevronsUp aria-hidden="true" size={15} strokeWidth={2.2} />
+                            {t("formativeMeetingAdvance")}
+                          </button>
+                        </form>
+                        <form action={resetFormativeMeeting.bind(null, year.id)}>
+                          <button
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                            type="submit"
+                          >
+                            <RotateCcw aria-hidden="true" size={15} strokeWidth={2.2} />
+                            {t("formativeMeetingReset")}
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </section>
+                ) : null}
               </article>
             ))}
           </div>

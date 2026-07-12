@@ -36,7 +36,7 @@ export type AcademicFormativeWorkbookInput = {
   semester: Semester;
   schoolName: string;
   exportData: FormativeExportData;
-  meetingTimeline: readonly string[];
+  meetingTimeline: readonly (string | null)[];
   sheetNamePrefix?: string;
 };
 
@@ -334,10 +334,23 @@ function getJakartaDayKey(date: Date) {
   return `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
 }
 
-export function buildAcademicMeetingTimeline(rows: FormativeExportRow[]) {
-  return [...new Set(rows.map((row) => getJakartaDayKey(row.date)))].sort(
+export function buildAcademicMeetingTimeline(
+  rows: FormativeExportRow[],
+  meetingCount: number,
+) {
+  const normalizedMeetingCount = Math.max(1, Math.trunc(meetingCount));
+  const meetingDays = [...new Set(rows.map((row) => getJakartaDayKey(row.date)))].sort(
     (left, right) => left.localeCompare(right),
   );
+  const visibleMeetingDays = meetingDays.slice(-normalizedMeetingCount);
+
+  return [
+    ...Array.from(
+      { length: normalizedMeetingCount - visibleMeetingDays.length },
+      () => null,
+    ),
+    ...visibleMeetingDays,
+  ];
 }
 
 function isLaterScoredRecord(
@@ -354,10 +367,12 @@ function isLaterScoredRecord(
 
 function buildMeetingScores(
   rows: FormativeExportRow[],
-  meetingTimeline: readonly string[],
+  meetingTimeline: readonly (string | null)[],
 ) {
   const meetingIndexByDay = new Map(
-    meetingTimeline.map((dayKey, index) => [dayKey, index]),
+    meetingTimeline.flatMap((dayKey, index) =>
+      dayKey === null ? [] : [[dayKey, index] as const],
+    ),
   );
   const latestScoredRowsByStudentAndDay = new Map<
     string,

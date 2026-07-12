@@ -1,6 +1,10 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
-import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
+import {
+  getAcademicFormativeMeeting,
+  getActiveAcademicYear,
+  getSemesterForDate,
+} from "@/lib/academic-year";
 import { createWorkbookStreamResponse } from "@/lib/excel";
 import {
   buildAcademicMeetingTimeline,
@@ -68,6 +72,10 @@ export async function GET(request: Request) {
         semesterExportData,
         classLevel,
       );
+      const meetingCount = await getAcademicFormativeMeeting(
+        academicYear,
+        semester,
+      );
 
       buildAcademicFormativeWorkbook(workbook, {
         academicYear,
@@ -77,6 +85,7 @@ export async function GET(request: Request) {
         exportData,
         meetingTimeline: buildAcademicMeetingTimeline(
           semesterExportData.rows,
+          meetingCount,
         ),
       });
 

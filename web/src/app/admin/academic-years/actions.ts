@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AcademicYearStatus, Semester } from "@/generated/prisma-next/enums";
+import { getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
@@ -18,6 +20,7 @@ function redirectWithMessage(type: "success" | "error", message: string) {
 }
 
 export async function getAdminAcademicYearsData() {
+  const currentSemester = getSemesterForDate(new Date());
   const years = await prisma.academicYear.findMany({
     orderBy: { year: "desc" },
   });
@@ -40,6 +43,11 @@ export async function getAdminAcademicYearsData() {
         endDate: year.endDate.toISOString().slice(0, 10),
         isActive: year.isActive,
         status: year.status,
+        currentSemester,
+        formativeMeeting:
+          currentSemester === Semester.GANJIL
+            ? year.formativeMeetingGanjil
+            : year.formativeMeetingGenap,
         studentCount,
         classGroupCount,
       };
@@ -134,4 +142,60 @@ export async function setActiveAcademicYear(yearId: string) {
 
   revalidateAcademicYearPaths();
   redirectWithMessage("success", t("yearActivated", { year: year.year }));
+}
+
+export async function advanceFormativeMeeting(yearId: string) {
+  await updateFormativeMeeting(yearId, "advance");
+}
+
+export async function resetFormativeMeeting(yearId: string) {
+  await updateFormativeMeeting(yearId, "reset");
+}
+
+async function updateFormativeMeeting(
+  yearId: string,
+  operation: "advance" | "reset",
+) {
+  await requireAdminScope();
+  const t = await getTranslations("AdminAcademicYear");
+  const semester = getSemesterForDate(new Date());
+  const year = await prisma.academicYear.findUnique({
+    where: { id: yearId },
+    select: { id: true, isActive: true, status: true },
+  });
+
+  if (!year) {
+    redirectWithMessage("error", t("yearNotFound"));
+    return;
+  }
+
+  if (!year.isActive || year.status !== AcademicYearStatus.ACTIVE) {
+    redirectWithMessage("error", t("formativeMeetingActiveYearRequired"));
+    return;
+  }
+
+  const value = operation === "advance" ? { increment: 1 } : 1;
+  const updated = await prisma.academicYear.update({
+    where: { id: year.id },
+    data:
+      semester === Semester.GANJIL
+        ? { formativeMeetingGanjil: value }
+        : { formativeMeetingGenap: value },
+    select: {
+      formativeMeetingGanjil: true,
+      formativeMeetingGenap: true,
+    },
+  });
+  const currentMeeting =
+    semester === Semester.GANJIL
+      ? updated.formativeMeetingGanjil
+      : updated.formativeMeetingGenap;
+
+  revalidateAcademicYearPaths();
+  redirectWithMessage(
+    "success",
+    operation === "advance"
+      ? t("formativeMeetingAdvanced", { meeting: currentMeeting })
+      : t("formativeMeetingResetSuccess"),
+  );
 }

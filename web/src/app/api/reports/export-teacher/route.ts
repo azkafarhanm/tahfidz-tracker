@@ -1,7 +1,10 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { ProgramType, Semester } from "@/generated/prisma-next/enums";
-import { getActiveAcademicYear } from "@/lib/academic-year";
+import {
+  getAcademicFormativeMeeting,
+  getActiveAcademicYear,
+} from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import {
   buildAcademicMeetingTimeline,
@@ -26,16 +29,31 @@ type ExportBundle = Awaited<ReturnType<typeof getTeacherExportBundle>>;
 type FormativeExportData = ExportBundle["formative"]["GANJIL"]["exportData"];
 type SummativeExportData = ExportBundle["summative"]["GANJIL"]["exportData"];
 
-function addProgramSheets(
+async function addProgramSheets(
   workbook: ExcelJS.Workbook,
   bundle: ExportBundle,
   programLabel: string,
 ) {
+  const formativeMeetings =
+    programLabel === "Akademik"
+      ? new Map(
+          await Promise.all(
+            [Semester.GANJIL, Semester.GENAP].map(async (semester) => [
+              semester,
+              await getAcademicFormativeMeeting(bundle.academicYear, semester),
+            ] as const),
+          ),
+        )
+      : null;
+
   for (const semester of [Semester.GANJIL, Semester.GENAP]) {
     const exportData = bundle.formative[semester].exportData;
     const sheetNamePrefix = `${programSheetPrefix(programLabel)} Fmt ${semesterLabel(semester)} `;
     if (programLabel === "Akademik") {
-      const meetingTimeline = buildAcademicMeetingTimeline(exportData.rows);
+      const meetingTimeline = buildAcademicMeetingTimeline(
+        exportData.rows,
+        formativeMeetings?.get(semester) ?? 1,
+      );
       for (const classLevel of getFormativeClassLevels(exportData)) {
         buildAcademicFormativeWorkbook(workbook, {
           academicYear: bundle.academicYear,
@@ -198,7 +216,7 @@ export async function GET(request: Request) {
       ].forEach((row) => infoSheet.addRow(row));
       finalizeTableSheet(infoSheet);
 
-      addProgramSheets(workbook, bundle, programLabel);
+      await addProgramSheets(workbook, bundle, programLabel);
 
       return createWorkbookStreamResponse(
         workbook,
@@ -232,10 +250,10 @@ export async function GET(request: Request) {
     finalizeTableSheet(infoSheet);
 
     if (hasAcademic) {
-      addProgramSheets(workbook, academicBundle, "Akademik");
+      await addProgramSheets(workbook, academicBundle, "Akademik");
     }
     if (hasBoarding) {
-      addProgramSheets(workbook, boardingBundle, "Boarding");
+      await addProgramSheets(workbook, boardingBundle, "Boarding");
     }
 
     if (!hasAcademic && !hasBoarding) {

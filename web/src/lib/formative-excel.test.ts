@@ -141,6 +141,7 @@ describe("buildAcademicFormativeWorkbook", () => {
     };
     const meetingTimeline = buildAcademicMeetingTimeline(
       semesterExportData.rows,
+      3,
     );
 
     for (const classLevel of [7, 8, 9]) {
@@ -182,6 +183,57 @@ describe("buildAcademicFormativeWorkbook", () => {
     expect(workbook.getWorksheet("9A")!.getCell("D9").value).toBe("");
     expect(workbook.getWorksheet("9A")!.getCell("E9").value).toBe("");
     expect(workbook.getWorksheet("9A")!.getCell("F9").value).toBe(95);
+  });
+
+  it("keeps configured early meetings empty when the semester has no rows for them", () => {
+    const workbook = new ExcelJS.Workbook();
+    const student = makeAcademicStudent(
+      "student-late",
+      "Santri Mulai Pertemuan Dua",
+      8,
+      "8A",
+    );
+    const rows = [
+      makeRow({
+        id: "student-late-p2",
+        studentId: student.id,
+        studentName: student.fullName,
+        type: "Hafalan",
+        surah: "Al-Fatihah",
+        fromAyah: 1,
+        toAyah: 7,
+        score: 90,
+        date: new Date("2026-07-07T08:00:00+07:00"),
+      }),
+      makeRow({
+        id: "student-late-p3",
+        studentId: student.id,
+        studentName: student.fullName,
+        type: "Hafalan",
+        surah: "Al-Fatihah",
+        fromAyah: 1,
+        toAyah: 7,
+        score: 95,
+        date: new Date("2026-07-08T08:00:00+07:00"),
+      }),
+    ];
+
+    buildAcademicFormativeWorkbook(workbook, {
+      academicYear: "2026/2027",
+      classLevel: 8,
+      semester: Semester.GANJIL,
+      schoolName: "TahfidzFlow",
+      exportData: { students: [student], rows },
+      meetingTimeline: buildAcademicMeetingTimeline(rows, 3),
+    });
+
+    const sheet = workbook.getWorksheet("8A")!;
+    expect(sheet.getCell("D7").value).toBe("Pertemuan 1");
+    expect(sheet.getCell("E7").value).toBe("Pertemuan 2");
+    expect(sheet.getCell("F7").value).toBe("Pertemuan 3");
+    expect(sheet.getCell("D9").value).toBe("");
+    expect(sheet.getCell("E9").value).toBe(90);
+    expect(sheet.getCell("F9").value).toBe(95);
   });
 });
 

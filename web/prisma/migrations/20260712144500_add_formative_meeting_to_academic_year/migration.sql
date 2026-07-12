@@ -1,0 +1,3 @@
+ALTER TABLE "AcademicYear"
+ADD COLUMN "formativeMeetingGanjil" INTEGER NOT NULL DEFAULT 1,
+ADD COLUMN "formativeMeetingGenap" INTEGER NOT NULL DEFAULT 1;

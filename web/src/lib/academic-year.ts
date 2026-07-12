@@ -32,6 +32,25 @@ export function getSemesterForDate(date: Date): Semester {
   return date.getMonth() >= 6 ? Semester.GANJIL : Semester.GENAP;
 }
 
+export async function getAcademicFormativeMeeting(
+  academicYear: string,
+  semester: Semester,
+) {
+  const year = await prisma.academicYear.findUnique({
+    where: { year: academicYear },
+    select: {
+      formativeMeetingGanjil: true,
+      formativeMeetingGenap: true,
+    },
+  });
+
+  if (!year) return 1;
+
+  return semester === Semester.GANJIL
+    ? year.formativeMeetingGanjil
+    : year.formativeMeetingGenap;
+}
+
 export function getSemesterDateRange(academicYear: string, semester: Semester) {
   const [startYearValue, endYearValue] = academicYear.split("/");
   const startYear = Number.parseInt(startYearValue, 10);
