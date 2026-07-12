@@ -16,6 +16,7 @@ async function getOperationalCounts() {
     TasmiRecord: await prisma.tasmiRecord.count(),
     AuditLog: await prisma.auditLog.count(),
     Student: await prisma.student.count(),
+    "ClassGroup (Halaqah)": await prisma.classGroup.count(),
   };
 }
 
@@ -25,7 +26,6 @@ async function getPreservedCounts() {
     Teacher: await prisma.teacher.count(),
     AcademicYear: await prisma.academicYear.count(),
     AcademicClass: await prisma.academicClass.count(),
-    ClassGroup: await prisma.classGroup.count(),
     Surah: await prisma.surah.count(),
     TargetSurah: await prisma.targetSurah.count(),
     Account: await prisma.account.count(),
@@ -55,9 +55,9 @@ function printCounts(title: string, counts: Record<string, number>) {
 
 async function main() {
   console.log("=".repeat(64));
-  console.log("  PRODUCTION CLEANUP - delete operational student data only");
+  console.log("  PRODUCTION CLEANUP - delete student data and all halaqah");
   console.log("=".repeat(64));
-  console.log("\nPreserving users, teachers, assignments, and all configuration.");
+  console.log("\nPreserving users, teachers, academic classes, and configuration.");
   console.log(
     "Quick Log and archive data are covered by their Student and record tables.",
   );
@@ -85,8 +85,13 @@ async function main() {
       // AuditLog has no dependent foreign keys and is safe to clear.
       result.AuditLog = (await tx.auditLog.deleteMany()).count;
 
-      // Student is last because it is the parent of all operational records.
+      // Student must be removed before its required ClassGroup relation.
       result.Student = (await tx.student.deleteMany()).count;
+
+      // ClassGroup is the Halaqah model and is safe after Student is empty.
+      result["ClassGroup (Halaqah)"] = (
+        await tx.classGroup.deleteMany()
+      ).count;
 
       return result;
     },
