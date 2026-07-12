@@ -19,6 +19,7 @@
     "db:seed:summative": "tsx prisma/seed-summative.ts",
     "db:seed": "npm run db:seed:base && npm run db:seed:summative",
     "db:reset-uat": "tsx prisma/reset-uat-data.ts",
+    "db:cleanup-production": "tsx prisma/cleanup-production.ts",
     "db:studio": "prisma studio"
   },
   "dependencies": {
