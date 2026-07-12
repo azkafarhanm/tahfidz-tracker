@@ -4,6 +4,7 @@ import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import {
+  buildAcademicMeetingTimeline,
   buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
@@ -34,6 +35,7 @@ function addProgramSheets(
     const exportData = bundle.formative[semester].exportData;
     const sheetNamePrefix = `${programSheetPrefix(programLabel)} Fmt ${semesterLabel(semester)} `;
     if (programLabel === "Akademik") {
+      const meetingTimeline = buildAcademicMeetingTimeline(exportData.rows);
       for (const classLevel of getFormativeClassLevels(exportData)) {
         buildAcademicFormativeWorkbook(workbook, {
           academicYear: bundle.academicYear,
@@ -41,6 +43,7 @@ function addProgramSheets(
           semester,
           schoolName: resolveSchoolName(),
           exportData: filterFormativeClassLevel(exportData, classLevel),
+          meetingTimeline,
           sheetNamePrefix,
         });
       }

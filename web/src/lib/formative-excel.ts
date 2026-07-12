@@ -36,6 +36,7 @@ export type AcademicFormativeWorkbookInput = {
   semester: Semester;
   schoolName: string;
   exportData: FormativeExportData;
+  meetingTimeline: readonly string[];
   sheetNamePrefix?: string;
 };
 
@@ -60,6 +61,7 @@ export function buildAcademicFormativeWorkbook(
   const studentSummary = summarizeFormativeRows(input.exportData.rows);
   const { meetingCount, scoresByStudent } = buildMeetingScores(
     input.exportData.rows,
+    input.meetingTimeline,
   );
 
   buildFormativeWorkbook(workbook, {
@@ -332,6 +334,12 @@ function getJakartaDayKey(date: Date) {
   return `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
 }
 
+export function buildAcademicMeetingTimeline(rows: FormativeExportRow[]) {
+  return [...new Set(rows.map((row) => getJakartaDayKey(row.date)))].sort(
+    (left, right) => left.localeCompare(right),
+  );
+}
+
 function isLaterScoredRecord(
   candidate: ScoredFormativeExportRow,
   current: ScoredFormativeExportRow,
@@ -344,39 +352,44 @@ function isLaterScoredRecord(
   ) > 0;
 }
 
-function buildMeetingScores(rows: FormativeExportRow[]) {
-  const meetingsByStudentAndDay = new Map<
+function buildMeetingScores(
+  rows: FormativeExportRow[],
+  meetingTimeline: readonly string[],
+) {
+  const meetingIndexByDay = new Map(
+    meetingTimeline.map((dayKey, index) => [dayKey, index]),
+  );
+  const latestScoredRowsByStudentAndDay = new Map<
     string,
-    Map<string, ScoredFormativeExportRow | null>
+    ScoredFormativeExportRow
   >();
 
   for (const row of rows) {
-    const dayKey = getJakartaDayKey(row.date);
-    const byDay = meetingsByStudentAndDay.get(row.studentId) ?? new Map();
-    if (!byDay.has(dayKey)) {
-      byDay.set(dayKey, null);
-    }
-    meetingsByStudentAndDay.set(row.studentId, byDay);
     if (row.score === null) continue;
 
+    const dayKey = getJakartaDayKey(row.date);
     const scoredRow: ScoredFormativeExportRow = { ...row, score: row.score };
-    const current = byDay.get(dayKey);
+    const scoreKey = `${row.studentId}:${dayKey}`;
+    const current = latestScoredRowsByStudentAndDay.get(scoreKey);
     if (!current || isLaterScoredRecord(scoredRow, current)) {
-      byDay.set(dayKey, scoredRow);
+      latestScoredRowsByStudentAndDay.set(scoreKey, scoredRow);
     }
   }
 
   const scoresByStudent = new Map<string, Array<number | "">>();
-  let meetingCount = 0;
-  for (const [studentId, byDay] of meetingsByStudentAndDay) {
-    const scores = [...byDay.entries()]
-      .sort(([left], [right]) => left.localeCompare(right))
-      .map(([, row]) => row?.score ?? "");
-    scoresByStudent.set(studentId, scores);
-    meetingCount = Math.max(meetingCount, scores.length);
+  for (const row of latestScoredRowsByStudentAndDay.values()) {
+    const dayKey = getJakartaDayKey(row.date);
+    const meetingIndex = meetingIndexByDay.get(dayKey);
+    if (meetingIndex === undefined) continue;
+
+    const scores =
+      scoresByStudent.get(row.studentId) ??
+      Array.from({ length: meetingTimeline.length }, () => "");
+    scores[meetingIndex] = row.score;
+    scoresByStudent.set(row.studentId, scores);
   }
 
-  return { meetingCount, scoresByStudent };
+  return { meetingCount: meetingTimeline.length, scoresByStudent };
 }
 
 function summarizeFormativeRows(rows: FormativeExportRow[]) {

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { createWorkbookStreamResponse } from "@/lib/excel";
 import {
+  buildAcademicMeetingTimeline,
   buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
@@ -12,6 +13,10 @@ import { isSemesterValue, parseSemester } from "@/lib/summative";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+type FormativeExportData = Awaited<
+  ReturnType<typeof getTeacherFormativeExportData>
+>;
 
 export async function GET(request: Request) {
   try {
@@ -52,12 +57,16 @@ export async function GET(request: Request) {
     workbook.created = new Date();
 
     if (!isBoarding) {
-      const exportData = await getTeacherFormativeExportData(
+      const semesterExportData = await getTeacherFormativeExportData(
         teacherId,
         semester,
         academicYear,
+        undefined,
+        "ACADEMIC",
+      );
+      const exportData = filterFormativeClassLevel(
+        semesterExportData,
         classLevel,
-        programType,
       );
 
       buildAcademicFormativeWorkbook(workbook, {
@@ -66,6 +75,9 @@ export async function GET(request: Request) {
         semester,
         schoolName: resolveSchoolName(),
         exportData,
+        meetingTimeline: buildAcademicMeetingTimeline(
+          semesterExportData.rows,
+        ),
       });
 
       const date = new Date().toISOString().split("T")[0];
@@ -105,4 +117,19 @@ function resolveSchoolName() {
     process.env.NEXT_PUBLIC_SCHOOL_NAME?.trim() ||
     "TahfidzFlow"
   );
+}
+
+function filterFormativeClassLevel(
+  exportData: FormativeExportData,
+  classLevel: number,
+): FormativeExportData {
+  const students = exportData.students.filter(
+    (student) => student.classGroup.grade === classLevel,
+  );
+  const studentIds = new Set(students.map((student) => student.id));
+
+  return {
+    students,
+    rows: exportData.rows.filter((row) => studentIds.has(row.studentId)),
+  };
 }

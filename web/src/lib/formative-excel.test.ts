@@ -7,7 +7,10 @@ import {
   Semester,
 } from "@/generated/prisma-next/enums";
 import {
+  buildAcademicMeetingTimeline,
+  buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
+  type AcademicFormativeWorkbookInput,
   type BoardingFormativeProgressWorkbookInput,
 } from "@/lib/formative-excel";
 
@@ -17,6 +20,7 @@ vi.mock("@/lib/summative", () => ({
 
 type ExportData = BoardingFormativeProgressWorkbookInput["exportData"];
 type ExportRow = ExportData["rows"][number];
+type AcademicExportData = AcademicFormativeWorkbookInput["exportData"];
 
 const boardingClassGroup = {
   grade: 7,
@@ -48,6 +52,138 @@ function makeRow(
     ...overrides,
   };
 }
+
+function makeAcademicStudent(
+  id: string,
+  fullName: string,
+  classLevel: number,
+  academicClassName: string,
+): AcademicExportData["students"][number] {
+  return {
+    id,
+    fullName,
+    classGroup: {
+      grade: classLevel,
+      name: `Akademik ${classLevel}`,
+      level: HalaqahLevel.LOW,
+      programType: ProgramType.ACADEMIC,
+    },
+    academicClass: { name: academicClassName },
+  };
+}
+
+describe("buildAcademicFormativeWorkbook", () => {
+  it("uses one Academic semester timeline for class levels 7, 8, and 9", () => {
+    const workbook = new ExcelJS.Workbook();
+    const semesterExportData: AcademicExportData = {
+      students: [
+        makeAcademicStudent("student-7", "Ahmad Lengkap", 7, "7A"),
+        makeAcademicStudent("student-8", "Zaid Pertemuan Dua", 8, "8A"),
+        makeAcademicStudent("student-9", "Umar Pertemuan Tiga", 9, "9A"),
+      ],
+      rows: [
+        makeRow({
+          id: "student-7-p1",
+          studentId: "student-7",
+          studentName: "Ahmad Lengkap",
+          type: "Hafalan",
+          surah: "Al-Fatihah",
+          fromAyah: 1,
+          toAyah: 7,
+          score: 80,
+          date: new Date("2026-07-06T08:00:00+07:00"),
+        }),
+        makeRow({
+          id: "student-7-p2",
+          studentId: "student-7",
+          studentName: "Ahmad Lengkap",
+          type: "Hafalan",
+          surah: "Al-Fatihah",
+          fromAyah: 1,
+          toAyah: 7,
+          score: 85,
+          date: new Date("2026-07-07T08:00:00+07:00"),
+        }),
+        makeRow({
+          id: "student-8-p2",
+          studentId: "student-8",
+          studentName: "Zaid Pertemuan Dua",
+          type: "Hafalan",
+          surah: "Al-Fatihah",
+          fromAyah: 1,
+          toAyah: 7,
+          score: 90,
+          date: new Date("2026-07-07T08:00:00+07:00"),
+        }),
+        makeRow({
+          id: "student-7-p3",
+          studentId: "student-7",
+          studentName: "Ahmad Lengkap",
+          type: "Hafalan",
+          surah: "Al-Fatihah",
+          fromAyah: 1,
+          toAyah: 7,
+          score: 90,
+          date: new Date("2026-07-08T08:00:00+07:00"),
+        }),
+        makeRow({
+          id: "student-9-p3",
+          studentId: "student-9",
+          studentName: "Umar Pertemuan Tiga",
+          type: "Hafalan",
+          surah: "Al-Fatihah",
+          fromAyah: 1,
+          toAyah: 7,
+          score: 95,
+          date: new Date("2026-07-08T08:00:00+07:00"),
+        }),
+      ],
+    };
+    const meetingTimeline = buildAcademicMeetingTimeline(
+      semesterExportData.rows,
+    );
+
+    for (const classLevel of [7, 8, 9]) {
+      const students = semesterExportData.students.filter(
+        (student) => student.classGroup.grade === classLevel,
+      );
+      const studentIds = new Set(students.map((student) => student.id));
+
+      buildAcademicFormativeWorkbook(workbook, {
+        academicYear: "2026/2027",
+        classLevel,
+        semester: Semester.GANJIL,
+        schoolName: "TahfidzFlow",
+        exportData: {
+          students,
+          rows: semesterExportData.rows.filter((row) =>
+            studentIds.has(row.studentId),
+          ),
+        },
+        meetingTimeline,
+      });
+    }
+
+    for (const sheetName of ["7A", "8A", "9A"]) {
+      const sheet = workbook.getWorksheet(sheetName)!;
+      expect(sheet.getCell("D7").value).toBe("Pertemuan 1");
+      expect(sheet.getCell("E7").value).toBe("Pertemuan 2");
+      expect(sheet.getCell("F7").value).toBe("Pertemuan 3");
+    }
+
+    expect(workbook.getWorksheet("7A")!.getCell("D9").value).toBe(80);
+    expect(workbook.getWorksheet("7A")!.getCell("E9").value).toBe(85);
+    expect(workbook.getWorksheet("7A")!.getCell("F9").value).toBe(90);
+
+    expect(workbook.getWorksheet("8A")!.getCell("D9").value).toBe("");
+    expect(workbook.getWorksheet("8A")!.getCell("E9").value).toBe(90);
+    expect(workbook.getWorksheet("8A")!.getCell("F9").value).toBe("");
+
+    expect(workbook.getWorksheet("9A")!.getCell("D9").value).toBe("");
+    expect(workbook.getWorksheet("9A")!.getCell("E9").value).toBe("");
+    expect(workbook.getWorksheet("9A")!.getCell("F9").value).toBe(95);
+  });
+});
 
 describe("buildBoardingFormativeProgressWorkbook", () => {
   it("creates Boarding progress worksheets for classes 7, 8, and 9 without academic score sheets", () => {
