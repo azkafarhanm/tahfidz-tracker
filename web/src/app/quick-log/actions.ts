@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
+import { RecordStatus } from "@/generated/prisma-next/enums";
 import {
   QuickLogRecordType,
   quickLogTypeLabels,
@@ -43,7 +43,6 @@ export async function createGuidedRecord(formData: FormData) {
     readString(formData, "time"),
     readString(formData, "timezoneOffset"),
   );
-  const submittedStatusValue = readOptionalString(formData, "status") ?? "";
   const score = readInt(formData, "score");
   const notes = readOptionalString(formData, "notes");
 
@@ -56,7 +55,6 @@ export async function createGuidedRecord(formData: FormData) {
     select: {
       id: true,
       teacherId: true,
-      classGroup: { select: { programType: true } },
     },
   });
 
@@ -72,10 +70,7 @@ export async function createGuidedRecord(formData: FormData) {
     return { ok: false as const, error: t("recordTypeInvalid") };
   }
 
-  const statusValue =
-    student.classGroup.programType === ProgramType.ACADEMIC
-      ? deriveRecordStatusFromScore(score)
-      : submittedStatusValue;
+  const statusValue = deriveRecordStatusFromScore(score);
 
   try {
     await validateRecordFields({

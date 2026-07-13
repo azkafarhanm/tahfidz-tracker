@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import SurahInput from "@/components/SurahInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
-import NumericScoreInput from "@/components/NumericScoreInput";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
@@ -39,7 +38,6 @@ type GuidedQuickLogProps = {
   action: (formData: FormData) => Promise<ActionResult>;
   students: Student[];
   recentItems: RecentActivityItem[];
-  isAcademic: boolean;
   programBadge?: React.ReactNode;
   programSelector?: React.ReactNode;
 };
@@ -65,7 +63,6 @@ export default function GuidedQuickLog({
   action,
   students,
   recentItems,
-  isAcademic,
   programBadge,
   programSelector,
 }: GuidedQuickLogProps) {
@@ -73,12 +70,6 @@ export default function GuidedQuickLog({
   const searchParams = useSearchParams();
   const programType = searchParams.get("programType");
   const dashboardHref = programType ? `/?programType=${programType}` : "/";
-
-  const statusOptions = [
-    { value: "LANCAR", label: t("statusLancar") },
-    { value: "CUKUP", label: t("statusCukup") },
-    { value: "PERLU_MUROJAAH", label: t("statusPerluMurojaah") },
-  ];
 
   const typeOptions = [
     { value: "HAFALAN", label: t("typeHafalan") },
@@ -96,8 +87,6 @@ export default function GuidedQuickLog({
   const [recordType, setRecordType] = useState("HAFALAN");
   const [fromAyah, setFromAyah] = useState("");
   const [toAyah, setToAyah] = useState("");
-  const [status, setStatus] = useState("CUKUP");
-  const [score, setScore] = useState("");
   const [notes, setNotes] = useState("");
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const [surahInputKey, setSurahInputKey] = useState(0);
@@ -209,8 +198,6 @@ export default function GuidedQuickLog({
     setRecordType("HAFALAN");
     setFromAyah("");
     setToAyah("");
-    setStatus("CUKUP");
-    setScore("");
     setNotes("");
     setSurahInputKey((value) => value + 1);
     setAssessmentInputKey((value) => value + 1);
@@ -449,47 +436,12 @@ export default function GuidedQuickLog({
                 <h2 className="font-semibold">{t("assessmentSection")}</h2>
 
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {isAcademic ? (
-                    <AutoRecordStatusField
-                      key={assessmentInputKey}
-                      placeholder={t("optionalPlaceholder")}
-                      scoreLabel={t("scoreLabel")}
-                      statusLabel={t("statusLabel")}
-                    />
-                  ) : (
-                    <>
-                      <label className="block">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {t("statusLabel")}
-                        </span>
-                        <select
-                          className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                          name="status"
-                          onChange={(e) => setStatus(e.target.value)}
-                          value={status}
-                        >
-                          {statusOptions.map((s) => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <label className="block">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {t("scoreLabel")}
-                        </span>
-                        <NumericScoreInput
-                          className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                          name="score"
-                          onChange={(e) => setScore(e.target.value)}
-                          placeholder={t("optionalPlaceholder")}
-                          value={score}
-                        />
-                      </label>
-                    </>
-                  )}
+                  <AutoRecordStatusField
+                    key={assessmentInputKey}
+                    placeholder={t("optionalPlaceholder")}
+                    scoreLabel={t("scoreLabel")}
+                    statusLabel={t("statusLabel")}
+                  />
                 </div>
               </section>
 
