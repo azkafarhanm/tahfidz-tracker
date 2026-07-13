@@ -39,8 +39,14 @@ async function getMeetingSettings() {
     select: {
       id: true,
       year: true,
-      formativeMeetingGanjil: true,
-      formativeMeetingGenap: true,
+      formativeMeetings: {
+        orderBy: [{ semester: "asc" }, { meetingNumber: "asc" }],
+        select: {
+          semester: true,
+          meetingNumber: true,
+          meetingDate: true,
+        },
+      },
     },
     orderBy: { id: "asc" },
   });

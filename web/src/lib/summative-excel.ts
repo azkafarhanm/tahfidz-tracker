@@ -46,6 +46,7 @@ export type FormativeWorkbookInput = {
   rows: Array<{ studentId: string; notes: string | null }>;
   scoresByStudent: Map<string, Array<number | "">>;
   meetingCount: number;
+  meetingDates?: readonly (string | null)[];
   sheetNamePrefix?: string;
 };
 
@@ -202,7 +203,7 @@ export function buildFormativeWorkbook(
           { length: Math.max(1, input.meetingCount) },
           (_, index) => ({
             number: index + 1,
-            name: `Pertemuan ${index + 1}`,
+            name: formatMeetingHeader(index + 1, input.meetingDates?.[index]),
           }),
         ),
       },
@@ -211,6 +212,18 @@ export function buildFormativeWorkbook(
     scoreByStudentAndTarget,
     sheetNamePrefix: input.sheetNamePrefix,
   });
+}
+
+const meetingHeaderDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+function formatMeetingHeader(meetingNumber: number, dayKey?: string | null) {
+  if (!dayKey) return `Pertemuan ${meetingNumber}`;
+  const date = new Date(`${dayKey}T00:00:00.000Z`);
+  return `Pertemuan ${meetingNumber}\n(${meetingHeaderDateFormatter.format(date)})`;
 }
 
 function buildAssessmentWorkbook(
@@ -496,9 +509,9 @@ function addAssessmentClassSheet(
       cell.border = thinBorder;
       cell.alignment = {
         horizontal: "center",
-        vertical: "bottom",
+        vertical: section.mergeTargetsAcrossHeaderRows ? "middle" : "bottom",
         textRotation: 90,
-        wrapText: false,
+        wrapText: Boolean(section.mergeTargetsAcrossHeaderRows),
       };
       currentColumn += 1;
     }
@@ -520,14 +533,24 @@ function addAssessmentClassSheet(
   );
 
   sheet.getRow(6).height = 20;
-  sheet.getRow(7).height = 20;
-  sheet.getRow(8).height = 74;
+  const hasMergedTargets = sections.some(
+    (section) => section.mergeTargetsAcrossHeaderRows,
+  );
+  sheet.getRow(7).height = hasMergedTargets ? 46 : 20;
+  sheet.getRow(8).height = hasMergedTargets ? 46 : 74;
 
   sheet.getColumn(1).width = 5;
   sheet.getColumn(2).width = 30;
   sheet.getColumn(3).width = 9;
-  for (let col = firstTargetColumn; col < tahsinColumn; col += 1) {
-    sheet.getColumn(col).width = 4;
+  let widthColumn = firstTargetColumn;
+  for (const section of sections) {
+    for (let targetIndex = 0; targetIndex < section.targets.length; targetIndex += 1) {
+      sheet.getColumn(widthColumn).width = section.mergeTargetsAcrossHeaderRows
+        ? 6
+        : 4;
+      widthColumn += 1;
+    }
+    widthColumn += 2;
   }
   for (const summaryColumn of getSectionSummaryColumns(sections, firstTargetColumn)) {
     sheet.getColumn(summaryColumn).width = 7;

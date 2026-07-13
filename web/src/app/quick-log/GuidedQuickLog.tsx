@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import SurahInput from "@/components/SurahInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
+import NumericScoreInput from "@/components/NumericScoreInput";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
@@ -479,14 +480,11 @@ export default function GuidedQuickLog({
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           {t("scoreLabel")}
                         </span>
-                        <input
+                        <NumericScoreInput
                           className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-950 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900"
-                          max={100}
-                          min={0}
                           name="score"
                           onChange={(e) => setScore(e.target.value)}
                           placeholder={t("optionalPlaceholder")}
-                          type="number"
                           value={score}
                         />
                       </label>

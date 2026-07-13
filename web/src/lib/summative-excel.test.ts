@@ -44,7 +44,12 @@ describe("buildFormativeWorkbook", () => {
     expect(sheet!.getCell("E7").value).toBe("Pertemuan 2");
     expect(sheet!.getCell("F7").value).toBe("Pertemuan 3");
     expect(sheet!.getCell("D7").isMerged).toBe(true);
-    expect(sheet!.getCell("D7").alignment?.textRotation).toBe(90);
+    expect(sheet!.getCell("D7").alignment).toMatchObject({
+      textRotation: 90,
+      vertical: "middle",
+      wrapText: true,
+    });
+    expect(sheet!.getColumn(4).width).toBe(6);
     expect(sheet!.getCell("D7").border?.top?.style).toBe("thin");
     expect(sheet!.getCell("G7").value).toBe("RERATA");
     expect(sheet!.getCell("H7").value).toBe("KET.");

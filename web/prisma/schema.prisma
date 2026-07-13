@@ -84,6 +84,7 @@ model User {
   accounts  Account[]
   sessions  Session[]
   auditLogs AuditLog[]
+  releaseViews UserReleaseView[]
 
   @@index([role])
 }
@@ -116,13 +117,57 @@ model AcademicYear {
   endDate                  DateTime
   isActive                 Boolean            @default(false)
   status                   AcademicYearStatus @default(ACTIVE)
-  formativeMeetingGanjil   Int                @default(1)
-  formativeMeetingGenap    Int                @default(1)
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
 
+  formativeMeetings FormativeMeeting[]
+
   @@index([isActive])
   @@index([status])
+}
+
+model FormativeMeeting {
+  id             String   @id @default(cuid())
+  academicYearId String
+  semester       Semester
+  meetingNumber  Int
+  meetingDate    DateTime @db.Date
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  @@unique([academicYearId, semester, meetingNumber])
+  @@index([academicYearId, semester, meetingDate])
+}
+
+model ReleaseNote {
+  id          String   @id @default(cuid())
+  version     String   @unique
+  title       String
+  summary     String
+  content     String
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  views UserReleaseView[]
+
+  @@index([isPublished, publishedAt])
+}
+
+model UserReleaseView {
+  id            String   @id @default(cuid())
+  userId        String
+  releaseNoteId String
+  seenAt        DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  releaseNote ReleaseNote @relation(fields: [releaseNoteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, releaseNoteId])
+  @@index([releaseNoteId])
 }
 
 model AcademicClass {

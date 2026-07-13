@@ -7,18 +7,13 @@ import { getJuz } from "@/lib/juz";
 import { surahList } from "@/lib/surahs";
 import { buildFormativeWorkbook } from "@/lib/summative-excel";
 import { semesterLabel } from "@/lib/summative";
+import { getJakartaDayKey } from "@/lib/jakarta-date";
 
 const jakartaDateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "long",
   year: "numeric",
   timeZone: "Asia/Jakarta",
-});
-const jakartaDayFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "2-digit",
-  month: "2-digit",
-  timeZone: "Asia/Jakarta",
-  year: "numeric",
 });
 
 type FormativeExportData = Awaited<
@@ -84,6 +79,7 @@ export function buildAcademicFormativeWorkbook(
     rows: input.exportData.rows,
     scoresByStudent,
     meetingCount,
+    meetingDates: input.meetingTimeline,
     sheetNamePrefix: input.sheetNamePrefix,
   });
 }
@@ -323,34 +319,6 @@ function addBoardingProgressSheet(
       "latestDate",
     ],
   });
-}
-
-function getJakartaDayKey(date: Date) {
-  const parts = new Map(
-    jakartaDayFormatter
-      .formatToParts(date)
-      .map((part) => [part.type, part.value]),
-  );
-  return `${parts.get("year")}-${parts.get("month")}-${parts.get("day")}`;
-}
-
-export function buildAcademicMeetingTimeline(
-  rows: FormativeExportRow[],
-  meetingCount: number,
-) {
-  const normalizedMeetingCount = Math.max(1, Math.trunc(meetingCount));
-  const meetingDays = [...new Set(rows.map((row) => getJakartaDayKey(row.date)))].sort(
-    (left, right) => left.localeCompare(right),
-  );
-  const visibleMeetingDays = meetingDays.slice(-normalizedMeetingCount);
-
-  return [
-    ...Array.from(
-      { length: normalizedMeetingCount - visibleMeetingDays.length },
-      () => null,
-    ),
-    ...visibleMeetingDays,
-  ];
 }
 
 function isLaterScoredRecord(

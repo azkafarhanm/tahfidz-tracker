@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { requireAdminScope } from "@/lib/session";
-import { Calendar, CheckCircle2, ChevronsUp, Eye, PlusCircle, XCircle, Archive, RotateCcw } from "lucide-react";
+import { Calendar, CheckCircle2, Eye, PlusCircle, XCircle, Archive, RotateCcw } from "lucide-react";
 import {
-  advanceFormativeMeeting,
   getAdminAcademicYearsData,
   resetFormativeMeeting,
   setActiveAcademicYear,
@@ -11,6 +10,7 @@ import {
 import { archiveAcademicYear, restoreAcademicYear } from "./archive-actions";
 import ConfirmActionDialogButton from "@/components/ConfirmActionDialogButton";
 import { badge, alert } from "@/lib/colors";
+import FormativeMeetingControls from "@/components/FormativeMeetingControls";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -182,32 +182,14 @@ export default async function AcademicYearsPage({ searchParams }: AcademicYearsP
                           })}
                         </p>
                         <p className="mt-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-                          {t("formativeMeetingCurrent", {
-                            meeting: year.formativeMeeting,
-                          })}
+                          {t("formativeMeetingAutomatic")}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <form action={advanceFormativeMeeting.bind(null, year.id)}>
-                          <button
-                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-3 text-xs font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
-                            type="submit"
-                          >
-                            <ChevronsUp aria-hidden="true" size={15} strokeWidth={2.2} />
-                            {t("formativeMeetingAdvance")}
-                          </button>
-                        </form>
-                        <form action={resetFormativeMeeting.bind(null, year.id)}>
-                          <button
-                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-900 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                            type="submit"
-                          >
-                            <RotateCcw aria-hidden="true" size={15} strokeWidth={2.2} />
-                            {t("formativeMeetingReset")}
-                          </button>
-                        </form>
-                      </div>
                     </div>
+                    <FormativeMeetingControls
+                      resetAction={resetFormativeMeeting.bind(null, year.id)}
+                      timeline={year.formativeMeetingTimeline}
+                    />
                   </section>
                 ) : null}
               </article>

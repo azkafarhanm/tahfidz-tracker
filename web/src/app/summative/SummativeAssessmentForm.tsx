@@ -8,6 +8,7 @@ import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import SurahInput from "@/components/SurahInput";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
+import NumericScoreInput from "@/components/NumericScoreInput";
 
 type SummativeAssessmentFormProps = {
   action: (formData: FormData) => Promise<void>;
@@ -96,15 +97,12 @@ export default function SummativeAssessmentForm({
             >
               {t("scoreLabel")}
             </label>
-            <input
+            <NumericScoreInput
               className="w-full rounded-2xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
               defaultValue={defaultScore ?? ""}
               id="score"
-              max={100}
-              min={0}
               name="score"
               required
-              type="number"
             />
           </div>
 

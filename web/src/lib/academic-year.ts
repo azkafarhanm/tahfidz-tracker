@@ -1,16 +1,20 @@
 import { ProgramType, Semester, AcademicYearStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
+import {
+  getAcademicYearForDate,
+  resolveNewAcademicMeetingDays,
+} from "@/lib/academic-year-rules";
+
+export {
+  getAcademicYearForDate,
+  getSemesterDateRange,
+  getSemesterForDate,
+  resolveNewAcademicMeetingDays,
+} from "@/lib/academic-year-rules";
 
 const ACADEMIC_YEAR_CACHE_TTL_MS = 60_000; // 60 seconds
 const ACADEMIC_YEAR_CACHE_KEY = "academic-year:active";
-
-export function getAcademicYearForDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const startYear = month >= 6 ? year : year - 1;
-  return `${startYear}/${startYear + 1}`;
-}
 
 export async function getActiveAcademicYear(): Promise<string> {
   return cached(ACADEMIC_YEAR_CACHE_KEY, ACADEMIC_YEAR_CACHE_TTL_MS, async () => {
@@ -28,49 +32,71 @@ export async function getActiveAcademicYear(): Promise<string> {
   });
 }
 
-export function getSemesterForDate(date: Date): Semester {
-  return date.getMonth() >= 6 ? Semester.GANJIL : Semester.GENAP;
-}
-
-export async function getAcademicFormativeMeeting(
+export async function getAcademicFormativeTimeline(
   academicYear: string,
   semester: Semester,
 ) {
   const year = await prisma.academicYear.findUnique({
     where: { year: academicYear },
-    select: {
-      formativeMeetingGanjil: true,
-      formativeMeetingGenap: true,
-    },
+    select: { id: true },
   });
 
-  if (!year) return 1;
+  if (!year) return [null];
 
-  return semester === Semester.GANJIL
-    ? year.formativeMeetingGanjil
-    : year.formativeMeetingGenap;
-}
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "AcademicYear" WHERE "id" = ${year.id} FOR UPDATE`;
 
-export function getSemesterDateRange(academicYear: string, semester: Semester) {
-  const [startYearValue, endYearValue] = academicYear.split("/");
-  const startYear = Number.parseInt(startYearValue, 10);
-  const endYear = Number.parseInt(endYearValue, 10);
+    const meetings = await tx.formativeMeeting.findMany({
+      where: { academicYearId: year.id, semester },
+      orderBy: { meetingNumber: "asc" },
+      select: { meetingNumber: true, meetingDate: true },
+    });
 
-  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) {
-    throw new Error(`Invalid academic year: ${academicYear}`);
-  }
+    if (meetings.length === 0) return [null];
 
-  if (semester === Semester.GANJIL) {
-    return {
-      start: new Date(startYear, 6, 1, 0, 0, 0, 0),
-      end: new Date(startYear, 11, 31, 23, 59, 59, 999),
-    };
-  }
+    const recordWhere = {
+      academicYear,
+      semester,
+      student: { classGroup: { programType: ProgramType.ACADEMIC } },
+    } as const;
+    const [memorizationRecords, revisionRecords] = await Promise.all([
+      tx.memorizationRecord.findMany({
+        where: recordWhere,
+        select: { date: true },
+      }),
+      tx.revisionRecord.findMany({
+        where: recordWhere,
+        select: { date: true },
+      }),
+    ]);
 
-  return {
-    start: new Date(endYear, 0, 1, 0, 0, 0, 0),
-    end: new Date(endYear, 5, 30, 23, 59, 59, 999),
-  };
+    const existingDays = meetings.map((meeting) =>
+      meeting.meetingDate.toISOString().slice(0, 10),
+    );
+    const lastMeeting = meetings.at(-1)!;
+    const newDays = resolveNewAcademicMeetingDays(
+      [...memorizationRecords, ...revisionRecords].map((record) => record.date),
+      existingDays,
+    );
+
+    if (newDays.length > 0) {
+      await tx.formativeMeeting.createMany({
+        data: newDays.map((day, index) => ({
+          academicYearId: year.id,
+          semester,
+          meetingNumber: lastMeeting.meetingNumber + index + 1,
+          meetingDate: new Date(`${day}T00:00:00.000Z`),
+        })),
+      });
+    }
+
+    return [
+      ...meetings.map((meeting) =>
+        meeting.meetingDate.toISOString().slice(0, 10),
+      ),
+      ...newDays,
+    ];
+  });
 }
 
 export type TeacherProgramContext = {

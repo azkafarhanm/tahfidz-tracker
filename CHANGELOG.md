@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Navigation & Scroll Persistence and workflow persistence across primary and
-detail navigation. Not yet released to production users.
+Navigation and workflow persistence, program-specific report exports, automatic
+Academic Formative meeting timelines, in-app release notes, and release
+operations completed after v1.0.0. Not yet released as a new tagged version.
 
 ### Added — Navigation & Scroll Persistence
 
@@ -84,11 +85,81 @@ detail navigation. Not yet released to production users.
   preserve readable labels across small mobile widths without changing desktop
   behavior.
 
+### Added — Formative Meeting Settings
+
+- **Official per-semester Academic meeting timeline.** Admin → Tahun Ajaran
+  stores the date of Pertemuan 1. After that, each new date with at least one
+  Academic Formative record automatically becomes the next meeting; days with
+  no Academic Formative activity do not create timeline entries.
+- **Reset remains the only manual meeting control.** Reset deletes the current
+  semester timeline and recreates Pertemuan 1 using the date selected by the
+  administrator. The previous manual counter and “advance meeting” workflow
+  were removed.
+- **One shared source of truth for all Academic classes.** Classes 7, 8, and 9
+  use the same stored semester timeline. Scores remain mapped to the official
+  meeting date, and a student without a record on that date keeps an empty cell
+  instead of having later scores shifted left.
+- **Dated Academic Formative Excel headers.** Each existing meeting column now
+  includes its short official date, for example `Pertemuan 2 (13 Jul)`, using a
+  compact vertical header without adding columns. Boarding and PDF exports are
+  unchanged.
+
+### Added — In-App Release Notes
+
+- **What’s New after login.** The Dashboard opens the latest published release
+  note that the current user has not read. Acknowledging it stores a per-user
+  read marker so the same release does not open automatically again.
+- **Release history remains accessible.** The Dashboard “What’s New” action can
+  reopen the latest published note even after it has been acknowledged.
+- **HTML Teacher Guide link.** Release notes open the Teacher Guide in a new tab
+  so the Dashboard and current application state remain available.
+
+### Changed — Program-Specific Report Exports
+
+- **Boarding Formative Excel** now uses grade-based progress sheets for classes
+  7, 8, and 9, including Hafalan/Murojaah setoran totals, progress, and latest
+  setoran information.
+- **Boarding Summative Excel** now uses an Info sheet and grade sheets with
+  per-student Surah/Nilai blocks and latest-assessment summaries.
+- **Teacher PDF export** keeps Academic and Boarding sections separate. Academic
+  data is grouped by grade and parallel class; Boarding data remains grouped by
+  grade.
+- **Institutional exports omit Halaqah Level.** Halaqah name and class context
+  remain available without exposing the internal level field.
+- **Teacher report export refinements** reuse the canonical Academic/Boarding
+  workbook helpers and program-aware sheet prefixes across standalone and
+  combined exports.
+
+### Changed — Summative Bulk Workflow
+
+- **Curriculum-guided bulk entry.** Teachers can save multiple target scores in
+  one submission. Boarding uses grade-specific targets; Academic also supports
+  additional memorization entries.
+- **Multi-highlight after save.** Every changed Summative row is returned through
+  the plural `highlights` query and revealed on the student detail page, while
+  single-record edit flows continue using `highlight`.
+- **“Latest Assessment” follows the final submitted input.** Bulk payload parsing
+  preserves the original form order across target, choice, and additional score
+  fields. Submission timestamps retain that order, so the final Surah in the
+  latest submit is shown instead of the first Surah or curriculum order.
+
+### Added — Production Cleanup
+
+- Added `npm run db:cleanup-production`, backed by a foreign-key-safe Prisma
+  transaction. It deletes students, operational records, targets, scores,
+  Tasmi records, audit logs, and ClassGroup/Halaqah rows while preserving users,
+  teachers, AcademicYear meeting settings, AcademicClass, Surah, TargetSurah,
+  and required auth/session data.
+
 ### Fixed
 
 - Preserved sidebar scroll position across navigation for both Admin and Teacher.
 - Prevented unnecessary sidebar auto-scrolling when the active navigation item
   was already visible.
+- **Prevented accidental score decrement.** All score fields now reuse
+  `NumericScoreInput` with `type="text"` and `inputMode="numeric"`, accepting
+  only empty input or digits from 0–100. Native number spinners, mouse/touchpad
+  wheel stepping, and ArrowUp/ArrowDown stepping can no longer change scores.
 - **Route loading is less jarring during App Router transitions.** Teacher,
   Admin, profile, login, reports, formative, and summative loading routes now
   use shared route-transition skeleton primitives with a short delayed reveal,
@@ -157,6 +228,11 @@ detail navigation. Not yet released to production users.
   to `usePanelScrollRestoration`.
 - **`LiveSearchForm` component** — refactored with debounced input, URL sync,
   and stable re-render behavior.
+- **Release verification no longer requires a local `.env` for unit tests.**
+  Academic-year calendar and timeline rules were separated from the
+  Prisma-backed module, allowing `npm run verify` to run in release/CI
+  environments with configuration supplied through normal CI environment
+  variables.
 - **Persistence architecture documentation** added to `docs/`.
 
 ### Tech stack (unchanged from v1.0.0)

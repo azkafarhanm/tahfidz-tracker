@@ -23,6 +23,8 @@ import { badge, heroSummary } from "@/lib/colors";
 import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
 import { ProgramType } from "@/generated/prisma-next/enums";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import ReleaseNotesModal from "@/components/ReleaseNotesModal";
+import { getReleaseNotesForUser } from "@/lib/release-notes";
 
 export const runtime = "nodejs";
 
@@ -43,6 +45,7 @@ export default async function DashboardPreview({
   ]);
   const { session, teacherId, isAdmin } = await requireSessionScope();
   const params = await searchParams;
+  const releaseNotes = await getReleaseNotesForUser(session.user.id);
 
   const requestedProgramType = params?.programType as ProgramType | undefined;
   const programContext = teacherId
@@ -125,6 +128,13 @@ export default async function DashboardPreview({
             </div>
           </div>
         </header>
+
+        <div className="flex justify-end">
+          <ReleaseNotesModal
+            latestPublished={releaseNotes.latestPublished}
+            latestUnseen={releaseNotes.latestUnseen}
+          />
+        </div>
 
         <MotivationCard />
 

@@ -1,13 +1,12 @@
 import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import {
-  getAcademicFormativeMeeting,
+  getAcademicFormativeTimeline,
   getActiveAcademicYear,
   getSemesterForDate,
 } from "@/lib/academic-year";
 import { createWorkbookStreamResponse } from "@/lib/excel";
 import {
-  buildAcademicMeetingTimeline,
   buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
@@ -72,7 +71,7 @@ export async function GET(request: Request) {
         semesterExportData,
         classLevel,
       );
-      const meetingCount = await getAcademicFormativeMeeting(
+      const meetingTimeline = await getAcademicFormativeTimeline(
         academicYear,
         semester,
       );
@@ -83,10 +82,7 @@ export async function GET(request: Request) {
         semester,
         schoolName: resolveSchoolName(),
         exportData,
-        meetingTimeline: buildAcademicMeetingTimeline(
-          semesterExportData.rows,
-          meetingCount,
-        ),
+        meetingTimeline,
       });
 
       const date = new Date().toISOString().split("T")[0];

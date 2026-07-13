@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AcademicYearStatus, Semester } from "@/generated/prisma-next/enums";
-import { getSemesterForDate } from "@/lib/academic-year";
+import {
+  getAcademicFormativeTimeline,
+  getSemesterForDate,
+} from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { requireAdminScope } from "@/lib/session";
 import { invalidateCache } from "@/lib/cache";
@@ -21,8 +24,21 @@ function redirectWithMessage(type: "success" | "error", message: string) {
 
 export async function getAdminAcademicYearsData() {
   const currentSemester = getSemesterForDate(new Date());
+  const activeYear = await prisma.academicYear.findFirst({
+    where: { isActive: true, status: AcademicYearStatus.ACTIVE },
+    select: { year: true },
+  });
+  if (activeYear) {
+    await getAcademicFormativeTimeline(activeYear.year, currentSemester);
+  }
   const years = await prisma.academicYear.findMany({
     orderBy: { year: "desc" },
+    include: {
+      formativeMeetings: {
+        where: { semester: currentSemester },
+        orderBy: { meetingNumber: "asc" },
+      },
+    },
   });
 
   // Get counts for each year
@@ -44,10 +60,10 @@ export async function getAdminAcademicYearsData() {
         isActive: year.isActive,
         status: year.status,
         currentSemester,
-        formativeMeeting:
-          currentSemester === Semester.GANJIL
-            ? year.formativeMeetingGanjil
-            : year.formativeMeetingGenap,
+        formativeMeetingTimeline: year.formativeMeetings.map((meeting) => ({
+          meetingNumber: meeting.meetingNumber,
+          meetingDate: meeting.meetingDate.toISOString().slice(0, 10),
+        })),
         studentCount,
         classGroupCount,
       };
@@ -103,6 +119,22 @@ export async function createAcademicYear(formData: FormData) {
       startDate,
       endDate,
       isActive: false,
+      formativeMeetings: {
+        create: [
+          {
+            semester: Semester.GANJIL,
+            meetingNumber: 1,
+            meetingDate: startDate,
+          },
+          {
+            semester: Semester.GENAP,
+            meetingNumber: 1,
+            meetingDate: new Date(
+              Date.UTC(Number.parseInt(year.split("/")[1], 10), 0, 1),
+            ),
+          },
+        ],
+      },
     },
   });
 
@@ -144,24 +176,17 @@ export async function setActiveAcademicYear(yearId: string) {
   redirectWithMessage("success", t("yearActivated", { year: year.year }));
 }
 
-export async function advanceFormativeMeeting(yearId: string) {
-  await updateFormativeMeeting(yearId, "advance");
-}
-
-export async function resetFormativeMeeting(yearId: string) {
-  await updateFormativeMeeting(yearId, "reset");
-}
-
-async function updateFormativeMeeting(
-  yearId: string,
-  operation: "advance" | "reset",
-) {
+export async function resetFormativeMeeting(yearId: string, formData: FormData) {
   await requireAdminScope();
   const t = await getTranslations("AdminAcademicYear");
   const semester = getSemesterForDate(new Date());
   const year = await prisma.academicYear.findUnique({
     where: { id: yearId },
-    select: { id: true, isActive: true, status: true },
+    select: {
+      id: true,
+      isActive: true,
+      status: true,
+    },
   });
 
   if (!year) {
@@ -174,28 +199,39 @@ async function updateFormativeMeeting(
     return;
   }
 
-  const value = operation === "advance" ? { increment: 1 } : 1;
-  const updated = await prisma.academicYear.update({
-    where: { id: year.id },
-    data:
-      semester === Semester.GANJIL
-        ? { formativeMeetingGanjil: value }
-        : { formativeMeetingGenap: value },
-    select: {
-      formativeMeetingGanjil: true,
-      formativeMeetingGenap: true,
-    },
+  const meetingDateRaw = readString(formData, "meetingDate");
+  const meetingDate = parseMeetingDate(meetingDateRaw);
+  if (!meetingDate) {
+    redirectWithMessage("error", t("formativeMeetingDateInvalid"));
+    return;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.formativeMeeting.deleteMany({
+      where: { academicYearId: year.id, semester },
+    });
+
+    await tx.formativeMeeting.create({
+      data: {
+        academicYearId: year.id,
+        semester,
+        meetingNumber: 1,
+        meetingDate,
+      },
+    });
   });
-  const currentMeeting =
-    semester === Semester.GANJIL
-      ? updated.formativeMeetingGanjil
-      : updated.formativeMeetingGenap;
 
   revalidateAcademicYearPaths();
   redirectWithMessage(
     "success",
-    operation === "advance"
-      ? t("formativeMeetingAdvanced", { meeting: currentMeeting })
-      : t("formativeMeetingResetSuccess"),
+    t("formativeMeetingResetSuccess"),
   );
+}
+
+function parseMeetingDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value
+    ? null
+    : date;
 }

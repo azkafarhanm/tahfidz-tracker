@@ -9,6 +9,7 @@ import SurahInput from "@/components/SurahInput";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { Semester } from "@/generated/prisma-next/enums";
 import { markServerActionReturn } from "@/hooks/usePanelScrollRestoration";
+import NumericScoreInput from "@/components/NumericScoreInput";
 import type {
   ExistingSummativeScore,
   SummativeInputTargetGroup,
@@ -199,18 +200,14 @@ export default function SummativeBulkScoreForm({
                           {target.number} - {target.totalAyahs} ayat
                         </span>
                       </span>
-                      <input
+                      <NumericScoreInput
                         className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                         defaultValue={scoreBySurahId.get(target.surahId) ?? ""}
-                        inputMode="numeric"
-                        max={100}
-                        min={0}
                         name={`score:${target.surahId}`}
                         onChange={(event) => {
                           updateEnteredScore(target.surahId, event.target.value);
                         }}
                         placeholder={t("scoreInputPlaceholder")}
-                        type="number"
                       />
                     </label>
                   );
@@ -261,22 +258,18 @@ export default function SummativeBulkScoreForm({
                       </div>
                       <label className="self-end">
                         <span className="sr-only">{t("scoreLabel")}</span>
-                        <input
+                        <NumericScoreInput
                           className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                           defaultValue={
                             selectedOption
                               ? scoreBySurahId.get(selectedOption.surahId) ?? ""
                               : ""
                           }
-                          inputMode="numeric"
-                          max={100}
-                          min={0}
                           name={`choiceScore:${choice.id}`}
                           onChange={(event) => {
                             updateEnteredScore(choice.id, event.target.value);
                           }}
                           placeholder={t("scoreInputPlaceholder")}
-                          type="number"
                         />
                       </label>
                     </div>
@@ -334,14 +327,10 @@ export default function SummativeBulkScoreForm({
                   <span className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
                     {t("scoreLabel")}
                   </span>
-                  <input
+                  <NumericScoreInput
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                    inputMode="numeric"
-                    max={100}
-                    min={0}
                     name={`additionalScore:${rowId}`}
                     placeholder={t("scoreInputPlaceholder")}
-                    type="number"
                   />
                 </label>
                 <button

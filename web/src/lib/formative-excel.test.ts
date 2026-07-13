@@ -7,7 +7,6 @@ import {
   Semester,
 } from "@/generated/prisma-next/enums";
 import {
-  buildAcademicMeetingTimeline,
   buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
   type AcademicFormativeWorkbookInput,
@@ -139,10 +138,11 @@ describe("buildAcademicFormativeWorkbook", () => {
         }),
       ],
     };
-    const meetingTimeline = buildAcademicMeetingTimeline(
-      semesterExportData.rows,
-      3,
-    );
+    const meetingTimeline = [
+      "2026-07-06",
+      "2026-07-07",
+      "2026-07-08",
+    ] as const;
 
     for (const classLevel of [7, 8, 9]) {
       const students = semesterExportData.students.filter(
@@ -167,9 +167,18 @@ describe("buildAcademicFormativeWorkbook", () => {
 
     for (const sheetName of ["7A", "8A", "9A"]) {
       const sheet = workbook.getWorksheet(sheetName)!;
-      expect(sheet.getCell("D7").value).toBe("Pertemuan 1");
-      expect(sheet.getCell("E7").value).toBe("Pertemuan 2");
-      expect(sheet.getCell("F7").value).toBe("Pertemuan 3");
+      expect(sheet.getCell("D7").value).toBe("Pertemuan 1\n(6 Jul)");
+      expect(sheet.getCell("E7").value).toBe("Pertemuan 2\n(7 Jul)");
+      expect(sheet.getCell("F7").value).toBe("Pertemuan 3\n(8 Jul)");
+      expect(sheet.getCell("D7").alignment).toMatchObject({
+        horizontal: "center",
+        textRotation: 90,
+        vertical: "middle",
+        wrapText: true,
+      });
+      expect(sheet.getColumn(4).width).toBe(6);
+      expect(sheet.getRow(7).height).toBe(46);
+      expect(sheet.getRow(8).height).toBe(46);
     }
 
     expect(workbook.getWorksheet("7A")!.getCell("D9").value).toBe(80);
@@ -224,13 +233,13 @@ describe("buildAcademicFormativeWorkbook", () => {
       semester: Semester.GANJIL,
       schoolName: "TahfidzFlow",
       exportData: { students: [student], rows },
-      meetingTimeline: buildAcademicMeetingTimeline(rows, 3),
+      meetingTimeline: [null, "2026-07-07", "2026-07-08"],
     });
 
     const sheet = workbook.getWorksheet("8A")!;
     expect(sheet.getCell("D7").value).toBe("Pertemuan 1");
-    expect(sheet.getCell("E7").value).toBe("Pertemuan 2");
-    expect(sheet.getCell("F7").value).toBe("Pertemuan 3");
+    expect(sheet.getCell("E7").value).toBe("Pertemuan 2\n(7 Jul)");
+    expect(sheet.getCell("F7").value).toBe("Pertemuan 3\n(8 Jul)");
     expect(sheet.getCell("D9").value).toBe("");
     expect(sheet.getCell("E9").value).toBe(90);
     expect(sheet.getCell("F9").value).toBe(95);

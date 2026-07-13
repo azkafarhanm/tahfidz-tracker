@@ -2,12 +2,11 @@ import ExcelJS from "exceljs";
 import { NextResponse } from "next/server";
 import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 import {
-  getAcademicFormativeMeeting,
+  getAcademicFormativeTimeline,
   getActiveAcademicYear,
 } from "@/lib/academic-year";
 import { createWorkbookStreamResponse, finalizeTableSheet } from "@/lib/excel";
 import {
-  buildAcademicMeetingTimeline,
   buildAcademicFormativeWorkbook,
   buildBoardingFormativeProgressWorkbook,
 } from "@/lib/formative-excel";
@@ -40,7 +39,7 @@ async function addProgramSheets(
           await Promise.all(
             [Semester.GANJIL, Semester.GENAP].map(async (semester) => [
               semester,
-              await getAcademicFormativeMeeting(bundle.academicYear, semester),
+              await getAcademicFormativeTimeline(bundle.academicYear, semester),
             ] as const),
           ),
         )
@@ -50,10 +49,7 @@ async function addProgramSheets(
     const exportData = bundle.formative[semester].exportData;
     const sheetNamePrefix = `${programSheetPrefix(programLabel)} Fmt ${semesterLabel(semester)} `;
     if (programLabel === "Akademik") {
-      const meetingTimeline = buildAcademicMeetingTimeline(
-        exportData.rows,
-        formativeMeetings?.get(semester) ?? 1,
-      );
+      const meetingTimeline = formativeMeetings?.get(semester) ?? [null];
       for (const classLevel of getFormativeClassLevels(exportData)) {
         buildAcademicFormativeWorkbook(workbook, {
           academicYear: bundle.academicYear,

@@ -21,6 +21,7 @@ import { getActiveAcademicYear, getSemesterForDate } from "@/lib/academic-year";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { parseRecordDateTime } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
+import { orderSummativeSubmission } from "@/lib/summative-submission";
 
 function buildSummativeRedirectPath(
   studentId: string,
@@ -146,10 +147,11 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
   const additionalScores = payload.additionalScores.filter(
     (score) => !allowedSurahIds.has(score.surahId),
   );
-  const scores =
+  const scores = orderSummativeSubmission(
     student.classGroup.programType === "ACADEMIC"
       ? [...targetScores, ...additionalScores]
-      : targetScores;
+      : targetScores,
+  );
   const records = await saveSummativeAssessments(scores);
   const changedSurahIds = new Set(
     [
@@ -403,14 +405,16 @@ async function parseBulkSummativePayload(formData: FormData) {
     throw new Error(t("dateInvalid"));
   }
 
-  const targetScores = [...formData.entries()]
-    .filter(([key]) => key.startsWith("score:"))
-    .map(([key, value]) => {
+  const formEntries = [...formData.entries()];
+  const targetScores = formEntries
+    .flatMap(([key, value], inputOrder) => {
+      if (!key.startsWith("score:")) return [];
       const surahId = key.slice("score:".length);
-      return {
+      return [{
+        inputOrder,
         surahId: surahId.trim(),
         scoreValue: String(value).trim(),
-      };
+      }];
     })
     .filter((entry) => entry.surahId && entry.scoreValue)
     .map((entry) => {
@@ -426,17 +430,19 @@ async function parseBulkSummativePayload(formData: FormData) {
         academicYear,
         score,
         createdAt,
+        inputOrder: entry.inputOrder,
       };
     });
-  const choiceScores = [...formData.entries()]
-    .filter(([key]) => key.startsWith("choiceScore:"))
-    .map(([key, value]) => {
+  const choiceScores = formEntries
+    .flatMap(([key, value], inputOrder) => {
+      if (!key.startsWith("choiceScore:")) return [];
       const choiceId = key.slice("choiceScore:".length);
       const surahId = String(formData.get(`choice:${choiceId}`) ?? "").trim();
-      return {
+      return [{
+        inputOrder,
         surahId,
         scoreValue: String(value).trim(),
-      };
+      }];
     })
     .filter((entry) => entry.surahId && entry.scoreValue)
     .map((entry) => {
@@ -452,6 +458,7 @@ async function parseBulkSummativePayload(formData: FormData) {
         academicYear,
         score,
         createdAt,
+        inputOrder: entry.inputOrder,
       };
     });
   const additionalScores: Array<{
@@ -461,8 +468,9 @@ async function parseBulkSummativePayload(formData: FormData) {
     academicYear: string;
     score: number;
     createdAt: Date;
+    inputOrder: number;
   }> = [];
-  for (const [key, value] of formData.entries()) {
+  for (const [inputOrder, [key, value]] of formEntries.entries()) {
     if (!key.startsWith("additionalScore:")) {
       continue;
     }
@@ -496,6 +504,7 @@ async function parseBulkSummativePayload(formData: FormData) {
       academicYear,
       score,
       createdAt,
+      inputOrder,
     });
   }
 

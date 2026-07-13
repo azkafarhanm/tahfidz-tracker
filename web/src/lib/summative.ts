@@ -4,6 +4,7 @@ import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
 import { prisma, withRetry } from "@/lib/prisma";
+import { assignSequentialSummativeSubmissionTimes } from "@/lib/summative-submission";
 
 export type ClassTargetSurah = {
   surahId: string;
@@ -489,7 +490,7 @@ async function getTeacherSummativeOverviewInner(
     prisma.summativeScore.groupBy({
       by: ["studentId"],
       where: studentScoreWhere,
-      _max: { createdAt: true },
+      _max: { updatedAt: true },
     }),
   ]);
 
@@ -498,10 +499,10 @@ async function getTeacherSummativeOverviewInner(
       ? await prisma.summativeScore.findMany({
           where: {
             OR: latestTimestamps
-              .filter((row) => row._max.createdAt)
+              .filter((row) => row._max.updatedAt)
               .map((row) => ({
                 studentId: row.studentId,
-                createdAt: row._max.createdAt!,
+                updatedAt: row._max.updatedAt!,
                 semester,
                 academicYear,
               })),
@@ -967,8 +968,9 @@ export async function saveSummativeAssessments(
     }
   }
 
+  const orderedInputs = assignSequentialSummativeSubmissionTimes(inputs);
   const records = await prisma.$transaction(
-    inputs.map((input) =>
+    orderedInputs.map((input) =>
       prisma.summativeScore.upsert({
         where: {
           studentId_surahId_semester_academicYear: {
@@ -980,6 +982,7 @@ export async function saveSummativeAssessments(
         },
         update: {
           score: input.score,
+          updatedAt: input.submittedAt,
         },
         create: {
           studentId: input.studentId,
@@ -988,6 +991,7 @@ export async function saveSummativeAssessments(
           academicYear: input.academicYear,
           score: input.score,
           createdAt: input.createdAt,
+          updatedAt: input.submittedAt,
         },
       }),
     ),
