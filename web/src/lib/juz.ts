@@ -1,3 +1,5 @@
+import { surahList } from "./surahs";
+
 type JuzRange = {
   juz: number;
   surah: string;
@@ -71,13 +73,14 @@ const juzRanges: JuzRange[] = [
   { juz: 26, surah: "Al-Fath", fromAyah: 1, toAyah: 29 },
   { juz: 26, surah: "Al-Hujurat", fromAyah: 1, toAyah: 18 },
   { juz: 26, surah: "Qaf", fromAyah: 1, toAyah: 45 },
-  { juz: 27, surah: "Adz-Dzariyat", fromAyah: 1, toAyah: 60 },
+  { juz: 26, surah: "Adz-Dzariyat", fromAyah: 1, toAyah: 30 },
+  { juz: 27, surah: "Adz-Dzariyat", fromAyah: 31, toAyah: 60 },
   { juz: 27, surah: "At-Tur", fromAyah: 1, toAyah: 49 },
   { juz: 27, surah: "An-Najm", fromAyah: 1, toAyah: 62 },
   { juz: 27, surah: "Al-Qamar", fromAyah: 1, toAyah: 55 },
   { juz: 27, surah: "Ar-Rahman", fromAyah: 1, toAyah: 78 },
   { juz: 27, surah: "Al-Waqi'ah", fromAyah: 1, toAyah: 96 },
-  { juz: 28, surah: "Al-Hadid", fromAyah: 1, toAyah: 29 },
+  { juz: 27, surah: "Al-Hadid", fromAyah: 1, toAyah: 29 },
   { juz: 28, surah: "Al-Mujadilah", fromAyah: 1, toAyah: 22 },
   { juz: 28, surah: "Al-Hashr", fromAyah: 1, toAyah: 24 },
   { juz: 28, surah: "Al-Mumtahanah", fromAyah: 1, toAyah: 13 },
@@ -138,11 +141,16 @@ const juzRanges: JuzRange[] = [
 ];
 
 export function getSurahNamesForJuz(juz: number): string[] {
-  return [...new Set(
-    juzRanges
-      .filter((range) => range.juz === juz)
-      .map((range) => range.surah),
-  )];
+  const rangesForJuz = juzRanges.filter((range) => range.juz === juz);
+
+  return surahList
+    .filter((surah) => rangesForJuz.some(
+      (range) =>
+        range.surah === surah.name &&
+        range.fromAyah <= surah.ayahs &&
+        range.toAyah >= 1,
+    ))
+    .map((surah) => surah.name);
 }
 
 export function getJuz(surah: string, ayah: number): number | null {

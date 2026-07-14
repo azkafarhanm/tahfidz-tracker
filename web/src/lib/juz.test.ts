@@ -16,6 +16,13 @@ describe("getSurahNamesForJuz", () => {
     expect(getSurahNamesForJuz(3)).toContain("Al-Baqarah");
   });
 
+  it("includes Surahs at Juz boundaries based on ayah-range overlap", () => {
+    expect(getSurahNamesForJuz(26)).toContain("Adz-Dzariyat");
+    expect(getSurahNamesForJuz(27)).toContain("Adz-Dzariyat");
+    expect(getSurahNamesForJuz(27)).toContain("Al-Hadid");
+    expect(getSurahNamesForJuz(28)).not.toContain("Al-Hadid");
+  });
+
   it("returns an empty list for an unknown Juz", () => {
     expect(getSurahNamesForJuz(0)).toEqual([]);
     expect(getSurahNamesForJuz(31)).toEqual([]);
@@ -26,5 +33,7 @@ describe("getJuz", () => {
   it("continues to resolve Juz from Surah and ayah", () => {
     expect(getJuz("Al-Baqarah", 141)).toBe(1);
     expect(getJuz("Al-Baqarah", 142)).toBe(2);
+    expect(getJuz("Adz-Dzariyat", 30)).toBe(26);
+    expect(getJuz("Adz-Dzariyat", 31)).toBe(27);
   });
 });
