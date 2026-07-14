@@ -1121,7 +1121,13 @@
   },
   "SurahInput": {
     "placeholder": "Search surah name or number",
-    "ayahCount": "{count} verses"
+    "allSurahsPlaceholder": "Search Surah...",
+    "placeholderInJuz": "Search Surah in Juz {juz}",
+    "ayahCount": "{count} verses",
+    "juzLabel": "Juz filter",
+    "juzOption": "Juz {juz}",
+    "allSurahs": "All Surahs",
+    "selectionKept": "{surah} is preserved even though it is outside Juz {juz}."
   },
   "Validation": {
     "surahRequired": "Surah name is required (max 80 characters).",

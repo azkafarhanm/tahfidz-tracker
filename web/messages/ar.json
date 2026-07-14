@@ -1121,7 +1121,13 @@
   },
   "SurahInput": {
     "placeholder": "ابحث عن اسم السورة أو رقمها",
-    "ayahCount": "{count} آية"
+    "allSurahsPlaceholder": "ابحث عن سورة...",
+    "placeholderInJuz": "ابحث عن سورة في الجزء {juz}",
+    "ayahCount": "{count} آية",
+    "juzLabel": "تصفية حسب الجزء",
+    "juzOption": "الجزء {juz}",
+    "allSurahs": "كل السور",
+    "selectionKept": "سيبقى اختيار {surah} محفوظًا رغم أنه خارج الجزء {juz}."
   },
   "Validation": {
     "surahRequired": "اسم السورة مطلوب (80 حرفًا كحد أقصى).",

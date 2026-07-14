@@ -137,6 +137,14 @@ const juzRanges: JuzRange[] = [
   { juz: 30, surah: "An-Nas", fromAyah: 1, toAyah: 6 },
 ];
 
+export function getSurahNamesForJuz(juz: number): string[] {
+  return [...new Set(
+    juzRanges
+      .filter((range) => range.juz === juz)
+      .map((range) => range.surah),
+  )];
+}
+
 export function getJuz(surah: string, ayah: number): number | null {
   const match = juzRanges.find(
     (r) => r.surah === surah && ayah >= r.fromAyah && ayah <= r.toAyah,

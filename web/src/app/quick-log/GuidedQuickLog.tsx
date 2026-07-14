@@ -13,7 +13,8 @@ import {
   Search,
   X,
 } from "lucide-react";
-import SurahInput from "@/components/SurahInput";
+import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
+import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
@@ -370,14 +371,20 @@ export default function GuidedQuickLog({
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">{t("materialSection")}</h2>
 
-                <label className="mt-4 block">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <div className="mt-4">
+                  <label
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                    htmlFor="quick-log-surah"
+                  >
                     {t("surahLabel")}
-                  </span>
+                  </label>
                   <div className="mt-2">
-                    <SurahInput key={surahInputKey} />
+                    <JuzFilteredSurahInput
+                      id="quick-log-surah"
+                      inputResetKey={surahInputKey}
+                    />
                   </div>
-                </label>
+                </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <label className="block">
@@ -391,15 +398,13 @@ export default function GuidedQuickLog({
                         size={16}
                         strokeWidth={2.2}
                       />
-                      <input
+                      <NumericInput
                         className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                        max={286}
-                        min={1}
+                        maxLength={3}
                         name="fromAyah"
                         onChange={(e) => setFromAyah(e.target.value)}
                         placeholder="1"
                         required
-                        type="number"
                         value={fromAyah}
                       />
                     </div>
@@ -416,15 +421,13 @@ export default function GuidedQuickLog({
                         size={16}
                         strokeWidth={2.2}
                       />
-                      <input
+                      <NumericInput
                         className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                        max={286}
-                        min={1}
+                        maxLength={3}
                         name="toAyah"
                         onChange={(e) => setToAyah(e.target.value)}
                         placeholder="10"
                         required
-                        type="number"
                         value={toAyah}
                       />
                     </div>

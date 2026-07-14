@@ -1121,7 +1121,13 @@
   },
   "SurahInput": {
     "placeholder": "Cari nama surah atau nomor surah",
-    "ayahCount": "{count} ayat"
+    "allSurahsPlaceholder": "Cari Surah...",
+    "placeholderInJuz": "Cari Surah dalam Juz {juz}",
+    "ayahCount": "{count} ayat",
+    "juzLabel": "Filter Juz",
+    "juzOption": "Juz {juz}",
+    "allSurahs": "Semua Surah",
+    "selectionKept": "{surah} tetap dipertahankan meski tidak termasuk Juz {juz}."
   },
   "Validation": {
     "surahRequired": "Nama surah wajib diisi dan maksimal 80 karakter.",

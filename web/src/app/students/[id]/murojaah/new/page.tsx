@@ -10,7 +10,8 @@ import {
 import { getStudentFormContext } from "@/lib/students";
 import { createMurojaahRecord } from "../actions";
 import { requireSessionScope } from "@/lib/session";
-import SurahInput from "@/components/SurahInput";
+import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
+import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
@@ -97,12 +98,14 @@ export default async function NewMurojaahPage({
               <h2 className="font-semibold">{t("sectionMaterialMurojaah")}</h2>
             </div>
 
-            <label className="mt-4 block">
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("labelSurah")}</span>
+            <div className="mt-4">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="surah">
+                {t("labelSurah")}
+              </label>
               <div className="mt-2">
-                <SurahInput id="surah" />
+                <JuzFilteredSurahInput id="surah" />
               </div>
-            </label>
+            </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               <label className="block">
@@ -116,13 +119,11 @@ export default async function NewMurojaahPage({
                     size={16}
                     strokeWidth={2.2}
                   />
-                  <input
+                  <NumericInput
                     className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                    max={286}
-                    min={1}
+                    maxLength={3}
                     name="fromAyah"
                     required
-                    type="number"
                   />
                 </div>
               </label>
@@ -138,13 +139,11 @@ export default async function NewMurojaahPage({
                     size={16}
                     strokeWidth={2.2}
                   />
-                  <input
+                  <NumericInput
                     className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
-                    max={286}
-                    min={1}
+                    maxLength={3}
                     name="toAyah"
                     required
-                    type="number"
                   />
                 </div>
               </label>

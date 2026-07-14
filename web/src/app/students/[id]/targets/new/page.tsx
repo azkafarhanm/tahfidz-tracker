@@ -10,7 +10,8 @@ import { createTarget } from "@/lib/target-actions";
 import { getStudentFormContext } from "@/lib/students";
 import { todayInputValue } from "@/lib/format";
 import { requireSessionScope } from "@/lib/session";
-import SurahInput from "@/components/SurahInput";
+import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
+import NumericInput from "@/components/NumericInput";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
@@ -108,22 +109,20 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
             <div className="mt-3 space-y-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="surah">{t("labelSurah")}</label>
-                <SurahInput id="surah" />
+                <JuzFilteredSurahInput id="surah" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="fromAyah">{t("labelFromAyah")}</label>
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-400/20">
                     <Hash aria-hidden="true" className="text-slate-400 dark:text-slate-500" size={14} strokeWidth={2.2} />
-                    <input
+                    <NumericInput
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                       id="fromAyah"
-                      max={286}
-                      min={1}
+                      maxLength={3}
                       name="fromAyah"
                       placeholder="1"
                       required
-                      type="number"
                     />
                   </div>
                 </div>
@@ -131,15 +130,13 @@ export default async function NewTargetPage({ params, searchParams }: NewTargetP
                   <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="toAyah">{t("labelToAyah")}</label>
                   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-400/20">
                     <Hash aria-hidden="true" className="text-slate-400 dark:text-slate-500" size={14} strokeWidth={2.2} />
-                    <input
+                    <NumericInput
                       className="min-w-0 flex-1 bg-transparent text-sm text-slate-950 outline-none dark:text-white"
                       id="toAyah"
-                      max={286}
-                      min={1}
+                      maxLength={3}
                       name="toAyah"
                       placeholder="20"
                       required
-                      type="number"
                     />
                   </div>
                 </div>

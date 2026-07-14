@@ -1,20 +1,32 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { surahList } from "@/lib/surahs";
+import {
+  matchesSurahSearch,
+  surahList,
+  type SurahInfo,
+} from "@/lib/surahs";
 import { useTranslations } from "next-intl";
+
+type SurahInputProps = {
+  defaultValue?: string;
+  id?: string;
+  name?: string;
+  onValueChange?: (value: string) => void;
+  options?: readonly SurahInfo[];
+  placeholder?: string;
+  required?: boolean;
+};
 
 export default function SurahInput({
   defaultValue,
   id,
   name = "surah",
+  onValueChange,
+  options = surahList,
+  placeholder,
   required = true,
-}: {
-  defaultValue?: string;
-  id?: string;
-  name?: string;
-  required?: boolean;
-}) {
+}: SurahInputProps) {
   const t = useTranslations("SurahInput");
   const [query, setQuery] = useState(defaultValue ?? "");
   const [isOpen, setIsOpen] = useState(false);
@@ -25,12 +37,8 @@ export default function SurahInput({
   const listRef = useRef<HTMLUListElement>(null);
   const listboxId = `${id ?? "surah"}-listbox`;
   const filtered = query.trim()
-    ? surahList.filter(
-        (s) =>
-          s.name.toLowerCase().includes(query.toLowerCase()) ||
-          String(s.number).includes(query.trim()),
-      )
-    : surahList;
+    ? options.filter((surah) => matchesSurahSearch(surah, query))
+    : options;
   const activeOptionId =
     isOpen && filtered[highlightIndex]
       ? `${listboxId}-option-${filtered[highlightIndex].number}`
@@ -59,6 +67,7 @@ export default function SurahInput({
 
   function selectSurah(name: string) {
     setQuery(name);
+    onValueChange?.(name);
     setIsOpen(false);
     justSelected.current = true;
     inputRef.current?.focus();
@@ -81,6 +90,7 @@ export default function SurahInput({
         name={name}
         onChange={(e) => {
           setQuery(e.target.value);
+          onValueChange?.(e.target.value);
           setIsOpen(true);
         }}
         onFocus={() => {
@@ -92,7 +102,9 @@ export default function SurahInput({
           if (!isOpen) return;
           if (e.key === "ArrowDown") {
             e.preventDefault();
-            setHighlightIndex((i) => Math.min(i + 1, Math.min(filtered.length, 20) - 1));
+            if (filtered.length > 0) {
+              setHighlightIndex((i) => Math.min(i + 1, filtered.length - 1));
+            }
           } else if (e.key === "ArrowUp") {
             e.preventDefault();
             setHighlightIndex((i) => Math.max(i - 1, 0));
@@ -103,7 +115,7 @@ export default function SurahInput({
             setIsOpen(false);
           }
         }}
-        placeholder={t("placeholder")}
+        placeholder={placeholder ?? t("placeholder")}
         ref={inputRef}
         required={required}
         role="combobox"
@@ -118,7 +130,7 @@ export default function SurahInput({
           ref={listRef}
           role="listbox"
         >
-          {filtered.slice(0, 20).map((surah, i) => (
+          {filtered.map((surah, i) => (
             <li key={surah.number}>
               <button
                 aria-selected={i === highlightIndex}

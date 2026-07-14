@@ -117,6 +117,28 @@ export const surahList = [
 
 export type SurahInfo = (typeof surahList)[number];
 
+function normalizeSurahSearch(value: string): string {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+export function matchesSurahSearch(surah: SurahInfo, query: string): boolean {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return true;
+
+  const normalizedQuery = normalizeSurahSearch(trimmedQuery);
+  const normalizedName = normalizeSurahSearch(surah.name);
+  const nameMatches = normalizedQuery.length > 0 && (
+    normalizedName.includes(normalizedQuery) ||
+    normalizedQuery.includes(normalizedName)
+  );
+
+  return nameMatches || String(surah.number).includes(trimmedQuery);
+}
+
 export function findSurah(name: string): SurahInfo | undefined {
   if (!name) return undefined;
   
