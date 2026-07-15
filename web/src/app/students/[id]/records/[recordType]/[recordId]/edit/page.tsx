@@ -18,10 +18,10 @@ import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
-import ServerActionReturnForm from "@/components/ServerActionReturnForm";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
+import EditRecordForm from "./EditRecordForm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,7 +106,21 @@ export default async function EditRecordPage({
 
         {query?.error ? <FormAlert message={query.error} /> : null}
 
-        <ServerActionReturnForm action={action} className="mt-6 space-y-4">
+        <EditRecordForm
+          action={action}
+          className="mt-6 space-y-4"
+          currentType={recordType}
+          labels={{
+            activityType: t("labelActivityType"),
+            hafalan: t("typeHafalan"),
+            murojaah: t("typeMurojaah"),
+            confirmTitle: t("conversionConfirmTitle"),
+            confirmDescription: t("conversionConfirmDescription"),
+            cancel: t("buttonCancel"),
+            confirm: t("conversionConfirmButton"),
+            processing: t("conversionProcessing"),
+          }}
+        >
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
             <div className="flex items-center gap-2">
               <Icon
@@ -237,7 +251,7 @@ export default async function EditRecordPage({
               {t("buttonSave")}
             </button>
           </div>
-        </ServerActionReturnForm>
+        </EditRecordForm>
       </section>
     </main>
   );

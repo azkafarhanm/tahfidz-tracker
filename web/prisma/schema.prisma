@@ -465,6 +465,7 @@ enum AuditAction {
   CREATE_TASMI
   UPDATE_TASMI
   DELETE_TASMI
+  CONVERT_RECORD_TYPE
 }
 
 model AuditLog {

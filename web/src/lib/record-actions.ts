@@ -8,6 +8,11 @@ import { prisma } from "@/lib/prisma";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { requireSessionScope } from "@/lib/session";
 import { deriveRecordStatusFromScore } from "@/lib/record-status";
+import {
+  convertRecordType,
+  RecordConversionSourceNotFoundError,
+  type RecordType,
+} from "@/lib/record-conversion";
 import { validateRecordFields } from "@/lib/validate-record";
 import {
   readString,
@@ -82,7 +87,7 @@ async function deleteRecordByType(
 
 export async function updateRecord(
   studentId: string,
-  recordType: "hafalan" | "murojaah",
+  recordType: RecordType,
   recordId: string,
   returnTo: string | undefined,
   formData: FormData,
@@ -121,6 +126,11 @@ export async function updateRecord(
   const score = readInt(formData, "score");
   const statusValue = deriveRecordStatusFromScore(score);
   const notes = readOptionalString(formData, "notes");
+  const requestedType = readString(formData, "activityType");
+
+  if (requestedType !== "hafalan" && requestedType !== "murojaah") {
+    return fail(t("invalidActivityType"));
+  }
 
   await validateRecordFields({
     surah, fromAyah, toAyah, date, statusValue, score, notes, validStatuses, fail, t,
@@ -136,7 +146,31 @@ export async function updateRecord(
     notes,
   };
 
-  if (recordType === "murojaah") {
+  let highlightRecordId = recordId;
+
+  if (requestedType !== recordType) {
+    try {
+      const conversion = await prisma.$transaction((tx) =>
+        convertRecordType(tx, {
+          studentId: student.id,
+          sourceType: recordType,
+          sourceRecordId: recordId,
+          data,
+          responsibleUser: {
+            id: session.user.id,
+            name: session.user.name,
+            email: session.user.email,
+          },
+        }),
+      );
+      highlightRecordId = conversion.destinationRecordId;
+    } catch (error) {
+      if (error instanceof RecordConversionSourceNotFoundError) {
+        return fail(t("recordNotFound"));
+      }
+      throw error;
+    }
+  } else if (recordType === "murojaah") {
     const existing = await prisma.revisionRecord.findFirst({
       where: { id: recordId, studentId: student.id },
       select: { id: true },
@@ -156,7 +190,7 @@ export async function updateRecord(
   redirect(
     resolveReturnPath(successPath, `/students/${studentId}`, {
       success: t("recordUpdated"),
-      highlight: recordId,
+      highlight: highlightRecordId,
     }),
   );
 }
