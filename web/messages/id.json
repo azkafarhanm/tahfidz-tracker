@@ -30,7 +30,23 @@
     "updatedAt": "Diperbarui {date}",
     "publishedAt": "Dipublikasikan {date}",
     "emptyDrafts": "Belum ada draft Catatan Rilis.",
-    "emptyPublished": "Belum ada Catatan Rilis yang dipublikasikan."
+    "emptyPublished": "Belum ada Catatan Rilis yang dipublikasikan.",
+    "newDraft": "Draft Baru",
+    "editDraft": "Edit Draft",
+    "saveDraft": "Simpan Draft",
+    "saveChanges": "Simpan Perubahan",
+    "backToReleaseNotes": "Kembali ke Catatan Rilis",
+    "draftDescription": "Simpan perubahan sebagai draft. Draft belum terlihat oleh guru.",
+    "draftFields": "Isi Catatan Rilis",
+    "applicationVersionLabel": "Versi Aplikasi",
+    "applicationVersionPlaceholder": "Contoh: 1.1.1",
+    "titleLabel": "Judul",
+    "titlePlaceholder": "Contoh: Pencarian Santri Lebih Fleksibel",
+    "summaryLabel": "Ringkasan",
+    "summaryPlaceholder": "Ringkasan singkat untuk guru.",
+    "contentLabel": "Isi",
+    "contentPlaceholder": "Jelaskan perubahan yang perlu diketahui guru.",
+    "preview": "Preview Guru"
   },
   "BottomNav": {
     "navHome": "Home",
@@ -1293,7 +1309,11 @@
     "unauthorized": "Anda tidak memiliki akses untuk data ini.",
     "passwordLetterNumber": "Password harus mengandung minimal satu huruf dan satu angka.",
     "targetCancelled": "Target aktif berhasil dibatalkan.",
-    "targetCompleted": "Target aktif berhasil diselesaikan."
+    "targetCompleted": "Target aktif berhasil diselesaikan.",
+    "releaseNoteVersionRequired": "Versi aplikasi wajib diisi.",
+    "releaseNoteTitleRequired": "Judul Catatan Rilis wajib diisi.",
+    "releaseNoteSummaryRequired": "Ringkasan Catatan Rilis wajib diisi.",
+    "releaseNoteContentRequired": "Isi Catatan Rilis wajib diisi."
   },
   "Offline": {
     "banner": "Anda sedang offline. Beberapa fitur tidak tersedia."

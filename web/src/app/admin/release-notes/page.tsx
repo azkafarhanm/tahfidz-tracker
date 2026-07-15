@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, FileText, Megaphone, Send } from "lucide-react";
+import { ArrowLeft, FileText, Megaphone, PencilLine, PlusCircle, Send } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getAdminReleaseNotes } from "@/lib/admin-release-notes";
 import { getLocaleTag } from "@/lib/format";
@@ -45,6 +45,13 @@ export default async function AdminReleaseNotesPage() {
         </div>
       </header>
 
+      <div className="mt-5 flex justify-end">
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950" href="/admin/release-notes/new">
+          <PlusCircle aria-hidden="true" size={17} strokeWidth={2.2} />
+          {t("newDraft")}
+        </Link>
+      </div>
+
       <section className="mt-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -68,6 +75,10 @@ export default async function AdminReleaseNotesPage() {
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">{note.summary}</p>
               <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">{t("updatedAt", { date: dateFormatter.format(note.updatedAt) })}</p>
+              <Link className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-400 dark:hover:text-emerald-300" href={`/admin/release-notes/${note.id}/edit`}>
+                <PencilLine aria-hidden="true" size={16} strokeWidth={2.2} />
+                {t("editDraft")}
+              </Link>
             </article>
           )) : (
             <p className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-sm text-slate-600 sm:col-span-2 xl:col-span-3 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">{t("emptyDrafts")}</p>

@@ -33,3 +33,16 @@ export async function getAdminReleaseNotes() {
 
   return { drafts, published };
 }
+
+export async function getAdminReleaseNoteDraft(releaseNoteId: string) {
+  return prisma.releaseNote.findFirst({
+    where: { id: releaseNoteId, isPublished: false },
+    select: {
+      id: true,
+      applicationVersion: true,
+      title: true,
+      summary: true,
+      content: true,
+    },
+  });
+}

@@ -30,7 +30,23 @@
     "updatedAt": "تم التحديث في {date}",
     "publishedAt": "نُشر في {date}",
     "emptyDrafts": "لا توجد مسودات لملاحظات الإصدار بعد.",
-    "emptyPublished": "لا توجد ملاحظات إصدار منشورة بعد."
+    "emptyPublished": "لا توجد ملاحظات إصدار منشورة بعد.",
+    "newDraft": "مسودة جديدة",
+    "editDraft": "تعديل المسودة",
+    "saveDraft": "حفظ المسودة",
+    "saveChanges": "حفظ التغييرات",
+    "backToReleaseNotes": "العودة إلى ملاحظات الإصدار",
+    "draftDescription": "احفظ التغييرات كمسودة. لا تظهر المسودات للمعلّمين.",
+    "draftFields": "تفاصيل ملاحظة الإصدار",
+    "applicationVersionLabel": "إصدار التطبيق",
+    "applicationVersionPlaceholder": "مثال: 1.1.1",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "مثال: بحث أكثر مرونة عن الطلاب",
+    "summaryLabel": "الملخص",
+    "summaryPlaceholder": "ملخص قصير للمعلّمين.",
+    "contentLabel": "المحتوى",
+    "contentPlaceholder": "اشرح التغيير الذي يحتاج المعلّمون إلى معرفته.",
+    "preview": "معاينة المعلّم"
   },
   "BottomNav": {
     "navHome": "الرئيسية",
@@ -1293,7 +1309,11 @@
     "unauthorized": "ليس لديك صلاحية الوصول إلى هذه البيانات.",
     "passwordLetterNumber": "??? ?? ????? ???? ?????? ??? ??? ???? ??? ?????.",
     "targetCancelled": "?? ????? ????? ?????.",
-    "targetCompleted": "?? ????? ????? ?????."
+    "targetCompleted": "?? ????? ????? ?????.",
+    "releaseNoteVersionRequired": "إصدار التطبيق مطلوب.",
+    "releaseNoteTitleRequired": "عنوان ملاحظة الإصدار مطلوب.",
+    "releaseNoteSummaryRequired": "ملخص ملاحظة الإصدار مطلوب.",
+    "releaseNoteContentRequired": "محتوى ملاحظة الإصدار مطلوب."
   },
   "Offline": {
     "banner": "أنت غير متصل بالإنترنت. بعض الميزات غير متاحة."

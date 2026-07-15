@@ -30,7 +30,23 @@
     "updatedAt": "Updated {date}",
     "publishedAt": "Published {date}",
     "emptyDrafts": "No Release Note drafts yet.",
-    "emptyPublished": "No published Release Notes yet."
+    "emptyPublished": "No published Release Notes yet.",
+    "newDraft": "New Draft",
+    "editDraft": "Edit Draft",
+    "saveDraft": "Save Draft",
+    "saveChanges": "Save Changes",
+    "backToReleaseNotes": "Back to Release Notes",
+    "draftDescription": "Save changes as a draft. Drafts are not visible to teachers.",
+    "draftFields": "Release Note Details",
+    "applicationVersionLabel": "Application Version",
+    "applicationVersionPlaceholder": "Example: 1.1.1",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Example: More Flexible Student Search",
+    "summaryLabel": "Summary",
+    "summaryPlaceholder": "A short summary for teachers.",
+    "contentLabel": "Content",
+    "contentPlaceholder": "Explain the change teachers need to know.",
+    "preview": "Teacher Preview"
   },
   "BottomNav": {
     "navHome": "Home",
@@ -1293,7 +1309,11 @@
     "unauthorized": "You do not have access to this data.",
     "passwordLetterNumber": "Password must contain at least one letter and one number.",
     "targetCancelled": "Active target has been cancelled.",
-    "targetCompleted": "Active target has been completed."
+    "targetCompleted": "Active target has been completed.",
+    "releaseNoteVersionRequired": "Application version is required.",
+    "releaseNoteTitleRequired": "Release Note title is required.",
+    "releaseNoteSummaryRequired": "Release Note summary is required.",
+    "releaseNoteContentRequired": "Release Note content is required."
   },
   "Offline": {
     "banner": "You are offline. Some features are unavailable."
