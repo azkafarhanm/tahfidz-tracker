@@ -30,6 +30,7 @@ import { badge, heroSummary, backLink } from "@/lib/colors";
 import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
 import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels } from "@/lib/format";
+import { matchesSearchText } from "@/lib/search";
 
 export const runtime = "nodejs";
 
@@ -85,10 +86,9 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear) : [];
   const filteredInactiveStudents = query
     ? inactiveStudents.filter((student) => {
-        const normalizedQuery = query.toLowerCase();
         return (
-          student.fullName.toLowerCase().includes(normalizedQuery) ||
-          student.classSummary.toLowerCase().includes(normalizedQuery)
+          matchesSearchText(student.fullName, query) ||
+          matchesSearchText(student.classSummary, query)
         );
       })
     : inactiveStudents;

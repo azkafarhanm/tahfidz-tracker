@@ -35,3 +35,16 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local development artifacts
+.codex/
+web/.codex/
+
+graphify-out/
+web/graphify-out/
+web/src/graphify-out/
+
+AGENTS.md
+web/AGENTS.md
+
+release/*.zip

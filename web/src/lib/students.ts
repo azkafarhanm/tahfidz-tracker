@@ -18,6 +18,7 @@ import {
   formatClassSummary,
 } from "@/lib/format";
 import { tasmiGradeLabels, tasmiStatusLabel, formatTasmiJuzSummary, getHighestCompletedTasmiJuz, getCompletedTasmiJuzList } from "@/lib/tasmi";
+import { normalizeSearchText } from "@/lib/search";
 
 function formatLatestRecord(
   record:
@@ -127,7 +128,7 @@ function scopeKey(teacherId?: string | null) {
 }
 
 export async function getStudentsData(query = "", teacherId?: string | null, locale = "id", programType?: ProgramType) {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalizeSearchText(query);
   const result = await cached(
     `students:list:${scopeKey(teacherId)}:${locale}:${normalizedQuery}:1:12:${programType ?? "all"}`,
     STUDENT_CACHE_TTL_MS,
@@ -144,7 +145,7 @@ export async function getStudentsPageData(
   pageSize = 12,
   programType?: ProgramType,
 ) {
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalizeSearchText(query);
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   return cached(
@@ -180,15 +181,15 @@ async function getStudentsDataInner(
     ...(normalizedQuery
       ? {
           OR: [
-            { fullName: { startsWith: normalizedQuery, mode: "insensitive" as const } },
+            { fullName: { contains: normalizedQuery, mode: "insensitive" as const } },
             {
               academicClass: {
-                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
+                name: { contains: normalizedQuery, mode: "insensitive" as const },
               },
             },
             {
               classGroup: {
-                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
+                name: { contains: normalizedQuery, mode: "insensitive" as const },
               },
             },
           ],

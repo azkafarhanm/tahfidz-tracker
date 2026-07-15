@@ -9,6 +9,7 @@ import {
   statusLabels,
 } from "@/lib/format";
 import { formatTasmiJuzSummary, getCompletedTasmiJuzList } from "@/lib/tasmi";
+import { normalizeSearchText } from "@/lib/search";
 
 const PAGE_SIZE_FALLBACK = 12;
 
@@ -58,7 +59,7 @@ export async function getLiveStudentsPageData(
     page,
     pageSize,
     programType,
-    query.trim().toLowerCase(),
+    normalizeSearchText(query),
     academicYear ?? "active",
     highlightId ?? "none",
   ].join(":");
@@ -88,7 +89,7 @@ async function getLiveStudentsPageDataInner(
   highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = normalizeSearchText(query);
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   const year = academicYear ?? await getActiveAcademicYear();
@@ -99,15 +100,15 @@ async function getLiveStudentsPageDataInner(
     ...(normalizedQuery
       ? {
           OR: [
-            { fullName: { startsWith: normalizedQuery, mode: "insensitive" as const } },
+            { fullName: { contains: normalizedQuery, mode: "insensitive" as const } },
             {
               academicClass: {
-                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
+                name: { contains: normalizedQuery, mode: "insensitive" as const },
               },
             },
             {
               classGroup: {
-                name: { startsWith: normalizedQuery, mode: "insensitive" as const },
+                name: { contains: normalizedQuery, mode: "insensitive" as const },
               },
             },
           ],

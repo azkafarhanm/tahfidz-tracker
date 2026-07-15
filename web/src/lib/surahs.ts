@@ -1,3 +1,5 @@
+import { normalizeLooseSearchText, normalizeSearchText } from "./search";
+
 export const surahList = [
   { number: 1, name: "Al-Fatihah", ayahs: 7 },
   { number: 2, name: "Al-Baqarah", ayahs: 286 },
@@ -117,20 +119,12 @@ export const surahList = [
 
 export type SurahInfo = (typeof surahList)[number];
 
-function normalizeSurahSearch(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
 export function matchesSurahSearch(surah: SurahInfo, query: string): boolean {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) return true;
 
-  const normalizedQuery = normalizeSurahSearch(trimmedQuery);
-  const normalizedName = normalizeSurahSearch(surah.name);
+  const normalizedQuery = normalizeLooseSearchText(trimmedQuery);
+  const normalizedName = normalizeLooseSearchText(surah.name);
   const nameMatches = normalizedQuery.length > 0 && (
     normalizedName.includes(normalizedQuery) ||
     normalizedQuery.includes(normalizedName)
@@ -142,7 +136,7 @@ export function matchesSurahSearch(surah: SurahInfo, query: string): boolean {
 export function findSurah(name: string): SurahInfo | undefined {
   if (!name) return undefined;
   
-  const cleanName = name.trim().toLowerCase();
+  const cleanName = normalizeSearchText(name);
   
   // 1. Exact match (case insensitive)
   let found = surahList.find(s => s.name.toLowerCase() === cleanName);
@@ -150,8 +144,7 @@ export function findSurah(name: string): SurahInfo | undefined {
 
   // Helper to strip prefixes and special chars
   const normalize = (str: string) => {
-    return str
-      .toLowerCase()
+    return normalizeSearchText(str)
       .replace(/^(al|an|at|ar|as|asy|adz|az|ai|ad|at|al-|-)+/gi, "")
       .replace(/[^a-z0-9]/gi, "");
   };

@@ -13,6 +13,7 @@ import {
 import { prisma, withRetry } from "@/lib/prisma";
 import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
+import { normalizeSearchText } from "@/lib/search";
 
 export { invalidateCache };
 
@@ -234,26 +235,26 @@ export async function getAdminTeachersData(
   highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeSearchText(query);
   const where = normalizedQuery
     ? {
         OR: [
           {
             fullName: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             phoneNumber: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             user: {
               email: {
-                startsWith: normalizedQuery,
+                contains: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -350,7 +351,7 @@ export async function getAdminStudentsData(
   highlightId?: string,
 ) {
   const dateFormatter = getDateFormatter(locale);
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeSearchText(query);
   const programFilter = programType ? { classGroup: { programType } } : {};
   const where = normalizedQuery
     ? {
@@ -358,14 +359,14 @@ export async function getAdminStudentsData(
         OR: [
           {
             fullName: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             teacher: {
               fullName: {
-                startsWith: normalizedQuery,
+                contains: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -373,7 +374,7 @@ export async function getAdminStudentsData(
           {
             classGroup: {
               name: {
-                startsWith: normalizedQuery,
+                contains: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -381,7 +382,7 @@ export async function getAdminStudentsData(
           {
             academicClass: {
               name: {
-                startsWith: normalizedQuery,
+                contains: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
@@ -564,7 +565,7 @@ export async function getAdminAcademicClassesData(
   programType?: ProgramType,
   highlightId?: string,
 ) {
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeSearchText(query);
   const baseFilter = programType ? { programType } : {};
   const where = normalizedQuery
     ? {
@@ -572,13 +573,13 @@ export async function getAdminAcademicClassesData(
         OR: [
           {
             name: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             academicYear: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
@@ -685,7 +686,7 @@ export async function getAdminClassGroupsData(
   programType?: ProgramType,
   highlightId?: string,
 ) {
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeSearchText(query);
   const parsedGrade = Number.parseInt(normalizedQuery, 10);
   const programFilter = programType ? { programType } : {};
   const where = normalizedQuery
@@ -694,21 +695,21 @@ export async function getAdminClassGroupsData(
         OR: [
           {
             name: {
-              startsWith: normalizedQuery,
+              contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
           {
             teacher: {
               fullName: {
-                startsWith: normalizedQuery,
+                contains: normalizedQuery,
                 mode: "insensitive" as const,
               },
             },
           },
           {
             academicYear: {
-              startsWith: normalizedQuery,
+                contains: normalizedQuery,
               mode: "insensitive" as const,
             },
           },
@@ -721,13 +722,13 @@ export async function getAdminClassGroupsData(
             : []),
           {
             name: {
-              startsWith: `Kelas ${normalizedQuery}`,
+              contains: `Kelas ${normalizedQuery}`,
               mode: "insensitive" as const,
             },
           },
           {
             description: {
-              startsWith: `Kelas ${normalizedQuery}`,
+              contains: `Kelas ${normalizedQuery}`,
               mode: "insensitive" as const,
             },
           },

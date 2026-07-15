@@ -24,6 +24,7 @@ import type { RecentActivityItem } from "@/lib/quick-log";
 import { badge, backLink } from "@/lib/colors";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { matchesSearchText } from "@/lib/search";
 
 type Student = {
   id: string;
@@ -168,9 +169,7 @@ export default function GuidedQuickLog({
   }, [activityExpanded]);
 
   const filtered = query.length > 0
-    ? students.filter((s) =>
-        s.fullName.toLowerCase().includes(query.toLowerCase()),
-      )
+    ? students.filter((s) => matchesSearchText(s.fullName, query))
     : students;
 
   const canSubmit =
