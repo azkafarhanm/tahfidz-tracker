@@ -69,3 +69,23 @@ export async function updateReleaseNoteDraft(releaseNoteId: string, formData: Fo
   revalidateReleaseNotePaths();
   redirect("/admin/release-notes");
 }
+
+export async function publishReleaseNote(releaseNoteId: string) {
+  await requireAdminScope();
+  const t = await getTranslations("AdminReleaseNotes");
+
+  const result = await prisma.releaseNote.updateMany({
+    where: { id: releaseNoteId, isPublished: false },
+    data: {
+      isPublished: true,
+      publishedAt: new Date(),
+    },
+  });
+
+  if (result.count === 0) {
+    return { ok: false as const, error: t("publishUnavailable") };
+  }
+
+  revalidateReleaseNotePaths();
+  redirect("/admin/release-notes");
+}

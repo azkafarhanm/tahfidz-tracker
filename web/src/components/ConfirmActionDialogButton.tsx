@@ -28,6 +28,8 @@ type ConfirmActionDialogProps = {
   cancelLabel: string;
   pendingLabel: string;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
+  confirmDisabled?: boolean;
   tone?: Extract<ActionButtonTone, "danger" | "warning" | "success">;
   onConfirm: () => Promise<ActionResult>;
   onBeforeConfirm?: () => void;
@@ -55,6 +57,8 @@ function ConfirmActionDialog({
   cancelLabel,
   pendingLabel,
   icon,
+  children,
+  confirmDisabled = false,
   tone = "danger",
   onConfirm,
   onBeforeConfirm,
@@ -122,10 +126,12 @@ function ConfirmActionDialog({
           </div>
         </div>
 
+        {children ? <div className="mt-5">{children}</div> : null}
+
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             className={actionButtonClass("neutral")}
-            disabled={isPending}
+            disabled={isPending || confirmDisabled}
             onClick={() => onOpenChange(false)}
             ref={cancelButtonRef}
             type="button"

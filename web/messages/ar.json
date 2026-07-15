@@ -46,7 +46,19 @@
     "summaryPlaceholder": "ملخص قصير للمعلّمين.",
     "contentLabel": "المحتوى",
     "contentPlaceholder": "اشرح التغيير الذي يحتاج المعلّمون إلى معرفته.",
-    "preview": "معاينة المعلّم"
+    "preview": "معاينة المعلّم",
+    "publish": "نشر",
+    "publishing": "جارٍ النشر...",
+    "publishTitle": "نشر ملاحظة الإصدار هذه؟",
+    "publishDescription": "بعد النشر، سيتلقاها المعلّمون الذين لم يؤكدوها. لا يمكن تعديل ملاحظات الإصدار المنشورة ولا يمكن التراجع عن هذا الإجراء.",
+    "publishCancel": "إلغاء",
+    "publishChecklistHeading": "تأكيد قبل النشر",
+    "publishChecklistWorkflow": "هذا التغيير يؤثر في سير عمل المعلّمين.",
+    "publishChecklistClear": "الصياغة واضحة وغير تقنية.",
+    "publishChecklistInternal": "التغييرات الهندسية الداخلية مستبعدة.",
+    "publishChecklistVersion": "إصدار التطبيق صحيح.",
+    "publishChecklistRequired": "حدّد جميع البنود قبل النشر.",
+    "publishUnavailable": "لم يتم العثور على ملاحظة الإصدار أو أنها منشورة بالفعل."
   },
   "BottomNav": {
     "navHome": "الرئيسية",

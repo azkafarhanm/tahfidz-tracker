@@ -46,7 +46,19 @@
     "summaryPlaceholder": "Ringkasan singkat untuk guru.",
     "contentLabel": "Isi",
     "contentPlaceholder": "Jelaskan perubahan yang perlu diketahui guru.",
-    "preview": "Preview Guru"
+    "preview": "Preview Guru",
+    "publish": "Publish",
+    "publishing": "Mempublikasikan...",
+    "publishTitle": "Publish Catatan Rilis ini?",
+    "publishDescription": "Setelah dipublikasikan, guru yang belum mengakuinya akan menerimanya secara otomatis. Catatan Rilis yang sudah dipublikasikan tidak dapat diedit dan tindakan ini tidak dapat dibatalkan.",
+    "publishCancel": "Batal",
+    "publishChecklistHeading": "Konfirmasi sebelum Publish",
+    "publishChecklistWorkflow": "Perubahan ini memengaruhi workflow guru.",
+    "publishChecklistClear": "Bahasanya jelas dan tidak teknis.",
+    "publishChecklistInternal": "Perubahan engineering internal tidak disertakan.",
+    "publishChecklistVersion": "Versi aplikasi sudah benar.",
+    "publishChecklistRequired": "Centang semua checklist sebelum Publish.",
+    "publishUnavailable": "Catatan Rilis tidak ditemukan atau sudah dipublikasikan."
   },
   "BottomNav": {
     "navHome": "Home",

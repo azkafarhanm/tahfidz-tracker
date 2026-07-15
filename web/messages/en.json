@@ -46,7 +46,19 @@
     "summaryPlaceholder": "A short summary for teachers.",
     "contentLabel": "Content",
     "contentPlaceholder": "Explain the change teachers need to know.",
-    "preview": "Teacher Preview"
+    "preview": "Teacher Preview",
+    "publish": "Publish",
+    "publishing": "Publishing...",
+    "publishTitle": "Publish this Release Note?",
+    "publishDescription": "After publishing, teachers who have not acknowledged it will receive it automatically. Published Release Notes cannot be edited and this action cannot be undone.",
+    "publishCancel": "Cancel",
+    "publishChecklistHeading": "Confirm before publishing",
+    "publishChecklistWorkflow": "This change affects teacher workflow.",
+    "publishChecklistClear": "The wording is clear and non-technical.",
+    "publishChecklistInternal": "Internal engineering changes are excluded.",
+    "publishChecklistVersion": "The application version is correct.",
+    "publishChecklistRequired": "Check every item before publishing.",
+    "publishUnavailable": "The Release Note was not found or has already been published."
   },
   "BottomNav": {
     "navHome": "Home",
