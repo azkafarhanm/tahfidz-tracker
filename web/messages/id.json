@@ -14,7 +14,23 @@
     "navHalaqah": "Halaqah",
     "navLaporan": "Laporan",
     "navLaporanGuru": "Laporan Guru",
-    "navSumatif": "Nilai Sumatif"
+    "navSumatif": "Nilai Sumatif",
+    "navReleaseNotes": "Catatan Rilis"
+  },
+  "AdminReleaseNotes": {
+    "heading": "Catatan Rilis",
+    "description": "Lihat draft dan komunikasi pembaruan yang sudah dipublikasikan.",
+    "backLink": "Kembali ke Admin",
+    "drafts": "Draft",
+    "draftsDescription": "Belum terlihat oleh guru.",
+    "published": "Dipublikasikan",
+    "publishedDescription": "Sudah tersedia sebagai komunikasi untuk guru.",
+    "count": "{count} catatan",
+    "applicationVersion": "TahfidzFlow v{version}",
+    "updatedAt": "Diperbarui {date}",
+    "publishedAt": "Dipublikasikan {date}",
+    "emptyDrafts": "Belum ada draft Catatan Rilis.",
+    "emptyPublished": "Belum ada Catatan Rilis yang dipublikasikan."
   },
   "BottomNav": {
     "navHome": "Home",

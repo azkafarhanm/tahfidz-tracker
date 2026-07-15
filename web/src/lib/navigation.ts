@@ -6,6 +6,7 @@ import {
   ClipboardList,
   GraduationCap,
   Home,
+  Megaphone,
   PlusCircle,
   ShieldCheck,
   UserCircle,
@@ -26,6 +27,7 @@ export const navigationIcons = {
   UserRound,
   BarChart3,
   Calendar,
+  Megaphone,
 } as const;
 
 export const teacherNavigationItems = [
@@ -48,6 +50,7 @@ export const adminNavigationItems = [
   { key: "navFormatif", href: "/formative", iconKey: "BookText" },
   { key: "navSumatif", href: "/summative", iconKey: "ClipboardList" },
   { key: "navLaporan", href: "/admin/reports", iconKey: "BarChart3" },
+  { key: "navReleaseNotes", href: "/admin/release-notes", iconKey: "Megaphone" },
   { key: "navProfil", href: "/profile", iconKey: "UserCircle" },
 ] as const;
 

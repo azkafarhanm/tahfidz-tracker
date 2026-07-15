@@ -14,7 +14,23 @@
     "navHalaqah": "Halaqah",
     "navLaporan": "Reports",
     "navLaporanGuru": "Teacher Reports",
-    "navSumatif": "Summative Scores"
+    "navSumatif": "Summative Scores",
+    "navReleaseNotes": "Release Notes"
+  },
+  "AdminReleaseNotes": {
+    "heading": "Release Notes",
+    "description": "View drafts and published update communications.",
+    "backLink": "Back to Admin",
+    "drafts": "Drafts",
+    "draftsDescription": "Not visible to teachers yet.",
+    "published": "Published",
+    "publishedDescription": "Available as teacher-facing communication.",
+    "count": "{count} notes",
+    "applicationVersion": "TahfidzFlow v{version}",
+    "updatedAt": "Updated {date}",
+    "publishedAt": "Published {date}",
+    "emptyDrafts": "No Release Note drafts yet.",
+    "emptyPublished": "No published Release Notes yet."
   },
   "BottomNav": {
     "navHome": "Home",

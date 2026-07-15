@@ -14,7 +14,23 @@
     "navHalaqah": "الحلقة",
     "navLaporan": "التقارير",
     "navLaporanGuru": "تقارير المعلّمين",
-    "navSumatif": "درجات تقييمية"
+    "navSumatif": "درجات تقييمية",
+    "navReleaseNotes": "ملاحظات الإصدار"
+  },
+  "AdminReleaseNotes": {
+    "heading": "ملاحظات الإصدار",
+    "description": "عرض المسودات وإشعارات التحديث المنشورة.",
+    "backLink": "العودة إلى الإدارة",
+    "drafts": "المسودات",
+    "draftsDescription": "لا تظهر للمعلّمين بعد.",
+    "published": "منشور",
+    "publishedDescription": "متاح كتواصل موجّه للمعلّمين.",
+    "count": "{count} ملاحظات",
+    "applicationVersion": "TahfidzFlow v{version}",
+    "updatedAt": "تم التحديث في {date}",
+    "publishedAt": "نُشر في {date}",
+    "emptyDrafts": "لا توجد مسودات لملاحظات الإصدار بعد.",
+    "emptyPublished": "لا توجد ملاحظات إصدار منشورة بعد."
   },
   "BottomNav": {
     "navHome": "الرئيسية",
