@@ -3,26 +3,45 @@
 import { requireSessionScope } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
-export async function markReleaseNoteSeen(releaseNoteId: string) {
+export async function markReleaseNotesSeen(releaseNoteIds: string[]) {
   const { session } = await requireSessionScope();
+  const requestedIds = [...new Set(releaseNoteIds.filter((id) => id.trim()))];
 
-  const releaseNote = await prisma.releaseNote.findFirst({
-    where: { id: releaseNoteId, isPublished: true },
-    select: { id: true },
-  });
+  if (requestedIds.length === 0) {
+    return { ok: true as const, acknowledgedIds: [] as string[] };
+  }
 
-  if (!releaseNote) return { ok: false as const };
+  const acknowledgedIds = await prisma.$transaction(async (tx) => {
+    const publishedNotes = await tx.releaseNote.findMany({
+      where: {
+        id: { in: requestedIds },
+        isPublished: true,
+      },
+      select: { id: true },
+    });
+    const requestedIdSet = new Set(requestedIds);
+    const publishedIds = publishedNotes
+      .map((releaseNote) => releaseNote.id)
+      .filter((releaseNoteId) => requestedIdSet.has(releaseNoteId));
 
-  await prisma.userReleaseView.upsert({
-    where: {
-      userId_releaseNoteId: {
+    if (publishedIds.length === 0) return [];
+
+    await tx.userReleaseView.createMany({
+      data: publishedIds.map((releaseNoteId) => ({
         userId: session.user.id,
         releaseNoteId,
-      },
-    },
-    create: { userId: session.user.id, releaseNoteId },
-    update: { seenAt: new Date() },
+      })),
+      skipDuplicates: true,
+    });
+
+    return publishedIds;
   });
 
-  return { ok: true as const };
+  return { ok: true as const, acknowledgedIds };
+}
+
+export async function markReleaseNoteSeen(releaseNoteId: string) {
+  const result = await markReleaseNotesSeen([releaseNoteId]);
+
+  return { ok: result.acknowledgedIds.includes(releaseNoteId) };
 }
