@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { getLocale } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import ReleaseNotePresentation from "@/components/ReleaseNotePresentation";
 import { groupReleaseNotes } from "@/components/release-note-groups";
+import { backLink } from "@/lib/colors";
 import { getReleaseNotesForUser } from "@/lib/release-notes";
 import { requireSessionScope } from "@/lib/session";
 
@@ -30,7 +33,11 @@ export default async function ReleaseNotesHistoryPage() {
   return (
     <AppShell currentPath="/release-notes" isAdmin={false} userName={session.user.name ?? "Guru"}>
       <header>
-        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">TahfidzFlow</p>
+        <Link className={backLink} href="/">
+          <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
+          Kembali ke Dashboard
+        </Link>
+        <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">TahfidzFlow</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">Riwayat Pembaruan</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Semua pembaruan yang telah dipublikasikan untuk guru.</p>
       </header>
