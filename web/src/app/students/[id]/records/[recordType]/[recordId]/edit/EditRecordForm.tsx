@@ -12,7 +12,6 @@ type EditRecordFormProps = {
   className?: string;
   currentType: RecordType;
   labels: {
-    activityType: string;
     hafalan: string;
     murojaah: string;
     confirmTitle: string;
@@ -34,7 +33,6 @@ export default function EditRecordForm({
   const confirmedRef = useRef(false);
   const [selectedType, setSelectedType] = useState<RecordType>(currentType);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const changed = selectedType !== currentType;
   const sourceLabel = currentType === "hafalan" ? labels.hafalan : labels.murojaah;
   const destinationLabel = selectedType === "hafalan" ? labels.hafalan : labels.murojaah;
 
@@ -45,7 +43,13 @@ export default function EditRecordForm({
           action={action}
           className={className}
           onSubmit={(event) => {
-            if (changed && !confirmedRef.current) {
+            const requestedType = new FormData(event.currentTarget).get("activityType");
+            const nextType = requestedType === "hafalan" || requestedType === "murojaah"
+              ? requestedType
+              : currentType;
+            setSelectedType(nextType);
+
+            if (nextType !== currentType && !confirmedRef.current) {
               event.preventDefault();
               setConfirmationOpen(true);
               return;
@@ -54,30 +58,6 @@ export default function EditRecordForm({
             markServerActionReturn();
           }}
         >
-        <fieldset className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <legend className="px-1 text-sm font-semibold text-slate-950 dark:text-white">
-            {labels.activityType}
-          </legend>
-          <div className="mt-2 grid grid-cols-2 gap-3">
-            {(["hafalan", "murojaah"] as const).map((type) => (
-              <label
-                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition has-checked:border-emerald-500 has-checked:bg-emerald-50 has-checked:text-emerald-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:has-checked:border-emerald-500 dark:has-checked:bg-emerald-950/40 dark:has-checked:text-emerald-300"
-                key={type}
-              >
-                <input
-                  checked={selectedType === type}
-                  className="h-4 w-4 accent-emerald-800"
-                  name="activityType"
-                  onChange={() => setSelectedType(type)}
-                  type="radio"
-                  value={type}
-                />
-                {type === "hafalan" ? labels.hafalan : labels.murojaah}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
           {children}
         </form>
       </div>

@@ -111,11 +111,10 @@ export default async function EditRecordPage({
           className="mt-6 space-y-4"
           currentType={recordType}
           labels={{
-            activityType: t("labelActivityType"),
             hafalan: t("typeHafalan"),
             murojaah: t("typeMurojaah"),
             confirmTitle: t("conversionConfirmTitle"),
-            confirmDescription: t("conversionConfirmDescription"),
+            confirmDescription: t.raw("conversionConfirmDescription"),
             cancel: t("buttonCancel"),
             confirm: t("conversionConfirmButton"),
             processing: t("conversionProcessing"),
@@ -131,6 +130,29 @@ export default async function EditRecordPage({
               />
               <h2 className="font-semibold">{sectionTitle}</h2>
             </div>
+
+            <fieldset className="mt-4">
+              <legend className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                {t("labelActivityType")}
+              </legend>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                {(["hafalan", "murojaah"] as const).map((type) => (
+                  <label
+                    className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition has-checked:border-emerald-500 has-checked:bg-emerald-50 has-checked:text-emerald-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:has-checked:border-emerald-500 dark:has-checked:bg-emerald-950/40 dark:has-checked:text-emerald-300"
+                    key={type}
+                  >
+                    <input
+                      className="h-4 w-4 accent-emerald-800"
+                      defaultChecked={recordType === type}
+                      name="activityType"
+                      type="radio"
+                      value={type}
+                    />
+                    {type === "hafalan" ? t("typeHafalan") : t("typeMurojaah")}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <div className="mt-4">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="surah">
