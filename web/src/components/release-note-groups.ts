@@ -6,6 +6,11 @@ export type ReleaseNoteGroup = {
   latestNote: ReleaseNote;
 };
 
+const applicationVersionCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
 function compareChronologically(left: ReleaseNote, right: ReleaseNote) {
   const publishedAtDifference = (left.publishedAt?.getTime() ?? 0) - (right.publishedAt?.getTime() ?? 0);
   if (publishedAtDifference !== 0) return publishedAtDifference;
@@ -31,5 +36,13 @@ export function groupReleaseNotes(notes: ReleaseNote[]): ReleaseNoteGroup[] {
       notes: groupedReleaseNotes,
       latestNote: groupedReleaseNotes.at(-1)!,
     }))
-    .sort((left, right) => compareChronologically(right.latestNote, left.latestNote));
+    .sort((left, right) => {
+      const versionDifference = applicationVersionCollator.compare(
+        right.applicationVersion,
+        left.applicationVersion,
+      );
+      if (versionDifference !== 0) return versionDifference;
+
+      return compareChronologically(right.latestNote, left.latestNote);
+    });
 }

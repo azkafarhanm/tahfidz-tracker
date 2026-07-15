@@ -131,7 +131,6 @@ export default async function DashboardPreview({
 
         <div className="flex justify-end">
           <ReleaseNotesModal
-            latestPublished={releaseNotes.publishedHistory[0] ?? null}
             locale={locale}
             unreadPublished={isAdmin ? [] : releaseNotes.unreadPublished}
           />

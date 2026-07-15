@@ -33,4 +33,13 @@ describe("groupReleaseNotes", () => {
     expect(result.map(({ applicationVersion }) => applicationVersion)).toEqual(["1.1.2", "1.1.1"]);
     expect(result[1].notes.map(({ id }) => id)).toEqual(["note-a", "note-b"]);
   });
+
+  it("shows newer application versions first, independently of note publication dates", () => {
+    const result = groupReleaseNotes([
+      note("note-old-version", "1.1.9", "2026-07-15T09:00:00.000Z"),
+      note("note-new-version", "1.2.0", "2026-07-14T09:00:00.000Z"),
+    ]);
+
+    expect(result.map(({ applicationVersion }) => applicationVersion)).toEqual(["1.2.0", "1.1.9"]);
+  });
 });
