@@ -710,6 +710,7 @@
     "placeholderNotesMurojaah": "Optional, e.g.: verses 7-9 still often mixed up.",
     "buttonCancel": "Cancel",
     "buttonSave": "Save",
+    "buttonSaving": "Saving...",
     "sectionDelete": "Delete Record",
     "deleteConfirm": "Record {surah} {from}-{to} will be permanently deleted.",
     "typeHafalan": "Hafalan",

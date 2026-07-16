@@ -710,6 +710,7 @@
     "placeholderNotesMurojaah": "اختياري، مثال: الآيات 7-9 لا تزال متداخلة.",
     "buttonCancel": "إلغاء",
     "buttonSave": "حفظ",
+    "buttonSaving": "جارٍ الحفظ...",
     "sectionDelete": "حذف التسجيل",
     "deleteConfirm": "سيتم حذف تسجيل {surah} {from}-{to} نهائيًا.",
     "typeHafalan": "حفظ",

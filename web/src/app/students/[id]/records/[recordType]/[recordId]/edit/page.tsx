@@ -7,7 +7,6 @@ import {
   Hash,
   PencilLine,
   RotateCcw,
-  Save,
 } from "lucide-react";
 import { getStudentFormContext } from "@/lib/students";
 import { getRecordData } from "@/lib/records";
@@ -21,7 +20,7 @@ import FormAlert from "@/components/FormAlert";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
-import EditRecordForm from "./EditRecordForm";
+import EditRecordForm, { EditRecordSaveButton } from "./EditRecordForm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -266,13 +265,10 @@ export default async function EditRecordPage({
             >
               {t("buttonCancel")}
             </WorkflowContextLink>
-            <button
-              className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950 active:scale-[0.98]"
-              type="submit"
-            >
-              <Save aria-hidden="true" size={17} strokeWidth={2.2} />
-              {t("buttonSave")}
-            </button>
+            <EditRecordSaveButton
+              saveLabel={t("buttonSave")}
+              savingLabel={t("buttonSaving")}
+            />
           </div>
         </EditRecordForm>
       </section>

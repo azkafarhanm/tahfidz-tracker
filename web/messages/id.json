@@ -710,6 +710,7 @@
     "placeholderNotesMurojaah": "Opsional, contoh: ayat 7-9 masih sering tertukar.",
     "buttonCancel": "Batal",
     "buttonSave": "Simpan",
+    "buttonSaving": "Menyimpan...",
     "sectionDelete": "Hapus catatan",
     "deleteConfirm": "Catatan {surah} {from}-{to} akan dihapus permanen.",
     "typeHafalan": "Hafalan",
