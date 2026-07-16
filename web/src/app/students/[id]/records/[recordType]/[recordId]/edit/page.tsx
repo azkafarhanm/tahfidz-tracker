@@ -17,6 +17,7 @@ import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
+import CrossSurahNoteGuidance from "@/components/CrossSurahNoteGuidance";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
@@ -257,6 +258,12 @@ export default async function EditRecordPage({
               defaultValue={record.notes}
               name="notes"
               placeholder={t("placeholderOptional")}
+            />
+            <CrossSurahNoteGuidance
+              description={t("crossSurahGuidanceDescription")}
+              example={t("crossSurahGuidanceExample")}
+              exampleLabel={t("crossSurahGuidanceExampleLabel")}
+              title={t("crossSurahGuidanceTitle")}
             />
           </section>
 

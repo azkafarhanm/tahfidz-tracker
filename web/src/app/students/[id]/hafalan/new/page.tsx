@@ -15,6 +15,7 @@ import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
 import FormAlert from "@/components/FormAlert";
+import CrossSurahNoteGuidance from "@/components/CrossSurahNoteGuidance";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
@@ -190,6 +191,12 @@ export default async function NewHafalanPage({
               className="mt-4 min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:bg-slate-800 dark:focus:ring-emerald-900/30"
               name="notes"
               placeholder={t("placeholderNotes")}
+            />
+            <CrossSurahNoteGuidance
+              description={t("crossSurahGuidanceDescription")}
+              example={t("crossSurahGuidanceExample")}
+              exampleLabel={t("crossSurahGuidanceExampleLabel")}
+              title={t("crossSurahGuidanceTitle")}
             />
           </section>
 
