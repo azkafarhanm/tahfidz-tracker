@@ -235,6 +235,7 @@ export default async function EditRecordPage({
             <DeviceDateTimeFields
               dateLabel={t("labelDate")}
               initialDateTimeIso={record.dateTimeIso}
+              preserveInitialTime
               timeLabel={t("labelTime")}
             />
           </section>

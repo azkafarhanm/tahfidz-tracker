@@ -2,70 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { CalendarDays, Clock } from "lucide-react";
+import {
+  resolveInitialDeviceDateTime,
+  withSelectedTimezoneOffset,
+  type DeviceDateTime,
+} from "@/lib/device-date-time";
 
 type DeviceDateTimeFieldsProps = {
   dateLabel: string;
   timeLabel: string;
   initialDateTimeIso?: string;
+  preserveInitialTime?: boolean;
 };
 
-type DeviceDateTime = {
-  date: string;
-  time: string;
-  timezoneOffset: string;
-};
-
-function toInputDateTime(value: Date): DeviceDateTime {
-  const pad = (part: number) => String(part).padStart(2, "0");
-
-  return {
-    date: `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`,
-    time: `${pad(value.getHours())}:${pad(value.getMinutes())}`,
-    timezoneOffset: String(value.getTimezoneOffset()),
-  };
-}
-
-function withSelectedTimezoneOffset(value: DeviceDateTime) {
-  if (!value.date || !value.time) return value;
-
-  const selectedDate = new Date(`${value.date}T${value.time}:00`);
-  if (Number.isNaN(selectedDate.getTime())) return value;
-
-  return {
-    ...value,
-    timezoneOffset: String(selectedDate.getTimezoneOffset()),
-  };
-}
-
-function resolveInitialValue(initialDateTimeIso?: string): DeviceDateTime {
-  const now = new Date();
-  const initialDate = initialDateTimeIso ? new Date(initialDateTimeIso) : now;
-  const dateValue = Number.isNaN(initialDate.getTime()) ? now : initialDate;
-  const date = toInputDateTime(dateValue);
-  const time = toInputDateTime(now);
-
-  return withSelectedTimezoneOffset({
-    date: date.date,
-    time: time.time,
-    timezoneOffset: time.timezoneOffset,
-  });
-}
-
-function useDeviceDateTime(initialDateTimeIso?: string) {
+function useDeviceDateTime(initialDateTimeIso?: string, preserveInitialTime = false) {
   // Initialize the date, time, and timezone atomically on the very first
   // render (via a lazy initializer) so both fields are populated before the
   // browser paints — this keeps date and time in sync across every form
   // (create and edit) and removes the empty-state window that previously
   // caused the two fields to appear inconsistently initialized.
   const [value, setValue] = useState<DeviceDateTime>(() =>
-    resolveInitialValue(initialDateTimeIso),
+    resolveInitialDeviceDateTime(initialDateTimeIso, preserveInitialTime),
   );
 
   // Keep the fields in sync if the source value changes after mount (e.g. a
   // client-side navigation to a different record).
   useEffect(() => {
-    setValue(resolveInitialValue(initialDateTimeIso));
-  }, [initialDateTimeIso]);
+    setValue(resolveInitialDeviceDateTime(initialDateTimeIso, preserveInitialTime));
+  }, [initialDateTimeIso, preserveInitialTime]);
 
   return [value, setValue] as const;
 }
@@ -86,8 +50,9 @@ export default function DeviceDateTimeFields({
   dateLabel,
   timeLabel,
   initialDateTimeIso,
+  preserveInitialTime = false,
 }: DeviceDateTimeFieldsProps) {
-  const [value, setValue] = useDeviceDateTime(initialDateTimeIso);
+  const [value, setValue] = useDeviceDateTime(initialDateTimeIso, preserveInitialTime);
 
   return (
     <>
