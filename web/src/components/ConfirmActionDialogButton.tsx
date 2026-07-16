@@ -27,6 +27,10 @@ type ConfirmActionDialogProps = {
   confirmLabel: string;
   cancelLabel: string;
   pendingLabel: string;
+  pendingTitle?: string;
+  pendingDescription?: string;
+  pendingIcon?: React.ReactNode;
+  hideActionsWhilePending?: boolean;
   icon?: React.ReactNode;
   children?: React.ReactNode;
   confirmDisabled?: boolean;
@@ -56,6 +60,10 @@ function ConfirmActionDialog({
   confirmLabel,
   cancelLabel,
   pendingLabel,
+  pendingTitle,
+  pendingDescription,
+  pendingIcon,
+  hideActionsWhilePending = false,
   icon,
   children,
   confirmDisabled = false,
@@ -108,26 +116,27 @@ function ConfirmActionDialog({
           <span
             className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${iconWrapClasses[tone]}`}
           >
-            {icon}
+            {isPending && pendingIcon ? pendingIcon : icon}
           </span>
           <div className="min-w-0">
             <h2
               className="text-base font-semibold text-slate-950 dark:text-white"
               id={titleId}
             >
-              {title}
+              {isPending && pendingTitle ? pendingTitle : title}
             </h2>
             <p
               className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400"
               id={descriptionId}
             >
-              {description}
+              {isPending && pendingDescription ? pendingDescription : description}
             </p>
           </div>
         </div>
 
-        {children ? <div className="mt-5">{children}</div> : null}
+        {!isPending && children ? <div className="mt-5">{children}</div> : null}
 
+        {isPending && hideActionsWhilePending ? null : (
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             className={actionButtonClass("neutral")}
@@ -175,6 +184,7 @@ function ConfirmActionDialog({
             {isPending ? pendingLabel : confirmLabel}
           </button>
         </div>
+        )}
       </div>
     </div>,
     document.body,

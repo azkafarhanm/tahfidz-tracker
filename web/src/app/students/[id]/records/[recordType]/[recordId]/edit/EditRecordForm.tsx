@@ -16,6 +16,8 @@ type EditRecordFormProps = {
     murojaah: string;
     confirmTitle: string;
     confirmDescription: string;
+    pendingTitle: string;
+    pendingDescription: string;
     cancel: string;
     confirm: string;
     processing: string;
@@ -57,7 +59,6 @@ export default function EditRecordForm({
   labels,
 }: EditRecordFormProps) {
   const formContainerRef = useRef<HTMLDivElement | null>(null);
-  const confirmedRef = useRef(false);
   const conversionSubmittingRef = useRef(false);
   const [selectedType, setSelectedType] = useState<RecordType>(currentType);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -85,17 +86,11 @@ export default function EditRecordForm({
               : currentType;
             setSelectedType(nextType);
 
-            if (nextType !== currentType && !confirmedRef.current) {
+            if (nextType !== currentType) {
               event.preventDefault();
               setConfirmationOpen(true);
               return;
             }
-
-            if (nextType !== currentType) {
-              conversionSubmittingRef.current = true;
-              setConversionSubmitting(true);
-            }
-            confirmedRef.current = false;
             markServerActionReturn();
           }}
         >
@@ -110,14 +105,24 @@ export default function EditRecordForm({
           .replace("{source}", sourceLabel)
           .replace("{destination}", destinationLabel)}
         icon={<Repeat2 aria-hidden="true" size={18} strokeWidth={2.2} />}
+        hideActionsWhilePending
         onConfirm={async () => {
-          confirmedRef.current = true;
-          formContainerRef.current?.querySelector("form")?.requestSubmit();
+          if (conversionSubmittingRef.current) return;
+          const form = formContainerRef.current?.querySelector("form");
+          if (!form) return;
+
+          conversionSubmittingRef.current = true;
+          setConversionSubmitting(true);
+          markServerActionReturn();
+          await action(new FormData(form));
           return { ok: true };
         }}
         onOpenChange={setConfirmationOpen}
         open={confirmationOpen}
         pendingLabel={labels.processing}
+        pendingDescription={labels.pendingDescription}
+        pendingIcon={<LoaderCircle aria-hidden="true" className="animate-spin" size={18} strokeWidth={2.2} />}
+        pendingTitle={labels.pendingTitle}
         showSuccessToast={false}
         title={labels.confirmTitle}
         tone="warning"

@@ -693,6 +693,8 @@
     "conversionConfirmDescription": "Catatan akan diubah dari {source} menjadi {destination}. Semua data akan dipindahkan dan tetap dipertahankan.",
     "conversionConfirmButton": "Ubah",
     "conversionProcessing": "Mengubah…",
+    "conversionPendingTitle": "Sedang mengubah aktivitas...",
+    "conversionPendingDescription": "Mohon tunggu, catatan sedang dipindahkan dan disimpan.",
     "backLink": "Detail santri",
     "sectionMaterial": "Materi hafalan",
     "sectionMaterialMurojaah": "Materi murojaah",

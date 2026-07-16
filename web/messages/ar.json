@@ -693,6 +693,8 @@
     "conversionConfirmDescription": "سيتم تغيير السجل من {source} إلى {destination}. سيتم نقل جميع البيانات والاحتفاظ بها.",
     "conversionConfirmButton": "تغيير",
     "conversionProcessing": "جارٍ التغيير…",
+    "conversionPendingTitle": "جارٍ تغيير النشاط...",
+    "conversionPendingDescription": "يرجى الانتظار بينما يتم نقل السجل وحفظه.",
     "backLink": "تفاصيل الطالب",
     "sectionMaterial": "مادة الحفظ",
     "sectionMaterialMurojaah": "مادة المراجعة",

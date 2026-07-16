@@ -114,6 +114,8 @@ export default async function EditRecordPage({
             murojaah: t("typeMurojaah"),
             confirmTitle: t("conversionConfirmTitle"),
             confirmDescription: t.raw("conversionConfirmDescription"),
+            pendingTitle: t("conversionPendingTitle"),
+            pendingDescription: t("conversionPendingDescription"),
             cancel: t("buttonCancel"),
             confirm: t("conversionConfirmButton"),
             processing: t("conversionProcessing"),

@@ -693,6 +693,8 @@
     "conversionConfirmDescription": "The record will be changed from {source} to {destination}. All data will be moved and preserved.",
     "conversionConfirmButton": "Change",
     "conversionProcessing": "Changing…",
+    "conversionPendingTitle": "Changing activity...",
+    "conversionPendingDescription": "Please wait while the record is moved and saved.",
     "backLink": "Student Detail",
     "sectionMaterial": "Memorization Material",
     "sectionMaterialMurojaah": "Review Material",
