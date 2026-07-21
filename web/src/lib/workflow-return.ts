@@ -23,3 +23,26 @@ export function samePageReturnQuery(
 export function normalizeQuery(query: string): string {
   return query.startsWith("?") ? query.slice(1) : query;
 }
+
+export function applyContextParams(
+  queryString: string,
+  contextParams?: Record<string, string | null | undefined>,
+): string {
+  const params = new URLSearchParams(queryString);
+  for (const [key, value] of Object.entries(contextParams ?? {})) {
+    if (value == null) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+  }
+  return params.toString();
+}
+
+export function resolveScrollContext(
+  currentContext: string,
+  destinationContext: string,
+  preserveCurrentContext: boolean,
+): string {
+  return preserveCurrentContext ? currentContext : destinationContext;
+}

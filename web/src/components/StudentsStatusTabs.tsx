@@ -23,7 +23,7 @@ type StudentsStatusTabsProps = {
 };
 
 const WORKSPACE_SCOPE_KEY = "studentsWorkspace";
-const WORKSPACE_PARAMS = ["q", "page"];
+const WORKSPACE_PARAMS = ["q", "page", "grade"];
 
 function workspaceValue(programType: string, status: StudentStatus) {
   return `${programType}:${status}`;

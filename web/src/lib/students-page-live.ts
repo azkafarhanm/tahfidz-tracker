@@ -51,6 +51,7 @@ export async function getLiveStudentsPageData(
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
   highlightId?: string,
+  grade?: 7 | 8 | 9,
 ) {
   const cacheKey = [
     "students:list",
@@ -62,6 +63,7 @@ export async function getLiveStudentsPageData(
     normalizeSearchText(query),
     academicYear ?? "active",
     highlightId ?? "none",
+    grade ?? "all",
   ].join(":");
 
   return cached(cacheKey, 15_000, () =>
@@ -74,6 +76,7 @@ export async function getLiveStudentsPageData(
       programType,
       academicYear,
       highlightId,
+      grade,
     ),
   );
 }
@@ -87,6 +90,7 @@ async function getLiveStudentsPageDataInner(
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
   highlightId?: string,
+  grade?: 7 | 8 | 9,
 ) {
   const dateFormatter = getDateFormatter(locale);
   const normalizedQuery = normalizeSearchText(query);
@@ -95,7 +99,7 @@ async function getLiveStudentsPageDataInner(
   const year = academicYear ?? await getActiveAcademicYear();
   const where = {
     isActive: true,
-    classGroup: { academicYear: year, programType },
+    classGroup: { academicYear: year, programType, ...(grade ? { grade } : {}) },
     ...scopeWhere(teacherId),
     ...(normalizedQuery
       ? {
@@ -171,7 +175,7 @@ async function getLiveStudentsPageDataInner(
 
   if (highlightId && !students.some(({ id }) => id === highlightId)) {
     const highlighted = await prisma.student.findFirst({
-      where: { id: highlightId, isActive: true, classGroup: { academicYear: year, programType }, ...scopeWhere(teacherId) },
+      where: { id: highlightId, isActive: true, classGroup: { academicYear: year, programType, ...(grade ? { grade } : {}) }, ...scopeWhere(teacherId) },
       include: {
         classGroup: { select: { name: true, level: true, programType: true, grade: true } },
         academicClass: { select: { name: true } },
@@ -216,11 +220,12 @@ export async function getLiveInactiveStudentsData(
   teacherId?: string | null,
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
+  grade?: 7 | 8 | 9,
 ) {
   return cached(
-    `students:inactive:${teacherId ?? "admin"}:${programType}:${academicYear ?? "active"}`,
+    `students:inactive:${teacherId ?? "admin"}:${programType}:${academicYear ?? "active"}:${grade ?? "all"}`,
     15_000,
-    () => getLiveInactiveStudentsDataInner(teacherId, programType, academicYear),
+    () => getLiveInactiveStudentsDataInner(teacherId, programType, academicYear, grade),
   );
 }
 
@@ -228,13 +233,14 @@ async function getLiveInactiveStudentsDataInner(
   teacherId?: string | null,
   programType: ProgramType = ProgramType.ACADEMIC,
   academicYear?: string,
+  grade?: 7 | 8 | 9,
 ) {
   const year = academicYear ?? await getActiveAcademicYear();
   const students = await withRetry(() =>
     prisma.student.findMany({
       where: {
         isActive: false,
-        classGroup: { academicYear: year, programType },
+        classGroup: { academicYear: year, programType, ...(grade ? { grade } : {}) },
         ...scopeWhere(teacherId),
       },
       orderBy: { fullName: "asc" },

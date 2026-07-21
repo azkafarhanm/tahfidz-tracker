@@ -1,5 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { normalizeQuery, samePageReturnQuery } from "./workflow-return";
+import {
+  applyContextParams,
+  normalizeQuery,
+  resolveScrollContext,
+  samePageReturnQuery,
+} from "./workflow-return";
+
+describe("applyContextParams", () => {
+  it("keeps the current grade context separate from destination overrides", () => {
+    const currentContext = "programType=ACADEMIC&grade=8&page=2";
+
+    expect(
+      applyContextParams(currentContext, { grade: "7", page: null }),
+    ).toBe("programType=ACADEMIC&grade=7");
+    expect(currentContext).toBe("programType=ACADEMIC&grade=8&page=2");
+  });
+
+  it("represents the All filter by removing only grade and page", () => {
+    expect(
+      applyContextParams("programType=ACADEMIC&grade=9&page=3", {
+        grade: null,
+        page: null,
+      }),
+    ).toBe("programType=ACADEMIC");
+  });
+
+  it("uses the source grade only when independent scroll context is requested", () => {
+    const current = "programType=ACADEMIC&grade=8";
+    const destination = "programType=ACADEMIC&grade=7";
+
+    expect(resolveScrollContext(current, destination, true)).toBe(current);
+    expect(resolveScrollContext(current, destination, false)).toBe(destination);
+  });
+});
 
 describe("samePageReturnQuery", () => {
   it("extracts a same-page canonical return query from workflow edit links", () => {

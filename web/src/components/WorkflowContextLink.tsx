@@ -11,13 +11,19 @@ import {
   mergeVisibleSearchFormContext,
   readNavigationContext,
 } from "@/hooks/useNavigationContext";
-import { normalizeQuery, samePageReturnQuery } from "@/lib/workflow-return";
+import {
+  applyContextParams,
+  normalizeQuery,
+  resolveScrollContext,
+  samePageReturnQuery,
+} from "@/lib/workflow-return";
 
 type WorkflowContextLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
   compatibilityKeys?: string[];
   contextParams?: Record<string, string | null | undefined>;
   href: string;
   preferStoredContext?: boolean;
+  preserveCurrentScrollContext?: boolean;
   restoreContext?: boolean;
 };
 
@@ -78,6 +84,7 @@ export default function WorkflowContextLink({
   href,
   onClick,
   preferStoredContext = false,
+  preserveCurrentScrollContext = false,
   restoreContext = false,
   scroll,
   target,
@@ -118,20 +125,27 @@ export default function WorkflowContextLink({
 
         const isSamePageQueryNavigation =
           isSamePageScrollPreservingNavigation(resolvedHref, pathname, scroll);
-        const outgoingParams = new URLSearchParams(
-          mergeVisibleSearchFormContext(searchParams.toString()),
+        // Some same-directory filters opt into preserving the exact source
+        // context. Their destination overrides (for example grade=7 while
+        // leaving grade=8) must not become a scroll-storage identity, or the
+        // destination's saved position is overwritten before it renders.
+        const currentContext = mergeVisibleSearchFormContext(
+          searchParams.toString(),
         );
-        for (const [key, value] of Object.entries(contextParams ?? {})) {
-          if (value == null) {
-            outgoingParams.delete(key);
-          } else {
-            outgoingParams.set(key, value);
-          }
-        }
-        const outgoingContext = outgoingParams.toString();
+        const destinationContext = applyContextParams(
+          currentContext,
+          contextParams,
+        );
 
         if (!isSamePageQueryNavigation) {
-          markPrimaryNavigation(pathname, outgoingContext);
+          markPrimaryNavigation(
+            pathname,
+            resolveScrollContext(
+              currentContext,
+              destinationContext,
+              preserveCurrentScrollContext,
+            ),
+          );
         }
         const returnQuery = typeof window === "undefined"
           ? null
@@ -144,13 +158,13 @@ export default function WorkflowContextLink({
         if (
           !isSamePageQueryNavigation &&
           returnQuery !== null &&
-          normalizeQuery(returnQuery) !== normalizeQuery(outgoingContext)
+          normalizeQuery(returnQuery) !== normalizeQuery(destinationContext)
         ) {
           markPrimaryNavigation(pathname, returnQuery);
         }
         markNavigationContext(
           pathname,
-          outgoingContext,
+          destinationContext,
         );
       }}
       scroll={scroll}

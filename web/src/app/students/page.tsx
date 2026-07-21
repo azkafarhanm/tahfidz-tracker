@@ -12,6 +12,7 @@ import {
   getLiveStudentsPageData,
 } from "@/lib/students-page-live";
 import ActiveStudentCard from "@/components/ActiveStudentCard";
+import AcademicGradeFilter from "@/components/AcademicGradeFilter";
 import AppShell from "@/components/AppShell";
 import InactiveStudentsSection from "@/components/InactiveStudentsSection";
 import LiveSearchForm from "@/components/LiveSearchForm";
@@ -50,6 +51,7 @@ type StudentsPageProps = {
     dashboardShortcut?: string;
     highlight?: string;
     returnTo?: string;
+    grade?: string;
   }>;
 };
 
@@ -80,10 +82,27 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const programType = programContext.programs.includes(requestedProgramType as ProgramType)
     ? (requestedProgramType as ProgramType)
     : programContext.resolvedProgramType;
+  const selectedGrade = programType === ProgramType.ACADEMIC && ["7", "8", "9"].includes(params?.grade ?? "")
+    ? Number(params?.grade) as 7 | 8 | 9
+    : undefined;
 
-  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear, params?.highlight);
+  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear, params?.highlight, selectedGrade);
   // Only fetch inactive students when viewing the inactive tab
-  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear) : [];
+  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear, selectedGrade) : [];
+  let academicGradeCounts: Record<7 | 8 | 9, number> | undefined;
+  if (programType === ProgramType.ACADEMIC) {
+    if (isInactiveView) {
+      const grades = await Promise.all([7, 8, 9].map((grade) =>
+        getLiveInactiveStudentsData(teacherId, programType, academicYear, grade as 7 | 8 | 9),
+      ));
+      academicGradeCounts = { 7: grades[0].length, 8: grades[1].length, 9: grades[2].length };
+    } else {
+      const grades = await Promise.all([7, 8, 9].map((grade) =>
+        getLiveStudentsPageData("", teacherId, locale, 1, 1, programType, academicYear, undefined, grade as 7 | 8 | 9),
+      ));
+      academicGradeCounts = { 7: grades[0].totalCount, 8: grades[1].totalCount, 9: grades[2].totalCount };
+    }
+  }
   const filteredInactiveStudents = query
     ? inactiveStudents.filter((student) => {
         return (
@@ -98,6 +117,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     if (query) nextParams.set("q", query);
     if (nextPage > 1) nextParams.set("page", String(nextPage));
     if (programType) nextParams.set("programType", programType);
+    if (selectedGrade) nextParams.set("grade", String(selectedGrade));
     if (dashboardShortcut) nextParams.set("dashboardShortcut", dashboardShortcut);
     if (fromProfile) nextParams.set("returnTo", "profile");
     const search = nextParams.toString();
@@ -108,6 +128,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   const searchActionParams = new URLSearchParams();
   if (isInactiveView) searchActionParams.set("status", "inactive");
   if (programType) searchActionParams.set("programType", programType);
+  if (selectedGrade) searchActionParams.set("grade", String(selectedGrade));
   if (dashboardShortcut) searchActionParams.set("dashboardShortcut", dashboardShortcut);
   if (fromProfile) searchActionParams.set("returnTo", "profile");
   const searchAction = `/students?${searchActionParams.toString()}`;
@@ -115,6 +136,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   if (page > 1) resetSearchParams.set("page", String(page));
   if (isInactiveView) resetSearchParams.set("status", "inactive");
   if (programType) resetSearchParams.set("programType", programType);
+  if (selectedGrade) resetSearchParams.set("grade", String(selectedGrade));
   if (dashboardShortcut) resetSearchParams.set("dashboardShortcut", dashboardShortcut);
   if (fromProfile) resetSearchParams.set("returnTo", "profile");
   const resetSearchHref = `/students?${resetSearchParams.toString()}`;
@@ -122,6 +144,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
   if (query) workflowParams.set("q", query);
   if (page > 1) workflowParams.set("page", String(page));
   if (programType) workflowParams.set("programType", programType);
+  if (selectedGrade) workflowParams.set("grade", String(selectedGrade));
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -150,7 +173,7 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
                   programs={programContext.programs}
                   programTypeLabels={programTypeLabels}
                   currentProgramType={programType}
-                  isolateParamsByProgram={["q", "page"]}
+                  isolateParamsByProgram={["q", "page", "grade"]}
                   isolateScopeKey="studentsWorkspace"
                   isolateScopeSuffix={status}
                 />
@@ -209,6 +232,15 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
             inactiveLabel={t("inactiveTab")}
             programType={programType}
             returnToProfile={fromProfile}
+          />
+        ) : null}
+
+        {programType === ProgramType.ACADEMIC && academicGradeCounts ? (
+          <AcademicGradeFilter
+            counts={academicGradeCounts}
+            href={searchAction}
+            selectedGrade={selectedGrade}
+            totalCount={academicGradeCounts[7] + academicGradeCounts[8] + academicGradeCounts[9]}
           />
         ) : null}
 
