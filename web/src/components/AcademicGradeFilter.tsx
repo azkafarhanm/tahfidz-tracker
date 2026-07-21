@@ -56,6 +56,7 @@ export default function AcademicGradeFilter({
           contextParams={{ grade: null, page: null }}
           href={buildHref()}
           preserveCurrentScrollContext
+          scroll={false}
         >
           Semua ({totalCount})
         </WorkflowContextLink>
@@ -66,6 +67,7 @@ export default function AcademicGradeFilter({
             href={buildHref(grade)}
             key={grade}
             preserveCurrentScrollContext
+            scroll={false}
           >
             {grade} ({counts[grade]})
           </WorkflowContextLink>

@@ -4,6 +4,7 @@ import {
   normalizeQuery,
   resolveScrollContext,
   samePageReturnQuery,
+  shouldSaveScrollContext,
 } from "./workflow-return";
 
 describe("applyContextParams", () => {
@@ -31,6 +32,12 @@ describe("applyContextParams", () => {
 
     expect(resolveScrollContext(current, destination, true)).toBe(current);
     expect(resolveScrollContext(current, destination, false)).toBe(destination);
+  });
+
+  it("still saves an opted-in filter when its link preserves scroll", () => {
+    expect(shouldSaveScrollContext(true, true)).toBe(true);
+    expect(shouldSaveScrollContext(true, false)).toBe(false);
+    expect(shouldSaveScrollContext(false, false)).toBe(true);
   });
 });
 

@@ -16,6 +16,7 @@ import {
   normalizeQuery,
   resolveScrollContext,
   samePageReturnQuery,
+  shouldSaveScrollContext,
 } from "@/lib/workflow-return";
 
 type WorkflowContextLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
@@ -137,7 +138,11 @@ export default function WorkflowContextLink({
           contextParams,
         );
 
-        if (!isSamePageQueryNavigation) {
+        const savesScrollContext = shouldSaveScrollContext(
+          isSamePageQueryNavigation,
+          preserveCurrentScrollContext,
+        );
+        if (savesScrollContext) {
           markPrimaryNavigation(
             pathname,
             resolveScrollContext(
@@ -156,7 +161,7 @@ export default function WorkflowContextLink({
               pathname,
             );
         if (
-          !isSamePageQueryNavigation &&
+          savesScrollContext &&
           returnQuery !== null &&
           normalizeQuery(returnQuery) !== normalizeQuery(destinationContext)
         ) {

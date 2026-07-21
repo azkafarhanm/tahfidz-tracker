@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { markPrimaryNavigation } from "@/hooks/usePanelScrollRestoration";
 import {
   markNavigationContext,
@@ -49,6 +49,9 @@ export default function StudentsStatusTabs({
   const router = useRouter();
   const searchParams = useSearchParams();
   const searchParamString = searchParams.toString();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   const buildHref = useCallback((status: StudentStatus) => {
     const params = new URLSearchParams();
@@ -57,11 +60,13 @@ export default function StudentsStatusTabs({
     if (dashboardShortcut) params.set("dashboardShortcut", dashboardShortcut);
     if (returnToProfile) params.set("returnTo", "profile");
 
-    const storedContext = readScopedNavigationContext(
-      pathname,
-      WORKSPACE_SCOPE_KEY,
-      workspaceValue(programType, status),
-    );
+    const storedContext = mounted
+      ? readScopedNavigationContext(
+          pathname,
+          WORKSPACE_SCOPE_KEY,
+          workspaceValue(programType, status),
+        )
+      : null;
     const storedParams = storedContext
       ? new URLSearchParams(storedContext)
       : null;
@@ -73,7 +78,7 @@ export default function StudentsStatusTabs({
 
     const search = params.toString();
     return search ? `${pathname}?${search}` : pathname;
-  }, [dashboardShortcut, pathname, programType, returnToProfile]);
+  }, [dashboardShortcut, mounted, pathname, programType, returnToProfile]);
 
   const activeHref = buildHref("active");
   const inactiveHref = buildHref("inactive");

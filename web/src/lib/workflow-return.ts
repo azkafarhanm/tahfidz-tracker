@@ -46,3 +46,10 @@ export function resolveScrollContext(
 ): string {
   return preserveCurrentContext ? currentContext : destinationContext;
 }
+
+export function shouldSaveScrollContext(
+  isSamePageScrollPreservingNavigation: boolean,
+  preserveCurrentContext: boolean,
+): boolean {
+  return !isSamePageScrollPreservingNavigation || preserveCurrentContext;
+}
