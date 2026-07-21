@@ -16,6 +16,11 @@ import FormAlert from "@/components/FormAlert";
 import CharacterCounter from "@/components/CharacterCounter";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { backLink } from "@/lib/colors";
+import {
+  findClassGroupForGrade,
+  resolveInitialHalaqahLevel,
+  resolveLevelForGrade,
+} from "./student-form-state";
 
 type ClassGroupOption = {
   id: string;
@@ -58,6 +63,7 @@ type TeacherStudentFormProps = {
   restoreContext?: boolean;
   directoryQ?: string;
   directoryPage?: string;
+  directoryGrade?: string;
 };
 
 export default function TeacherStudentForm({
@@ -70,21 +76,29 @@ export default function TeacherStudentForm({
   restoreContext = false,
   directoryQ = "",
   directoryPage = "",
+  directoryGrade = "",
 }: TeacherStudentFormProps) {
   const t = useTranslations("StudentForm");
   const tc = useTranslations("CharacterCounter");
-  const [selectedLevel, setSelectedLevel] = useState(values.halaqahLevel);
+  const [selectedLevel, setSelectedLevel] = useState(() =>
+    resolveInitialHalaqahLevel(
+      options.classGroups,
+      values.grade,
+      values.halaqahLevel,
+      defaultProgramType,
+    ),
+  );
   const [selectedGrade, setSelectedGrade] = useState(values.grade);
   const [selectedAcademicClassId, setSelectedAcademicClassId] = useState(values.academicClassId);
   const [nameLength, setNameLength] = useState(values.fullName.length);
   const [notesLength, setNotesLength] = useState(values.notes.length);
 
   // Find existing halaqah for selected grade, filtered by programType
-  const gradeHasExistingCg = selectedGrade
-    ? options.classGroups.find(
-        (g) => g.grade === Number(selectedGrade) && g.programType === defaultProgramType,
-      ) ?? null
-    : null;
+  const gradeHasExistingCg = findClassGroupForGrade(
+    options.classGroups,
+    selectedGrade,
+    defaultProgramType,
+  );
 
   const lockedLevel = gradeHasExistingCg?.levelKey ?? null;
 
@@ -112,10 +126,13 @@ export default function TeacherStudentForm({
       // Only recalculate level if grade actually changed
       if (newGrade !== selectedGrade) {
         setSelectedGrade(newGrade);
-        const cg = options.classGroups.find(
-          (g) => g.grade === ac.grade && g.programType === defaultProgramType,
+        setSelectedLevel(
+          resolveLevelForGrade(
+            options.classGroups,
+            newGrade,
+            defaultProgramType,
+          ),
         );
-        setSelectedLevel(cg ? cg.levelKey : "");
       }
     }
   }
@@ -128,10 +145,13 @@ export default function TeacherStudentForm({
       setSelectedAcademicClassId("");
     }
     // Auto-select level if existing halaqah found, otherwise reset
-    const cg = options.classGroups.find(
-      (g) => g.grade === Number(grade) && g.programType === defaultProgramType,
+    setSelectedLevel(
+      resolveLevelForGrade(
+        options.classGroups,
+        grade,
+        defaultProgramType,
+      ),
     );
-    setSelectedLevel(cg ? cg.levelKey : "");
   }
 
   function handleLevelClick(levelKey: string) {
@@ -209,6 +229,7 @@ export default function TeacherStudentForm({
         <form action={action} className="mt-6 space-y-4">
           {directoryQ && <input name="directoryQ" type="hidden" value={directoryQ} />}
           {directoryPage && <input name="directoryPage" type="hidden" value={directoryPage} />}
+          {directoryGrade && <input name="directoryGrade" type="hidden" value={directoryGrade} />}
           <input
             name="classGroupId"
             type="hidden"

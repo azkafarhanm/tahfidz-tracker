@@ -1,6 +1,7 @@
 "use client";
 
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import { useEffect, useState } from "react";
 
 type Grade = 7 | 8 | 9;
 
@@ -27,6 +28,12 @@ export default function AcademicGradeFilter({
   selectedGrade,
   totalCount,
 }: AcademicGradeFilterProps) {
+  const [displayedGrade, setDisplayedGrade] = useState(selectedGrade);
+
+  useEffect(() => {
+    setDisplayedGrade(selectedGrade);
+  }, [selectedGrade]);
+
   function buildHref(grade?: Grade) {
     const url = new URL(href, "http://localhost");
     url.searchParams.delete("page");
@@ -52,9 +59,10 @@ export default function AcademicGradeFilter({
       </p>
       <div className="mt-4 inline-flex flex-wrap rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
         <WorkflowContextLink
-          className={chipClassName(selectedGrade === undefined)}
+          className={chipClassName(displayedGrade === undefined)}
           contextParams={{ grade: null, page: null }}
           href={buildHref()}
+          onNavigate={() => setDisplayedGrade(undefined)}
           preserveCurrentScrollContext
           scroll={false}
         >
@@ -62,10 +70,11 @@ export default function AcademicGradeFilter({
         </WorkflowContextLink>
         {grades.map((grade) => (
           <WorkflowContextLink
-            className={chipClassName(selectedGrade === grade)}
+            className={chipClassName(displayedGrade === grade)}
             contextParams={{ grade: String(grade), page: null }}
             href={buildHref(grade)}
             key={grade}
+            onNavigate={() => setDisplayedGrade(grade)}
             preserveCurrentScrollContext
             scroll={false}
           >

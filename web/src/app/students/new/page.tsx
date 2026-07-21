@@ -7,6 +7,7 @@ import { requireSessionScope } from "@/lib/session";
 import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
 import { getTranslations } from "next-intl/server";
 import { backLink } from "@/lib/colors";
+import { normalizeAcademicDirectoryGrade } from "@/lib/student-create-return";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ type NewStudentPageProps = {
     programType?: string;
     q?: string;
     page?: string;
+    directoryGrade?: string;
   }>;
 };
 
@@ -67,6 +69,10 @@ export default async function NewStudentPage({
   const backHref = defaultProgramType
     ? `/students?programType=${defaultProgramType}`
     : "/students";
+  const directoryGrade = normalizeAcademicDirectoryGrade(
+    defaultProgramType,
+    params?.directoryGrade ?? params?.grade ?? "",
+  );
 
   return (
     <StudentForm
@@ -78,6 +84,7 @@ export default async function NewStudentPage({
       restoreContext
       directoryQ={params?.q ?? ""}
       directoryPage={params?.page ?? ""}
+      directoryGrade={directoryGrade}
       values={{
         fullName: params?.fullName ?? "",
         classGroupId: params?.classGroupId ?? "",

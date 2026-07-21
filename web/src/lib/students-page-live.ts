@@ -12,6 +12,9 @@ import { formatTasmiJuzSummary, getCompletedTasmiJuzList } from "@/lib/tasmi";
 import { normalizeSearchText } from "@/lib/search";
 
 const PAGE_SIZE_FALLBACK = 12;
+type AcademicGrade = 7 | 8 | 9;
+
+export type AcademicGradeCounts = Record<AcademicGrade, number>;
 
 function formatLatestRecord(
   record:
@@ -40,6 +43,46 @@ function formatLatestRecord(
 
 function scopeWhere(teacherId?: string | null) {
   return teacherId ? { teacherId } : {};
+}
+
+export async function getLiveAcademicGradeCounts(
+  teacherId?: string | null,
+  academicYear?: string,
+  isActive = true,
+) {
+  const year = academicYear ?? await getActiveAcademicYear();
+  return cached(
+    `students:grade-counts:${teacherId ?? "admin"}:${year}:${isActive ? "active" : "inactive"}`,
+    15_000,
+    async () => {
+      const classGroups = await withRetry(() =>
+        prisma.classGroup.findMany({
+          where: {
+            academicYear: year,
+            programType: ProgramType.ACADEMIC,
+            grade: { in: [7, 8, 9] },
+          },
+          select: {
+            grade: true,
+            _count: {
+              select: {
+                students: {
+                  where: { isActive, ...scopeWhere(teacherId) },
+                },
+              },
+            },
+          },
+        }),
+      );
+      const counts: AcademicGradeCounts = { 7: 0, 8: 0, 9: 0 };
+      for (const classGroup of classGroups) {
+        if (classGroup.grade === 7 || classGroup.grade === 8 || classGroup.grade === 9) {
+          counts[classGroup.grade] += classGroup._count.students;
+        }
+      }
+      return counts;
+    },
+  );
 }
 
 export async function getLiveStudentsPageData(

@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import {
+  getLiveAcademicGradeCounts,
   getLiveInactiveStudentsData,
   getLiveStudentsPageData,
 } from "@/lib/students-page-live";
@@ -86,23 +87,16 @@ export default async function StudentsPage({ searchParams }: StudentsPageProps) 
     ? Number(params?.grade) as 7 | 8 | 9
     : undefined;
 
-  const studentPage = await getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear, params?.highlight, selectedGrade);
-  // Only fetch inactive students when viewing the inactive tab
-  const inactiveStudents = !isAdmin && isInactiveView ? await getLiveInactiveStudentsData(teacherId, programType, academicYear, selectedGrade) : [];
-  let academicGradeCounts: Record<7 | 8 | 9, number> | undefined;
-  if (programType === ProgramType.ACADEMIC) {
-    if (isInactiveView) {
-      const grades = await Promise.all([7, 8, 9].map((grade) =>
-        getLiveInactiveStudentsData(teacherId, programType, academicYear, grade as 7 | 8 | 9),
-      ));
-      academicGradeCounts = { 7: grades[0].length, 8: grades[1].length, 9: grades[2].length };
-    } else {
-      const grades = await Promise.all([7, 8, 9].map((grade) =>
-        getLiveStudentsPageData("", teacherId, locale, 1, 1, programType, academicYear, undefined, grade as 7 | 8 | 9),
-      ));
-      academicGradeCounts = { 7: grades[0].totalCount, 8: grades[1].totalCount, 9: grades[2].totalCount };
-    }
-  }
+  const [studentPage, inactiveStudents, academicGradeCounts] = await Promise.all([
+    getLiveStudentsPageData(query, teacherId, locale, page, PAGE_SIZE, programType, academicYear, params?.highlight, selectedGrade),
+    // Only fetch inactive students when viewing the inactive tab.
+    !isAdmin && isInactiveView
+      ? getLiveInactiveStudentsData(teacherId, programType, academicYear, selectedGrade)
+      : Promise.resolve([]),
+    programType === ProgramType.ACADEMIC
+      ? getLiveAcademicGradeCounts(teacherId, academicYear, !isInactiveView)
+      : Promise.resolve(undefined),
+  ]);
   const filteredInactiveStudents = query
     ? inactiveStudents.filter((student) => {
         return (

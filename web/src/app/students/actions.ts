@@ -16,6 +16,7 @@ import { requireSessionScope } from "@/lib/session";
 import { invalidateStudentRelatedCaches } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { halaqahLevelLabels } from "@/lib/format";
+import { applyStudentDirectoryContext } from "@/lib/student-create-return";
 
 const validGenders = new Set<string>(Object.values(Gender));
 const validLevels = new Set<string>(Object.values(HalaqahLevel));
@@ -30,6 +31,7 @@ export async function createTeacherStudent(formData: FormData) {
 
   const directoryQ = readOptionalString(formData, "directoryQ") ?? "";
   const directoryPage = readOptionalString(formData, "directoryPage") ?? "";
+  const directoryGrade = readOptionalString(formData, "directoryGrade") ?? "";
 
   const fullName = readString(formData, "fullName");
   const classGroupId = readOptionalString(formData, "classGroupId");
@@ -39,8 +41,12 @@ export async function createTeacherStudent(formData: FormData) {
   const academicClassId = readString(formData, "academicClassId");
   const programType = (readString(formData, "programType") as ProgramType) || ProgramType.ACADEMIC;
   const failParams = new URLSearchParams({ programType });
-  if (directoryQ) failParams.set("q", directoryQ);
-  if (directoryPage) failParams.set("page", directoryPage);
+  applyStudentDirectoryContext(failParams, {
+    grade: directoryGrade,
+    page: directoryPage,
+    programType,
+    query: directoryQ,
+  });
   const fail = createFailFn(`/students/new?${failParams.toString()}`);
   const gender = readString(formData, "gender");
   const joinDate = readString(formData, "joinDate");
@@ -206,7 +212,11 @@ export async function createTeacherStudent(formData: FormData) {
   revalidatePath("/summative");
   revalidatePath("/reports");
   const resultParams = new URLSearchParams({ success: t("studentAdded", { name: fullName }), highlight: newStudent.id, programType });
-  if (directoryQ) resultParams.set("q", directoryQ);
-  if (directoryPage) resultParams.set("page", directoryPage);
+  applyStudentDirectoryContext(resultParams, {
+    grade: directoryGrade,
+    page: directoryPage,
+    programType,
+    query: directoryQ,
+  });
   redirect(`/students?${resultParams.toString()}`);
 }
