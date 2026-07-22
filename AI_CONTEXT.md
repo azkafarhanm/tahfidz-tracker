@@ -94,6 +94,16 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - `lib/tasmi.ts` provides labels, options, CRUD helpers, and cache invalidation
 - `@@index([studentId, createdAt])` for recent-records query performance
 
+### Academic Meeting Status
+
+- `MeetingStatus` is daily learning-meeting context, not school attendance and not a Hafalan/Murojaah activity.
+- Scope is strictly `ProgramType.ACADEMIC`; Boarding queries and UI remain unchanged.
+- `MeetingAttendanceStatus`: `HADIR`, `IZIN`, `SAKIT`, `ALFA`.
+- Unique key: `(studentId, programType, date)`; saving the same date uses an upsert.
+- Notes are nullable and always optional. A meeting with zero learning activities is valid.
+- Student Detail groups Hafalan/Murojaah into a status day using the Asia/Jakarta day key.
+- Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
+
 ### AcademicYear and Archive System
 
 - `AcademicYear` model with `startDate`, `endDate`, `isActive`, `status` (`ACTIVE`/`ARCHIVED`)
@@ -144,7 +154,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - `AcademicClass` is the school class such as `7A`, `8B`, `9C` — has `programType`
 - `ClassGroup` is the halaqah owned by a teacher for a grade, year, and program — has `programType`
 - Students from multiple academic sections can share one halaqah
-- ProgramType never appears on record tables or `AcademicYear`
+- ProgramType does not appear on learning activity tables or `AcademicYear`; `MeetingStatus` is the deliberate exception because its Academic-only boundary is enforced in the database key and queries
 - Boarding `HalaqahLevel` (`LOW`) is stored but never displayed
 - AcademicYear is global and single; serves as archive boundary
 - Formative is derived from daily hafalan and murojaah records

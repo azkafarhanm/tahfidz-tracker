@@ -19,6 +19,7 @@ import {
 } from "@/lib/format";
 import { tasmiGradeLabels, tasmiStatusLabel, formatTasmiJuzSummary, getHighestCompletedTasmiJuz, getCompletedTasmiJuzList } from "@/lib/tasmi";
 import { normalizeSearchText } from "@/lib/search";
+import { buildMeetingTimeline } from "@/lib/meeting-status";
 
 function formatLatestRecord(
   record:
@@ -324,7 +325,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
 
   const check = await prisma.student.findUnique({
     where: { id: studentId },
-    select: { id: true, isActive: true, teacherId: true, fullName: true, classGroup: { select: { academicYear: true } } }
+    select: { id: true, isActive: true, teacherId: true, fullName: true, classGroup: { select: { academicYear: true, programType: true } } }
   });
 
   if (!check) {
@@ -427,12 +428,42 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     return null;
   }
 
+  const meetingStatuses = check.classGroup.programType === ProgramType.ACADEMIC
+    ? await prisma.meetingStatus.findMany({
+        where: { studentId, programType: ProgramType.ACADEMIC },
+        orderBy: { date: "desc" },
+        take: 50,
+        select: { id: true, date: true, status: true, note: true },
+      })
+    : [];
+
   const hafalanRecords = student.memorizationRecords.map((record) =>
     formatRecord(record, "Hafalan", dateFormatter, timeFormatter),
   );
   const murojaahRecords = student.revisionRecords.map((record) =>
     formatRecord(record, "Murojaah", dateFormatter, timeFormatter),
   );
+
+  const meetingTimeline = student.classGroup.programType === ProgramType.ACADEMIC
+    ? buildMeetingTimeline(
+        meetingStatuses,
+        [
+          ...student.memorizationRecords.map((record) => ({
+            id: record.id,
+            type: "Hafalan" as const,
+            range: formatRange(record.surah, record.fromAyah, record.toAyah),
+            date: record.date,
+          })),
+          ...student.revisionRecords.map((record) => ({
+            id: record.id,
+            type: "Murojaah" as const,
+            range: formatRange(record.surah, record.fromAyah, record.toAyah),
+            date: record.date,
+          })),
+        ],
+        dateFormatter,
+      )
+    : [];
 
   const tasmiRecords = student.tasmiRecords.map((record) => ({
     id: record.id,
@@ -499,6 +530,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     completedTasmiJuz: getCompletedTasmiJuzList(student.tasmiRecords),
     tasmiJuzSummary: formatTasmiJuzSummary(getCompletedTasmiJuzList(student.tasmiRecords)),
     recentActivity: latestActivity,
+    meetingTimeline,
     historyRecords,
     needsReviewCount,
   };

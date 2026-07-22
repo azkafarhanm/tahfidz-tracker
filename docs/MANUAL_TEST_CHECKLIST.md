@@ -320,6 +320,8 @@ Expected:
 - Active targets section with TargetCards
 - Recent activity section with ActivityRows
 - Edit, Excel, PDF buttons
+- Academic only: Meeting History with status, optional note, and same-day Hafalan/Murojaah summaries
+- Boarding only: no Meeting History section or Meeting Status action
 
 Result:
 [x] PASS

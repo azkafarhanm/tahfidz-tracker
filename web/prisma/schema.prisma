@@ -56,6 +56,13 @@ enum ProgramType {
   BOARDING
 }
 
+enum MeetingAttendanceStatus {
+  HADIR
+  IZIN
+  SAKIT
+  ALFA
+}
+
 enum TasmiGrade {
   MUMTAZ
   JAYYID_JIDDAN
@@ -104,6 +111,7 @@ model Teacher {
   students            Student[]
   memorizationRecords MemorizationRecord[]
   revisionRecords     RevisionRecord[]
+  meetingStatuses     MeetingStatus[]
   targets             Target[]
   tasmiRecords        TasmiRecord[]
 
@@ -124,6 +132,26 @@ model AcademicYear {
 
   @@index([isActive])
   @@index([status])
+}
+
+model MeetingStatus {
+  id          String                  @id @default(cuid())
+  studentId   String
+  programType ProgramType             @default(ACADEMIC)
+  date        DateTime                @db.Date
+  status      MeetingAttendanceStatus
+  note        String?
+  teacherId   String
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@unique([studentId, programType, date])
+  @@index([studentId, date])
+  @@index([teacherId, date])
+  @@index([programType, date])
 }
 
 model FormativeMeeting {
@@ -233,6 +261,7 @@ model Student {
   academicClass       AcademicClass?       @relation(fields: [academicClassId], references: [id], onDelete: Restrict)
   memorizationRecords MemorizationRecord[]
   revisionRecords     RevisionRecord[]
+  meetingStatuses     MeetingStatus[]
   targets             Target[]
   summativeScores     SummativeScore[]
   tasmiRecords        TasmiRecord[]

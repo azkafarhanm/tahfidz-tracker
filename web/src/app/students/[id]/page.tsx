@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Award,
   BookOpen,
+  CalendarCheck2,
   CheckCircle2,
   ClipboardList,
   Download,
@@ -46,6 +47,12 @@ type StudentDetailPageProps = {
 
 function recordStatusClass(record: RecordItem) {
   return record.needsReview ? badge.warning : badge.success;
+}
+
+function meetingStatusClass(status: string) {
+  if (status === "HADIR") return badge.success;
+  if (status === "ALFA") return "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200";
+  return badge.warning;
 }
 
 function LatestRecordCard({
@@ -478,6 +485,85 @@ export default async function StudentDetailPage({
                   ))}
                 </tbody>
               </table>
+            </div>
+          </section>
+        ) : null}
+
+        {!student.isBoarding ? (
+          <section className="mt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-semibold">{t("meetingHistoryHeading")}</h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {t("meetingHistoryDescription")}
+                </p>
+              </div>
+              <WorkflowContextLink
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
+                href={`/students/${student.id}/meeting-status`}
+              >
+                <CalendarCheck2 aria-hidden="true" size={15} strokeWidth={2.2} />
+                {t("meetingAddButton")}
+              </WorkflowContextLink>
+            </div>
+
+            <div className="mt-3 space-y-3">
+              {student.meetingTimeline.length > 0 ? (
+                student.meetingTimeline.map((meeting) => (
+                  <article
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
+                    data-highlight={meeting.id}
+                    key={meeting.id}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-slate-950 dark:text-white">{meeting.date}</p>
+                        <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${meetingStatusClass(meeting.status)}`}>
+                          {t(`meetingStatus${meeting.status}`)}
+                        </span>
+                      </div>
+                      <WorkflowContextLink
+                        className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-400"
+                        href={`/students/${student.id}/meeting-status?date=${meeting.dateKey}`}
+                      >
+                        {t("meetingUpdateButton")}
+                      </WorkflowContextLink>
+                    </div>
+
+                    {meeting.note ? (
+                      <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{t("meetingNoteLabel")}:</span>{" "}
+                        {meeting.note}
+                      </p>
+                    ) : null}
+
+                    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                      {meeting.activities.length > 0 ? (
+                        meeting.activities.map((activity) => (
+                          <div className="flex items-start gap-2 text-sm" key={`${activity.type}-${activity.id}`}>
+                            {activity.type === "Hafalan" ? (
+                              <BookOpen aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400" size={15} />
+                            ) : (
+                              <RotateCcw aria-hidden="true" className="mt-0.5 shrink-0 text-blue-700 dark:text-blue-400" size={15} />
+                            )}
+                            <p>
+                              <span className="font-medium">{activity.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}</span>
+                              <span className="text-slate-500 dark:text-slate-400"> - {activity.range}</span>
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{t("meetingNoActivity")}</p>
+                      )}
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center dark:border-slate-700 dark:bg-slate-900/70">
+                  <CalendarCheck2 aria-hidden="true" className="mx-auto text-emerald-800 dark:text-emerald-400" size={24} />
+                  <p className="mt-3 text-sm font-semibold">{t("meetingEmpty")}</p>
+                </div>
+              )}
             </div>
           </section>
         ) : null}

@@ -62,6 +62,7 @@ TahfidzFlow models this with a `ProgramType` enum on `AcademicClass` and `ClassG
 |---|---|
 | **Teacher Dashboard** | Daily stats, weekly target progress, recent activity with Tasmi' |
 | **Dual-Program System** | Academic + Boarding with context-aware filtering via ProgramSelector |
+| **Academic Meeting Context** | Per-student daily Hadir/Izin/Sakit/Alfa context with optional notes and zero-or-more Hafalan/Murojaah activities |
 | **Workflow Persistence** | Search, filters, pagination, and scroll restored across primary navigation and frequent Students/Formative/Summative detail round-trips |
 | **Full Hafalan Lifecycle** | Quick Log → Hafalan → Murojaah → Tasmi' → Formative recap → Summative |
 | **Flexible Summative** | Curriculum-guided bulk scoring with Academic/Boarding targets and multi-row result highlighting |
@@ -137,6 +138,7 @@ Browser / PWA Client
 - Curriculum-guided bulk summative assessment with Academic/Boarding target rules and multi-row highlight after save
 - Active targets with cancel/complete actions
 - Student detail with history, targets, Tasmi' summary, and exports (Excel + PDF)
+- Academic Student Detail includes Meeting History; one optional-note status per day can exist even with no Hafalan/Murojaah activity
 - Teacher reports with program-specific Excel/PDF layouts and context-aware back navigation
 
 ### Admin workflow
@@ -154,6 +156,7 @@ Browser / PWA Client
 ### Program Type system
 
 - `ProgramType` enum (`ACADEMIC`, `BOARDING`) on `AcademicClass` and `ClassGroup`
+- `MeetingStatus` stores `ProgramType.ACADEMIC` explicitly and is never queried or rendered for Boarding students
 - Teachers see only their program context (auto-detected from ClassGroups; selector shown for dual-program teachers)
 - Admins get a "Semua" (All) option in addition to per-program filtering
 - Program context persists across navigation and program-filtered live search via URL params
@@ -162,6 +165,8 @@ Browser / PWA Client
 - `ProgramSelector` context-switching control on all filtered pages
 
 ### Report exports
+
+- Meeting Status is intentionally excluded from dashboards, reports, Excel exports, and PDF exports in Phase 1.
 
 - Academic Formative Excel uses one configured meeting count for the whole Academic semester. Every class sheet shares the same `Pertemuan 1..N` columns, and missed meetings remain blank.
 - Boarding Formative Excel is grouped into `Kelas 7`, `Kelas 8`, and `Kelas 9` progress sheets with setoran totals, memorization/revision progress, and latest setoran.

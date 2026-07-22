@@ -136,6 +136,19 @@ Each item has PASS / FAIL criteria for manual verification.
   - Review: RESOLVED - Students list, active/inactive tabs, search, pagination, and row/card actions are implemented in `web/src/app/students/page.tsx`, `web/src/lib/students-page-live.ts`, `ActiveStudentCard`, `StudentCardActions`, and `InactiveStudentsSection`.
 ## 4. Student Detail (`/students/[id]`)
 
+- [ ] Academic Meeting History is visible; Boarding has no Meeting Status UI
+  - PASS: Academic detail shows the section and add action; Boarding detail remains identical to the prior workflow
+  - FAIL: section appears for Boarding or Academic section is missing
+- [ ] Meeting Status supports Hadir, Izin, Sakit, and Alfa with optional note
+  - PASS: save succeeds with an empty note; saving the same date updates instead of creating a duplicate
+  - FAIL: note is required, duplicate rows appear, or a valid status cannot be saved
+- [ ] Meeting timeline accepts zero or more learning activities
+  - PASS: status-only day says "Tidak ada aktivitas hari ini"; same-day Hafalan/Murojaah summaries appear when available
+  - FAIL: status-only day disappears or unrelated-day activity is grouped into it
+- [ ] Meeting Status does not affect dashboard, report, or export output
+  - PASS: existing dashboard/report totals and Excel/PDF schemas remain unchanged
+  - FAIL: Meeting Status changes totals, columns, or exported rows
+
 - [x] Page loads with student name, class, avatar
   - PASS: header shows name + classSummary + InitialsAvatar
   - FAIL: blank or error
