@@ -102,6 +102,8 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Unique key: `(studentId, programType, date)`; saving the same date uses an upsert.
 - Notes are nullable and always optional. A meeting with zero learning activities is valid.
 - Student Detail groups Hafalan/Murojaah into a status day using the Asia/Jakarta day key.
+- Academic Student Detail derives exact-today metadata and inclusive rolling 30-day status counts from the existing 50-row timeline query; it never uses the previous day's latest status as today's value.
+- Student and Academic Meeting Status queries run concurrently, and the detail cache key includes the Jakarta day to make midnight rollover immediate.
 - Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
 
 ### AcademicYear and Archive System

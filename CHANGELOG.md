@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added one daily `HADIR`, `IZIN`, `SAKIT`, or `ALFA` meeting status per Academic student, with an always-optional note.
 - Added Academic Student Detail Meeting History that remains valid without activity and summarizes same-day Hafalan/Murojaah when present.
 - Added database uniqueness and server-side Academic/ownership guards. Boarding, dashboard, reports, and Excel/PDF exports are unchanged.
+- Polished Academic Student Detail with exact-today status metadata, compact rolling 30-day status totals, and activity counts in each meeting timeline entry without adding database queries.
 
 ## [1.1.1] — 2026-07-14
 

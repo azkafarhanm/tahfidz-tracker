@@ -25,6 +25,16 @@ Academic Student Detail
 
 The create/edit page validates active-student scope, teacher ownership (or admin role), Academic program membership, date shape, and enum status. Note input has no `required` attribute and stores blank input as `null`. Save returns to Student Detail with the existing URL-driven highlight behavior.
 
+## Student Detail UX
+
+Academic Student Detail presents the meeting context in this order:
+
+1. A small header metadata line for **today's exact Jakarta date**. If that date has no row, it says “Belum dicatat”; it never falls back to the latest prior status.
+2. A compact `30 Hari Terakhir` summary for Hadir, Izin, Sakit, and Alfa. The inclusive rolling window is today plus the preceding 29 Jakarta calendar days.
+3. Meeting History, where activity days show the activity count followed by Hafalan/Murojaah summaries, while zero-activity days remain valid and explicit.
+
+The existing Academic Meeting Status query returns at most 50 rows through today's Jakarta date. Because the database permits only one row per student/day, those rows necessarily cover the complete rolling 30-day window even if future-dated rows exist. The today metadata and statistics are derived from that same result without another query. The Student and Academic Meeting Status queries run concurrently after authorization. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
+
 ## Regression boundaries
 
 - Hafalan, Murojaah, Tasmi, target, Formative, and Summative mutations are unchanged.

@@ -321,6 +321,8 @@ Expected:
 - Recent activity section with ActivityRows
 - Edit, Excel, PDF buttons
 - Academic only: Meeting History with status, optional note, and same-day Hafalan/Murojaah summaries
+- Academic only: header shows today's exact status (or "Belum dicatat"), followed by rolling 30-day Hadir/Izin/Sakit/Alfa totals
+- Meeting entries with activity show the activity count before their Hafalan/Murojaah summaries
 - Boarding only: no Meeting History section or Meeting Status action
 
 Result:

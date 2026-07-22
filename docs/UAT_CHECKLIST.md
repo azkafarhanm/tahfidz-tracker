@@ -148,6 +148,15 @@ Each item has PASS / FAIL criteria for manual verification.
 - [ ] Meeting Status does not affect dashboard, report, or export output
   - PASS: existing dashboard/report totals and Excel/PDF schemas remain unchanged
   - FAIL: Meeting Status changes totals, columns, or exported rows
+- [ ] Today's status uses today's Jakarta date, not the latest row
+  - PASS: yesterday's status is not shown as today's; a new day without a row says "Belum dicatat"
+  - FAIL: header carries yesterday's value into today or the metadata appears for Boarding
+- [ ] Rolling 30-day statistics use Meeting Status only
+  - PASS: Hadir/Izin/Sakit/Alfa totals include today and the preceding 29 days; older/future rows and learning activities do not affect them
+  - FAIL: window boundaries or totals are incorrect
+- [ ] Meeting timeline activity count matches its summaries
+  - PASS: activity days show the correct count and Hafalan/Murojaah rows; zero-activity days keep the existing message
+  - FAIL: count and displayed activity rows disagree
 
 - [x] Page loads with student name, class, avatar
   - PASS: header shows name + classSummary + InitialsAvatar

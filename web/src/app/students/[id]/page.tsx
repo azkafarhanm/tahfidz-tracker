@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Award,
   BookOpen,
-  CalendarCheck2,
   CheckCircle2,
   ClipboardList,
   Download,
@@ -23,6 +22,7 @@ import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
+import MeetingHistorySection from "./MeetingHistorySection";
 import ReactivateStudentButton from "@/components/ReactivateStudentButton";
 import ProgramBadge from "@/components/ProgramBadge";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
@@ -49,11 +49,15 @@ function recordStatusClass(record: RecordItem) {
   return record.needsReview ? badge.warning : badge.success;
 }
 
-function meetingStatusClass(status: string) {
-  if (status === "HADIR") return badge.success;
-  if (status === "ALFA") return "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200";
-  return badge.warning;
+function meetingStatusDotClass(status: string | null) {
+  if (status === "HADIR") return "bg-emerald-500";
+  if (status === "IZIN") return "bg-yellow-400";
+  if (status === "SAKIT") return "bg-orange-500";
+  if (status === "ALFA") return "bg-red-500";
+  return "bg-slate-300 dark:bg-slate-600";
 }
+
+const meetingStatuses = ["HADIR", "IZIN", "SAKIT", "ALFA"] as const;
 
 function LatestRecordCard({
   icon: Icon,
@@ -235,6 +239,8 @@ export default async function StudentDetailPage({
     );
   }
 
+  const meetingSummary = student.meetingSummary;
+
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
          <ScrollToHighlightedItem />
@@ -263,6 +269,20 @@ export default async function StudentDetailPage({
                   <ProgramBadge programType={programType} />
                 </div>
               )}
+              {!student.isBoarding && meetingSummary ? (
+                <p className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                  <span
+                    aria-hidden="true"
+                    className={`h-2.5 w-2.5 rounded-full ${meetingStatusDotClass(meetingSummary.todayStatus)}`}
+                  />
+                  <span>{t("meetingTodayLabel")}:</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-100">
+                    {meetingSummary.todayStatus
+                      ? t(`meetingStatus${meetingSummary.todayStatus}`)
+                      : t("meetingStatusUnrecorded")}
+                  </span>
+                </p>
+              ) : null}
               </div>
             </div>
            <div className="flex flex-wrap items-center gap-2">
@@ -293,6 +313,56 @@ export default async function StudentDetailPage({
               />
             </div>
          </header>
+
+        {!student.isBoarding && meetingSummary ? (
+          <>
+            <section className="mt-4 border-y border-slate-200 py-4 dark:border-slate-800">
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                {t("meetingStatsHeading")}
+              </h2>
+              <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 sm:grid-cols-4">
+                {meetingStatuses.map((status) => (
+                  <div className="flex items-center justify-between gap-3 sm:justify-start" key={status}>
+                    <span className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                      <span aria-hidden="true" className={`h-2.5 w-2.5 rounded-full ${meetingStatusDotClass(status)}`} />
+                      {t(`meetingStatus${status}`)}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-950 dark:text-white">
+                      {meetingSummary.counts[status]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <MeetingHistorySection
+              labels={{
+                heading: t("meetingHistoryHeading"),
+                description: t("meetingHistoryDescription"),
+                add: t("meetingAddButton"),
+                update: t("meetingUpdateButton"),
+                note: t("meetingNoteLabel"),
+                noActivity: t("meetingNoActivity"),
+                empty: t("meetingEmpty"),
+                hafalan: t("hafalanButton"),
+                murojaah: t("murojaahButton"),
+                statuses: {
+                  HADIR: t("meetingStatusHADIR"),
+                  IZIN: t("meetingStatusIZIN"),
+                  SAKIT: t("meetingStatusSAKIT"),
+                  ALFA: t("meetingStatusALFA"),
+                },
+              }}
+              meetings={student.meetingTimeline.map((meeting) => ({
+                ...meeting,
+                activityCountText: t("meetingActivityCount", {
+                  count: meeting.activities.length,
+                }),
+              }))}
+              studentId={student.id}
+            />
+          </>
+        ) : null}
 
         <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
@@ -485,85 +555,6 @@ export default async function StudentDetailPage({
                   ))}
                 </tbody>
               </table>
-            </div>
-          </section>
-        ) : null}
-
-        {!student.isBoarding ? (
-          <section className="mt-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold">{t("meetingHistoryHeading")}</h2>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {t("meetingHistoryDescription")}
-                </p>
-              </div>
-              <WorkflowContextLink
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-900 px-4 text-xs font-semibold text-white transition hover:bg-emerald-950"
-                href={`/students/${student.id}/meeting-status`}
-              >
-                <CalendarCheck2 aria-hidden="true" size={15} strokeWidth={2.2} />
-                {t("meetingAddButton")}
-              </WorkflowContextLink>
-            </div>
-
-            <div className="mt-3 space-y-3">
-              {student.meetingTimeline.length > 0 ? (
-                student.meetingTimeline.map((meeting) => (
-                  <article
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
-                    data-highlight={meeting.id}
-                    key={meeting.id}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold text-slate-950 dark:text-white">{meeting.date}</p>
-                        <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${meetingStatusClass(meeting.status)}`}>
-                          {t(`meetingStatus${meeting.status}`)}
-                        </span>
-                      </div>
-                      <WorkflowContextLink
-                        className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-400"
-                        href={`/students/${student.id}/meeting-status?date=${meeting.dateKey}`}
-                      >
-                        {t("meetingUpdateButton")}
-                      </WorkflowContextLink>
-                    </div>
-
-                    {meeting.note ? (
-                      <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
-                        <span className="font-medium text-slate-700 dark:text-slate-300">{t("meetingNoteLabel")}:</span>{" "}
-                        {meeting.note}
-                      </p>
-                    ) : null}
-
-                    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                      {meeting.activities.length > 0 ? (
-                        meeting.activities.map((activity) => (
-                          <div className="flex items-start gap-2 text-sm" key={`${activity.type}-${activity.id}`}>
-                            {activity.type === "Hafalan" ? (
-                              <BookOpen aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400" size={15} />
-                            ) : (
-                              <RotateCcw aria-hidden="true" className="mt-0.5 shrink-0 text-blue-700 dark:text-blue-400" size={15} />
-                            )}
-                            <p>
-                              <span className="font-medium">{activity.type === "Hafalan" ? t("hafalanButton") : t("murojaahButton")}</span>
-                              <span className="text-slate-500 dark:text-slate-400"> - {activity.range}</span>
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-sm text-slate-500 dark:text-slate-400">{t("meetingNoActivity")}</p>
-                      )}
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center dark:border-slate-700 dark:bg-slate-900/70">
-                  <CalendarCheck2 aria-hidden="true" className="mx-auto text-emerald-800 dark:text-emerald-400" size={24} />
-                  <p className="mt-3 text-sm font-semibold">{t("meetingEmpty")}</p>
-                </div>
-              )}
             </div>
           </section>
         ) : null}

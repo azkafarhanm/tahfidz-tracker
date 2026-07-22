@@ -9,6 +9,38 @@ export function parseMeetingDate(value: string) {
     : date;
 }
 
+type MeetingStatusSummaryInput = {
+  date: Date;
+  status: MeetingAttendanceStatus;
+};
+
+export function summarizeMeetingStatuses(
+  statuses: MeetingStatusSummaryInput[],
+  todayKey = getJakartaDayKey(new Date()),
+) {
+  const today = parseMeetingDate(todayKey);
+  if (!today) throw new Error("Invalid Jakarta day key");
+
+  const rollingStart = new Date(today);
+  rollingStart.setUTCDate(rollingStart.getUTCDate() - 29);
+  const rollingStartKey = rollingStart.toISOString().slice(0, 10);
+  const counts: Record<MeetingAttendanceStatus, number> = {
+    [MeetingAttendanceStatus.HADIR]: 0,
+    [MeetingAttendanceStatus.IZIN]: 0,
+    [MeetingAttendanceStatus.SAKIT]: 0,
+    [MeetingAttendanceStatus.ALFA]: 0,
+  };
+  let todayStatus: MeetingAttendanceStatus | null = null;
+
+  for (const meeting of statuses) {
+    const day = meeting.date.toISOString().slice(0, 10);
+    if (day === todayKey) todayStatus = meeting.status;
+    if (day >= rollingStartKey && day <= todayKey) counts[meeting.status] += 1;
+  }
+
+  return { todayStatus, counts, rollingStartKey, todayKey };
+}
+
 type TimelineActivity = {
   id: string;
   type: "Hafalan" | "Murojaah";

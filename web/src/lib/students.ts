@@ -19,7 +19,12 @@ import {
 } from "@/lib/format";
 import { tasmiGradeLabels, tasmiStatusLabel, formatTasmiJuzSummary, getHighestCompletedTasmiJuz, getCompletedTasmiJuzList } from "@/lib/tasmi";
 import { normalizeSearchText } from "@/lib/search";
-import { buildMeetingTimeline } from "@/lib/meeting-status";
+import {
+  buildMeetingTimeline,
+  parseMeetingDate,
+  summarizeMeetingStatuses,
+} from "@/lib/meeting-status";
+import { getJakartaDayKey } from "@/lib/jakarta-date";
 
 function formatLatestRecord(
   record:
@@ -312,16 +317,23 @@ async function getInactiveStudentsDataInner(teacherId?: string | null, programTy
 }
 
 export async function getStudentDetailData(studentId: string, teacherId?: string | null, locale = "id") {
+  const jakartaToday = getJakartaDayKey(new Date());
   return cached(
-    `students:detail:${scopeKey(teacherId)}:${locale}:${studentId}`,
+    `students:detail:${scopeKey(teacherId)}:${locale}:${studentId}:${jakartaToday}`,
     STUDENT_CACHE_TTL_MS,
-    () => getStudentDetailDataInner(studentId, teacherId, locale),
+    () => getStudentDetailDataInner(studentId, teacherId, locale, jakartaToday),
   );
 }
 
-async function getStudentDetailDataInner(studentId: string, teacherId?: string | null, locale = "id") {
+async function getStudentDetailDataInner(
+  studentId: string,
+  teacherId?: string | null,
+  locale = "id",
+  jakartaToday = getJakartaDayKey(new Date()),
+) {
   const dateFormatter = getDateFormatter(locale);
   const timeFormatter = getTimeFormatter(locale);
+  const todayDate = parseMeetingDate(jakartaToday)!;
 
   const check = await prisma.student.findUnique({
     where: { id: studentId },
@@ -353,89 +365,94 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     } as const;
   }
 
-  const student = await prisma.student.findUnique({
-    where: {
-      id: studentId,
-    },
-    include: {
-      classGroup: {
-        select: { id: true, name: true, level: true, grade: true, programType: true },
+  const [student, meetingStatuses] = await Promise.all([
+    prisma.student.findUnique({
+      where: {
+        id: studentId,
       },
-      academicClass: {
-        select: { name: true },
-      },
-      memorizationRecords: {
-        orderBy: { date: "desc" },
-        take: 50,
-        select: {
-          id: true,
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
-          score: true,
-          notes: true,
+      include: {
+        classGroup: {
+          select: { id: true, name: true, level: true, grade: true, programType: true },
+        },
+        academicClass: {
+          select: { name: true },
+        },
+        memorizationRecords: {
+          orderBy: { date: "desc" },
+          take: 50,
+          select: {
+            id: true,
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+            score: true,
+            notes: true,
+          },
+        },
+        revisionRecords: {
+          orderBy: { date: "desc" },
+          take: 50,
+          select: {
+            id: true,
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            date: true,
+            status: true,
+            score: true,
+            notes: true,
+          },
+        },
+        targets: {
+          where: { status: TargetStatus.ACTIVE },
+          orderBy: { endDate: "asc" },
+          take: 20,
+          select: {
+            id: true,
+            type: true,
+            surah: true,
+            fromAyah: true,
+            toAyah: true,
+            startDate: true,
+            endDate: true,
+            notes: true,
+          },
+        },
+        tasmiRecords: {
+          orderBy: { createdAt: "desc" },
+          take: 50,
+          select: {
+            id: true,
+            juz: true,
+            grade: true,
+            status: true,
+            examinerName: true,
+            date: true,
+            notes: true,
+            semester: true,
+          },
         },
       },
-      revisionRecords: {
-        orderBy: { date: "desc" },
-        take: 50,
-        select: {
-          id: true,
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          date: true,
-          status: true,
-          score: true,
-          notes: true,
-        },
-      },
-      targets: {
-        where: { status: TargetStatus.ACTIVE },
-        orderBy: { endDate: "asc" },
-        take: 20,
-        select: {
-          id: true,
-          type: true,
-          surah: true,
-          fromAyah: true,
-          toAyah: true,
-          startDate: true,
-          endDate: true,
-          notes: true,
-        },
-      },
-      tasmiRecords: {
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        select: {
-          id: true,
-          juz: true,
-          grade: true,
-          status: true,
-          examinerName: true,
-          date: true,
-          notes: true,
-          semester: true,
-        },
-      },
-    },
-  });
+    }),
+    check.classGroup.programType === ProgramType.ACADEMIC
+      ? prisma.meetingStatus.findMany({
+          where: {
+            studentId,
+            programType: ProgramType.ACADEMIC,
+            date: { lte: todayDate },
+          },
+          orderBy: { date: "desc" },
+          take: 50,
+          select: { id: true, date: true, status: true, note: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   if (!student) {
     return null;
   }
-
-  const meetingStatuses = check.classGroup.programType === ProgramType.ACADEMIC
-    ? await prisma.meetingStatus.findMany({
-        where: { studentId, programType: ProgramType.ACADEMIC },
-        orderBy: { date: "desc" },
-        take: 50,
-        select: { id: true, date: true, status: true, note: true },
-      })
-    : [];
 
   const hafalanRecords = student.memorizationRecords.map((record) =>
     formatRecord(record, "Hafalan", dateFormatter, timeFormatter),
@@ -464,6 +481,9 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
         dateFormatter,
       )
     : [];
+  const meetingSummary = student.classGroup.programType === ProgramType.ACADEMIC
+    ? summarizeMeetingStatuses(meetingStatuses, jakartaToday)
+    : null;
 
   const tasmiRecords = student.tasmiRecords.map((record) => ({
     id: record.id,
@@ -531,6 +551,7 @@ async function getStudentDetailDataInner(studentId: string, teacherId?: string |
     tasmiJuzSummary: formatTasmiJuzSummary(getCompletedTasmiJuzList(student.tasmiRecords)),
     recentActivity: latestActivity,
     meetingTimeline,
+    meetingSummary,
     historyRecords,
     needsReviewCount,
   };
