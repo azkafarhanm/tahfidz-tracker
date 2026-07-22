@@ -104,6 +104,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Student Detail groups Hafalan/Murojaah into a status day using the Asia/Jakarta day key.
 - Academic Student Detail derives exact-today metadata from the timeline query and active-semester status counts from a database `groupBy` bounded by the configured active Academic Year plus `getSemesterForDate()`/`getSemesterDateRange()`.
 - Student, Academic Meeting Status timeline, and four-group semester aggregation queries run concurrently; the detail cache key includes the Jakarta day to make midnight rollover immediate.
+- Meeting History groups the existing newest-first timeline in memory by month. Native disclosure sections open the newest month by default, preserve independent non-persistent UI state, and also open any month targeted by URL highlight.
 - Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
 
 ### AcademicYear and Archive System

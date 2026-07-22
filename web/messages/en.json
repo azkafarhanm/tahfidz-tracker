@@ -216,6 +216,7 @@
     "meetingStatusUnrecorded": "Not recorded",
     "meetingStatsHeading": "Active Semester",
     "meetingActivityCount": "{count, plural, one {# Activity} other {# Activities}}",
+    "meetingCount": "{count, plural, one {# Meeting} other {# Meetings}}",
     "meetingAddButton": "Record meeting",
     "meetingUpdateButton": "Edit",
     "meetingNoteLabel": "Note",

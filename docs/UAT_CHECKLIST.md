@@ -157,6 +157,12 @@ Each item has PASS / FAIL criteria for manual verification.
 - [ ] Meeting timeline activity count matches its summaries
   - PASS: activity days show the correct count and Hafalan/Murojaah rows; zero-activity days keep the existing message
   - FAIL: count and displayed activity rows disagree
+- [ ] Meeting History is grouped into independent monthly sections
+  - PASS: newest month is open, older months are closed, month headers show meeting totals, and toggling one month does not affect another
+  - FAIL: ordering/counts are incorrect or collapse behavior is coupled/persisted
+- [ ] Highlight remains visible inside a collapsed-era month
+  - PASS: saving or editing an older meeting opens its month and the existing scroll/highlight reveals the meeting
+  - FAIL: target remains hidden inside a closed month or highlight persistence changes
 
 - [x] Page loads with student name, class, avatar
   - PASS: header shows name + classSummary + InitialsAvatar

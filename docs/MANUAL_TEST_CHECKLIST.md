@@ -323,6 +323,8 @@ Expected:
 - Academic only: Meeting History with status, optional note, and same-day Hafalan/Murojaah summaries
 - Academic only: header shows today's exact status (or "Belum dicatat"), followed by active Academic Year/semester Hadir/Izin/Sakit/Alfa totals
 - Meeting entries with activity show the activity count before their Hafalan/Murojaah summaries
+- Meeting History groups entries by month; newest month starts open, older months start closed, and each month toggles independently
+- Saving/editing an older meeting opens its month so URL-driven scroll/highlight remains visible
 - Boarding only: no Meeting History section or Meeting Status action
 
 Result:

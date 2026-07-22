@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added database uniqueness and server-side Academic/ownership guards. Boarding, dashboard, reports, and Excel/PDF exports are unchanged.
 - Polished Academic Student Detail with exact-today status metadata, compact active-semester status totals, and activity counts in each meeting timeline entry.
 - Refined attendance statistics to follow the configured active Academic Year and semester, using a bounded database aggregation independent from the 50-row timeline limit.
+- Grouped Academic Meeting History by month with independently collapsible native sections; the newest month opens by default and highlighted older meetings remain revealable.
 
 ## [1.1.1] — 2026-07-14
 

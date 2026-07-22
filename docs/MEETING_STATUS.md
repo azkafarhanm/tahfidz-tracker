@@ -31,9 +31,11 @@ Academic Student Detail presents the meeting context in this order:
 
 1. A small header metadata line for **today's exact Jakarta date**. If that date has no row, it says “Belum dicatat”; it never falls back to the latest prior status.
 2. A compact `Semester Aktif` summary for Hadir, Izin, Sakit, and Alfa. Its boundary comes from the configured active Academic Year and the same active-semester resolver used by the other academic modules.
-3. Meeting History, where activity days show the activity count followed by Hafalan/Murojaah summaries, while zero-activity days remain valid and explicit.
+3. Meeting History grouped into monthly disclosure sections, where activity days show the activity count followed by compact Hafalan/Murojaah summaries, while zero-activity days remain valid and explicit.
 
 The existing Academic Meeting Status timeline query remains capped at 50 rows through today's Jakarta date and continues to supply exact-today metadata. Semester totals cannot safely reuse that capped dataset, so a separate PostgreSQL `groupBy status` query covers the active Academic Year's active-semester date range and returns at most four aggregate rows. The Student, timeline, and aggregation queries run concurrently after authorization. Boarding executes neither Meeting Status query. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
+
+Monthly grouping is an O(n) in-memory transformation of that existing timeline result and does not add a query. The newest month is open by default and earlier months are closed. Each native `<details>` section can be toggled independently without database or navigation persistence. When `highlight` or `highlights` targets an older meeting, its month is rendered open so the existing scroll/highlight workflow can still reveal it.
 
 ## Regression boundaries
 

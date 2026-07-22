@@ -216,6 +216,7 @@
     "meetingStatusUnrecorded": "غير مسجل",
     "meetingStatsHeading": "الفصل الدراسي النشط",
     "meetingActivityCount": "{count} نشاط",
+    "meetingCount": "{count} لقاء",
     "meetingAddButton": "تسجيل لقاء",
     "meetingUpdateButton": "تعديل",
     "meetingNoteLabel": "ملاحظة",

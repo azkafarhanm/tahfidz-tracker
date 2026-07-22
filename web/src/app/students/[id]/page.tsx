@@ -28,6 +28,7 @@ import ProgramBadge from "@/components/ProgramBadge";
 import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
+import { groupMeetingTimelineByMonth } from "@/lib/meeting-status";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,7 +43,12 @@ type StudentDetailPageProps = {
   params: Promise<{
     id: string;
   }>;
-  searchParams?: Promise<{ programType?: string; returnTo?: string }>;
+  searchParams?: Promise<{
+    programType?: string;
+    returnTo?: string;
+    highlight?: string;
+    highlights?: string;
+  }>;
 };
 
 function recordStatusClass(record: RecordItem) {
@@ -240,6 +246,11 @@ export default async function StudentDetailPage({
   }
 
   const meetingSummary = student.meetingSummary;
+  const meetingGroups = groupMeetingTimelineByMonth(student.meetingTimeline, locale);
+  const meetingHighlightIds = [
+    query?.highlight,
+    ...(query?.highlights?.split(",") ?? []),
+  ].filter((value): value is string => Boolean(value));
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
@@ -336,6 +347,17 @@ export default async function StudentDetailPage({
             </section>
 
             <MeetingHistorySection
+              groups={meetingGroups.map((group) => ({
+                ...group,
+                countText: t("meetingCount", { count: group.meetings.length }),
+                meetings: group.meetings.map((meeting) => ({
+                  ...meeting,
+                  activityCountText: t("meetingActivityCount", {
+                    count: meeting.activities.length,
+                  }),
+                })),
+              }))}
+              highlightIds={meetingHighlightIds}
               labels={{
                 heading: t("meetingHistoryHeading"),
                 description: t("meetingHistoryDescription"),
@@ -353,12 +375,7 @@ export default async function StudentDetailPage({
                   ALFA: t("meetingStatusALFA"),
                 },
               }}
-              meetings={student.meetingTimeline.map((meeting) => ({
-                ...meeting,
-                activityCountText: t("meetingActivityCount", {
-                  count: meeting.activities.length,
-                }),
-              }))}
+              locale={locale}
               studentId={student.id}
             />
           </>

@@ -36,6 +36,34 @@ export function buildMeetingStatusCounts(
   return counts;
 }
 
+export function groupMeetingTimelineByMonth<T extends { dateKey: string }>(
+  meetings: T[],
+  locale: string,
+) {
+  const monthFormatter = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    timeZone: "UTC",
+    year: "numeric",
+  });
+  const groups = new Map<string, { monthKey: string; label: string; meetings: T[] }>();
+
+  for (const meeting of meetings) {
+    const monthKey = meeting.dateKey.slice(0, 7);
+    const existing = groups.get(monthKey);
+    if (existing) {
+      existing.meetings.push(meeting);
+      continue;
+    }
+    groups.set(monthKey, {
+      monthKey,
+      label: monthFormatter.format(new Date(`${monthKey}-01T00:00:00.000Z`)),
+      meetings: [meeting],
+    });
+  }
+
+  return [...groups.values()];
+}
+
 type TimelineActivity = {
   id: string;
   type: "Hafalan" | "Murojaah";

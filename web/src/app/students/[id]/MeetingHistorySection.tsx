@@ -1,10 +1,14 @@
-import { BookOpen, CalendarCheck2, RotateCcw } from "lucide-react";
+import {
+  BookOpen,
+  CalendarCheck2,
+  ChevronRight,
+  RotateCcw,
+} from "lucide-react";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { badge } from "@/lib/colors";
 
 type MeetingItem = {
   id: string;
-  date: string;
   dateKey: string;
   status: "HADIR" | "IZIN" | "SAKIT" | "ALFA";
   note: string | null;
@@ -18,7 +22,14 @@ type MeetingItem = {
 
 type Props = {
   studentId: string;
-  meetings: MeetingItem[];
+  locale: string;
+  highlightIds: string[];
+  groups: {
+    monthKey: string;
+    label: string;
+    countText: string;
+    meetings: MeetingItem[];
+  }[];
   labels: {
     heading: string;
     description: string;
@@ -40,7 +51,20 @@ function statusClass(status: MeetingItem["status"]) {
   return "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200";
 }
 
-export default function MeetingHistorySection({ studentId, meetings, labels }: Props) {
+export default function MeetingHistorySection({
+  studentId,
+  locale,
+  highlightIds,
+  groups,
+  labels,
+}: Props) {
+  const shortDateFormatter = new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+  const highlighted = new Set(highlightIds);
+
   return (
     <section className="mt-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -57,64 +81,85 @@ export default function MeetingHistorySection({ studentId, meetings, labels }: P
         </WorkflowContextLink>
       </div>
 
-      <div className="mt-3 space-y-3">
-        {meetings.length > 0 ? (
-          meetings.map((meeting) => (
-            <article
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none"
-              data-highlight={meeting.id}
-              key={meeting.id}
+      <div className="mt-3 divide-y divide-slate-200 border-y border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+        {groups.length > 0 ? (
+          groups.map((group, index) => (
+            <details
+              className="group/month"
+              key={group.monthKey}
+              open={index === 0 || group.meetings.some(({ id }) => highlighted.has(id))}
             >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-slate-950 dark:text-white">{meeting.date}</p>
-                  <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClass(meeting.status)}`}>
-                    {labels.statuses[meeting.status]}
-                  </span>
-                </div>
-                <WorkflowContextLink
-                  className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-400"
-                  href={`/students/${studentId}/meeting-status?date=${meeting.dateKey}`}
-                >
-                  {labels.update}
-                </WorkflowContextLink>
-              </div>
+              <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 py-3 text-sm marker:content-none">
+                <ChevronRight
+                  aria-hidden="true"
+                  className="shrink-0 text-slate-400 transition-transform group-open/month:rotate-90"
+                  size={17}
+                  strokeWidth={2.2}
+                />
+                <span className="font-semibold text-slate-900 dark:text-white">{group.label}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">({group.countText})</span>
+              </summary>
 
-              {meeting.note ? (
-                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
-                  <span className="font-medium text-slate-700 dark:text-slate-300">{labels.note}:</span>{" "}
-                  {meeting.note}
-                </p>
-              ) : null}
-
-              <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                {meeting.activities.length > 0 ? (
-                  <>
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      {meeting.activityCountText}
-                    </p>
-                    {meeting.activities.map((activity) => (
-                      <div className="flex items-start gap-2 text-sm" key={`${activity.type}-${activity.id}`}>
-                        {activity.type === "Hafalan" ? (
-                          <BookOpen aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400" size={15} />
-                        ) : (
-                          <RotateCcw aria-hidden="true" className="mt-0.5 shrink-0 text-blue-700 dark:text-blue-400" size={15} />
-                        )}
-                        <p>
-                          <span className="font-medium">{activity.type === "Hafalan" ? labels.hafalan : labels.murojaah}</span>
-                          <span className="text-slate-500 dark:text-slate-400"> - {activity.range}</span>
+              <div className="divide-y divide-slate-100 border-t border-slate-100 pl-6 dark:divide-slate-800 dark:border-slate-800">
+                {group.meetings.map((meeting) => (
+                  <article className="py-4" data-highlight={meeting.id} key={meeting.id}>
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950 dark:text-white">
+                          {shortDateFormatter.format(new Date(`${meeting.dateKey}T00:00:00.000Z`))}
                         </p>
+                        <span className={`mt-1.5 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(meeting.status)}`}>
+                          {labels.statuses[meeting.status]}
+                        </span>
                       </div>
-                    ))}
-                  </>
-                ) : (
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{labels.noActivity}</p>
-                )}
+                      <WorkflowContextLink
+                        className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-400"
+                        href={`/students/${studentId}/meeting-status?date=${meeting.dateKey}`}
+                      >
+                        {labels.update}
+                      </WorkflowContextLink>
+                    </div>
+
+                    {meeting.note ? (
+                      <p className="mt-2 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{labels.note}:</span>{" "}
+                        {meeting.note}
+                      </p>
+                    ) : null}
+
+                    <div className="mt-3 space-y-2">
+                      {meeting.activities.length > 0 ? (
+                        <>
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            {meeting.activityCountText}
+                          </p>
+                          {meeting.activities.map((activity) => (
+                            <div className="flex items-start gap-2" key={`${activity.type}-${activity.id}`}>
+                              {activity.type === "Hafalan" ? (
+                                <BookOpen aria-hidden="true" className="mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400" size={14} />
+                              ) : (
+                                <RotateCcw aria-hidden="true" className="mt-0.5 shrink-0 text-blue-700 dark:text-blue-400" size={14} />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                                  {activity.type === "Hafalan" ? labels.hafalan : labels.murojaah}
+                                </p>
+                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">{activity.range}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{labels.noActivity}</p>
+                      )}
+                    </div>
+                  </article>
+                ))}
               </div>
-            </article>
+            </details>
           ))
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-6 text-center dark:border-slate-700 dark:bg-slate-900/70">
+          <div className="py-6 text-center">
             <CalendarCheck2 aria-hidden="true" className="mx-auto text-emerald-800 dark:text-emerald-400" size={24} />
             <p className="mt-3 text-sm font-semibold">{labels.empty}</p>
           </div>

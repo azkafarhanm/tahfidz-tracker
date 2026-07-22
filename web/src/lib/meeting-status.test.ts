@@ -4,6 +4,7 @@ import {
   buildMeetingTimeline,
   buildMeetingStatusCounts,
   getTodayMeetingStatus,
+  groupMeetingTimelineByMonth,
   parseMeetingDate,
 } from "@/lib/meeting-status";
 
@@ -88,5 +89,27 @@ describe("buildMeetingStatusCounts", () => {
     );
 
     expect(counts).toEqual({ HADIR: 22, IZIN: 2, SAKIT: 0, ALFA: 3 });
+  });
+});
+
+describe("groupMeetingTimelineByMonth", () => {
+  it("preserves newest-first month and meeting order", () => {
+    const groups = groupMeetingTimelineByMonth(
+      [
+        { id: "jul-22", dateKey: "2026-07-22" },
+        { id: "jul-20", dateKey: "2026-07-20" },
+        { id: "jun-30", dateKey: "2026-06-30" },
+      ],
+      "id-ID",
+    );
+
+    expect(groups.map(({ monthKey, meetings }) => ({
+      monthKey,
+      ids: meetings.map((meeting) => meeting.id),
+    }))).toEqual([
+      { monthKey: "2026-07", ids: ["jul-22", "jul-20"] },
+      { monthKey: "2026-06", ids: ["jun-30"] },
+    ]);
+    expect(groups[0].label).toContain("2026");
   });
 });

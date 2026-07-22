@@ -216,6 +216,7 @@
     "meetingStatusUnrecorded": "Belum dicatat",
     "meetingStatsHeading": "Semester Aktif",
     "meetingActivityCount": "{count} Aktivitas",
+    "meetingCount": "{count} Pertemuan",
     "meetingAddButton": "Catat pertemuan",
     "meetingUpdateButton": "Ubah",
     "meetingNoteLabel": "Catatan",
