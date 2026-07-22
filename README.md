@@ -131,7 +131,7 @@ Browser / PWA Client
 - Program-aware filtering via ProgramSelector (Academic / Boarding)
 - Student list with search, pagination, latest records, Tasmi' badges, and review indicators
 - Students, Formative, and Summative detail round-trips restore the originating filters, pagination, and scroll position
-- Quick Log guided record entry
+- Quick Log guided record entry; for Academic students it can create a missing status for today once, while existing status is read-only metadata and Boarding remains unchanged
 - Hafalan and murojaah create/edit/delete with surah + ayah range input
 - Tasmi' module: create/edit/delete per-juz Tasmi' records with grade and examiner
 - Formative recap generated automatically from daily records, per semester; Academic Excel uses the configured semester meeting timeline

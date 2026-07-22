@@ -45,7 +45,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Dashboard with stats, progress, motivation card, recent activity (Hafalan, Murojaah, Tasmi'), and ProgramBadge
 - ProgramSelector for dual-program teachers (auto-detect for single-program)
 - Student list with search, pagination, Tasmi' badges, inactive tabs, and optimistic count updates
-- Quick Log for fast entry
+- Quick Log for fast entry; Academic selection reads today's Meeting Status and can create a missing status before entry, while Boarding keeps the original flow
 - Create/edit/delete hafalan and murojaah
 - Tasmi' module: create/edit/delete per-juz records with grade, status, and examiner
 - Target CRUD
@@ -105,6 +105,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Academic Student Detail derives exact-today metadata from the timeline query and active-semester status counts from a database `groupBy` bounded by the configured active Academic Year plus `getSemesterForDate()`/`getSemesterDateRange()`.
 - Student, Academic Meeting Status timeline, and four-group semester aggregation queries run concurrently; the detail cache key includes the Jakarta day to make midnight rollover immediate.
 - Meeting History groups the existing newest-first timeline in memory by month. Native disclosure sections open the newest month by default, preserve independent non-persistent UI state, and also open any month targeted by URL highlight.
+- Academic Quick Log resolves today's status in one batched student-list query. A missing status is created with `create` (never `upsert`); a unique-key race returns the existing row without editing it. Newly created non-Hadir statuses suppress activity inputs, while any pre-existing status is shown as read-only metadata and leaves the normal record workflow available. Boarding performs no Meeting Status query or mutation.
 - Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
 
 ### AcademicYear and Archive System

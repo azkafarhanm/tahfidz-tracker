@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useActionState } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -21,15 +27,18 @@ import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import type { RecentActivityItem } from "@/lib/quick-log";
+import { shouldAllowQuickLogRecordEntry } from "@/lib/quick-log-meeting-status";
 import { badge, backLink } from "@/lib/colors";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { matchesSearchText } from "@/lib/search";
+import { MeetingAttendanceStatus } from "@/generated/prisma-next/enums";
 
 type Student = {
   id: string;
   fullName: string;
   classSummary: string;
+  meetingStatusToday: MeetingAttendanceStatus | null;
 };
 
 type ActionResult =
@@ -38,11 +47,32 @@ type ActionResult =
 
 type GuidedQuickLogProps = {
   action: (formData: FormData) => Promise<ActionResult>;
+  meetingStatusAction: (
+    studentId: string,
+    status: string,
+  ) => Promise<MeetingStatusActionResult>;
+  meetingStatusEnabled: boolean;
   students: Student[];
   recentItems: RecentActivityItem[];
   programBadge?: React.ReactNode;
   programSelector?: React.ReactNode;
 };
+
+type MeetingStatusActionResult =
+  | {
+      ok: true;
+      created: boolean;
+      status: MeetingAttendanceStatus;
+      success: string;
+    }
+  | { ok: false; error: string };
+
+function meetingStatusDotClass(status: MeetingAttendanceStatus) {
+  if (status === MeetingAttendanceStatus.HADIR) return "bg-emerald-500";
+  if (status === MeetingAttendanceStatus.IZIN) return "bg-yellow-400";
+  if (status === MeetingAttendanceStatus.SAKIT) return "bg-orange-500";
+  return "bg-red-500";
+}
 
 function formatRelativeTime(date: Date, now: Date): string {
   const diffMs = now.getTime() - date.getTime();
@@ -63,6 +93,8 @@ function formatAyahRange(from: number, to: number): string {
 
 export default function GuidedQuickLog({
   action,
+  meetingStatusAction,
+  meetingStatusEnabled,
   students,
   recentItems,
   programBadge,
@@ -77,6 +109,10 @@ export default function GuidedQuickLog({
     { value: "HAFALAN", label: t("typeHafalan") },
     { value: "MUROJAAH", label: t("typeMurojaah") },
   ];
+  const meetingStatusOptions = Object.values(MeetingAttendanceStatus).map((status) => ({
+    status,
+    label: t(`meetingStatus${status}`),
+  }));
 
   const [result, submitAction, isPending] = useActionState(
     async (_prev: ActionResult, formData: FormData) => action(formData),
@@ -84,6 +120,12 @@ export default function GuidedQuickLog({
   );
   const [query, setQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [meetingStatus, setMeetingStatus] = useState<MeetingAttendanceStatus | null>(null);
+  const [meetingStatusOverrides, setMeetingStatusOverrides] = useState<
+    Record<string, MeetingAttendanceStatus>
+  >({});
+  const [recordEntryAllowed, setRecordEntryAllowed] = useState(true);
+  const [isMeetingStatusPending, startMeetingStatusTransition] = useTransition();
   const [showDropdown, setShowDropdown] = useState(false);
 
   const [recordType, setRecordType] = useState("HAFALAN");
@@ -180,19 +222,28 @@ export default function GuidedQuickLog({
     Number(toAyah) >= Number(fromAyah);
 
   function handleSelectStudent(student: Student) {
+    const currentMeetingStatus = meetingStatusOverrides[student.id] ?? student.meetingStatusToday;
     setSelectedStudent(student);
+    setMeetingStatus(currentMeetingStatus);
+    setRecordEntryAllowed(
+      shouldAllowQuickLogRecordEntry(meetingStatusEnabled, currentMeetingStatus),
+    );
     setQuery("");
     setShowDropdown(false);
   }
 
   function handleClearStudent() {
     setSelectedStudent(null);
+    setMeetingStatus(null);
+    setRecordEntryAllowed(true);
     setQuery("");
   }
 
   function handleReset() {
     formRef.current?.reset();
     setSelectedStudent(null);
+    setMeetingStatus(null);
+    setRecordEntryAllowed(true);
     setQuery("");
     setShowDropdown(false);
     setRecordType("HAFALAN");
@@ -201,6 +252,26 @@ export default function GuidedQuickLog({
     setNotes("");
     setSurahInputKey((value) => value + 1);
     setAssessmentInputKey((value) => value + 1);
+  }
+
+  function handleMeetingStatus(status: MeetingAttendanceStatus) {
+    if (!selectedStudent || isMeetingStatusPending) return;
+    startMeetingStatusTransition(async () => {
+      const meetingResult = await meetingStatusAction(selectedStudent.id, status);
+      if (!meetingResult.ok) {
+        toast.error(meetingResult.error);
+        return;
+      }
+      setMeetingStatus(meetingResult.status);
+      setMeetingStatusOverrides((current) => ({
+        ...current,
+        [selectedStudent.id]: meetingResult.status,
+      }));
+      setRecordEntryAllowed(
+        shouldAllowQuickLogRecordEntry(true, meetingResult.status, meetingResult.created),
+      );
+      toast.success(meetingResult.success);
+    });
   }
 
   const now = new Date();
@@ -340,6 +411,44 @@ export default function GuidedQuickLog({
 
           {selectedStudent ? (
             <>
+              {meetingStatusEnabled ? (
+                <section className="border-y border-slate-200 px-1 py-3 dark:border-slate-800">
+                  {meetingStatus ? (
+                    <p className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                      <span
+                        aria-hidden="true"
+                        className={`h-2.5 w-2.5 rounded-full ${meetingStatusDotClass(meetingStatus)}`}
+                      />
+                      <span>{t("meetingTodayLabel")}:</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">
+                        {t(`meetingStatus${meetingStatus}`)}
+                      </span>
+                    </p>
+                  ) : (
+                    <>
+                      <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                        {t("meetingStatusSection")}
+                      </h2>
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {meetingStatusOptions.map((option) => (
+                          <button
+                            className="min-h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-emerald-600 dark:hover:bg-emerald-950"
+                            disabled={isMeetingStatusPending}
+                            key={option.status}
+                            onClick={() => handleMeetingStatus(option.status)}
+                            type="button"
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </section>
+              ) : null}
+
+              {recordEntryAllowed ? (
+                <>
               <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
                 <h2 className="font-semibold">{t("recordTypeSection")}</h2>
                 <div className="mt-4 grid grid-cols-2 gap-2">
@@ -479,6 +588,14 @@ export default function GuidedQuickLog({
                   isPending={isPending}
                 />
               </div>
+                </>
+              ) : (
+                <p className="rounded-xl bg-slate-100 px-4 py-3 text-center text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-400">
+                  {meetingStatus
+                    ? t("meetingNoActivityEntry")
+                    : t("meetingChooseToContinue")}
+                </p>
+              )}
             </>
           ) : (
             <div className="mt-2 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-5 text-center text-sm text-slate-500 dark:border-slate-600 dark:bg-slate-900/70 dark:text-slate-400">

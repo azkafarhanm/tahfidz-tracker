@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
-import { RecordStatus } from "@/generated/prisma-next/enums";
+import {
+  MeetingAttendanceStatus,
+  ProgramType,
+  RecordStatus,
+} from "@/generated/prisma-next/enums";
+import { Prisma } from "@/generated/prisma-next/client";
 import {
   QuickLogRecordType,
   quickLogTypeLabels,
@@ -19,9 +24,12 @@ import {
   readInt,
   parseRecordDateTime,
 } from "@/lib/form-helpers";
+import { getJakartaDayKey } from "@/lib/jakarta-date";
+import { parseMeetingDate } from "@/lib/meeting-status";
 
 const validStatuses = new Set<string>(Object.values(RecordStatus));
 const validTypes = new Set<string>(Object.keys(quickLogTypeLabels));
+const validMeetingStatuses = new Set<string>(Object.values(MeetingAttendanceStatus));
 
 class ValidationError extends Error {
   constructor(message: string) {
@@ -117,4 +125,79 @@ export async function createGuidedRecord(formData: FormData) {
   revalidatePath(`/formative/${student.id}`);
   invalidateStudentRelatedCaches(student.id);
   return { ok: true as const, recordId: record.id, success: t("recordSaved") };
+}
+
+export async function createQuickLogMeetingStatus(
+  studentId: string,
+  statusValue: string,
+) {
+  const { session } = await requireSessionScope();
+  const t = await getTranslations("QuickLog");
+
+  if (!validMeetingStatuses.has(statusValue)) {
+    return { ok: false as const, error: t("meetingStatusInvalid") };
+  }
+
+  const student = await prisma.student.findFirst({
+    where: { id: studentId, isActive: true },
+    select: {
+      id: true,
+      teacherId: true,
+      classGroup: { select: { programType: true } },
+    },
+  });
+
+  if (!student) return { ok: false as const, error: t("meetingStudentUnavailable") };
+  if (session.user.role !== "ADMIN" && student.teacherId !== session.user.teacherId) {
+    return { ok: false as const, error: t("meetingNoPermission") };
+  }
+  if (student.classGroup.programType !== ProgramType.ACADEMIC) {
+    return { ok: false as const, error: t("meetingAcademicOnly") };
+  }
+
+  const date = parseMeetingDate(getJakartaDayKey(new Date()))!;
+  const status = statusValue as MeetingAttendanceStatus;
+
+  try {
+    await prisma.meetingStatus.create({
+      data: {
+        studentId: student.id,
+        teacherId: student.teacherId,
+        programType: ProgramType.ACADEMIC,
+        date,
+        status,
+      },
+    });
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+      throw error;
+    }
+    const existing = await prisma.meetingStatus.findUnique({
+      where: {
+        studentId_programType_date: {
+          studentId: student.id,
+          programType: ProgramType.ACADEMIC,
+          date,
+        },
+      },
+      select: { status: true },
+    });
+    if (!existing) throw error;
+    return {
+      ok: true as const,
+      created: false as const,
+      status: existing.status,
+      success: t("meetingStatusAlreadyRecorded"),
+    };
+  }
+
+  revalidatePath(`/students/${student.id}`);
+  revalidatePath("/quick-log");
+  invalidateStudentRelatedCaches(student.id);
+  return {
+    ok: true as const,
+    created: true as const,
+    status,
+    success: t("meetingStatusSaved"),
+  };
 }

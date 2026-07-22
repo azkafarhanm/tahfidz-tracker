@@ -392,6 +392,15 @@ Each item has PASS / FAIL criteria for manual verification.
   - PASS: shows "noStudentFound" with query
   - FAIL: blank dropdown
   - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [ ] Academic student without today's Meeting Status gets a create-once choice
+  - PASS: Hadir reveals normal entry; newly saved Izin/Sakit/Alfa hides activity inputs; a duplicate/racing save returns the existing status without changing it
+  - FAIL: the status is duplicated/overwritten, or non-Hadir activity inputs remain available immediately after creation
+- [ ] Existing Academic Meeting Status is read-only metadata in Quick Log
+  - PASS: no status choices appear, the correct status is shown, and normal Quick Log entry remains available; editing remains on Student Detail
+  - FAIL: Quick Log offers status editing or blocks the existing-status workflow
+- [ ] Boarding Quick Log remains unchanged
+  - PASS: no Meeting Status selection appears and record entry works as before
+  - FAIL: Boarding displays or requires Meeting Status
 ## 13. Formative Recap (`/formative`)
 
 - [x] Page loads with class-level tabs (7/8/9) + semester tabs

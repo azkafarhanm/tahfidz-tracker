@@ -1,5 +1,5 @@
 import { getQuickLogStudents, getQuickLogRecentActivity } from "@/lib/quick-log";
-import { createGuidedRecord } from "./actions";
+import { createGuidedRecord, createQuickLogMeetingStatus } from "./actions";
 import GuidedQuickLog from "./GuidedQuickLog";
 import AppShell from "@/components/AppShell";
 import ProgramSelector from "@/components/ProgramSelector";
@@ -47,6 +47,8 @@ export default async function QuickLogPage({ searchParams }: QuickLogPageProps) 
     <AppShell currentPath="/quick-log" userName={userName} isAdmin={isAdmin}>
       <GuidedQuickLog
         action={createGuidedRecord}
+        meetingStatusAction={createQuickLogMeetingStatus}
+        meetingStatusEnabled={programType === ProgramType.ACADEMIC}
         students={students}
         recentItems={recentItems}
         programBadge={<ProgramBadge programType={programType} />}

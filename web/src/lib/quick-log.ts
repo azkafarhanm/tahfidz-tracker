@@ -1,4 +1,8 @@
-import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
+import {
+  MeetingAttendanceStatus,
+  ProgramType,
+  RecordStatus,
+} from "@/generated/prisma-next/enums";
 import { cached } from "@/lib/cache";
 import { prisma } from "@/lib/prisma";
 import { getActiveAcademicYear } from "@/lib/academic-year";
@@ -7,6 +11,8 @@ import {
   statusLabels,
 } from "@/lib/format";
 import { findSurah } from "@/lib/surahs";
+import { getJakartaDayKey } from "@/lib/jakarta-date";
+import { parseMeetingDate } from "@/lib/meeting-status";
 
 export type QuickLogRecordType = "HAFALAN" | "MUROJAAH";
 
@@ -14,6 +20,7 @@ export type QuickLogStudent = {
   id: string;
   fullName: string;
   classSummary: string;
+  meetingStatusToday: MeetingAttendanceStatus | null;
 };
 
 export type RecentActivityItem = {
@@ -349,36 +356,58 @@ function extractRange(value: string) {
 }
 
 export async function getQuickLogStudents(teacherId?: string | null, programType?: ProgramType) {
+  const jakartaToday = getJakartaDayKey(new Date());
   return cached(
-    `quick-log-students:${scopeKey(teacherId)}:${programType ?? "all"}`,
+    `quick-log-students:${scopeKey(teacherId)}:${programType ?? "all"}:${jakartaToday}`,
     QUICK_LOG_CACHE_TTL_MS,
-    () => getQuickLogStudentsInner(teacherId, programType),
+    () => getQuickLogStudentsInner(teacherId, programType, jakartaToday),
   );
 }
 
-async function getQuickLogStudentsInner(teacherId?: string | null, programType?: ProgramType) {
+async function getQuickLogStudentsInner(
+  teacherId?: string | null,
+  programType?: ProgramType,
+  jakartaToday = getJakartaDayKey(new Date()),
+) {
   const academicYear = await getActiveAcademicYear();
-  const students = await prisma.student.findMany({
-    where: {
-      isActive: true,
-      classGroup: { academicYear, ...(programType ? { programType } : {}) },
-      ...(teacherId ? { teacherId } : {}),
-    },
-    include: {
-      classGroup: {
-        select: { name: true, level: true, programType: true, grade: true },
+  const studentWhere = {
+    isActive: true,
+    classGroup: { academicYear, ...(programType ? { programType } : {}) },
+    ...(teacherId ? { teacherId } : {}),
+  };
+  const [students, todayStatuses] = await Promise.all([
+    prisma.student.findMany({
+      where: studentWhere,
+      include: {
+        classGroup: {
+          select: { name: true, level: true, programType: true, grade: true },
+        },
+        academicClass: {
+          select: { name: true },
+        },
       },
-      academicClass: {
-        select: { name: true },
-      },
-    },
-    orderBy: { fullName: "asc" },
-  });
+      orderBy: { fullName: "asc" },
+    }),
+    programType === ProgramType.ACADEMIC
+      ? prisma.meetingStatus.findMany({
+          where: {
+            date: parseMeetingDate(jakartaToday)!,
+            programType: ProgramType.ACADEMIC,
+            student: studentWhere,
+          },
+          select: { studentId: true, status: true },
+        })
+      : Promise.resolve([]),
+  ]);
+  const statusByStudent = new Map(
+    todayStatuses.map(({ studentId, status }) => [studentId, status]),
+  );
 
   return students.map((student) => ({
     id: student.id,
     fullName: student.fullName,
     classSummary: formatStudentClassSummary(student).classSummary,
+    meetingStatusToday: statusByStudent.get(student.id) ?? null,
   }));
 }
 

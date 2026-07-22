@@ -843,17 +843,22 @@ Route: `/quick-log`
 Steps:
 1. Click "Catat Cepat" in sidebar
 2. Search for a student in combobox
-3. Select student
-4. Toggle Hafalan/Murojaah
+3. Select an Academic student without a Meeting Status today
+4. Select Hadir, then toggle Hafalan/Murojaah
 5. Select surah + ayah range
 6. Select status (LANCAR/CUKUP/PERLU_MUROJAAH)
 7. Enter score (optional)
 8. Add notes (optional)
 9. Click submit button
+10. Repeat with a student whose Meeting Status already exists
+11. Repeat with a new Izin/Sakit/Alfa status and with a Boarding student
 
 Expected:
 - Combobox filters students as you type
-- Form sections appear after student selection
+- Academic students without today's status see the compact create-once choices
+- Newly created Hadir reveals the record form; newly created Izin/Sakit/Alfa hides activity inputs
+- Existing Academic status appears only as metadata and leaves normal entry available
+- Boarding shows no Meeting Status step and behaves as before
 - Submit creates record
 - Success toast appears
 - Form resets completely

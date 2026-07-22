@@ -1,4 +1,4 @@
-# Academic Meeting Status — Phase 1
+# Academic Meeting Status
 
 ## Purpose and boundary
 
@@ -36,6 +36,12 @@ Academic Student Detail presents the meeting context in this order:
 The existing Academic Meeting Status timeline query remains capped at 50 rows through today's Jakarta date and continues to supply exact-today metadata. Semester totals cannot safely reuse that capped dataset, so a separate PostgreSQL `groupBy status` query covers the active Academic Year's active-semester date range and returns at most four aggregate rows. The Student, timeline, and aggregation queries run concurrently after authorization. Boarding executes neither Meeting Status query. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
 
 Monthly grouping is an O(n) in-memory transformation of that existing timeline result and does not add a query. The newest month is open by default and earlier months are closed. Each native `<details>` section can be toggled independently without database or navigation persistence. When `highlight` or `highlights` targets an older meeting, its month is rendered open so the existing scroll/highlight workflow can still reveal it.
+
+## Quick Log integration
+
+Academic Quick Log includes today's Meeting Status in its existing student-list payload. The status lookup is one batched query for the Jakarta date, runs in parallel with the student query, and is skipped entirely for Boarding. Selecting an Academic student with no status shows a compact create-once choice. `HADIR` continues into normal record entry; a newly created `IZIN`, `SAKIT`, or `ALFA` suppresses Hafalan/Murojaah inputs for that interaction.
+
+If today's status already exists, Quick Log shows read-only metadata and retains its normal record-entry behavior. Quick Log never edits a status; Student Detail remains the source of truth for changes. The create action uses the database unique key and handles a concurrent `P2002` by returning the existing row without overwriting it, so duplicate submissions cannot create or mutate a second status.
 
 ## Regression boundaries
 
