@@ -30,10 +30,10 @@ The create/edit page validates active-student scope, teacher ownership (or admin
 Academic Student Detail presents the meeting context in this order:
 
 1. A small header metadata line for **today's exact Jakarta date**. If that date has no row, it says “Belum dicatat”; it never falls back to the latest prior status.
-2. A compact `30 Hari Terakhir` summary for Hadir, Izin, Sakit, and Alfa. The inclusive rolling window is today plus the preceding 29 Jakarta calendar days.
+2. A compact `Semester Aktif` summary for Hadir, Izin, Sakit, and Alfa. Its boundary comes from the configured active Academic Year and the same active-semester resolver used by the other academic modules.
 3. Meeting History, where activity days show the activity count followed by Hafalan/Murojaah summaries, while zero-activity days remain valid and explicit.
 
-The existing Academic Meeting Status query returns at most 50 rows through today's Jakarta date. Because the database permits only one row per student/day, those rows necessarily cover the complete rolling 30-day window even if future-dated rows exist. The today metadata and statistics are derived from that same result without another query. The Student and Academic Meeting Status queries run concurrently after authorization. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
+The existing Academic Meeting Status timeline query remains capped at 50 rows through today's Jakarta date and continues to supply exact-today metadata. Semester totals cannot safely reuse that capped dataset, so a separate PostgreSQL `groupBy status` query covers the active Academic Year's active-semester date range and returns at most four aggregate rows. The Student, timeline, and aggregation queries run concurrently after authorization. Boarding executes neither Meeting Status query. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
 
 ## Regression boundaries
 

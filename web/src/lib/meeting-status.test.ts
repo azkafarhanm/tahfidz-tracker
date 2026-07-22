@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { MeetingAttendanceStatus } from "@/generated/prisma-next/enums";
 import {
   buildMeetingTimeline,
+  buildMeetingStatusCounts,
+  getTodayMeetingStatus,
   parseMeetingDate,
-  summarizeMeetingStatuses,
 } from "@/lib/meeting-status";
 
 describe("parseMeetingDate", () => {
@@ -60,9 +61,9 @@ describe("buildMeetingTimeline", () => {
   });
 });
 
-describe("summarizeMeetingStatuses", () => {
+describe("getTodayMeetingStatus", () => {
   it("uses today's exact date instead of the latest prior status", () => {
-    const summary = summarizeMeetingStatuses(
+    const todayStatus = getTodayMeetingStatus(
       [
         {
           date: new Date("2026-07-21T00:00:00.000Z"),
@@ -72,23 +73,20 @@ describe("summarizeMeetingStatuses", () => {
       "2026-07-22",
     );
 
-    expect(summary.todayStatus).toBeNull();
-    expect(summary.counts.HADIR).toBe(1);
+    expect(todayStatus).toBeNull();
   });
+});
 
-  it("counts only the inclusive rolling 30-day window", () => {
-    const summary = summarizeMeetingStatuses(
+describe("buildMeetingStatusCounts", () => {
+  it("maps grouped semester totals and fills absent statuses with zero", () => {
+    const counts = buildMeetingStatusCounts(
       [
-        { date: new Date("2026-07-22T00:00:00.000Z"), status: MeetingAttendanceStatus.SAKIT },
-        { date: new Date("2026-06-23T00:00:00.000Z"), status: MeetingAttendanceStatus.IZIN },
-        { date: new Date("2026-06-22T00:00:00.000Z"), status: MeetingAttendanceStatus.ALFA },
-        { date: new Date("2026-07-23T00:00:00.000Z"), status: MeetingAttendanceStatus.HADIR },
+        { status: MeetingAttendanceStatus.HADIR, _count: { _all: 22 } },
+        { status: MeetingAttendanceStatus.IZIN, _count: { _all: 2 } },
+        { status: MeetingAttendanceStatus.ALFA, _count: { _all: 3 } },
       ],
-      "2026-07-22",
     );
 
-    expect(summary.todayStatus).toBe(MeetingAttendanceStatus.SAKIT);
-    expect(summary.counts).toEqual({ HADIR: 0, IZIN: 1, SAKIT: 1, ALFA: 0 });
-    expect(summary.rollingStartKey).toBe("2026-06-23");
+    expect(counts).toEqual({ HADIR: 22, IZIN: 2, SAKIT: 0, ALFA: 3 });
   });
 });

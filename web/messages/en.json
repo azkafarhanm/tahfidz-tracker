@@ -214,7 +214,7 @@
     "meetingHistoryDescription": "Daily tahfidz meeting context for the Academic Program.",
     "meetingTodayLabel": "Today's Status",
     "meetingStatusUnrecorded": "Not recorded",
-    "meetingStatsHeading": "Last 30 Days",
+    "meetingStatsHeading": "Active Semester",
     "meetingActivityCount": "{count, plural, one {# Activity} other {# Activities}}",
     "meetingAddButton": "Record meeting",
     "meetingUpdateButton": "Edit",

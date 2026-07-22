@@ -5,7 +5,11 @@ import {
   TargetStatus,
   TargetType,
 } from "@/generated/prisma-next/enums";
-import { getActiveAcademicYear } from "@/lib/academic-year";
+import {
+  getActiveAcademicYear,
+  getSemesterDateRange,
+  getSemesterForDate,
+} from "@/lib/academic-year";
 import { computeTargetCoverage } from "@/lib/target-progress";
 import { cached } from "@/lib/cache";
 import { prisma, withRetry } from "@/lib/prisma";
@@ -21,8 +25,9 @@ import { tasmiGradeLabels, tasmiStatusLabel, formatTasmiJuzSummary, getHighestCo
 import { normalizeSearchText } from "@/lib/search";
 import {
   buildMeetingTimeline,
+  buildMeetingStatusCounts,
+  getTodayMeetingStatus,
   parseMeetingDate,
-  summarizeMeetingStatuses,
 } from "@/lib/meeting-status";
 import { getJakartaDayKey } from "@/lib/jakarta-date";
 
@@ -344,10 +349,13 @@ async function getStudentDetailDataInner(
     return null;
   }
 
+  const activeAcademicYear = teacherId || check.classGroup.programType === ProgramType.ACADEMIC
+    ? await getActiveAcademicYear()
+    : check.classGroup.academicYear;
+
   // Verify student belongs to active academic year (teacher access only)
   if (teacherId) {
-    const activeYear = await getActiveAcademicYear();
-    if (check.classGroup.academicYear !== activeYear) {
+    if (check.classGroup.academicYear !== activeAcademicYear) {
       return null;
     }
   }
@@ -365,7 +373,20 @@ async function getStudentDetailDataInner(
     } as const;
   }
 
-  const [student, meetingStatuses] = await Promise.all([
+  const activeSemester = getSemesterForDate(todayDate);
+  const semesterRange = getSemesterDateRange(activeAcademicYear, activeSemester);
+  const semesterStart = new Date(Date.UTC(
+    semesterRange.start.getFullYear(),
+    semesterRange.start.getMonth(),
+    semesterRange.start.getDate(),
+  ));
+  const semesterEnd = new Date(Date.UTC(
+    semesterRange.end.getFullYear(),
+    semesterRange.end.getMonth(),
+    semesterRange.end.getDate(),
+  ));
+
+  const [student, meetingStatuses, meetingStatusGroups] = await Promise.all([
     prisma.student.findUnique({
       where: {
         id: studentId,
@@ -448,6 +469,17 @@ async function getStudentDetailDataInner(
           select: { id: true, date: true, status: true, note: true },
         })
       : Promise.resolve([]),
+    check.classGroup.programType === ProgramType.ACADEMIC
+      ? prisma.meetingStatus.groupBy({
+          by: ["status"],
+          where: {
+            studentId,
+            programType: ProgramType.ACADEMIC,
+            date: { gte: semesterStart, lte: semesterEnd },
+          },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   if (!student) {
@@ -482,7 +514,10 @@ async function getStudentDetailDataInner(
       )
     : [];
   const meetingSummary = student.classGroup.programType === ProgramType.ACADEMIC
-    ? summarizeMeetingStatuses(meetingStatuses, jakartaToday)
+    ? {
+        todayStatus: getTodayMeetingStatus(meetingStatuses, jakartaToday),
+        counts: buildMeetingStatusCounts(meetingStatusGroups),
+      }
     : null;
 
   const tasmiRecords = student.tasmiRecords.map((record) => ({

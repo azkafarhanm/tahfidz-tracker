@@ -139,7 +139,7 @@ Browser / PWA Client
 - Active targets with cancel/complete actions
 - Student detail with history, targets, Tasmi' summary, and exports (Excel + PDF)
 - Academic Student Detail includes Meeting History; one optional-note status per day can exist even with no Hafalan/Murojaah activity
-- Academic Student Detail shows lightweight today's-status metadata, rolling 30-day attendance counts, and per-meeting activity totals
+- Academic Student Detail shows lightweight today's-status metadata, active Academic Year/semester attendance counts, and per-meeting activity totals
 - Teacher reports with program-specific Excel/PDF layouts and context-aware back navigation
 
 ### Admin workflow

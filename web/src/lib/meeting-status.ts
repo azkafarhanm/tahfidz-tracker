@@ -9,36 +9,31 @@ export function parseMeetingDate(value: string) {
     : date;
 }
 
-type MeetingStatusSummaryInput = {
+type MeetingStatusTodayInput = {
   date: Date;
   status: MeetingAttendanceStatus;
 };
 
-export function summarizeMeetingStatuses(
-  statuses: MeetingStatusSummaryInput[],
+export function getTodayMeetingStatus(
+  statuses: MeetingStatusTodayInput[],
   todayKey = getJakartaDayKey(new Date()),
 ) {
-  const today = parseMeetingDate(todayKey);
-  if (!today) throw new Error("Invalid Jakarta day key");
+  return statuses.find(
+    (meeting) => meeting.date.toISOString().slice(0, 10) === todayKey,
+  )?.status ?? null;
+}
 
-  const rollingStart = new Date(today);
-  rollingStart.setUTCDate(rollingStart.getUTCDate() - 29);
-  const rollingStartKey = rollingStart.toISOString().slice(0, 10);
+export function buildMeetingStatusCounts(
+  groups: { status: MeetingAttendanceStatus; _count: { _all: number } }[],
+) {
   const counts: Record<MeetingAttendanceStatus, number> = {
     [MeetingAttendanceStatus.HADIR]: 0,
     [MeetingAttendanceStatus.IZIN]: 0,
     [MeetingAttendanceStatus.SAKIT]: 0,
     [MeetingAttendanceStatus.ALFA]: 0,
   };
-  let todayStatus: MeetingAttendanceStatus | null = null;
-
-  for (const meeting of statuses) {
-    const day = meeting.date.toISOString().slice(0, 10);
-    if (day === todayKey) todayStatus = meeting.status;
-    if (day >= rollingStartKey && day <= todayKey) counts[meeting.status] += 1;
-  }
-
-  return { todayStatus, counts, rollingStartKey, todayKey };
+  for (const group of groups) counts[group.status] = group._count._all;
+  return counts;
 }
 
 type TimelineActivity = {
