@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improved — Surah Picker Toggle
+
+- The shared Surah input trigger now toggles its result list open and closed on
+  repeated clicks or taps. Typing, keyboard navigation, option selection, and
+  Smart Default behavior are unchanged.
+
+### Fixed — Surah Picker Native Scroll Chaining
+
+- Removed manual touch and wheel interception from the shared Surah result list.
+  Android Chrome/PWA can now natively chain the same gesture to the page at both
+  the top and bottom list boundaries without changing one-time initial
+  positioning, Smart Default, or filtering.
+
 ### Fixed — Responsive Layout Hardening
 
 - Hardened shared badges, chips, statistics, summary cards, and action controls so

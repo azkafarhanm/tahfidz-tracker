@@ -18,16 +18,26 @@ is marked with a check, becomes the keyboard-active option, and is scrolled into
 the center of the list. Typing starts the existing fuzzy name/number filtering;
 choosing an option commits it and closes the list.
 
+Clicking or tapping the input trigger toggles the open state: closed to open,
+then open to closed. This applies only to that trigger; focus, text entry,
+keyboard navigation, and option selection retain their existing behavior.
+
 Initial positioning is a one-shot operation tied only to opening the dropdown.
 After that operation, hover and highlighted-option changes never write
-`scrollTop`. Mouse wheel, trackpad, and touch gestures therefore retain native
-control of the list, including normal scroll chaining to the page at its top and
-bottom boundaries.
+`scrollTop`.
+
+The open list uses native vertical overflow and scroll chaining only. Its
+`touch-action: pan-y`, `overflow-y: auto`, and `overscroll-behavior-y: auto`
+allow Android Chrome/PWA to keep a gesture in the list while it can scroll and
+continue the same gesture in the page after either list boundary. There are no
+touch, pointer, or wheel handlers that call `preventDefault()` or manually
+write `scrollTop`, so neither direction can be trapped after the browser has
+chosen the list as the scroll owner.
 
 The visible input retains its original `name`, required state, callback, and
 free-text behavior, so server actions, validation, Smart Default, and stored
-data are unchanged. The mobile list continues to use native touch panning,
-momentum scrolling, and boundary scroll chaining.
+data are unchanged. The mobile list keeps touch panning, momentum, and boundary
+scroll chaining.
 
 ## Regression boundaries
 
@@ -36,6 +46,10 @@ momentum scrolling, and boundary scroll chaining.
   program, record type, validation, or persistence behavior.
 - Keyboard Arrow Up/Down, Enter, Escape, outside-click close, and mouse hover
   continue to use the highlighted option independently from the selected item.
+- Input-trigger clicks and taps only toggle the open state; they do not change
+  filtering, selection, Juz defaults, validation, or persistence.
 - Do not attach list positioning to highlight, hover, query, wheel, or touch
   changes. A new positioning request may only be armed by opening a closed
   dropdown.
+- Do not add touch, pointer, or wheel handlers that prevent default scrolling
+  on the list; doing so can break native chaining mid-gesture at a boundary.
