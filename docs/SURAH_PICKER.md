@@ -21,6 +21,9 @@ choosing an option commits it and closes the list.
 Clicking or tapping the input trigger toggles the open state: closed to open,
 then open to closed. This applies only to that trigger; focus, text entry,
 keyboard navigation, and option selection retain their existing behavior.
+Pointer-origin focus defers opening to the matching trigger click, avoiding a
+focus-open followed by click-close in the same interaction. Keyboard and
+programmatic focus continue to open the picker directly.
 
 Initial positioning is a one-shot operation tied only to opening the dropdown.
 After that operation, hover and highlighted-option changes never write

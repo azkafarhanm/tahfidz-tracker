@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The shared Surah input trigger now toggles its result list open and closed on
   repeated clicks or taps. Typing, keyboard navigation, option selection, and
   Smart Default behavior are unchanged.
+- The first click or tap now opens the result list in the same interaction as
+  input focus instead of requiring a second trigger interaction.
 
 ### Fixed — Surah Picker Native Scroll Chaining
 

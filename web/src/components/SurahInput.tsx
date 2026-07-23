@@ -46,6 +46,7 @@ export default function SurahInput({
     getSelectedSurahIndex(options, defaultValue ?? ""),
   );
   const justSelected = useRef(false);
+  const isPointerFocus = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -120,6 +121,8 @@ export default function SurahInput({
   }
 
   function toggleDropdown() {
+    isPointerFocus.current = false;
+
     if (isOpen) {
       setIsOpen(false);
       return;
@@ -151,7 +154,7 @@ export default function SurahInput({
           setIsOpen(true);
         }}
         onFocus={() => {
-          if (!justSelected.current) {
+          if (!justSelected.current && !isPointerFocus.current) {
             openDropdown();
           }
         }}
@@ -173,6 +176,12 @@ export default function SurahInput({
           }
         }}
         placeholder={placeholder ?? t("placeholder")}
+        onPointerCancel={() => {
+          isPointerFocus.current = false;
+        }}
+        onPointerDown={(event) => {
+          isPointerFocus.current = event.button === 0;
+        }}
         ref={inputRef}
         required={required}
         role="combobox"
