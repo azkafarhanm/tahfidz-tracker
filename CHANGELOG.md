@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Academic Meeting History now starts fully collapsed and remembers each student's independently opened/closed months for the current browser session; highlighted meetings remain revealable.
 - Hafalan and Murojaah create forms now prefill only Juz and Surah from the student's latest same-type record, with a same-type session preference fallback when no record exists. Edit forms retain their current material and also update the session preference.
 - Surah picker results use native touch panning and momentum scrolling so mobile gestures remain with the list until its scroll boundary.
+- Surah pickers now open the complete current-Juz list around the checked selection instead of filtering by a Smart Default or existing value; filtering begins only when the teacher types.
 
 ### Added — Academic Meeting Status
 

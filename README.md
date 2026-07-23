@@ -132,7 +132,7 @@ Browser / PWA Client
 - Student list with search, pagination, latest records, Tasmi' badges, and review indicators
 - Students, Formative, and Summative detail round-trips restore the originating filters, pagination, and scroll position
 - Quick Log guided record entry; for Academic students it can create a missing status for today once, while existing status is read-only metadata and Boarding remains unchanged
-- Hafalan and murojaah create/edit/delete with mobile-friendly Surah scrolling and same-type latest-material smart defaults for Juz + Surah
+- Hafalan and murojaah create/edit/delete with a natural full-list Surah picker, mobile-friendly scrolling, and same-type latest-material smart defaults for Juz + Surah
 - Tasmi' module: create/edit/delete per-juz Tasmi' records with grade and examiner
 - Formative recap generated automatically from daily records, per semester; Academic Excel uses the configured semester meeting timeline
 - Curriculum-guided bulk summative assessment with Academic/Boarding target rules and multi-row highlight after save
@@ -438,6 +438,7 @@ For rollback procedures, see [`docs/ROLLBACK.md`](docs/ROLLBACK.md).
 | [`docs/PWA_BUGS.md`](docs/PWA_BUGS.md) | PWA bug inventory and severity |
 | [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) | PWA release decision checklist |
 | [`docs/PERSISTENCE_ARCHITECTURE.md`](docs/PERSISTENCE_ARCHITECTURE.md) | Navigation context and scroll persistence design |
+| [`docs/SURAH_PICKER.md`](docs/SURAH_PICKER.md) | Shared Surah picker state, search, selection, and scrolling behavior |
 | [`docs/WORKFLOW_PERSISTENCE_PHASE_3B_AUDIT.md`](docs/WORKFLOW_PERSISTENCE_PHASE_3B_AUDIT.md) | Phase 3B high-frequency workflow persistence candidates |
 | [`docs/ui-ux-speed-improvements-plan.md`](docs/ui-ux-speed-improvements-plan.md) | Performance optimization plan |
 | [`AI_CONTEXT.md`](AI_CONTEXT.md) | AI handoff context and architecture overview |

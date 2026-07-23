@@ -47,6 +47,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Student list with search, pagination, Tasmi' badges, inactive tabs, and optimistic count updates
 - Quick Log for fast entry; Academic selection reads today's Meeting Status and can create a missing status before entry, while Boarding keeps the original flow
 - Create/edit/delete Hafalan and Murojaah; new forms prefill only Juz + Surah from the student's latest same-type record, then fall back to the user's per-session same-type material preference
+- `SurahInput` separates field value, committed selection, and transient search query. Opening shows the full supplied/Juz-filtered list centered on the checked selection; filtering starts only after typing and applies consistently to all direct and wrapped picker usages.
 - Tasmi' module: create/edit/delete per-juz records with grade, status, and examiner
 - Target CRUD
 - Formative recap generated from daily records

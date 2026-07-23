@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
-  matchesSurahSearch,
   surahList,
   type SurahInfo,
 } from "@/lib/surahs";
 import { useTranslations } from "next-intl";
+import { Check } from "lucide-react";
+import {
+  getSelectedSurahIndex,
+  getVisibleSurahOptions,
+} from "@/lib/surah-picker";
 
 type SurahInputProps = {
   defaultValue?: string;
@@ -28,17 +32,27 @@ export default function SurahInput({
   required = true,
 }: SurahInputProps) {
   const t = useTranslations("SurahInput");
-  const [query, setQuery] = useState(defaultValue ?? "");
+  const [value, setValue] = useState(defaultValue ?? "");
+  const [selectedValue, setSelectedValue] = useState(
+    options.some(({ name: surahName }) => surahName === defaultValue)
+      ? defaultValue ?? ""
+      : "",
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(0);
+  const [highlightIndex, setHighlightIndex] = useState(() =>
+    getSelectedSurahIndex(options, defaultValue ?? ""),
+  );
   const justSelected = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const listboxId = `${id ?? "surah"}-listbox`;
-  const filtered = query.trim()
-    ? options.filter((surah) => matchesSurahSearch(surah, query))
-    : options;
+  const filtered = useMemo(
+    () => getVisibleSurahOptions(options, searchQuery, isSearching),
+    [isSearching, options, searchQuery],
+  );
   const activeOptionId =
     isOpen && filtered[highlightIndex]
       ? `${listboxId}-option-${filtered[highlightIndex].number}`
@@ -55,18 +69,42 @@ export default function SurahInput({
   }, []);
 
   useEffect(() => {
-    setHighlightIndex(0);
-  }, [query]);
+    if (isSearching) {
+      setHighlightIndex(0);
+      return;
+    }
+    setHighlightIndex(getSelectedSurahIndex(filtered, selectedValue));
+  }, [filtered, isSearching, selectedValue]);
 
   useEffect(() => {
     if (isOpen && listRef.current) {
+      const list = listRef.current;
       const item = listRef.current.children[highlightIndex] as HTMLElement;
-      item?.scrollIntoView({ block: "nearest" });
+      if (!item) return;
+      if (!isSearching) {
+        list.scrollTop = Math.max(
+          0,
+          item.offsetTop - (list.clientHeight - item.offsetHeight) / 2,
+        );
+        return;
+      }
+      if (item.offsetTop < list.scrollTop) {
+        list.scrollTop = item.offsetTop;
+      } else if (
+        item.offsetTop + item.offsetHeight >
+        list.scrollTop + list.clientHeight
+      ) {
+        list.scrollTop =
+          item.offsetTop + item.offsetHeight - list.clientHeight;
+      }
     }
-  }, [highlightIndex, isOpen]);
+  }, [highlightIndex, isOpen, isSearching]);
 
   function selectSurah(name: string) {
-    setQuery(name);
+    setValue(name);
+    setSelectedValue(name);
+    setSearchQuery("");
+    setIsSearching(false);
     onValueChange?.(name);
     setIsOpen(false);
     justSelected.current = true;
@@ -74,6 +112,14 @@ export default function SurahInput({
     setTimeout(() => {
       justSelected.current = false;
     }, 200);
+  }
+
+  function openDropdown() {
+    setSearchQuery("");
+    setIsSearching(false);
+    setHighlightIndex(getSelectedSurahIndex(options, selectedValue || value));
+    setIsOpen(true);
+    window.requestAnimationFrame(() => inputRef.current?.select());
   }
 
   return (
@@ -88,14 +134,21 @@ export default function SurahInput({
         className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-950 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:shadow-none dark:focus:border-emerald-400 dark:focus:ring-emerald-400"
         id={id}
         name={name}
+        onClick={() => {
+          if (!isOpen && !justSelected.current) openDropdown();
+        }}
         onChange={(e) => {
-          setQuery(e.target.value);
-          onValueChange?.(e.target.value);
+          const nextValue = e.target.value;
+          setValue(nextValue);
+          setSelectedValue("");
+          setSearchQuery(nextValue);
+          setIsSearching(true);
+          onValueChange?.(nextValue);
           setIsOpen(true);
         }}
         onFocus={() => {
           if (!justSelected.current) {
-            setIsOpen(true);
+            openDropdown();
           }
         }}
         onKeyDown={(e) => {
@@ -121,7 +174,7 @@ export default function SurahInput({
         role="combobox"
         spellCheck={false}
         type="text"
-        value={query}
+        value={value}
       />
       {isOpen && filtered.length > 0 ? (
         <ul
@@ -133,7 +186,7 @@ export default function SurahInput({
           {filtered.map((surah, i) => (
             <li key={surah.number}>
               <button
-                aria-selected={i === highlightIndex}
+                aria-selected={surah.name === selectedValue}
                 className={`flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition ${
                   i === highlightIndex
                     ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-400"
@@ -152,6 +205,14 @@ export default function SurahInput({
                 <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
                   {t("ayahCount", { count: surah.ayahs })}
                 </span>
+                {surah.name === selectedValue ? (
+                  <Check
+                    aria-hidden="true"
+                    className="shrink-0 text-emerald-700 dark:text-emerald-400"
+                    size={16}
+                    strokeWidth={2.5}
+                  />
+                ) : null}
               </button>
             </li>
           ))}
