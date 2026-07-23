@@ -26,7 +26,7 @@ export default async function AppShell({
     <>
       <TimezoneCookie />
       {showNav ? (
-        <Sidebar currentPath={currentPath} userName={userName} isAdmin={isAdmin} />
+        <Sidebar currentPath={currentPath} isAdmin={isAdmin} />
       ) : null}
       {showNav ? <FloatingIslamicClockGate /> : null}
       <main
