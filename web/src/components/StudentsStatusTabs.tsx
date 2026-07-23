@@ -30,7 +30,7 @@ function workspaceValue(programType: string, status: StudentStatus) {
 }
 
 function tabClassName(isActive: boolean) {
-  return `inline-flex min-h-10 items-center justify-center rounded-xl px-4 text-sm font-semibold transition ${
+  return `inline-flex min-h-10 min-w-0 items-center justify-center rounded-xl px-2 text-center text-sm font-semibold [overflow-wrap:anywhere] transition sm:px-4 ${
     isActive
       ? "bg-emerald-900 text-white"
       : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -114,7 +114,7 @@ export default function StudentsStatusTabs({
   }
 
   return (
-    <div className="mt-5 inline-flex rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+    <div className="mt-5 grid w-full min-w-0 grid-cols-2 rounded-2xl border border-slate-200 bg-white p-1 shadow-sm sm:w-fit dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
       <Link
         className={tabClassName(currentStatus === "active")}
         href={activeHref}

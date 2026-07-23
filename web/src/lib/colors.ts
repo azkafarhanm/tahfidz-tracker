@@ -13,19 +13,19 @@
 
 export const badge = {
   success:
-    "bg-emerald-50 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
+    "max-w-full [overflow-wrap:anywhere] bg-emerald-50 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
   progress:
-    "bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+    "max-w-full [overflow-wrap:anywhere] bg-blue-50 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
   warning:
-    "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
+    "max-w-full [overflow-wrap:anywhere] bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
   error:
-    "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-100",
+    "max-w-full [overflow-wrap:anywhere] bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-100",
   neutral:
-    "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-100",
+    "max-w-full [overflow-wrap:anywhere] bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-100",
   summary:
-    "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
+    "max-w-full [overflow-wrap:anywhere] bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100",
   info:
-    "bg-cyan-50 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100",
+    "max-w-full [overflow-wrap:anywhere] bg-cyan-50 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100",
 } as const;
 
 export const badgeSm = {
@@ -47,19 +47,19 @@ export const badgeSm = {
 
 export const chip = {
   success:
-    "rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100",
+    "max-w-full rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-emerald-800 [overflow-wrap:anywhere] dark:bg-emerald-900 dark:text-emerald-100",
   progress:
-    "rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+    "max-w-full rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-blue-800 [overflow-wrap:anywhere] dark:bg-blue-900 dark:text-blue-100",
   warning:
-    "rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-amber-800 dark:bg-amber-900 dark:text-amber-100",
+    "max-w-full rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-amber-800 [overflow-wrap:anywhere] dark:bg-amber-900 dark:text-amber-100",
   error:
-    "rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-red-700 dark:bg-red-900 dark:text-red-100",
+    "max-w-full rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-red-700 [overflow-wrap:anywhere] dark:bg-red-900 dark:text-red-100",
   neutral:
-    "rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-slate-500 dark:bg-slate-700 dark:text-slate-100",
+    "max-w-full rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-slate-500 [overflow-wrap:anywhere] dark:bg-slate-700 dark:text-slate-100",
   summary:
-    "rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-slate-600 dark:bg-slate-700 dark:text-slate-100",
+    "max-w-full rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-slate-600 [overflow-wrap:anywhere] dark:bg-slate-700 dark:text-slate-100",
   info:
-    "rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-cyan-800 dark:bg-cyan-900 dark:text-cyan-100",
+    "max-w-full rounded-full bg-cyan-50 px-2.5 py-0.5 text-[11px] font-semibold leading-tight text-cyan-800 [overflow-wrap:anywhere] dark:bg-cyan-900 dark:text-cyan-100",
 } as const;
 
 export const statusDot = {
@@ -130,19 +130,19 @@ export const progressBg = {
  */
 export const statCard = {
   success:
-    "border-emerald-600 bg-emerald-600 dark:border-emerald-700 dark:bg-emerald-900",
+    "min-w-0 overflow-hidden border-emerald-600 bg-emerald-600 dark:border-emerald-700 dark:bg-emerald-900",
   progress:
-    "border-blue-600 bg-blue-600 dark:border-blue-700 dark:bg-blue-900",
+    "min-w-0 overflow-hidden border-blue-600 bg-blue-600 dark:border-blue-700 dark:bg-blue-900",
   warning:
-    "border-amber-500 bg-amber-500 dark:border-amber-700 dark:bg-amber-900",
+    "min-w-0 overflow-hidden border-amber-500 bg-amber-500 dark:border-amber-700 dark:bg-amber-900",
   error:
-    "border-red-600 bg-red-600 dark:border-red-700 dark:bg-red-900",
+    "min-w-0 overflow-hidden border-red-600 bg-red-600 dark:border-red-700 dark:bg-red-900",
   neutral:
-    "border-slate-500 bg-slate-500 dark:border-slate-600 dark:bg-slate-800",
+    "min-w-0 overflow-hidden border-slate-500 bg-slate-500 dark:border-slate-600 dark:bg-slate-800",
   summary:
-    "border-slate-700 bg-slate-700 dark:border-slate-600 dark:bg-slate-800",
+    "min-w-0 overflow-hidden border-slate-700 bg-slate-700 dark:border-slate-600 dark:bg-slate-800",
   info:
-    "border-cyan-600 bg-cyan-600 dark:border-cyan-700 dark:bg-cyan-900",
+    "min-w-0 overflow-hidden border-cyan-600 bg-cyan-600 dark:border-cyan-700 dark:bg-cyan-900",
 } as const;
 
 /**
@@ -192,11 +192,11 @@ export const statLabel = {
  */
 export const widget = {
   elevated:
-    "bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:shadow-lg dark:shadow-black/20",
+    "min-w-0 bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:shadow-lg dark:shadow-black/20",
   flat:
-    "bg-slate-50 dark:bg-slate-800",
+    "min-w-0 bg-slate-50 dark:bg-slate-800",
   info:
-    "bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:shadow-lg dark:shadow-black/20",
+    "min-w-0 bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:shadow-lg dark:shadow-black/20",
 } as const;
 
 /**
@@ -205,7 +205,7 @@ export const widget = {
  * Dark mode: slate-900 background with subtle emerald accent border
  */
 export const heroCard =
-  "bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-emerald-500/20 dark:shadow-lg dark:shadow-black/20 transition-colors";
+  "min-w-0 overflow-hidden bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-emerald-500/20 dark:shadow-lg dark:shadow-black/20 transition-colors";
 
 /**
  * Hero summary — dark summary cards (used for main dashboard stats)
@@ -213,7 +213,7 @@ export const heroCard =
  * Dark mode: subtle emerald accent border for separation
  */
 export const heroSummary =
-  "bg-slate-950 text-white border border-transparent dark:border-emerald-500/20 shadow-2xl shadow-slate-950/20 transition-colors";
+  "min-w-0 overflow-hidden bg-slate-950 text-white border border-transparent dark:border-emerald-500/20 shadow-2xl shadow-slate-950/20 transition-colors";
 
 /**
  * Back link — navigation link with subtle hover state

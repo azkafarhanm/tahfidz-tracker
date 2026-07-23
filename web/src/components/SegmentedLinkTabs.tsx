@@ -43,8 +43,9 @@ export default function SegmentedLinkTabs({
     <div
       aria-busy={isPending}
       aria-label={ariaLabel}
-      className="flex rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+      className="grid w-full min-w-0 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
       role="tablist"
+      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((option) => {
         const isActive = activeValue === option.value;
@@ -52,7 +53,7 @@ export default function SegmentedLinkTabs({
         return (
           <button
             key={option.value}
-            className={`px-4 py-2 text-sm font-medium transition first:rounded-s-2xl last:rounded-e-2xl ${
+            className={`min-w-0 px-2 py-2 text-sm font-medium [overflow-wrap:anywhere] transition first:rounded-s-2xl last:rounded-e-2xl sm:px-4 ${
               isActive
                 ? "bg-emerald-900 text-white"
                 : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"

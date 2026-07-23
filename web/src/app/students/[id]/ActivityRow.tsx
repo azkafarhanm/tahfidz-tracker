@@ -78,9 +78,9 @@ export default function ActivityRow({
               {record.time ? <p className="mt-1">{record.time}</p> : null}
             </div>
           </div>
-          <div className="mt-3 flex w-full flex-wrap items-center justify-end gap-2">
-            <div className="mr-auto flex flex-wrap items-center gap-1.5">
-              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-tight ${recordStatusClass(record)}`}>
+          <div className="mt-3 flex w-full min-w-0 flex-wrap items-center justify-end gap-2">
+            <div className="mr-auto flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
+              <span className={`max-w-full rounded-full px-2.5 py-0.5 text-center text-[11px] font-semibold leading-tight [overflow-wrap:anywhere] ${recordStatusClass(record)}`}>
                 {record.status}
               </span>
               {record.score !== null ? (
@@ -89,7 +89,7 @@ export default function ActivityRow({
                 </span>
               ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5">
               <WorkflowContextLink
                 className={actionButtonClass("neutral")}
                 href={editHref}

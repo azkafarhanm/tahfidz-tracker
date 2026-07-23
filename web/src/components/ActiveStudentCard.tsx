@@ -45,8 +45,8 @@ export default function ActiveStudentCard({
 
   return (
     <article data-highlight={id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <InitialsAvatar name={fullName} />
           <div className="min-w-0">
             <p className="truncate font-semibold text-slate-950 dark:text-white">
@@ -58,7 +58,7 @@ export default function ActiveStudentCard({
           </div>
         </div>
         <span
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${needsReview ? badge.warning : badge.success}`}
+          className={`max-w-full rounded-full px-3 py-1 text-center text-xs font-medium ${needsReview ? badge.warning : badge.success}`}
         >
           {needsReview ? t("badgeNeedsReview") : t("badgeAktif")}
         </span>
@@ -129,8 +129,8 @@ export default function ActiveStudentCard({
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
-        <span className="inline-flex min-w-0 items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3 text-sm dark:border-slate-800">
+        <span className="inline-flex min-w-0 flex-1 items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
           <Target aria-hidden="true" size={16} strokeWidth={2.2} />
           {activeTargetCount} {t("targetCountLabel")}
         </span>

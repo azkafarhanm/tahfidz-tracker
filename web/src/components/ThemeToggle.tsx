@@ -28,11 +28,11 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
 
   if (!mounted) {
     return (
-      <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+      <div className="grid w-full min-w-0 grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
         {themes.map((t) => (
           <div
             key={t.value}
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
+            className="flex h-10 min-w-0 items-center justify-center rounded-xl"
           >
             <t.icon size={18} className="text-slate-300 dark:text-slate-500" />
           </div>
@@ -42,7 +42,7 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
   }
 
   return (
-    <div className="flex gap-2 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
+    <div className="grid w-full min-w-0 grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1 dark:bg-slate-800">
       {themes.map((t) => {
         const active = theme === t.value;
         return (
@@ -51,7 +51,7 @@ export default function ThemeToggle({ labels }: ThemeToggleProps) {
             aria-pressed={active}
             key={t.value}
             onClick={() => setTheme(t.value)}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${
+            className={`flex h-10 min-w-0 items-center justify-center rounded-xl transition-all ${
               active
                 ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-700 dark:text-emerald-400"
                 : "text-slate-400 active:bg-black/5 hover:text-slate-600 dark:active:bg-white/10 dark:hover:text-slate-300"

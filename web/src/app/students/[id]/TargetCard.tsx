@@ -36,14 +36,14 @@ export default function TargetCard({
 
   return (
     <article data-highlight={target.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{target.type}</p>
           <p className="mt-1 truncate font-semibold text-slate-950 dark:text-white">
             {target.range}
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
           <WorkflowContextLink
             className={actionButtonClass("neutral")}
             href={`/students/${studentId}/targets/${target.id}/edit`}
@@ -63,8 +63,8 @@ export default function TargetCard({
       </div>
 
       <div className="mt-3">
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-          <span className="inline-flex items-center gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400">
+          <span className="inline-flex min-w-0 items-center gap-1">
             <CalendarDays aria-hidden="true" size={13} strokeWidth={2.2} />
             {target.startDate} - {target.endDate}
           </span>

@@ -19,7 +19,7 @@ const styles: Record<ProgramType, string> = {
 export default function ProgramBadge({ programType }: ProgramBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold leading-tight ${styles[programType]}`}
+      className={`inline-flex max-w-full items-center rounded-full px-2.5 py-0.5 text-center text-[11px] font-bold leading-tight [overflow-wrap:anywhere] ${styles[programType]}`}
     >
       {labels[programType]}
     </span>

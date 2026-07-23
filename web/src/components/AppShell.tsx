@@ -35,7 +35,7 @@ export default async function AppShell({
         }`}
       >
         <div
-          className={`mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8 ${
+          className={`mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col px-4 py-5 sm:max-w-3xl sm:px-8 ${
             showNav ? "pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pb-5" : ""
           }`}
         >

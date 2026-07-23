@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed — Responsive Layout Hardening
+
+- Hardened shared badges, chips, statistics, summary cards, and action controls so
+  they shrink or wrap within their parent instead of crossing card boundaries.
+- Made theme, language, student-status, and linked segmented controls respect the
+  available width on iPhone and small Android viewports.
+- Improved dense student cards and activity/target metadata rows so badges and
+  actions remain contained while desktop layouts retain their existing shape.
+
 ### Improved — Teacher Daily UX
 
 - Quick Log now shares the Hafalan/Murojaah Juz + Surah smart-default priority and refreshes the material independently when teachers switch record type, for both Academic and Boarding.

@@ -1,7 +1,7 @@
 export type ActionButtonTone = "neutral" | "danger" | "warning" | "success";
 
 const actionButtonBase =
-  "inline-flex min-h-10 min-w-[5.5rem] items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border px-3 text-sm font-semibold shadow-sm transition duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:focus-visible:ring-offset-slate-900";
+  "inline-flex min-h-10 min-w-0 max-w-full items-center justify-center gap-1.5 rounded-xl border px-3 text-center text-sm font-semibold leading-tight [overflow-wrap:anywhere] shadow-sm transition duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 sm:min-w-[5.5rem] dark:focus-visible:ring-offset-slate-900";
 
 const actionButtonToneClasses = {
   neutral:
@@ -15,7 +15,7 @@ const actionButtonToneClasses = {
 } as const;
 
 const compactActionButtonBase =
-  "inline-flex min-h-9 min-w-[4.75rem] items-center justify-center whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 dark:focus-visible:ring-offset-slate-900";
+  "inline-flex min-h-9 min-w-0 max-w-full items-center justify-center rounded-lg px-3 text-center text-xs font-semibold leading-tight [overflow-wrap:anywhere] transition duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:opacity-60 sm:min-w-[4.75rem] dark:focus-visible:ring-offset-slate-900";
 
 const compactActionButtonToneClasses = {
   neutral:
