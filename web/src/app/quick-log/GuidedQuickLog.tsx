@@ -26,20 +26,23 @@ import InitialsAvatar from "@/components/InitialsAvatar";
 import { DeviceDateTimeHiddenFields } from "@/components/DeviceDateTimeFields";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import type { RecentActivityItem } from "@/lib/quick-log";
+import type {
+  QuickLogRecordType,
+  QuickLogStudent,
+  RecentActivityItem,
+} from "@/lib/quick-log";
 import { shouldAllowQuickLogRecordEntry } from "@/lib/quick-log-meeting-status";
 import { badge, backLink } from "@/lib/colors";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { matchesSearchText } from "@/lib/search";
 import { MeetingAttendanceStatus } from "@/generated/prisma-next/enums";
+import {
+  getQuickLogSessionPreferenceKey,
+  getQuickLogSmartDefault,
+} from "@/lib/quick-log-smart-default";
 
-type Student = {
-  id: string;
-  fullName: string;
-  classSummary: string;
-  meetingStatusToday: MeetingAttendanceStatus | null;
-};
+type Student = QuickLogStudent;
 
 type ActionResult =
   | { ok: true; recordId?: string; success: string }
@@ -105,7 +108,7 @@ export default function GuidedQuickLog({
   const programType = searchParams.get("programType");
   const dashboardHref = programType ? `/?programType=${programType}` : "/";
 
-  const typeOptions = [
+  const typeOptions: { value: QuickLogRecordType; label: string }[] = [
     { value: "HAFALAN", label: t("typeHafalan") },
     { value: "MUROJAAH", label: t("typeMurojaah") },
   ];
@@ -128,7 +131,8 @@ export default function GuidedQuickLog({
   const [isMeetingStatusPending, startMeetingStatusTransition] = useTransition();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const [recordType, setRecordType] = useState("HAFALAN");
+  const [recordType, setRecordType] =
+    useState<QuickLogRecordType>("HAFALAN");
   const [fromAyah, setFromAyah] = useState("");
   const [toAyah, setToAyah] = useState("");
   const [notes, setNotes] = useState("");
@@ -275,6 +279,9 @@ export default function GuidedQuickLog({
   }
 
   const now = new Date();
+  const smartDefault = selectedStudent
+    ? getQuickLogSmartDefault(selectedStudent, recordType)
+    : null;
 
   return (
     <>
@@ -488,8 +495,14 @@ export default function GuidedQuickLog({
                   </label>
                   <div className="mt-2">
                     <JuzFilteredSurahInput
+                      defaultFromAyah={smartDefault?.fromAyah}
+                      defaultValue={smartDefault?.surah}
                       id="quick-log-surah"
                       inputResetKey={surahInputKey}
+                      key={`${selectedStudent.id}:${recordType}:${surahInputKey}`}
+                      sessionPreferenceKey={getQuickLogSessionPreferenceKey(
+                        recordType,
+                      )}
                     />
                   </div>
                 </div>

@@ -45,7 +45,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Dashboard with stats, progress, motivation card, recent activity (Hafalan, Murojaah, Tasmi'), and ProgramBadge
 - ProgramSelector for dual-program teachers (auto-detect for single-program)
 - Student list with search, pagination, Tasmi' badges, inactive tabs, and optimistic count updates
-- Quick Log for fast entry; Academic selection reads today's Meeting Status and can create a missing status before entry, while Boarding keeps the original flow
+- Quick Log for fast entry; both programs use the selected student's latest same-type Juz + Surah with isolated session fallback, while Academic additionally reads/creates today's Meeting Status
 - Create/edit/delete Hafalan and Murojaah; new forms prefill only Juz + Surah from the student's latest same-type record, then fall back to the user's per-session same-type material preference
 - `SurahInput` separates field value, committed selection, and transient search query. Opening shows the full supplied/Juz-filtered list centered on the checked selection; filtering starts only after typing and applies consistently to all direct and wrapped picker usages.
 - Tasmi' module: create/edit/delete per-juz records with grade, status, and examiner
@@ -107,6 +107,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Student, Academic Meeting Status timeline, and four-group semester aggregation queries run concurrently; the detail cache key includes the Jakarta day to make midnight rollover immediate.
 - Meeting History groups the existing newest-first timeline in memory by month. Every month starts collapsed on first visit, independent open/closed state is stored per student in `sessionStorage`, and a month targeted by URL highlight is still forced open for reveal.
 - Academic Quick Log resolves today's status in one batched student-list query. A missing status is created with `create` (never `upsert`); a unique-key race returns the existing row without editing it. Newly created non-Hadir statuses suppress activity inputs, while any pre-existing status is shown as read-only metadata and leaves the normal record workflow available. Boarding performs no Meeting Status query or mutation.
+- The same Quick Log student query selects one latest Hafalan and one latest Murojaah material. Switching record type remounts only the shared Juz/Surah picker with the matching material and same-type `sessionStorage` fallback; all other Quick Log fields retain their existing behavior.
 - Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
 
 ### AcademicYear and Archive System

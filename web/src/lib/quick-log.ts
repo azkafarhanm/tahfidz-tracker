@@ -21,6 +21,8 @@ export type QuickLogStudent = {
   fullName: string;
   classSummary: string;
   meetingStatusToday: MeetingAttendanceStatus | null;
+  latestHafalanMaterial: { surah: string; fromAyah: number } | null;
+  latestMurojaahMaterial: { surah: string; fromAyah: number } | null;
 };
 
 export type RecentActivityItem = {
@@ -385,6 +387,16 @@ async function getQuickLogStudentsInner(
         academicClass: {
           select: { name: true },
         },
+        memorizationRecords: {
+          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+          take: 1,
+          select: { surah: true, fromAyah: true },
+        },
+        revisionRecords: {
+          orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+          take: 1,
+          select: { surah: true, fromAyah: true },
+        },
       },
       orderBy: { fullName: "asc" },
     }),
@@ -408,6 +420,8 @@ async function getQuickLogStudentsInner(
     fullName: student.fullName,
     classSummary: formatStudentClassSummary(student).classSummary,
     meetingStatusToday: statusByStudent.get(student.id) ?? null,
+    latestHafalanMaterial: student.memorizationRecords[0] ?? null,
+    latestMurojaahMaterial: student.revisionRecords[0] ?? null,
   }));
 }
 

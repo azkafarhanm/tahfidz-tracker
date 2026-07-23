@@ -404,6 +404,9 @@ Each item has PASS / FAIL criteria for manual verification.
   - PASS: shows "noStudentFound" with query
   - FAIL: blank dropdown
   - Review: RESOLVED - Quick Log search, selection, toggles, reset states, empty states, and submit action are implemented in `web/src/app/quick-log/GuidedQuickLog.tsx` and `actions.ts`.
+- [ ] Quick Log uses independent same-type Juz + Surah smart defaults
+  - PASS: Hafalan uses the student's latest Hafalan, Murojaah uses latest Murojaah, missing history uses the corresponding session preference, and switching both directions refreshes only Juz + Surah
+  - FAIL: material leaks between types or ayat, score, notes, date, status, or Meeting Status is prefilled/changed
 - [ ] Academic student without today's Meeting Status gets a create-once choice
   - PASS: Hadir reveals normal entry; newly saved Izin/Sakit/Alfa hides activity inputs; a duplicate/racing save returns the existing status without changing it
   - FAIL: the status is duplicated/overwritten, or non-Hadir activity inputs remain available immediately after creation

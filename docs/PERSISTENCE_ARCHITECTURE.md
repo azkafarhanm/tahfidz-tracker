@@ -42,13 +42,16 @@ the absence of a stored value means collapsed. URL-driven highlights temporarily
 force the containing month open so reveal and scroll behavior are preserved.
 Boarding never renders or accesses this state.
 
-`JuzFilteredSurahInput` may receive a same-type session key from Hafalan or
-Murojaah record forms. A server-provided material always wins: edit forms keep
-the record being edited, while create forms query the student's latest same-type
-material in parallel with the existing student form context. Only when that value
-is absent does the client restore the session's Juz and Surah. Ayat, score,
-status, notes, and date/time are never persisted by this mechanism. Malformed
-or unavailable session storage fails silently to the existing defaults.
+`JuzFilteredSurahInput` may receive a same-type session key from Hafalan,
+Murojaah, or Quick Log. A server-provided material always wins: edit forms keep
+the record being edited, create forms query the student's latest same-type
+material in parallel with the existing student form context, and Quick Log
+includes one latest material per type in its existing student payload. Switching
+Quick Log type remounts only the material picker with the matching history.
+Only when the selected type has no record does the client restore that type's
+session Juz and Surah. Ayat, score, status, notes, and date/time are never
+persisted by this mechanism. Malformed or unavailable session storage fails
+silently to the existing defaults.
 
 ## Scroll Persistence
 

@@ -857,6 +857,8 @@ Steps:
 9. Click submit button
 10. Repeat with a student whose Meeting Status already exists
 11. Repeat with a new Izin/Sakit/Alfa status and with a Boarding student
+12. For Academic and Boarding, switch Hafalan → Murojaah → Hafalan and compare each Juz + Surah with that student's latest same-type record
+13. Repeat on a student without one record type and verify its isolated session fallback, then confirm all non-material fields remain unchanged
 
 Expected:
 - Combobox filters students as you type
@@ -864,6 +866,7 @@ Expected:
 - Newly created Hadir reveals the record form; newly created Izin/Sakit/Alfa hides activity inputs
 - Existing Academic status appears only as metadata and leaves normal entry available
 - Boarding shows no Meeting Status step and behaves as before
+- Each record type refreshes only Juz + Surah from its own latest history, then its own session fallback
 - Submit creates record
 - Success toast appears
 - Form resets completely

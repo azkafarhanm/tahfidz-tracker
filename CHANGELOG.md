@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Improved — Teacher Daily UX
 
+- Quick Log now shares the Hafalan/Murojaah Juz + Surah smart-default priority and refreshes the material independently when teachers switch record type, for both Academic and Boarding.
 - Academic Meeting History now starts fully collapsed and remembers each student's independently opened/closed months for the current browser session; highlighted meetings remain revealable.
 - Hafalan and Murojaah create forms now prefill only Juz and Surah from the student's latest same-type record, with a same-type session preference fallback when no record exists. Edit forms retain their current material and also update the session preference.
 - Surah picker results use native touch panning and momentum scrolling so mobile gestures remain with the list until its scroll boundary.
