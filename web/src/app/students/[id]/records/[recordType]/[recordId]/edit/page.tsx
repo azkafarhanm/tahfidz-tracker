@@ -165,6 +165,7 @@ export default async function EditRecordPage({
                   defaultFromAyah={record.fromAyah}
                   defaultValue={record.surah}
                   id="surah"
+                  sessionPreferenceKey={recordType}
                 />
               </div>
             </div>

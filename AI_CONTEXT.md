@@ -46,7 +46,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - ProgramSelector for dual-program teachers (auto-detect for single-program)
 - Student list with search, pagination, Tasmi' badges, inactive tabs, and optimistic count updates
 - Quick Log for fast entry; Academic selection reads today's Meeting Status and can create a missing status before entry, while Boarding keeps the original flow
-- Create/edit/delete hafalan and murojaah
+- Create/edit/delete Hafalan and Murojaah; new forms prefill only Juz + Surah from the student's latest same-type record, then fall back to the user's per-session same-type material preference
 - Tasmi' module: create/edit/delete per-juz records with grade, status, and examiner
 - Target CRUD
 - Formative recap generated from daily records
@@ -104,7 +104,7 @@ This file is the current handoff context for the TahfidzFlow codebase.
 - Student Detail groups Hafalan/Murojaah into a status day using the Asia/Jakarta day key.
 - Academic Student Detail derives exact-today metadata from the timeline query and active-semester status counts from a database `groupBy` bounded by the configured active Academic Year plus `getSemesterForDate()`/`getSemesterDateRange()`.
 - Student, Academic Meeting Status timeline, and four-group semester aggregation queries run concurrently; the detail cache key includes the Jakarta day to make midnight rollover immediate.
-- Meeting History groups the existing newest-first timeline in memory by month. Native disclosure sections open the newest month by default, preserve independent non-persistent UI state, and also open any month targeted by URL highlight.
+- Meeting History groups the existing newest-first timeline in memory by month. Every month starts collapsed on first visit, independent open/closed state is stored per student in `sessionStorage`, and a month targeted by URL highlight is still forced open for reveal.
 - Academic Quick Log resolves today's status in one batched student-list query. A missing status is created with `create` (never `upsert`); a unique-key race returns the existing row without editing it. Newly created non-Hadir statuses suppress activity inputs, while any pre-existing status is shown as read-only metadata and leaves the normal record workflow available. Boarding performs no Meeting Status query or mutation.
 - Phase 1 excludes Meeting Status from dashboard, report, PDF, and Excel data paths.
 

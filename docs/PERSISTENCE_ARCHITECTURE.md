@@ -1,6 +1,6 @@
 # Persistence Architecture
 
-This document describes the two independent persistence concerns used by
+This document describes the independent persistence concerns used by
 TahfidzFlow primary navigation. Both are client-side enhancements built around
 Next.js App Router navigation. Neither changes authentication, authorization,
 server data, or business logic.
@@ -12,6 +12,9 @@ The implementation is split by responsibility:
 - Scroll Persistence remembers the vertical position of top-level panels.
 - Navigation Context Persistence remembers URL-based page state such as search,
   filters, tabs, and pagination.
+- Local Session UI State remembers component-only preferences that do not belong
+  in the URL or database, currently Academic Meeting History disclosure state
+  and same-type Hafalan/Murojaah material preferences.
 
 `NavigationLinks` is the coordination point because a primary-navigation click
 is the final synchronous moment before App Router navigation begins. It calls
@@ -24,10 +27,28 @@ The storage namespaces are intentionally separate:
 - Navigation contexts: `ctx:<pathname>`
 - Scoped navigation contexts: `ctx:<pathname>:<scopeKey>=<scopeValue>`
 - One-shot scroll-navigation flag: `navScrollRestore`
+- Meeting History months: `meeting-history:<studentId>`
+- Record material preferences: `record-material:<hafalan|murojaah>`
 
 All persistence uses `sessionStorage`. State is therefore isolated per browser
 tab and is normally cleared when the tab closes. The public context operations
 and the scroll save operation treat storage write failures as non-fatal.
+
+## Local Session UI State
+
+Component-local preferences do not participate in navigation coordination.
+Academic `MeetingHistorySection` stores an independent boolean per student/month;
+the absence of a stored value means collapsed. URL-driven highlights temporarily
+force the containing month open so reveal and scroll behavior are preserved.
+Boarding never renders or accesses this state.
+
+`JuzFilteredSurahInput` may receive a same-type session key from Hafalan or
+Murojaah record forms. A server-provided material always wins: edit forms keep
+the record being edited, while create forms query the student's latest same-type
+material in parallel with the existing student form context. Only when that value
+is absent does the client restore the session's Juz and Surah. Ayat, score,
+status, notes, and date/time are never persisted by this mechanism. Malformed
+or unavailable session storage fails silently to the existing defaults.
 
 ## Scroll Persistence
 
@@ -226,6 +247,8 @@ scroll restoration and visual reveal independent.
 - Add a route to `CONTEXT_WHITELIST` only when its query string represents UI
   context that should survive primary navigation.
 - Keep scroll keys and navigation-context keys separate.
+- Keep component UI-state keys separate from scroll and URL context; never move
+  these session-only preferences to permanent local storage.
 - For Teacher server-action returns, keep the `returnTo` query and saved scroll
   route identity in sync.
 - Preserve the one-shot observer cleanup and safety timeout.

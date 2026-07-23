@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   BookOpen,
   CalendarCheck2,
@@ -6,6 +9,7 @@ import {
 } from "lucide-react";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { badge } from "@/lib/colors";
+import { parseMeetingMonthState } from "@/lib/ui-session-state";
 
 type MeetingItem = {
   id: string;
@@ -64,6 +68,30 @@ export default function MeetingHistorySection({
     timeZone: "UTC",
   });
   const highlighted = new Set(highlightIds);
+  const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
+  const storageKey = `meeting-history:${studentId}`;
+
+  useEffect(() => {
+    try {
+      setOpenMonths(
+        parseMeetingMonthState(window.sessionStorage.getItem(storageKey)),
+      );
+    } catch {
+      // Collapse persistence is optional when sessionStorage is unavailable.
+    }
+  }, [storageKey]);
+
+  function persistMonth(monthKey: string, open: boolean) {
+    setOpenMonths((current) => {
+      const next = { ...current, [monthKey]: open };
+      try {
+        window.sessionStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        // Collapse persistence is optional when sessionStorage is unavailable.
+      }
+      return next;
+    });
+  }
 
   return (
     <section className="mt-6">
@@ -83,11 +111,17 @@ export default function MeetingHistorySection({
 
       <div className="mt-3 divide-y divide-slate-200 border-y border-slate-200 dark:divide-slate-800 dark:border-slate-800">
         {groups.length > 0 ? (
-          groups.map((group, index) => (
+          groups.map((group) => (
             <details
               className="group/month"
               key={group.monthKey}
-              open={index === 0 || group.meetings.some(({ id }) => highlighted.has(id))}
+              onToggle={(event) =>
+                persistMonth(group.monthKey, event.currentTarget.open)
+              }
+              open={
+                openMonths[group.monthKey] === true ||
+                group.meetings.some(({ id }) => highlighted.has(id))
+              }
             >
               <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 py-3 text-sm marker:content-none">
                 <ChevronRight

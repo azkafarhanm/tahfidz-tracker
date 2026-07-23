@@ -63,7 +63,7 @@ TahfidzFlow models this with a `ProgramType` enum on `AcademicClass` and `ClassG
 | **Teacher Dashboard** | Daily stats, weekly target progress, recent activity with Tasmi' |
 | **Dual-Program System** | Academic + Boarding with context-aware filtering via ProgramSelector |
 | **Academic Meeting Context** | Per-student daily Hadir/Izin/Sakit/Alfa context with optional notes and zero-or-more Hafalan/Murojaah activities |
-| **Workflow Persistence** | Search, filters, pagination, and scroll restored across primary navigation and frequent Students/Formative/Summative detail round-trips |
+| **Workflow Persistence** | Search, filters, pagination, scroll, and Academic Meeting History disclosure state restored within the current browser session |
 | **Full Hafalan Lifecycle** | Quick Log → Hafalan → Murojaah → Tasmi' → Formative recap → Summative |
 | **Flexible Summative** | Curriculum-guided bulk scoring with Academic/Boarding targets and multi-row result highlighting |
 | **Admin Management** | Teachers, classes, halaqah, students, academic years, formative meeting settings, and archive workflow |
@@ -132,14 +132,14 @@ Browser / PWA Client
 - Student list with search, pagination, latest records, Tasmi' badges, and review indicators
 - Students, Formative, and Summative detail round-trips restore the originating filters, pagination, and scroll position
 - Quick Log guided record entry; for Academic students it can create a missing status for today once, while existing status is read-only metadata and Boarding remains unchanged
-- Hafalan and murojaah create/edit/delete with surah + ayah range input
+- Hafalan and murojaah create/edit/delete with mobile-friendly Surah scrolling and same-type latest-material smart defaults for Juz + Surah
 - Tasmi' module: create/edit/delete per-juz Tasmi' records with grade and examiner
 - Formative recap generated automatically from daily records, per semester; Academic Excel uses the configured semester meeting timeline
 - Curriculum-guided bulk summative assessment with Academic/Boarding target rules and multi-row highlight after save
 - Active targets with cancel/complete actions
 - Student detail with history, targets, Tasmi' summary, and exports (Excel + PDF)
 - Academic Student Detail includes Meeting History; one optional-note status per day can exist even with no Hafalan/Murojaah activity
-- Academic Student Detail shows lightweight today's-status metadata, active Academic Year/semester attendance counts, and monthly collapsible Meeting History with per-meeting activity totals
+- Academic Student Detail shows lightweight today's-status metadata, active Academic Year/semester attendance counts, and session-persisted monthly Meeting History with all months collapsed on first visit
 - Teacher reports with program-specific Excel/PDF layouts and context-aware back navigation
 
 ### Admin workflow

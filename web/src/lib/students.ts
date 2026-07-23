@@ -703,3 +703,26 @@ export async function getStudentFormContext(
     classGroupGrade: student.classGroup.grade.toString(),
   };
 }
+
+export async function getLatestStudentRecordMaterial(
+  studentId: string,
+  teacherId: string | null | undefined,
+  recordType: "hafalan" | "murojaah",
+) {
+  const where = {
+    studentId,
+    student: {
+      isActive: true,
+      ...(teacherId ? { teacherId } : {}),
+    },
+  };
+  const query = {
+    where,
+    orderBy: [{ date: "desc" as const }, { createdAt: "desc" as const }],
+    select: { surah: true, fromAyah: true },
+  };
+
+  return recordType === "hafalan"
+    ? prisma.memorizationRecord.findFirst(query)
+    : prisma.revisionRecord.findFirst(query);
+}

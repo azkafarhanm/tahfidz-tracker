@@ -7,7 +7,10 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
-import { getStudentFormContext } from "@/lib/students";
+import {
+  getLatestStudentRecordMaterial,
+  getStudentFormContext,
+} from "@/lib/students";
 import { createMurojaahRecord } from "../actions";
 import { requireSessionScope } from "@/lib/session";
 import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
@@ -45,7 +48,10 @@ export default async function NewMurojaahPage({
   const t = await getTranslations("RecordForm");
   const { id } = await params;
   const { teacherId } = await requireSessionScope();
-  const student = await getStudentFormContext(id, teacherId);
+  const [student, latestMaterial] = await Promise.all([
+    getStudentFormContext(id, teacherId),
+    getLatestStudentRecordMaterial(id, teacherId, "murojaah"),
+  ]);
   const query = await searchParams;
   const error = query?.error;
   const programType =
@@ -104,7 +110,12 @@ export default async function NewMurojaahPage({
                 {t("labelSurah")}
               </label>
               <div className="mt-2">
-                <JuzFilteredSurahInput id="surah" />
+                <JuzFilteredSurahInput
+                  defaultFromAyah={latestMaterial?.fromAyah}
+                  defaultValue={latestMaterial?.surah}
+                  id="surah"
+                  sessionPreferenceKey="murojaah"
+                />
               </div>
             </div>
 

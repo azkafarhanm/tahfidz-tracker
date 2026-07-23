@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import SurahInput from "@/components/SurahInput";
 import { getJuz, getSurahNamesForJuz } from "@/lib/juz";
 import { surahList } from "@/lib/surahs";
+import { parseRecordMaterialPreference } from "@/lib/ui-session-state";
 
 type JuzFilter = number | "all";
 
@@ -15,9 +16,11 @@ type JuzFilteredSurahInputProps = {
   inputResetKey?: number;
   name?: string;
   required?: boolean;
+  sessionPreferenceKey?: "hafalan" | "murojaah";
 };
 
 const juzOptions = Array.from({ length: 30 }, (_, index) => 30 - index);
+const validSurahNames = new Set(surahList.map(({ name }) => name));
 
 function initialJuz(defaultValue?: string, defaultFromAyah?: number): JuzFilter {
   if (!defaultValue) return 30;
@@ -31,6 +34,7 @@ export default function JuzFilteredSurahInput({
   inputResetKey,
   name = "surah",
   required = true,
+  sessionPreferenceKey,
 }: JuzFilteredSurahInputProps) {
   const t = useTranslations("SurahInput");
   const [selectedJuz, setSelectedJuz] = useState<JuzFilter>(() =>
@@ -42,6 +46,35 @@ export default function JuzFilteredSurahInput({
   const previousResetKey = useRef(inputResetKey);
   const inputId = id ?? name;
   const juzSelectId = `${inputId}-juz`;
+  const storageKey = sessionPreferenceKey
+    ? `record-material:${sessionPreferenceKey}`
+    : null;
+
+  useEffect(() => {
+    if (defaultValue || !storageKey) return;
+    try {
+      const preference = parseRecordMaterialPreference(
+        window.sessionStorage.getItem(storageKey),
+        validSurahNames,
+      );
+      if (!preference) return;
+      setSelectedJuz(preference.juz);
+      setCurrentValue(preference.surah);
+      setInputDefaultValue(preference.surah);
+      setInputVersion((version) => version + 1);
+    } catch {
+      // Session preferences are an optional enhancement.
+    }
+  }, [defaultValue, storageKey]);
+
+  function saveSessionPreference(juz: JuzFilter, surah: string) {
+    if (!storageKey || !surah) return;
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify({ juz, surah }));
+    } catch {
+      // Session preferences are an optional enhancement.
+    }
+  }
 
   useEffect(() => {
     if (previousResetKey.current === inputResetKey) return;
@@ -81,7 +114,9 @@ export default function JuzFilteredSurahInput({
           id={juzSelectId}
           onChange={(event) => {
             const value = event.target.value;
-            setSelectedJuz(value === "all" ? "all" : Number(value));
+            const nextJuz = value === "all" ? "all" : Number(value);
+            setSelectedJuz(nextJuz);
+            saveSessionPreference(nextJuz, currentValue);
           }}
           value={selectedJuz}
         >
@@ -99,7 +134,10 @@ export default function JuzFilteredSurahInput({
         id={id}
         key={inputVersion}
         name={name}
-        onValueChange={setCurrentValue}
+        onValueChange={(value) => {
+          setCurrentValue(value);
+          saveSessionPreference(selectedJuz, value);
+        }}
         options={options}
         placeholder={placeholder}
         required={required}

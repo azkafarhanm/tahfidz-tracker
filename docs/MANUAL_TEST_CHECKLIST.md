@@ -323,7 +323,7 @@ Expected:
 - Academic only: Meeting History with status, optional note, and same-day Hafalan/Murojaah summaries
 - Academic only: header shows today's exact status (or "Belum dicatat"), followed by active Academic Year/semester Hadir/Izin/Sakit/Alfa totals
 - Meeting entries with activity show the activity count before their Hafalan/Murojaah summaries
-- Meeting History groups entries by month; newest month starts open, older months start closed, and each month toggles independently
+- Academic Meeting History groups entries by month; every month starts closed on first visit, each toggles independently, and its last state returns within the same browser session
 - Saving/editing an older meeting opens its month so URL-driven scroll/highlight remains visible
 - Boarding only: no Meeting History section or Meeting Status action
 
@@ -539,16 +539,19 @@ Route: `/students/[id]/hafalan/new`
 
 Steps:
 1. Click "Hafalan" on student detail
-2. Select surah (SurahInput autocomplete)
-3. Enter from ayah (1-286)
-4. Enter to ayah (1-286)
-5. Select status (default: CUKUP)
-6. Enter score (0-100, optional)
-7. Add notes (optional)
-8. Click "Simpan"
+2. Verify Juz + Surah use the student's latest Hafalan; for a student without Hafalan, verify the previous session Hafalan choice, then the existing default
+3. On mobile, swipe inside the open Surah results before and after reaching its top/bottom boundary
+4. Enter from ayah (1-286)
+5. Enter to ayah (1-286)
+6. Select status (default: CUKUP)
+7. Enter score (0-100, optional)
+8. Add notes (optional)
+9. Click "Simpan"
 
 Expected:
 - All fields present with correct defaults
+- Only Juz + Surah are smart-prefilled; ayat, score, notes, and date/time retain their existing defaults
+- Surah results scroll independently on mobile and chain to the page only at the list boundary
 - Default status is CUKUP
 - Submit redirects to student detail
 - Success toast appears

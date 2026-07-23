@@ -158,8 +158,8 @@ Each item has PASS / FAIL criteria for manual verification.
   - PASS: activity days show the correct count and Hafalan/Murojaah rows; zero-activity days keep the existing message
   - FAIL: count and displayed activity rows disagree
 - [ ] Meeting History is grouped into independent monthly sections
-  - PASS: newest month is open, older months are closed, month headers show meeting totals, and toggling one month does not affect another
-  - FAIL: ordering/counts are incorrect or collapse behavior is coupled/persisted
+  - PASS: every month is closed on first visit; toggling one month does not affect another; open/closed state survives a same-tab round trip per student
+  - FAIL: a month opens by default, states are coupled, or the last state is lost during the session
 - [ ] Highlight remains visible inside a collapsed-era month
   - PASS: saving or editing an older meeting opens its month and the existing scroll/highlight reveals the meeting
   - FAIL: target remains hidden inside a closed month or highlight persistence changes
@@ -286,6 +286,12 @@ Each item has PASS / FAIL criteria for manual verification.
   - PASS: all fields present
   - FAIL: missing fields
   - Review: RESOLVED - Hafalan/Murojaah forms and validation are implemented in their `new/page.tsx` files, route actions, and `web/src/lib/validate-record.ts`.
+- [ ] Juz and Surah use the smart-default priority without prefilling other fields
+  - PASS: latest same-type student record wins; otherwise the same-type session choice is used; otherwise existing defaults remain. Ayat, score, notes, and date/time stay untouched.
+  - FAIL: another record type supplies the material, edit material changes unexpectedly, or any additional field is prefilled
+- [ ] Surah result list owns mobile vertical gestures
+  - PASS: swiping inside the scrollable list moves the list, with normal page chaining available at its boundary
+  - FAIL: the page moves while the list still has scrollable content
 - [x] Submit with valid data
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error

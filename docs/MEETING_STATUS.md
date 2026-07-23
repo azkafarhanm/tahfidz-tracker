@@ -35,7 +35,7 @@ Academic Student Detail presents the meeting context in this order:
 
 The existing Academic Meeting Status timeline query remains capped at 50 rows through today's Jakarta date and continues to supply exact-today metadata. Semester totals cannot safely reuse that capped dataset, so a separate PostgreSQL `groupBy status` query covers the active Academic Year's active-semester date range and returns at most four aggregate rows. The Student, timeline, and aggregation queries run concurrently after authorization. Boarding executes neither Meeting Status query. The Student Detail cache key includes the Jakarta day so a midnight rollover cannot reuse yesterday's “today” metadata.
 
-Monthly grouping is an O(n) in-memory transformation of that existing timeline result and does not add a query. The newest month is open by default and earlier months are closed. Each native `<details>` section can be toggled independently without database or navigation persistence. When `highlight` or `highlights` targets an older meeting, its month is rendered open so the existing scroll/highlight workflow can still reveal it.
+Monthly grouping is an O(n) in-memory transformation of that existing timeline result and does not add a query. All months are closed on first visit. Each native `<details>` section can be toggled independently, and its open/closed value is stored per student in `sessionStorage` for the current browser tab only. When `highlight` or `highlights` targets an older meeting, its month is rendered open so the existing scroll/highlight workflow can still reveal it.
 
 ## Quick Log integration
 

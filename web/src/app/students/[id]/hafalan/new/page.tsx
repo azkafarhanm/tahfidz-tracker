@@ -7,7 +7,10 @@ import {
   Hash,
   Save,
 } from "lucide-react";
-import { getStudentFormContext } from "@/lib/students";
+import {
+  getLatestStudentRecordMaterial,
+  getStudentFormContext,
+} from "@/lib/students";
 import { createHafalanRecord } from "../actions";
 import { requireSessionScope } from "@/lib/session";
 import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
@@ -45,7 +48,10 @@ export default async function NewHafalanPage({
   const t = await getTranslations("RecordForm");
   const { id } = await params;
   const { teacherId } = await requireSessionScope();
-  const student = await getStudentFormContext(id, teacherId);
+  const [student, latestMaterial] = await Promise.all([
+    getStudentFormContext(id, teacherId),
+    getLatestStudentRecordMaterial(id, teacherId, "hafalan"),
+  ]);
   const query = await searchParams;
   const error = query?.error;
   const programType =
@@ -104,7 +110,12 @@ export default async function NewHafalanPage({
                 {t("labelSurah")}
               </label>
               <div className="mt-2">
-                <JuzFilteredSurahInput id="surah" />
+                <JuzFilteredSurahInput
+                  defaultFromAyah={latestMaterial?.fromAyah}
+                  defaultValue={latestMaterial?.surah}
+                  id="surah"
+                  sessionPreferenceKey="hafalan"
+                />
               </div>
             </div>
 

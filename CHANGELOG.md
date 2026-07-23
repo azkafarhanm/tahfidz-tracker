@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improved — Teacher Daily UX
+
+- Academic Meeting History now starts fully collapsed and remembers each student's independently opened/closed months for the current browser session; highlighted meetings remain revealable.
+- Hafalan and Murojaah create forms now prefill only Juz and Surah from the student's latest same-type record, with a same-type session preference fallback when no record exists. Edit forms retain their current material and also update the session preference.
+- Surah picker results use native touch panning and momentum scrolling so mobile gestures remain with the list until its scroll boundary.
+
 ### Added — Academic Meeting Status
 
 - Added one daily `HADIR`, `IZIN`, `SAKIT`, or `ALFA` meeting status per Academic student, with an always-optional note.
