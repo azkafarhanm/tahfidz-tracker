@@ -18,6 +18,12 @@ is marked with a check, becomes the keyboard-active option, and is scrolled into
 the center of the list. Typing starts the existing fuzzy name/number filtering;
 choosing an option commits it and closes the list.
 
+Initial positioning is a one-shot operation tied only to opening the dropdown.
+After that operation, hover and highlighted-option changes never write
+`scrollTop`. Mouse wheel, trackpad, and touch gestures therefore retain native
+control of the list, including normal scroll chaining to the page at its top and
+bottom boundaries.
+
 The visible input retains its original `name`, required state, callback, and
 free-text behavior, so server actions, validation, Smart Default, and stored
 data are unchanged. The mobile list continues to use native touch panning,
@@ -30,3 +36,6 @@ momentum scrolling, and boundary scroll chaining.
   program, record type, validation, or persistence behavior.
 - Keyboard Arrow Up/Down, Enter, Escape, outside-click close, and mouse hover
   continue to use the highlighted option independently from the selected item.
+- Do not attach list positioning to highlight, hover, query, wheel, or touch
+  changes. A new positioning request may only be armed by opening a closed
+  dropdown.

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hafalan and Murojaah create forms now prefill only Juz and Surah from the student's latest same-type record, with a same-type session preference fallback when no record exists. Edit forms retain their current material and also update the session preference.
 - Surah picker results use native touch panning and momentum scrolling so mobile gestures remain with the list until its scroll boundary.
 - Surah pickers now open the complete current-Juz list around the checked selection instead of filtering by a Smart Default or existing value; filtering begins only when the teacher types.
+- Initial Surah positioning now runs exactly once when the dropdown opens; subsequent mouse, trackpad, and touch scrolling is never repositioned by hover or highlight changes.
 
 ### Added — Academic Meeting Status
 

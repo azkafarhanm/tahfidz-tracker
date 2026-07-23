@@ -19,3 +19,14 @@ export function getSelectedSurahIndex(
   const index = options.findIndex(({ name }) => name === selectedValue);
   return index >= 0 ? index : 0;
 }
+
+export function getCenteredSurahScrollTop(
+  itemOffsetTop: number,
+  itemHeight: number,
+  containerHeight: number,
+): number {
+  return Math.max(
+    0,
+    itemOffsetTop - (containerHeight - itemHeight) / 2,
+  );
+}

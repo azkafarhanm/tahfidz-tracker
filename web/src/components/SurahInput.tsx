@@ -8,6 +8,7 @@ import {
 import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import {
+  getCenteredSurahScrollTop,
   getSelectedSurahIndex,
   getVisibleSurahOptions,
 } from "@/lib/surah-picker";
@@ -48,6 +49,7 @@ export default function SurahInput({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const initialPositionIndexRef = useRef<number | null>(null);
   const listboxId = `${id ?? "surah"}-listbox`;
   const filtered = useMemo(
     () => getVisibleSurahOptions(options, searchQuery, isSearching),
@@ -77,28 +79,18 @@ export default function SurahInput({
   }, [filtered, isSearching, selectedValue]);
 
   useEffect(() => {
-    if (isOpen && listRef.current) {
-      const list = listRef.current;
-      const item = listRef.current.children[highlightIndex] as HTMLElement;
-      if (!item) return;
-      if (!isSearching) {
-        list.scrollTop = Math.max(
-          0,
-          item.offsetTop - (list.clientHeight - item.offsetHeight) / 2,
-        );
-        return;
-      }
-      if (item.offsetTop < list.scrollTop) {
-        list.scrollTop = item.offsetTop;
-      } else if (
-        item.offsetTop + item.offsetHeight >
-        list.scrollTop + list.clientHeight
-      ) {
-        list.scrollTop =
-          item.offsetTop + item.offsetHeight - list.clientHeight;
-      }
-    }
-  }, [highlightIndex, isOpen, isSearching]);
+    const initialIndex = initialPositionIndexRef.current;
+    const list = listRef.current;
+    if (!isOpen || initialIndex === null || !list) return;
+    initialPositionIndexRef.current = null;
+    const item = list.children[initialIndex] as HTMLElement | undefined;
+    if (!item) return;
+    list.scrollTop = getCenteredSurahScrollTop(
+      item.offsetTop,
+      item.offsetHeight,
+      list.clientHeight,
+    );
+  }, [isOpen]);
 
   function selectSurah(name: string) {
     setValue(name);
@@ -115,9 +107,14 @@ export default function SurahInput({
   }
 
   function openDropdown() {
+    const selectedIndex = getSelectedSurahIndex(
+      options,
+      selectedValue || value,
+    );
     setSearchQuery("");
     setIsSearching(false);
-    setHighlightIndex(getSelectedSurahIndex(options, selectedValue || value));
+    setHighlightIndex(selectedIndex);
+    initialPositionIndexRef.current = selectedIndex;
     setIsOpen(true);
     window.requestAnimationFrame(() => inputRef.current?.select());
   }

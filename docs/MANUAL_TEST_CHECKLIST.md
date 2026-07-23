@@ -553,6 +553,7 @@ Expected:
 - Only Juz + Surah are smart-prefilled; ayat, score, notes, and date/time retain their existing defaults
 - Surah results scroll independently on mobile and chain to the page only at the list boundary
 - Opening a prefilled Surah shows the entire current-Juz list, checks and centers the selected Surah, and filters only after typing
+- After the one-time initial position, verify unrestricted list scrolling with desktop mouse wheel and trackpad, then Android and iOS touch where available; no hover/highlight may pull the list back
 - Default status is CUKUP
 - Submit redirects to student detail
 - Success toast appears

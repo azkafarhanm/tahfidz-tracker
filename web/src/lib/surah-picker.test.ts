@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getCenteredSurahScrollTop,
   getSelectedSurahIndex,
   getVisibleSurahOptions,
 } from "@/lib/surah-picker";
@@ -28,6 +29,16 @@ describe("getVisibleSurahOptions", () => {
 
   it("shows all options for an empty explicit query", () => {
     expect(getVisibleSurahOptions(options, "", true)).toEqual(options);
+  });
+});
+
+describe("getCenteredSurahScrollTop", () => {
+  it("centers the selected item for the initial dropdown position", () => {
+    expect(getCenteredSurahScrollTop(320, 32, 208)).toBe(232);
+  });
+
+  it("does not produce a negative position near the start of the list", () => {
+    expect(getCenteredSurahScrollTop(16, 32, 208)).toBe(0);
   });
 });
 

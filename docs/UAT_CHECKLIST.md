@@ -295,6 +295,9 @@ Each item has PASS / FAIL criteria for manual verification.
 - [ ] Every Surah picker separates opening from searching
   - PASS: an existing/default Surah opens the complete supplied Juz list, shows a check on the selected item, and scrolls it into view; typing then filters normally
   - FAIL: opening filters to the existing name, starts at the top/bottom, or differs between Hafalan, Murojaah, Quick Log, Target, and Summative
+- [ ] Initial Surah positioning releases scroll control after opening
+  - PASS: positioning occurs once; mouse wheel, trackpad, Android touch, and iOS touch can freely scroll without hover/highlight pulling the list back
+  - FAIL: the selected item is repeatedly recentered or the page moves while the list still has available scroll range
 - [x] Submit with valid data
   - PASS: redirects to student detail + success toast
   - FAIL: stays on form or error
