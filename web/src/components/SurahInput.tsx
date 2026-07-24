@@ -191,7 +191,7 @@ export default function SurahInput({
       />
       {isOpen && filtered.length > 0 ? (
         <ul
-          className="absolute z-50 mt-1 max-h-52 w-full touch-pan-y overflow-y-auto overscroll-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-lg [-webkit-overflow-scrolling:touch] dark:border-slate-700 dark:bg-slate-900"
+          className="absolute z-50 mt-1 max-h-52 w-full touch-pan-y overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white py-1 shadow-lg [-webkit-overflow-scrolling:touch] dark:border-slate-700 dark:bg-slate-900"
           id={listboxId}
           ref={listRef}
           role="listbox"

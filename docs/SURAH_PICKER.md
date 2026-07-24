@@ -29,18 +29,17 @@ Initial positioning is a one-shot operation tied only to opening the dropdown.
 After that operation, hover and highlighted-option changes never write
 `scrollTop`.
 
-The open list uses native vertical overflow and scroll chaining only. Its
-`touch-action: pan-y`, `overflow-y: auto`, and `overscroll-behavior-y: auto`
-allow Android Chrome/PWA to keep a gesture in the list while it can scroll and
-continue the same gesture in the page after either list boundary. There are no
-touch, pointer, or wheel handlers that call `preventDefault()` or manually
-write `scrollTop`, so neither direction can be trapped after the browser has
-chosen the list as the scroll owner.
+The open list uses native vertical overflow with independent scroll ownership.
+Its `touch-action: pan-y`, `overflow-y: auto`, and
+`overscroll-behavior-y: contain` keep pointer and touch scrolling inside the
+list at both boundaries. The page can scroll only when a new gesture starts
+outside the picker. There are no touch, pointer, or wheel handlers that call
+`preventDefault()` or manually write `scrollTop`.
 
 The visible input retains its original `name`, required state, callback, and
 free-text behavior, so server actions, validation, Smart Default, and stored
-data are unchanged. The mobile list keeps touch panning, momentum, and boundary
-scroll chaining.
+data are unchanged. The mobile list keeps touch panning and momentum without
+passing scroll ownership to the page.
 
 ## Regression boundaries
 
@@ -55,4 +54,5 @@ scroll chaining.
   changes. A new positioning request may only be armed by opening a closed
   dropdown.
 - Do not add touch, pointer, or wheel handlers that prevent default scrolling
-  on the list; doing so can break native chaining mid-gesture at a boundary.
+  on the list; CSS containment provides the required isolation without
+  intercepting native scrolling.

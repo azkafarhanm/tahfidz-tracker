@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The first click or tap now opens the result list in the same interaction as
   input focus instead of requiring a second trigger interaction.
 
-### Fixed — Surah Picker Native Scroll Chaining
+### Fixed — Surah Picker Independent Scrolling
 
-- Removed manual touch and wheel interception from the shared Surah result list.
-  Android Chrome/PWA can now natively chain the same gesture to the page at both
-  the top and bottom list boundaries without changing one-time initial
-  positioning, Smart Default, or filtering.
+- The shared Surah result list now retains scrolling at both boundaries on
+  Android Chrome/PWA and desktop. Page scrolling resumes only for a new gesture
+  started outside the picker, without changing initial positioning, Smart
+  Default, or filtering.
 
 ### Fixed — Responsive Layout Hardening
 
