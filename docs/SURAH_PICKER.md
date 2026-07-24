@@ -36,12 +36,13 @@ list at both boundaries. The page can scroll only when a new gesture starts
 outside the picker. There are no touch, pointer, or wheel handlers that call
 `preventDefault()` or manually write `scrollTop`.
 
-When an Android soft keyboard resizes the Visual Viewport, the open list
-measures the available visible height below its focused input and reduces only
-its overlay height as needed. The update is driven by `VisualViewport` resize
-and scroll events, never by timers, polling, forced blur, or programmatic page
-scrolling. This keeps the list's contained scrollport inside the touchable
-viewport while search remains focused.
+When an Android soft keyboard resizes the Visual Viewport, the open list keeps
+its comfortable fixed maximum height. If the keyboard leaves insufficient space
+below the focused input, the overlay opens above it instead. Placement is driven
+only by the VisualViewport resize lifecycle, never by timers, polling, forced
+blur, programmatic page scrolling, or resizing the scrollport during a touch
+interaction. This keeps the list's contained hit area and scroll ownership
+stable while search remains focused.
 
 The visible input retains its original `name`, required state, callback, and
 free-text behavior, so server actions, validation, Smart Default, and stored
@@ -63,6 +64,5 @@ passing scroll ownership to the page.
 - Do not add touch, pointer, or wheel handlers that prevent default scrolling
   on the list; CSS containment provides the required isolation without
   intercepting native scrolling.
-- Keep keyboard-driven list sizing tied to the current Visual Viewport, not the
-  static layout viewport, so a focused search field cannot place the list
-  behind the Android soft keyboard.
+- Keep keyboard-driven placement tied to the current Visual Viewport, while
+  preserving a stable list height and hit area throughout scrolling.

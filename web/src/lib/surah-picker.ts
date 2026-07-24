@@ -31,18 +31,22 @@ export function getCenteredSurahScrollTop(
   );
 }
 
-export function getSurahPickerListMaxHeight(
+export function shouldOpenSurahPickerUpward(
+  inputTop: number,
   inputBottom: number,
   viewportHeight: number,
-  preferredMaxHeight: number,
-  gap = 4,
-): number {
-  if (!Number.isFinite(inputBottom) || !Number.isFinite(viewportHeight)) {
-    return preferredMaxHeight;
+  listHeight: number,
+): boolean {
+  if (
+    !Number.isFinite(inputTop) ||
+    !Number.isFinite(inputBottom) ||
+    !Number.isFinite(viewportHeight) ||
+    !Number.isFinite(listHeight)
+  ) {
+    return false;
   }
 
-  return Math.max(
-    0,
-    Math.min(preferredMaxHeight, viewportHeight - inputBottom - gap),
-  );
+  const spaceAbove = Math.max(0, inputTop);
+  const spaceBelow = Math.max(0, viewportHeight - inputBottom);
+  return spaceBelow < listHeight && spaceAbove > spaceBelow;
 }

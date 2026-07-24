@@ -9,9 +9,9 @@ import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import {
   getCenteredSurahScrollTop,
-  getSurahPickerListMaxHeight,
   getSelectedSurahIndex,
   getVisibleSurahOptions,
+  shouldOpenSurahPickerUpward,
 } from "@/lib/surah-picker";
 
 type SurahInputProps = {
@@ -45,7 +45,7 @@ export default function SurahInput({
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [visibleListMaxHeight, setVisibleListMaxHeight] = useState<number | null>(null);
+  const [opensUpward, setOpensUpward] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(() =>
     getSelectedSurahIndex(options, defaultValue ?? ""),
   );
@@ -85,36 +85,34 @@ export default function SurahInput({
 
   useLayoutEffect(() => {
     if (!isOpen) {
-      setVisibleListMaxHeight(null);
+      setOpensUpward(false);
       return;
     }
 
     const visualViewport = window.visualViewport;
 
-    function syncListHeight() {
+    function syncListPlacement() {
       const input = inputRef.current;
       if (!input) return;
       const viewportHeight = visualViewport?.height ?? window.innerHeight;
-      setVisibleListMaxHeight(
-        getSurahPickerListMaxHeight(
-          input.getBoundingClientRect().bottom,
+      const { top, bottom } = input.getBoundingClientRect();
+      setOpensUpward(
+        shouldOpenSurahPickerUpward(
+          top,
+          bottom,
           viewportHeight,
           LIST_MAX_HEIGHT,
         ),
       );
     }
 
-    syncListHeight();
-    visualViewport?.addEventListener("resize", syncListHeight);
-    visualViewport?.addEventListener("scroll", syncListHeight);
-    window.addEventListener("resize", syncListHeight);
-    window.addEventListener("scroll", syncListHeight, { passive: true });
+    syncListPlacement();
+    visualViewport?.addEventListener("resize", syncListPlacement);
+    window.addEventListener("resize", syncListPlacement);
 
     return () => {
-      visualViewport?.removeEventListener("resize", syncListHeight);
-      visualViewport?.removeEventListener("scroll", syncListHeight);
-      window.removeEventListener("resize", syncListHeight);
-      window.removeEventListener("scroll", syncListHeight);
+      visualViewport?.removeEventListener("resize", syncListPlacement);
+      window.removeEventListener("resize", syncListPlacement);
     };
   }, [isOpen]);
 
@@ -230,13 +228,12 @@ export default function SurahInput({
       />
       {isOpen && filtered.length > 0 ? (
         <ul
-          className="absolute z-50 mt-1 max-h-52 w-full touch-pan-y overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white py-1 shadow-lg [-webkit-overflow-scrolling:touch] dark:border-slate-700 dark:bg-slate-900"
+          className={`absolute z-50 max-h-52 w-full touch-pan-y overflow-y-auto overscroll-y-contain rounded-xl border border-slate-200 bg-white py-1 shadow-lg [-webkit-overflow-scrolling:touch] dark:border-slate-700 dark:bg-slate-900 ${
+            opensUpward ? "bottom-full mb-1" : "mt-1"
+          }`}
           id={listboxId}
           ref={listRef}
           role="listbox"
-          style={visibleListMaxHeight === null
-            ? undefined
-            : { maxHeight: visibleListMaxHeight }}
         >
           {filtered.map((surah, i) => (
             <li key={surah.number}>
