@@ -30,3 +30,19 @@ export function getCenteredSurahScrollTop(
     itemOffsetTop - (containerHeight - itemHeight) / 2,
   );
 }
+
+export function getSurahPickerListMaxHeight(
+  inputBottom: number,
+  viewportHeight: number,
+  preferredMaxHeight: number,
+  gap = 4,
+): number {
+  if (!Number.isFinite(inputBottom) || !Number.isFinite(viewportHeight)) {
+    return preferredMaxHeight;
+  }
+
+  return Math.max(
+    0,
+    Math.min(preferredMaxHeight, viewportHeight - inputBottom - gap),
+  );
+}

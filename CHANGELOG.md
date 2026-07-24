@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Android Chrome/PWA and desktop. Page scrolling resumes only for a new gesture
   started outside the picker, without changing initial positioning, Smart
   Default, or filtering.
+- When the Android soft keyboard is visible, the open result list now fits the
+  Visual Viewport while preserving focus, contained scrolling, and search.
 
 ### Fixed — Responsive Layout Hardening
 

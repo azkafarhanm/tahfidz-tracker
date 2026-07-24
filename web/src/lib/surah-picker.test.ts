@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getCenteredSurahScrollTop,
+  getSurahPickerListMaxHeight,
   getSelectedSurahIndex,
   getVisibleSurahOptions,
 } from "@/lib/surah-picker";
@@ -39,6 +40,20 @@ describe("getCenteredSurahScrollTop", () => {
 
   it("does not produce a negative position near the start of the list", () => {
     expect(getCenteredSurahScrollTop(16, 32, 208)).toBe(0);
+  });
+});
+
+describe("getSurahPickerListMaxHeight", () => {
+  it("keeps the normal list height when it fits in the visual viewport", () => {
+    expect(getSurahPickerListMaxHeight(180, 720, 208)).toBe(208);
+  });
+
+  it("shrinks the list to stay above the virtual keyboard", () => {
+    expect(getSurahPickerListMaxHeight(380, 500, 208)).toBe(116);
+  });
+
+  it("does not produce a negative height when no visible space remains", () => {
+    expect(getSurahPickerListMaxHeight(520, 500, 208)).toBe(0);
   });
 });
 

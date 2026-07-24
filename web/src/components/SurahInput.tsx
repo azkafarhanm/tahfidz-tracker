@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import {
   surahList,
   type SurahInfo,
@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import {
   getCenteredSurahScrollTop,
+  getSurahPickerListMaxHeight,
   getSelectedSurahIndex,
   getVisibleSurahOptions,
 } from "@/lib/surah-picker";
@@ -22,6 +23,8 @@ type SurahInputProps = {
   placeholder?: string;
   required?: boolean;
 };
+
+const LIST_MAX_HEIGHT = 208;
 
 export default function SurahInput({
   defaultValue,
@@ -42,6 +45,7 @@ export default function SurahInput({
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [visibleListMaxHeight, setVisibleListMaxHeight] = useState<number | null>(null);
   const [highlightIndex, setHighlightIndex] = useState(() =>
     getSelectedSurahIndex(options, defaultValue ?? ""),
   );
@@ -78,6 +82,41 @@ export default function SurahInput({
     }
     setHighlightIndex(getSelectedSurahIndex(filtered, selectedValue));
   }, [filtered, isSearching, selectedValue]);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setVisibleListMaxHeight(null);
+      return;
+    }
+
+    const visualViewport = window.visualViewport;
+
+    function syncListHeight() {
+      const input = inputRef.current;
+      if (!input) return;
+      const viewportHeight = visualViewport?.height ?? window.innerHeight;
+      setVisibleListMaxHeight(
+        getSurahPickerListMaxHeight(
+          input.getBoundingClientRect().bottom,
+          viewportHeight,
+          LIST_MAX_HEIGHT,
+        ),
+      );
+    }
+
+    syncListHeight();
+    visualViewport?.addEventListener("resize", syncListHeight);
+    visualViewport?.addEventListener("scroll", syncListHeight);
+    window.addEventListener("resize", syncListHeight);
+    window.addEventListener("scroll", syncListHeight, { passive: true });
+
+    return () => {
+      visualViewport?.removeEventListener("resize", syncListHeight);
+      visualViewport?.removeEventListener("scroll", syncListHeight);
+      window.removeEventListener("resize", syncListHeight);
+      window.removeEventListener("scroll", syncListHeight);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const initialIndex = initialPositionIndexRef.current;
@@ -195,6 +234,9 @@ export default function SurahInput({
           id={listboxId}
           ref={listRef}
           role="listbox"
+          style={visibleListMaxHeight === null
+            ? undefined
+            : { maxHeight: visibleListMaxHeight }}
         >
           {filtered.map((surah, i) => (
             <li key={surah.number}>
