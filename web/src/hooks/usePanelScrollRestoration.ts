@@ -6,6 +6,12 @@ import {
   teacherNavigationItems,
   adminNavigationItems,
 } from "@/lib/navigation";
+import { traceScrollLifecycle } from "@/lib/scroll-lifecycle-trace";
+import {
+  isSupportedDetailPanel,
+  scrollRouteIdentity,
+  shouldConsumeScrollRestoreFlag,
+} from "@/lib/scroll-restoration-policy";
 
 /**
  * Scroll Position Persistence for primary application panels.
@@ -111,27 +117,9 @@ const WHITELIST = new Set<string>([
 // the same save/restore cycle as primary panels. The trailing slash ensures a
 // prefix only matches nested detail paths (/students/abc) and never the list
 // route itself (/students), which the WHITELIST already covers.
-const DETAIL_PREFIXES = [
-  "/students/",
-  "/formative/",
-  "/summative/",
-  "/admin/students/",
-];
-
 function isRestorable(pathname: string): boolean {
   if (WHITELIST.has(pathname)) return true;
-  return DETAIL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
-
-function routeIdentity(pathname: string, queryString: string): string {
-  const params = new URLSearchParams(queryString);
-  params.delete("dashboardShortcut");
-  if (pathname === "/") {
-    params.delete("programType");
-  }
-  params.sort();
-  const query = params.toString();
-  return query ? `${pathname}?${query}` : pathname;
+  return isSupportedDetailPanel(pathname);
 }
 
 function storageKey(identity: string): string {
@@ -157,7 +145,7 @@ function saveScroll(identity: string): void {
 export function usePanelScrollRestoration(): void {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const identity = routeIdentity(pathname, searchParams.toString());
+  const identity = scrollRouteIdentity(pathname, searchParams.toString());
   const hasHighlight = searchParams.get("highlight") !== null;
   const prevIdentity = useRef<string | null>(identity);
   const currentIdentity = useRef(identity);
@@ -171,9 +159,16 @@ export function usePanelScrollRestoration(): void {
 
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
+    traceScrollLifecycle("Browser Scroll Restoration initialized", {
+      previous,
+      current: window.history.scrollRestoration,
+    });
 
     return () => {
       window.history.scrollRestoration = previous;
+      traceScrollLifecycle("Browser Scroll Restoration cleanup", {
+        restoredValue: previous,
+      });
     };
   }, []);
 
@@ -190,8 +185,17 @@ export function usePanelScrollRestoration(): void {
 
     const handlePopState = () => {
       try {
+        traceScrollLifecycle("Browser popstate received", {
+          currentIdentity: currentIdentity.current,
+          currentPathname: currentPathname.current,
+          flagBefore: sessionStorage.getItem(NAV_FLAG),
+        });
         saveCurrentRoute();
         sessionStorage.setItem(NAV_FLAG, "1");
+        traceScrollLifecycle("Browser popstate armed scroll restore", {
+          currentIdentity: currentIdentity.current,
+          flagAfter: sessionStorage.getItem(NAV_FLAG),
+        });
       } catch {
         // sessionStorage may be unavailable - browser history continues.
       }
@@ -199,6 +203,9 @@ export function usePanelScrollRestoration(): void {
 
     window.addEventListener("popstate", handlePopState);
     window.addEventListener("pagehide", saveCurrentRoute);
+    traceScrollLifecycle("Scroll persistence listeners mounted", {
+      identity: currentIdentity.current,
+    });
     return () => {
       window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("pagehide", saveCurrentRoute);
@@ -252,7 +259,7 @@ export function usePanelScrollRestoration(): void {
         } else {
           normalizedCurrentUrl.searchParams.set("page", currentPage);
         }
-        const normalizedCurrentIdentity = routeIdentity(
+        const normalizedCurrentIdentity = scrollRouteIdentity(
           normalizedCurrentUrl.pathname,
           normalizedCurrentUrl.search,
         );
@@ -264,7 +271,7 @@ export function usePanelScrollRestoration(): void {
         // A pagination URL has no saved position on its first visit. Seed it
         // with the outgoing viewport so the cold transition behaves like later
         // visits while still allowing each page to diverge independently.
-        const destinationIdentity = routeIdentity(
+        const destinationIdentity = scrollRouteIdentity(
           destinationUrl.pathname,
           destinationUrl.search,
         );
@@ -286,21 +293,40 @@ export function usePanelScrollRestoration(): void {
     // before Next.js resets window.scrollY. Nothing to save here.
 
     // Restore the INCOMING panel's scroll — only via primary navigation.
-    const viaPrimaryNav = sessionStorage.getItem(NAV_FLAG) === "1";
-    if (viaPrimaryNav) {
+    const rawNavigationFlag = sessionStorage.getItem(NAV_FLAG);
+    const viaPrimaryNav = rawNavigationFlag === "1";
+    const incomingRouteIsRestorable = isRestorable(pathname);
+    const consumesRestoreFlag = shouldConsumeScrollRestoreFlag(
+      viaPrimaryNav,
+      incomingRouteIsRestorable,
+    );
+    traceScrollLifecycle("Scroll restore layout effect started", {
+      identity,
+      viaPrimaryNav,
+      rawNavigationFlag,
+      restorable: incomingRouteIsRestorable,
+      consumesRestoreFlag,
+      hasHighlight,
+      savedTarget: readSaved(identity),
+    });
+    if (consumesRestoreFlag) {
       sessionStorage.removeItem(NAV_FLAG); // one-shot
+      traceScrollLifecycle("Scroll restore flag consumed", {
+        identity,
+        restorable: incomingRouteIsRestorable,
+      });
     }
 
     // Highlight precedence: a `highlight` param means the highlighted item is
     // the authoritative viewport for this navigation (e.g. a Save that returns
     // to the edited row). NAV_FLAG was already consumed above so it cannot leak
     // to a later navigation; scroll restoration is skipped for this load only.
-    if (viaPrimaryNav && hasHighlight) {
+    if (consumesRestoreFlag && hasHighlight) {
       prevIdentity.current = identity;
       return;
     }
 
-    if (viaPrimaryNav && isRestorable(pathname)) {
+    if (consumesRestoreFlag) {
       const target = readSaved(identity);
       if (target != null) {
         const docEl = document.documentElement;
@@ -311,8 +337,24 @@ export function usePanelScrollRestoration(): void {
         const tryRestore = () => {
           const max = maxScrollable();
           const clamped = Math.min(target, max);
+          traceScrollLifecycle("Scroll restore attempt", {
+            identity,
+            target,
+            maxScrollable: max,
+            clamped,
+          });
           window.scrollTo(0, clamped);
-          return max >= target;
+          const complete = max >= target;
+          traceScrollLifecycle(
+            complete ? "Final scroll restore" : "Scroll context partially restored",
+            {
+              identity,
+              target,
+              applied: clamped,
+              complete,
+            },
+          );
+          return complete;
         };
 
         // Once restore succeeds, install a short-lived watchdog that re-asserts
@@ -413,6 +455,15 @@ export function usePanelScrollRestoration(): void {
           finish();
         };
       }
+      traceScrollLifecycle("Scroll restore skipped: no saved target", {
+        identity,
+      });
+    } else {
+      traceScrollLifecycle("Scroll restore skipped: navigation not eligible", {
+        identity,
+        viaPrimaryNav,
+        restorable: incomingRouteIsRestorable,
+      });
     }
 
     prevIdentity.current = identity;
@@ -434,14 +485,24 @@ export function markPrimaryNavigation(
   try {
     if (isRestorable(outgoingPathname)) {
       const identities = new Set([
-        routeIdentity(outgoingPathname, window.location.search),
-        routeIdentity(outgoingPathname, queryString),
+        scrollRouteIdentity(outgoingPathname, window.location.search),
+        scrollRouteIdentity(outgoingPathname, queryString),
       ]);
       for (const identity of identities) {
         saveScroll(identity);
       }
+      traceScrollLifecycle("Scroll Context saved", {
+        outgoingPathname,
+        identities: [...identities],
+        savedScrollY: Math.round(window.scrollY),
+      });
     }
     sessionStorage.setItem(NAV_FLAG, "1");
+    traceScrollLifecycle("Scroll restore armed", {
+      outgoingPathname,
+      queryString,
+      flag: sessionStorage.getItem(NAV_FLAG),
+    });
   } catch {
     // sessionStorage may be unavailable (private mode) — fail silently.
   }

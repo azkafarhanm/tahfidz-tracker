@@ -1,5 +1,7 @@
 "use client";
 
+import { traceScrollLifecycle } from "@/lib/scroll-lifecycle-trace";
+
 /**
  * Navigation Context Persistence (Phase 2B).
  *
@@ -52,6 +54,11 @@ export function markNavigationContext(
   if (!CONTEXT_WHITELIST.has(outgoingPathname)) return;
   try {
     sessionStorage.setItem(contextKey(outgoingPathname), queryString);
+    traceScrollLifecycle("Navigation Context saved", {
+      outgoingPathname,
+      key: contextKey(outgoingPathname),
+      queryString,
+    });
   } catch {
     // sessionStorage may be unavailable (private mode) — fail silently.
   }
@@ -91,7 +98,13 @@ export function readNavigationContext(pathname: string): string | null {
   if (typeof window === "undefined") return null;
   if (!CONTEXT_WHITELIST.has(pathname)) return null;
   try {
-    return sessionStorage.getItem(contextKey(pathname));
+    const value = sessionStorage.getItem(contextKey(pathname));
+    traceScrollLifecycle("Navigation Context loaded", {
+      destinationPathname: pathname,
+      key: contextKey(pathname),
+      value,
+    });
+    return value;
   } catch {
     return null;
   }

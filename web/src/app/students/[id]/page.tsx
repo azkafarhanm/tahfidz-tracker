@@ -20,6 +20,7 @@ import ExportSection from "@/components/ExportSection";
 import InitialsAvatar from "@/components/InitialsAvatar";
 import ScrollToHighlightedItem from "@/components/ScrollToHighlightedItem";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
+import StudentDetailLifecycleTrace from "./StudentDetailLifecycleTrace";
 import ActivityRow from "./ActivityRow";
 import TargetCard from "./TargetCard";
 import MeetingHistorySection from "./MeetingHistorySection";
@@ -254,6 +255,12 @@ export default async function StudentDetailPage({
 
   return (
     <AppShell currentPath="/students" userName={session.user.name} isAdmin={isAdmin}>
+         <StudentDetailLifecycleTrace
+           historyCount={student.historyRecords.length}
+           programType={student.programType}
+           studentId={student.id}
+           tasmiCount={student.tasmiRecords.length}
+         />
          <ScrollToHighlightedItem />
          <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3 min-w-0">

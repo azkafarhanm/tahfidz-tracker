@@ -18,6 +18,7 @@ import {
   samePageReturnQuery,
   shouldSaveScrollContext,
 } from "@/lib/workflow-return";
+import { traceScrollLifecycle } from "@/lib/scroll-lifecycle-trace";
 
 type WorkflowContextLinkProps = Omit<ComponentProps<typeof Link>, "href"> & {
   compatibilityKeys?: string[];
@@ -108,7 +109,25 @@ export default function WorkflowContextLink({
       ? mergeContextParams(href, storedContext)
       : href;
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    traceScrollLifecycle("WorkflowContextLink hydrated", {
+      sourcePathname: pathname,
+      destinationPathname,
+      rawHref: href,
+      restoreContext,
+    });
+    setMounted(true);
+  }, [destinationPathname, href, pathname, restoreContext]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    traceScrollLifecycle("Workflow restored", {
+      sourcePathname: pathname,
+      destinationPathname,
+      storedContext,
+      resolvedHref,
+    });
+  }, [destinationPathname, mounted, pathname, resolvedHref, storedContext]);
 
   return (
     <Link
@@ -142,6 +161,14 @@ export default function WorkflowContextLink({
           isSamePageQueryNavigation,
           preserveCurrentScrollContext,
         );
+        traceScrollLifecycle("Workflow navigation clicked", {
+          sourcePathname: pathname,
+          destinationPathname,
+          resolvedHref,
+          currentContext,
+          destinationContext,
+          savesScrollContext,
+        });
         if (savesScrollContext) {
           markPrimaryNavigation(
             pathname,
