@@ -10,19 +10,32 @@ import {
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
-import { getTeacherReportData } from "@/lib/reports";
+import {
+  getReportAttendancePeriods,
+  getTeacherReportData,
+} from "@/lib/reports";
 import AppShell from "@/components/AppShell";
+import AttendanceSemesterFilter from "@/components/AttendanceSemesterFilter";
 import ExportSection from "@/components/ExportSection";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
 import { requireSessionScope } from "@/lib/session";
-import { getActiveAcademicYear, getTeacherProgramContext } from "@/lib/academic-year";
+import {
+  getActiveAcademicYear,
+  getSemesterForDate,
+  getTeacherProgramContext,
+} from "@/lib/academic-year";
 import { badge, heroSummary, backLink } from "@/lib/colors";
 import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels } from "@/lib/format";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { groupProgressStudentsByGradeAndClass } from "@/lib/report-presentation";
+import {
+  attendancePeriodValue,
+  ensureActiveAttendancePeriods,
+  resolveAttendancePeriod,
+} from "@/lib/report-attendance-period";
 
 export const runtime = "nodejs";
 
@@ -35,6 +48,7 @@ export async function generateMetadata() {
 
 type ReportsPageProps = {
   searchParams?: Promise<{
+    attendancePeriod?: string;
     programType?: string;
   }>;
 };
@@ -83,8 +97,40 @@ export default async function ReportsPage({
     ? (requestedProgramType as ProgramType)
     : programContext.resolvedProgramType;
   const isBoarding = programType === ProgramType.BOARDING;
+  const defaultAttendancePeriod = {
+    academicYear,
+    semester: getSemesterForDate(new Date()),
+  };
+  const attendancePeriods = isBoarding
+    ? []
+    : ensureActiveAttendancePeriods(
+        await getReportAttendancePeriods(),
+        academicYear,
+      );
+  const selectedAttendancePeriod = resolveAttendancePeriod(
+    attendancePeriods,
+    params?.attendancePeriod,
+    defaultAttendancePeriod,
+  );
+  const attendancePeriodOptions = attendancePeriods.map((period) => ({
+    value: attendancePeriodValue(period),
+    label: t("attendanceSemesterOption", {
+      academicYear: period.academicYear,
+      semester:
+        period.semester === "GANJIL"
+          ? t("attendanceSemesterGanjil")
+          : t("attendanceSemesterGenap"),
+    }),
+  }));
 
-  const data = await getTeacherReportData(teacherId, locale, programType, academicYear);
+  const data = await getTeacherReportData(
+    teacherId,
+    locale,
+    programType,
+    academicYear,
+    selectedAttendancePeriod.academicYear,
+    selectedAttendancePeriod.semester,
+  );
   const academicProgressGroups = isBoarding
     ? []
     : groupProgressStudentsByGradeAndClass(data.students);
@@ -111,7 +157,26 @@ export default async function ReportsPage({
               key={s.id}
             >
               <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
-                {s.fullName}
+                <span>{s.fullName}</span>
+                {s.attendance ? (
+                  <div className="mt-2 flex max-w-64 flex-wrap gap-1 text-[11px] font-medium">
+                    <span className="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
+                      {t("meetingAttendanceRate")} {s.attendance.attendanceRate}%
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      {t("meetingHadir")} {s.attendance.hadir}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      {t("meetingIzin")} {s.attendance.izin}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      {t("meetingSakit")} {s.attendance.sakit}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      {t("meetingAlfa")} {s.attendance.alfa}
+                    </span>
+                  </div>
+                ) : null}
               </td>
               <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.academicClassName}</td>
               <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.halaqahName}</td>
@@ -180,6 +245,13 @@ export default async function ReportsPage({
                   currentProgramType={programType}
                 />
               )}
+              {!isBoarding ? (
+                <AttendanceSemesterFilter
+                  currentValue={attendancePeriodValue(selectedAttendancePeriod)}
+                  label={t("attendanceSemesterFilterLabel")}
+                  options={attendancePeriodOptions}
+                />
+              ) : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

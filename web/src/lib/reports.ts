@@ -1,7 +1,16 @@
 import { ProgramType, RecordStatus, Semester, TargetStatus } from "@/generated/prisma-next/enums";
 import { prisma } from "@/lib/prisma";
 import { cached } from "@/lib/cache";
-import { getActiveAcademicYear } from "@/lib/academic-year";
+import {
+  getActiveAcademicYear,
+  getSemesterDateRange,
+  getSemesterForDate,
+} from "@/lib/academic-year";
+import {
+  buildSemesterMeetingStatistics,
+  buildStudentMeetingStatistics,
+} from "@/lib/meeting-status";
+import { getAcademicReportRecordPeriodFilter } from "@/lib/report-attendance-period";
 import { computeTargetCoverage } from "@/lib/target-progress";
 import { getTeacherFormativeExportData } from "@/lib/formative";
 import {
@@ -16,16 +25,89 @@ import {
 } from "@/lib/summative";
 import { tasmiGradeLabels, tasmiStatusLabel } from "@/lib/tasmi";
 
-export async function getTeacherReportData(teacherId: string, locale = "id", programType?: ProgramType, academicYear?: string) {
-  const year = academicYear ?? await getActiveAcademicYear();
-  const cacheKey = `report-teacher:${teacherId}:${locale}:${programType ?? "all"}:${year}`;
-  return cached(cacheKey, 30_000, () => getTeacherReportDataInner(teacherId, locale, programType, year));
+export async function getReportAttendancePeriods() {
+  const academicYears = await prisma.academicYear.findMany({
+    orderBy: { startDate: "desc" },
+    select: { year: true },
+  });
+
+  return academicYears.flatMap(({ year }) => [
+    { academicYear: year, semester: Semester.GANJIL },
+    { academicYear: year, semester: Semester.GENAP },
+  ]);
 }
 
-async function getTeacherReportDataInner(teacherId: string, locale = "id", programType?: ProgramType, academicYear?: string) {
+export async function getTeacherReportData(
+  teacherId: string,
+  locale = "id",
+  programType?: ProgramType,
+  academicYear?: string,
+  attendanceAcademicYear?: string,
+  attendanceSemester?: Semester,
+) {
+  const year = academicYear ?? await getActiveAcademicYear();
+  const hasSelectedReportPeriod =
+    attendanceAcademicYear !== undefined && attendanceSemester !== undefined;
+  const selectedAttendanceYear = attendanceAcademicYear ?? year;
+  const selectedAttendanceSemester =
+    attendanceSemester ?? getSemesterForDate(new Date());
+  const reportPeriodKey = hasSelectedReportPeriod
+    ? `${selectedAttendanceYear}:${selectedAttendanceSemester}`
+    : "cumulative";
+  const cacheKey = `report-teacher:${teacherId}:${locale}:${programType ?? "all"}:${year}:period:${reportPeriodKey}`;
+  return cached(
+    cacheKey,
+    30_000,
+    () => getTeacherReportDataInner(
+      teacherId,
+      locale,
+      programType,
+      year,
+      selectedAttendanceYear,
+      selectedAttendanceSemester,
+      hasSelectedReportPeriod,
+    ),
+  );
+}
+
+async function getTeacherReportDataInner(
+  teacherId: string,
+  locale = "id",
+  programType?: ProgramType,
+  academicYear?: string,
+  attendanceAcademicYear?: string,
+  attendanceSemester?: Semester,
+  filterAcademicRecordsByPeriod = false,
+) {
   const dateFormatter = getDateFormatter(locale);
   const year = academicYear ?? await getActiveAcademicYear();
   const programFilter = programType ? { programType } : {};
+  const selectedAttendanceYear = attendanceAcademicYear ?? year;
+  const selectedAttendanceSemester =
+    attendanceSemester ?? getSemesterForDate(new Date());
+  const semesterRange = getSemesterDateRange(
+    selectedAttendanceYear,
+    selectedAttendanceSemester,
+  );
+  const semesterStart = new Date(Date.UTC(
+    semesterRange.start.getFullYear(),
+    semesterRange.start.getMonth(),
+    semesterRange.start.getDate(),
+  ));
+  const semesterEnd = new Date(Date.UTC(
+    semesterRange.end.getFullYear(),
+    semesterRange.end.getMonth(),
+    semesterRange.end.getDate(),
+  ));
+  const academicRecordPeriodFilter = getAcademicReportRecordPeriodFilter(
+    programType,
+    {
+      academicYear: selectedAttendanceYear,
+      semester: selectedAttendanceSemester,
+    },
+    teacherId,
+    filterAcademicRecordsByPeriod,
+  );
   const [classGroups, students] = await Promise.all([
     prisma.classGroup.findMany({
       where: { teacherId, isActive: true, academicYear: year, ...programFilter },
@@ -42,14 +124,19 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
         academicClass: { select: { name: true } },
         _count: {
           select: {
-            memorizationRecords: true,
-            revisionRecords: true,
+            memorizationRecords: {
+              where: academicRecordPeriodFilter,
+            },
+            revisionRecords: {
+              where: academicRecordPeriodFilter,
+            },
             targets: {
               where: { status: TargetStatus.ACTIVE },
             },
           },
         },
         memorizationRecords: {
+          where: academicRecordPeriodFilter,
           orderBy: { date: "desc" },
           take: 1,
           select: {
@@ -62,6 +149,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
           },
         },
         revisionRecords: {
+          where: academicRecordPeriodFilter,
           orderBy: { date: "desc" },
           take: 1,
           select: {
@@ -83,12 +171,14 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
     revisionScoreStats,
     memorizationStudentStats,
     revisionStudentStats,
+    meetingStatusGroups,
   ] = studentIds.length > 0
     ? await Promise.all([
         prisma.memorizationRecord.aggregate({
           where: {
             studentId: { in: studentIds },
             score: { not: null },
+            ...academicRecordPeriodFilter,
           },
           _avg: { score: true },
           _count: { score: true },
@@ -97,6 +187,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
           where: {
             studentId: { in: studentIds },
             score: { not: null },
+            ...academicRecordPeriodFilter,
           },
           _avg: { score: true },
           _count: { score: true },
@@ -106,6 +197,7 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
           where: {
             studentId: { in: studentIds },
             score: { not: null },
+            ...academicRecordPeriodFilter,
           },
           _avg: { score: true },
           _count: { score: true },
@@ -115,14 +207,28 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
           where: {
             studentId: { in: studentIds },
             score: { not: null },
+            ...academicRecordPeriodFilter,
           },
           _avg: { score: true },
           _count: { score: true },
         }),
+        programType === ProgramType.ACADEMIC
+          ? prisma.meetingStatus.groupBy({
+              by: ["studentId", "status"],
+              where: {
+                studentId: { in: studentIds },
+                teacherId,
+                programType: ProgramType.ACADEMIC,
+                date: { gte: semesterStart, lte: semesterEnd },
+              },
+              _count: { _all: true },
+            })
+          : Promise.resolve([]),
       ])
     : [
         { _avg: { score: null }, _count: { score: 0 } },
         { _avg: { score: null }, _count: { score: 0 } },
+        [],
         [],
         [],
       ] as const;
@@ -140,6 +246,9 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
     revisionScoreStats,
   ]);
   const studentScoreStats = new Map<string, { scoreTotal: number; count: number }>();
+  const meetingStatisticsByStudent =
+    buildStudentMeetingStatistics(meetingStatusGroups);
+  const emptyMeetingStatistics = buildSemesterMeetingStatistics([]);
 
   for (const row of [...memorizationStudentStats, ...revisionStudentStats]) {
     const average = row._avg.score;
@@ -213,6 +322,10 @@ async function getTeacherReportDataInner(teacherId: string, locale = "id", progr
           lastH?.status === RecordStatus.PERLU_MUROJAAH ||
           lastM?.status === RecordStatus.PERLU_MUROJAAH,
         activeTargets: s._count.targets,
+        attendance:
+          programType === ProgramType.ACADEMIC
+            ? meetingStatisticsByStudent.get(s.id) ?? emptyMeetingStatistics
+            : null,
       };
     }),
   };

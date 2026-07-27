@@ -24,7 +24,7 @@ export function getTodayMeetingStatus(
 }
 
 export function buildMeetingStatusCounts(
-  groups: { status: MeetingAttendanceStatus; _count: { _all: number } }[],
+  groups: readonly { status: MeetingAttendanceStatus; _count: { _all: number } }[],
 ) {
   const counts: Record<MeetingAttendanceStatus, number> = {
     [MeetingAttendanceStatus.HADIR]: 0,
@@ -34,6 +34,52 @@ export function buildMeetingStatusCounts(
   };
   for (const group of groups) counts[group.status] = group._count._all;
   return counts;
+}
+
+export function buildSemesterMeetingStatistics(
+  groups: readonly { status: MeetingAttendanceStatus; _count: { _all: number } }[],
+) {
+  const counts = buildMeetingStatusCounts(groups);
+  const totalMeetings =
+    counts.HADIR + counts.IZIN + counts.SAKIT + counts.ALFA;
+
+  return {
+    totalMeetings,
+    hadir: counts.HADIR,
+    izin: counts.IZIN,
+    sakit: counts.SAKIT,
+    alfa: counts.ALFA,
+    attendanceRate:
+      totalMeetings > 0
+        ? Math.round((counts.HADIR / totalMeetings) * 100)
+        : 0,
+  };
+}
+
+export function buildStudentMeetingStatistics(
+  groups: readonly {
+    studentId: string;
+    status: MeetingAttendanceStatus;
+    _count: { _all: number };
+  }[],
+) {
+  const groupsByStudent = new Map<
+    string,
+    { status: MeetingAttendanceStatus; _count: { _all: number } }[]
+  >();
+
+  for (const { studentId, status, _count } of groups) {
+    const studentGroups = groupsByStudent.get(studentId) ?? [];
+    studentGroups.push({ status, _count });
+    groupsByStudent.set(studentId, studentGroups);
+  }
+
+  return new Map(
+    [...groupsByStudent].map(([studentId, studentGroups]) => [
+      studentId,
+      buildSemesterMeetingStatistics(studentGroups),
+    ]),
+  );
 }
 
 export function groupMeetingTimelineByMonth<T extends { dateKey: string }>(

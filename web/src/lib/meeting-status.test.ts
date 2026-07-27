@@ -3,6 +3,8 @@ import { MeetingAttendanceStatus } from "@/generated/prisma-next/enums";
 import {
   buildMeetingTimeline,
   buildMeetingStatusCounts,
+  buildSemesterMeetingStatistics,
+  buildStudentMeetingStatistics,
   getTodayMeetingStatus,
   groupMeetingTimelineByMonth,
   parseMeetingDate,
@@ -89,6 +91,76 @@ describe("buildMeetingStatusCounts", () => {
     );
 
     expect(counts).toEqual({ HADIR: 22, IZIN: 2, SAKIT: 0, ALFA: 3 });
+  });
+});
+
+describe("buildSemesterMeetingStatistics", () => {
+  it("calculates the halaqah-wide total and a rounded attendance rate", () => {
+    expect(
+      buildSemesterMeetingStatistics([
+        { status: MeetingAttendanceStatus.HADIR, _count: { _all: 22 } },
+        { status: MeetingAttendanceStatus.IZIN, _count: { _all: 2 } },
+        { status: MeetingAttendanceStatus.SAKIT, _count: { _all: 1 } },
+        { status: MeetingAttendanceStatus.ALFA, _count: { _all: 2 } },
+      ]),
+    ).toEqual({
+      totalMeetings: 27,
+      hadir: 22,
+      izin: 2,
+      sakit: 1,
+      alfa: 2,
+      attendanceRate: 81,
+    });
+  });
+
+  it("returns zero percent when the active semester has no meetings", () => {
+    expect(buildSemesterMeetingStatistics([])).toEqual({
+      totalMeetings: 0,
+      hadir: 0,
+      izin: 0,
+      sakit: 0,
+      alfa: 0,
+      attendanceRate: 0,
+    });
+  });
+});
+
+describe("buildStudentMeetingStatistics", () => {
+  it("keeps each student's grouped attendance independent", () => {
+    const statistics = buildStudentMeetingStatistics([
+      {
+        studentId: "student-a",
+        status: MeetingAttendanceStatus.HADIR,
+        _count: { _all: 3 },
+      },
+      {
+        studentId: "student-a",
+        status: MeetingAttendanceStatus.IZIN,
+        _count: { _all: 1 },
+      },
+      {
+        studentId: "student-b",
+        status: MeetingAttendanceStatus.ALFA,
+        _count: { _all: 2 },
+      },
+    ]);
+
+    expect(statistics.get("student-a")).toEqual({
+      totalMeetings: 4,
+      hadir: 3,
+      izin: 1,
+      sakit: 0,
+      alfa: 0,
+      attendanceRate: 75,
+    });
+    expect(statistics.get("student-b")).toEqual({
+      totalMeetings: 2,
+      hadir: 0,
+      izin: 0,
+      sakit: 0,
+      alfa: 2,
+      attendanceRate: 0,
+    });
   });
 });
 
