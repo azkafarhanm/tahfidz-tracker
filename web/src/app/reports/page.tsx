@@ -5,7 +5,6 @@ import {
   BookText,
   Download,
   FileText,
-  AlertTriangle,
   ClipboardList,
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -30,12 +29,12 @@ import { ProgramType } from "@/generated/prisma-next/enums";
 import { programTypeLabels } from "@/lib/format";
 import PanelScrollLink from "@/components/PanelScrollLink";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
-import { groupProgressStudentsByGradeAndClass } from "@/lib/report-presentation";
+import AcademicReportProgress from "@/components/AcademicReportProgress";
+import BoardingReportProgress from "@/components/BoardingReportProgress";
 import {
-  attendancePeriodValue,
-  ensureActiveAttendancePeriods,
-  resolveAttendancePeriod,
-} from "@/lib/report-attendance-period";
+  getAcademicReportViewModel,
+  getReportViewModel,
+} from "@/lib/report-view-model";
 
 export const runtime = "nodejs";
 
@@ -96,130 +95,34 @@ export default async function ReportsPage({
   const programType = programContext.programs.includes(requestedProgramType as ProgramType)
     ? (requestedProgramType as ProgramType)
     : programContext.resolvedProgramType;
-  const isBoarding = programType === ProgramType.BOARDING;
-  const defaultAttendancePeriod = {
-    academicYear,
-    semester: getSemesterForDate(new Date()),
-  };
-  const attendancePeriods = isBoarding
-    ? []
-    : ensureActiveAttendancePeriods(
-        await getReportAttendancePeriods(),
+  const reportView = getReportViewModel(programType);
+  const academicReportView = reportView.kind === "academic"
+    ? getAcademicReportViewModel({
+        activeAcademicYear: academicYear,
+        activeSemester: getSemesterForDate(new Date()),
+        availablePeriods: await getReportAttendancePeriods(),
+        formatPeriod: (period) =>
+          t("attendanceSemesterOption", {
+            academicYear: period.academicYear,
+            semester:
+              period.semester === "GANJIL"
+                ? t("attendanceSemesterGanjil")
+                : t("attendanceSemesterGenap"),
+          }),
+        requestedPeriod: params?.attendancePeriod,
+      })
+    : null;
+
+  const data = academicReportView
+    ? await getTeacherReportData(
+        teacherId,
+        locale,
+        programType,
         academicYear,
-      );
-  const selectedAttendancePeriod = resolveAttendancePeriod(
-    attendancePeriods,
-    params?.attendancePeriod,
-    defaultAttendancePeriod,
-  );
-  const attendancePeriodOptions = attendancePeriods.map((period) => ({
-    value: attendancePeriodValue(period),
-    label: t("attendanceSemesterOption", {
-      academicYear: period.academicYear,
-      semester:
-        period.semester === "GANJIL"
-          ? t("attendanceSemesterGanjil")
-          : t("attendanceSemesterGenap"),
-    }),
-  }));
-
-  const data = await getTeacherReportData(
-    teacherId,
-    locale,
-    programType,
-    academicYear,
-    selectedAttendancePeriod.academicYear,
-    selectedAttendancePeriod.semester,
-  );
-  const academicProgressGroups = isBoarding
-    ? []
-    : groupProgressStudentsByGradeAndClass(data.students);
-
-  const renderProgressTable = (students: typeof data.students) => (
-    <div className="mt-3 overflow-x-auto">
-      <table className="w-full min-w-[700px] text-sm">
-        <thead>
-          <tr className="border-b border-slate-200 text-left dark:border-slate-700">
-            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableName")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableClass")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableHalaqah")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableHafalan")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableMurojaah")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableSkor")}</th>
-            <th className="pb-3 pr-4 font-semibold text-slate-700 dark:text-slate-300">{t("tableLast")}</th>
-            <th className="pb-3 font-semibold text-slate-700 text-center dark:text-slate-300">{t("tableStatus")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((s) => (
-            <tr
-              className="border-b border-slate-100 dark:border-slate-800"
-              key={s.id}
-            >
-              <td className="py-3 pr-4 font-medium text-slate-950 dark:text-white">
-                <span>{s.fullName}</span>
-                {s.attendance ? (
-                  <div className="mt-2 flex max-w-64 flex-wrap gap-1 text-[11px] font-medium">
-                    <span className="rounded-full bg-emerald-100 px-2 py-1 font-semibold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200">
-                      {t("meetingAttendanceRate")} {s.attendance.attendanceRate}%
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                      {t("meetingHadir")} {s.attendance.hadir}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                      {t("meetingIzin")} {s.attendance.izin}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                      {t("meetingSakit")} {s.attendance.sakit}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                      {t("meetingAlfa")} {s.attendance.alfa}
-                    </span>
-                  </div>
-                ) : null}
-              </td>
-              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.academicClassName}</td>
-              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.halaqahName}</td>
-              <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
-                {s.hafalanCount}
-              </td>
-              <td className="py-3 pr-4 text-center text-slate-900 dark:text-slate-100">
-                {s.murojaahCount}
-              </td>
-              <td className="py-3 pr-4 text-center">
-                <span
-                  className={
-                    s.avgScore >= 85
-                      ? "font-semibold text-emerald-700"
-                      : s.avgScore >= 70
-                        ? "font-semibold text-amber-700"
-                        : s.avgScore > 0
-                          ? "font-semibold text-red-700"
-                          : "text-slate-400"
-                  }
-                >
-                  {s.avgScore ?? "-"}
-                </span>
-              </td>
-              <td className="py-3 pr-4 text-slate-600 dark:text-slate-400">{s.lastRange}</td>
-              <td className="py-3 text-center">
-                {s.needsReview ? (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${badge.warning}`}>
-                    <AlertTriangle aria-hidden="true" size={10} />
-                    {t("badgeCek")}
-                  </span>
-                ) : (
-                  <span className={`rounded-full px-2 py-1 text-xs font-medium ${badge.success}`}>
-                    {s.lastStatus}
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+        academicReportView.selectedPeriod.academicYear,
+        academicReportView.selectedPeriod.semester,
+      )
+    : await getTeacherReportData(teacherId, locale, programType, academicYear);
 
   return (
     <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>
@@ -232,9 +135,11 @@ export default async function ReportsPage({
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
               {t("backLink")}
             </PanelScrollLink>
-            <h1 className="mt-3 text-2xl font-semibold">{t("heading")}</h1>
+            <h1 className="mt-3 text-2xl font-semibold">
+              {t(reportView.labels.heading)}
+            </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              {t("description")}
+              {t(reportView.labels.description)}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <ProgramBadge programType={programType} />
@@ -245,11 +150,13 @@ export default async function ReportsPage({
                   currentProgramType={programType}
                 />
               )}
-              {!isBoarding ? (
+              {academicReportView ? (
                 <AttendanceSemesterFilter
-                  currentValue={attendancePeriodValue(selectedAttendancePeriod)}
+                  availablePeriods={academicReportView.availablePeriods}
+                  defaultActiveSemester={academicReportView.defaultActiveSemester}
                   label={t("attendanceSemesterFilterLabel")}
-                  options={attendancePeriodOptions}
+                  selectedPeriod={academicReportView.selectedPeriod}
+                  selectedPeriodLabel={academicReportView.selectedPeriodLabel}
                 />
               ) : null}
             </div>
@@ -282,14 +189,14 @@ export default async function ReportsPage({
         <section className={`mt-6 rounded-[1.75rem] p-5 sm:p-6 ${heroSummary}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-emerald-100">{t("avgScoreLabel")}</p>
+              <p className="text-sm text-emerald-100">{t(reportView.labels.avgScore)}</p>
               <p className="mt-3 text-4xl font-semibold">{data.avgScore ?? "-"}</p>
               <p className="mt-1 text-sm text-slate-300">
-                {t("fromRecordsCount", { count: data.totalHafalan + data.totalMurojaah })}
+                {t(reportView.labels.fromRecords, { count: data.totalHafalan + data.totalMurojaah })}
               </p>
             </div>
             <div className="rounded-2xl bg-white/10 px-3 py-2 text-right">
-              <p className="text-xs text-slate-300">{t("needsReviewLabel")}</p>
+              <p className="text-xs text-slate-300">{t(reportView.labels.needsReview)}</p>
               <p className="mt-1 text-xl font-semibold">{data.needsReviewCount}</p>
             </div>
           </div>
@@ -301,11 +208,11 @@ export default async function ReportsPage({
             <p className="mt-2 text-2xl font-bold text-white">{data.studentCount}</p>
           </article>
           <article className="rounded-2xl bg-green-600 p-4 shadow-lg shadow-green-900/20">
-            <p className="text-xs font-medium text-white/80">{t("statHafalan")}</p>
+            <p className="text-xs font-medium text-white/80">{t(reportView.labels.statHafalan)}</p>
             <p className="mt-2 text-2xl font-bold text-white">{data.totalHafalan}</p>
           </article>
           <article className="rounded-2xl bg-blue-600 p-4 shadow-lg shadow-blue-900/20">
-            <p className="text-xs font-medium text-white/80">{t("statMurojaah")}</p>
+            <p className="text-xs font-medium text-white/80">{t(reportView.labels.statMurojaah)}</p>
             <p className="mt-2 text-2xl font-bold text-white">{data.totalMurojaah}</p>
           </article>
           <article className="rounded-2xl bg-purple-600 p-4 shadow-lg shadow-purple-900/20">
@@ -384,7 +291,7 @@ export default async function ReportsPage({
                     {t("halaqahGradeLabel", { grade: cg.grade })} · {cg.name}
                   </p>
                   <div className="mt-2 flex items-center gap-2">
-                    {cg.level && !isBoarding && (
+                    {cg.level && reportView.showHalaqahLevel && (
                       <span className={`shrink-0 rounded-full ${badge.success} px-3 py-1 text-xs font-medium`}>
                         {cg.level}
                       </span>
@@ -399,40 +306,11 @@ export default async function ReportsPage({
           </section>
         ) : null}
 
-        {isBoarding
-          ? [7, 8, 9].map((grade) => {
-              const gradeStudents = data.students.filter((student) => student.grade === grade);
-              if (gradeStudents.length === 0) return null;
-              return (
-                <section key={grade} className="mt-6">
-                  <h2 className="text-lg font-semibold">{t("progressGradeHeading", { grade })}</h2>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    {t("progressGradeCount", { count: gradeStudents.length })}
-                  </p>
-                  {renderProgressTable(gradeStudents)}
-                </section>
-              );
-            })
-          : academicProgressGroups.map((gradeGroup) => (
-              <section key={gradeGroup.grade} className="mt-6">
-                <h2 className="text-lg font-semibold">
-                  {t("progressGradeHeading", { grade: gradeGroup.grade })}
-                </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  {t("progressGradeCount", { count: gradeGroup.studentCount })}
-                </p>
-                <div className="mt-4 space-y-6">
-                  {gradeGroup.classes.map((parallelClass) => (
-                    <section key={parallelClass.className}>
-                      <h3 className="text-base font-semibold text-slate-950 dark:text-white">
-                        {parallelClass.className}
-                      </h3>
-                      {renderProgressTable(parallelClass.students)}
-                    </section>
-                  ))}
-                </div>
-              </section>
-            ))}
+        {reportView.kind === "academic" ? (
+          <AcademicReportProgress data={data} t={t} />
+        ) : (
+          <BoardingReportProgress data={data} t={t} />
+        )}
 
       </AppShell>
   );
