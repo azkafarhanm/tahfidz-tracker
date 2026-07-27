@@ -3,6 +3,13 @@ export type RecordMaterialPreference = {
   surah: string;
 };
 
+export function getRecordMaterialPreferenceKey(
+  studentId: string,
+  recordType: "hafalan" | "murojaah",
+) {
+  return `record-material:${studentId}:${recordType}`;
+}
+
 export function parseMeetingMonthState(raw: string | null): Record<string, boolean> {
   if (!raw) return {};
   try {

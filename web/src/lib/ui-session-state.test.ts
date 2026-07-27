@@ -1,9 +1,24 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getRecordMaterialPreferenceKey,
   parseMeetingMonthState,
   parseRecordMaterialPreference,
 } from "@/lib/ui-session-state";
+
+describe("getRecordMaterialPreferenceKey", () => {
+  it("scopes material preferences by both student and record type", () => {
+    expect(getRecordMaterialPreferenceKey("student-a", "hafalan")).toBe(
+      "record-material:student-a:hafalan",
+    );
+    expect(getRecordMaterialPreferenceKey("student-b", "hafalan")).not.toBe(
+      getRecordMaterialPreferenceKey("student-a", "hafalan"),
+    );
+    expect(getRecordMaterialPreferenceKey("student-a", "murojaah")).not.toBe(
+      getRecordMaterialPreferenceKey("student-a", "hafalan"),
+    );
+  });
+});
 
 describe("parseMeetingMonthState", () => {
   it("defaults every month to collapsed when session state is absent", () => {

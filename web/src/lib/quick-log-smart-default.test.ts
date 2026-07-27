@@ -11,19 +11,28 @@ const student = {
 };
 
 describe("getQuickLogSmartDefault", () => {
-  it("uses the latest Hafalan material for Hafalan", () => {
+  it("uses only the student's latest Hafalan material for Hafalan", () => {
     expect(getQuickLogSmartDefault(student, "HAFALAN")).toEqual(
       student.latestHafalanMaterial,
     );
   });
 
-  it("switches to the independent Murojaah material", () => {
+  it("uses only the student's latest Murojaah material for Murojaah", () => {
     expect(getQuickLogSmartDefault(student, "MUROJAAH")).toEqual(
       student.latestMurojaahMaterial,
     );
   });
 
-  it("returns no database default when that record type has no history", () => {
+  it("does not fall back from Hafalan to Murojaah", () => {
+    expect(
+      getQuickLogSmartDefault(
+        { ...student, latestHafalanMaterial: null },
+        "HAFALAN",
+      ),
+    ).toBeNull();
+  });
+
+  it("does not fall back from Murojaah to Hafalan", () => {
     expect(
       getQuickLogSmartDefault(
         { ...student, latestMurojaahMaterial: null },

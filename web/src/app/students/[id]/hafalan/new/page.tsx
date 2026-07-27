@@ -14,6 +14,7 @@ import {
 import { createHafalanRecord } from "../actions";
 import { requireSessionScope } from "@/lib/session";
 import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
@@ -48,21 +49,30 @@ export default async function NewHafalanPage({
   const t = await getTranslations("RecordForm");
   const { id } = await params;
   const { teacherId } = await requireSessionScope();
-  const [student, latestMaterial] = await Promise.all([
-    getStudentFormContext(id, teacherId),
-    getLatestStudentRecordMaterial(id, teacherId, "hafalan"),
-  ]);
   const query = await searchParams;
   const error = query?.error;
   const programType =
     query?.programType === "ACADEMIC" || query?.programType === "BOARDING"
       ? query.programType
       : undefined;
+  const student = await getStudentFormContext(id, teacherId);
 
   if (!student) {
     notFound();
   }
 
+  const isAcademic = student.classGroupProgramType === "ACADEMIC";
+  const latestMaterial = await getLatestStudentRecordMaterial(
+    id,
+    teacherId,
+    "hafalan",
+  );
+  traceSmartDefault("Add Hafalan server form initialization", {
+    studentId: id,
+    programType: student.classGroupProgramType,
+    querySource: "getLatestStudentRecordMaterial(hafalan-only)",
+    material: latestMaterial,
+  });
   const detailHref = `/students/${student.id}${programType ? `?programType=${programType}` : ""}`;
   const action = createHafalanRecord.bind(null, student.id);
 
@@ -114,7 +124,10 @@ export default async function NewHafalanPage({
                   defaultFromAyah={latestMaterial?.fromAyah}
                   defaultValue={latestMaterial?.surah}
                   id="surah"
-                  sessionPreferenceKey="hafalan"
+                  sessionPreferenceKey={
+                    isAcademic ? undefined : "hafalan"
+                  }
+                  sessionPreferenceStudentId={student.id}
                 />
               </div>
             </div>

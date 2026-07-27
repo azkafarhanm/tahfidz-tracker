@@ -13,6 +13,7 @@ import { getRecordData } from "@/lib/records";
 import { updateRecord } from "@/lib/record-actions";
 import { requireSessionScope } from "@/lib/session";
 import JuzFilteredSurahInput from "@/components/JuzFilteredSurahInput";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 import NumericInput from "@/components/NumericInput";
 import AutoRecordStatusField from "@/components/AutoRecordStatusField";
 import DeviceDateTimeFields from "@/components/DeviceDateTimeFields";
@@ -70,6 +71,17 @@ export default async function EditRecordPage({
   if (record.studentId !== student.id) {
     redirect(`/students/${id}`);
   }
+
+  traceSmartDefault("Edit record server form initialization", {
+    studentId: student.id,
+    programType: student.classGroupProgramType,
+    recordType,
+    querySource:
+      recordType === "hafalan"
+        ? "current MemorizationRecord"
+        : "current RevisionRecord",
+    material: { surah: record.surah, fromAyah: record.fromAyah },
+  });
 
   const action = updateRecord.bind(null, student.id, recordType, recordId, returnTo);
   const Icon = recordType === "hafalan" ? BookOpen : RotateCcw;
@@ -165,7 +177,12 @@ export default async function EditRecordPage({
                   defaultFromAyah={record.fromAyah}
                   defaultValue={record.surah}
                   id="surah"
-                  sessionPreferenceKey={recordType}
+                  sessionPreferenceKey={
+                    student.classGroupProgramType === "ACADEMIC"
+                      ? undefined
+                      : recordType
+                  }
+                  sessionPreferenceStudentId={student.id}
                 />
               </div>
             </div>

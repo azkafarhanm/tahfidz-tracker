@@ -41,6 +41,7 @@ import {
   getQuickLogSessionPreferenceKey,
   getQuickLogSmartDefault,
 } from "@/lib/quick-log-smart-default";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 
 type Student = QuickLogStudent;
 
@@ -227,6 +228,12 @@ export default function GuidedQuickLog({
 
   function handleSelectStudent(student: Student) {
     const currentMeetingStatus = meetingStatusOverrides[student.id] ?? student.meetingStatusToday;
+    traceSmartDefault("Quick Log student selected", {
+      studentId: student.id,
+      previousStudentId: selectedStudent?.id ?? null,
+      latestHafalanMaterial: student.latestHafalanMaterial,
+      latestMurojaahMaterial: student.latestMurojaahMaterial,
+    });
     setSelectedStudent(student);
     setMeetingStatus(currentMeetingStatus);
     setRecordEntryAllowed(
@@ -282,6 +289,15 @@ export default function GuidedQuickLog({
   const smartDefault = selectedStudent
     ? getQuickLogSmartDefault(selectedStudent, recordType)
     : null;
+
+  useEffect(() => {
+    traceSmartDefault("Quick Log smart default committed", {
+      studentId: selectedStudent?.id ?? null,
+      recordType,
+      source: `getQuickLogSmartDefault(${recordType.toLowerCase()}-only)`,
+      material: smartDefault,
+    });
+  }, [recordType, selectedStudent?.id, smartDefault]);
 
   return (
     <>
@@ -500,9 +516,12 @@ export default function GuidedQuickLog({
                       id="quick-log-surah"
                       inputResetKey={surahInputKey}
                       key={`${selectedStudent.id}:${recordType}:${surahInputKey}`}
-                      sessionPreferenceKey={getQuickLogSessionPreferenceKey(
-                        recordType,
-                      )}
+                      sessionPreferenceKey={
+                        meetingStatusEnabled
+                          ? undefined
+                          : getQuickLogSessionPreferenceKey(recordType)
+                      }
+                      sessionPreferenceStudentId={selectedStudent.id}
                     />
                   </div>
                 </div>

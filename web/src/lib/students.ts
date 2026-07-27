@@ -13,6 +13,7 @@ import {
 import { computeTargetCoverage } from "@/lib/target-progress";
 import { cached } from "@/lib/cache";
 import { prisma, withRetry } from "@/lib/prisma";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 import {
   getDateFormatter,
   getTimeFormatter,
@@ -701,6 +702,7 @@ export async function getStudentFormContext(
     classGroupId: student.classGroup.id,
     classGroupLevel: student.classGroup.level,
     classGroupGrade: student.classGroup.grade.toString(),
+    classGroupProgramType: student.classGroup.programType,
   };
 }
 
@@ -722,7 +724,14 @@ export async function getLatestStudentRecordMaterial(
     select: { surah: true, fromAyah: true },
   };
 
-  return recordType === "hafalan"
+  const material = await (recordType === "hafalan"
     ? prisma.memorizationRecord.findFirst(query)
-    : prisma.revisionRecord.findFirst(query);
+    : prisma.revisionRecord.findFirst(query));
+  traceSmartDefault("student material query resolved", {
+    studentId,
+    recordType,
+    teacherScoped: Boolean(teacherId),
+    material,
+  });
+  return material;
 }

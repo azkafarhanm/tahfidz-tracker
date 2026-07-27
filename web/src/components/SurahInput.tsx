@@ -13,6 +13,7 @@ import {
   getVisibleSurahOptions,
   shouldOpenSurahPickerUpward,
 } from "@/lib/surah-picker";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 
 type SurahInputProps = {
   defaultValue?: string;
@@ -36,7 +37,16 @@ export default function SurahInput({
   required = true,
 }: SurahInputProps) {
   const t = useTranslations("SurahInput");
-  const [value, setValue] = useState(defaultValue ?? "");
+  const [value, setValue] = useState(() => {
+    const initialValue = defaultValue ?? "";
+    traceSmartDefault("SurahInput form initialization", {
+      id: id ?? name,
+      source: "JuzFilteredSurahInput defaultValue",
+      defaultValue: defaultValue ?? null,
+      initialValue,
+    });
+    return initialValue;
+  });
   const [selectedValue, setSelectedValue] = useState(
     options.some(({ name: surahName }) => surahName === defaultValue)
       ? defaultValue ?? ""
@@ -64,6 +74,25 @@ export default function SurahInput({
     isOpen && filtered[highlightIndex]
       ? `${listboxId}-option-${filtered[highlightIndex].number}`
       : undefined;
+
+  useEffect(() => {
+    traceSmartDefault("SurahInput hydrated", {
+      id: id ?? name,
+      defaultValue: defaultValue ?? null,
+      value,
+      selectedValue,
+    });
+    // This is intentionally mount-only: it records the hydrated initial state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    traceSmartDefault("SurahInput state committed", {
+      id: id ?? name,
+      value,
+      selectedValue,
+    });
+  }, [id, name, selectedValue, value]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -131,6 +160,11 @@ export default function SurahInput({
   }, [isOpen]);
 
   function selectSurah(name: string) {
+    traceSmartDefault("SurahInput selection overwrites local state", {
+      id: id ?? "surah",
+      previousValue: value,
+      nextValue: name,
+    });
     setValue(name);
     setSelectedValue(name);
     setSearchQuery("");
@@ -183,6 +217,11 @@ export default function SurahInput({
         onClick={toggleDropdown}
         onChange={(e) => {
           const nextValue = e.target.value;
+          traceSmartDefault("SurahInput typing overwrites local state", {
+            id: id ?? name,
+            previousValue: value,
+            nextValue,
+          });
           setValue(nextValue);
           setSelectedValue("");
           setSearchQuery(nextValue);

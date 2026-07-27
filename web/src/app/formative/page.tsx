@@ -232,7 +232,7 @@ export default async function FormativePage({
         </div>
       ) : (
         <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <div>
               <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                 {t("studentListHeading")}
@@ -242,8 +242,11 @@ export default async function FormativePage({
               </p>
             </div>
             {overview.pagination ? (
-              <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
-                {overview.students.length}/{overview.totalStudentCount}
+              <span className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${badge.success}`}>
+                {t("visibleStudentProgress", {
+                  visible: overview.students.length,
+                  total: overview.totalStudentCount,
+                })}
               </span>
             ) : null}
           </div>
@@ -377,7 +380,7 @@ export default async function FormativePage({
               ) : (
                 <span className="h-10 w-10" aria-hidden="true" />
               )}
-        <span className={`rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
+        <span className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${badge.neutral}`}>
                 {overview.pagination.page} / {overview.pagination.totalPages}
               </span>
               {hasNextPage ? (

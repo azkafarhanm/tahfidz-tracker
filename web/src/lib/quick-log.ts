@@ -13,6 +13,7 @@ import {
 import { findSurah } from "@/lib/surahs";
 import { getJakartaDayKey } from "@/lib/jakarta-date";
 import { parseMeetingDate } from "@/lib/meeting-status";
+import { traceSmartDefault } from "@/lib/smart-default-trace";
 
 export type QuickLogRecordType = "HAFALAN" | "MUROJAAH";
 
@@ -415,7 +416,7 @@ async function getQuickLogStudentsInner(
     todayStatuses.map(({ studentId, status }) => [studentId, status]),
   );
 
-  return students.map((student) => ({
+  const quickLogStudents = students.map((student) => ({
     id: student.id,
     fullName: student.fullName,
     classSummary: formatStudentClassSummary(student).classSummary,
@@ -423,6 +424,16 @@ async function getQuickLogStudentsInner(
     latestHafalanMaterial: student.memorizationRecords[0] ?? null,
     latestMurojaahMaterial: student.revisionRecords[0] ?? null,
   }));
+  traceSmartDefault("Quick Log server query resolved", {
+    programType: programType ?? "all",
+    teacherScoped: Boolean(teacherId),
+    students: quickLogStudents.map((student) => ({
+      studentId: student.id,
+      latestHafalanMaterial: student.latestHafalanMaterial,
+      latestMurojaahMaterial: student.latestMurojaahMaterial,
+    })),
+  });
+  return quickLogStudents;
 }
 
 export function parseQuickLogInput(
