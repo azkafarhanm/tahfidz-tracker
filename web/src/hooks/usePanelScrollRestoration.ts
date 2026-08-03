@@ -442,15 +442,34 @@ export function usePanelScrollRestoration(): void {
 
         // Otherwise wait for the content to grow. The observer exists ONLY
         // while this restore is pending and disconnects the instant it succeeds
-        // (or on the safety timeout). Exactly one successful restore per nav.
+        // (or on the safety timeout). User input also hands viewport ownership
+        // over permanently, so no later ResizeObserver callback can restore.
         let restored = false;
         let watchdogDisarm: (() => void) | undefined;
+
+        const onUserInput = () => {
+          traceScrollWriter({
+            writer: "panel-resize-observer",
+            reason: "user took scroll ownership; cancel pending restore",
+            targetY: target,
+          });
+          finish();
+        };
+
+        const removeUserInputListeners = () => {
+          window.removeEventListener("wheel", onUserInput, true);
+          window.removeEventListener("pointerdown", onUserInput, true);
+          window.removeEventListener("touchstart", onUserInput, true);
+          window.removeEventListener("touchmove", onUserInput, true);
+          window.removeEventListener("keydown", onUserInput, true);
+        };
 
         const finish = () => {
           if (restored) return;
           restored = true;
           observer.disconnect();
           window.clearTimeout(safetyTimer);
+          removeUserInputListeners();
         };
 
         const observer = new ResizeObserver(() => {
@@ -464,9 +483,16 @@ export function usePanelScrollRestoration(): void {
 
         // Safety: guarantee termination even if height never reaches target.
         const safetyTimer = window.setTimeout(() => {
+          if (restored) return;
           tryRestore();
           finish();
         }, 3000);
+
+        window.addEventListener("wheel", onUserInput, true);
+        window.addEventListener("pointerdown", onUserInput, true);
+        window.addEventListener("touchstart", onUserInput, true);
+        window.addEventListener("touchmove", onUserInput, true);
+        window.addEventListener("keydown", onUserInput, true);
 
         prevIdentity.current = identity;
         return () => {
