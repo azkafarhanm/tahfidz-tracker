@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { traceScrollWriter } from "@/lib/scroll-lifecycle-trace";
 
 /**
  * Horizontal-only scroll persistence for Formative tables.
@@ -51,6 +52,12 @@ export default function FormativeTableScroll({
     if (!el) return;
 
     if (hasHighlight) {
+      traceScrollWriter({
+        writer: "formative-table.scrollLeft",
+        reason: "reset horizontal table position for highlight",
+        targetX: 0,
+        target: "formative-table",
+      });
       el.scrollLeft = 0;
       try {
         sessionStorage.removeItem(storageKey);
@@ -75,7 +82,14 @@ export default function FormativeTableScroll({
       // max (content shorter than when saved) still restores to the end rather
       // than being rejected entirely.
       const max = Math.max(0, el.scrollWidth - el.clientWidth);
-      el.scrollLeft = Math.min(saved!, max);
+      const targetX = Math.min(saved!, max);
+      traceScrollWriter({
+        writer: "formative-table.scrollLeft",
+        reason: "restore horizontal table position",
+        targetX,
+        target: "formative-table",
+      });
+      el.scrollLeft = targetX;
       return max >= saved!;
     };
 

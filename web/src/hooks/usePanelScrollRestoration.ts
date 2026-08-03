@@ -6,7 +6,10 @@ import {
   teacherNavigationItems,
   adminNavigationItems,
 } from "@/lib/navigation";
-import { traceScrollLifecycle } from "@/lib/scroll-lifecycle-trace";
+import {
+  traceScrollLifecycle,
+  traceScrollWriter,
+} from "@/lib/scroll-lifecycle-trace";
 import {
   isSupportedDetailPanel,
   scrollRouteIdentity,
@@ -98,7 +101,15 @@ export function restoreSidebarScroll(
       0,
       scroller.scrollHeight - scroller.clientHeight,
     );
-    scroller.scrollTop = Math.min(saved, maxScrollable);
+    const targetY = Math.min(saved, maxScrollable);
+    traceScrollWriter({
+      writer: "sidebar.scrollTop",
+      reason: "restore sidebar navigation position",
+      targetY,
+      currentY: scroller.scrollTop,
+      target: "sidebar",
+    });
+    scroller.scrollTop = targetY;
   } catch {
     // sessionStorage may be unavailable — active-link reveal remains the fallback.
   }
@@ -159,6 +170,11 @@ export function usePanelScrollRestoration(): void {
 
     const previous = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
+    traceScrollWriter({
+      writer: "history.scrollRestoration",
+      reason: "disable browser-native restoration",
+      target: "manual",
+    });
     traceScrollLifecycle("Browser Scroll Restoration initialized", {
       previous,
       current: window.history.scrollRestoration,
@@ -166,6 +182,11 @@ export function usePanelScrollRestoration(): void {
 
     return () => {
       window.history.scrollRestoration = previous;
+      traceScrollWriter({
+        writer: "history.scrollRestoration",
+        reason: "restore browser-native restoration setting",
+        target: previous,
+      });
       traceScrollLifecycle("Browser Scroll Restoration cleanup", {
         restoredValue: previous,
       });

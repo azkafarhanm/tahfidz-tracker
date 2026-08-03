@@ -19,6 +19,7 @@ import {
   readNavigationContext,
   mergeContextParams,
 } from "@/hooks/useNavigationContext";
+import { traceScrollWriter } from "@/lib/scroll-lifecycle-trace";
 
 const SCROLL_KEY = "bottomNavScrollX";
 
@@ -43,6 +44,12 @@ function isFullyVisible(element: HTMLElement): boolean {
 
 function revealIfNeeded(element: HTMLElement) {
   if (isFullyVisible(element)) return;
+  traceScrollWriter({
+    writer: "navigation.scrollIntoView",
+    reason: "reveal active navigation item",
+    targetY: element.offsetTop,
+    target: element.getAttribute("href") ?? undefined,
+  });
   element.scrollIntoView({ block: "nearest" });
 }
 
@@ -90,7 +97,14 @@ export default function NavigationLinks({
     if (saved) {
       const scroller = document.querySelector("[data-bottom-scroll]");
       if (scroller) {
-        scroller.scrollLeft = Number(saved);
+        const targetX = Number(saved);
+        traceScrollWriter({
+          writer: "bottom-navigation.scrollLeft",
+          reason: "restore bottom navigation position",
+          targetX,
+          target: "[data-bottom-scroll]",
+        });
+        scroller.scrollLeft = targetX;
       }
     }
   }, [pathname, variant]);

@@ -14,6 +14,7 @@ import {
   shouldOpenSurahPickerUpward,
 } from "@/lib/surah-picker";
 import { traceSmartDefault } from "@/lib/smart-default-trace";
+import { traceScrollWriter } from "@/lib/scroll-lifecycle-trace";
 
 type SurahInputProps = {
   defaultValue?: string;
@@ -152,11 +153,19 @@ export default function SurahInput({
     initialPositionIndexRef.current = null;
     const item = list.children[initialIndex] as HTMLElement | undefined;
     if (!item) return;
-    list.scrollTop = getCenteredSurahScrollTop(
+    const targetY = getCenteredSurahScrollTop(
       item.offsetTop,
       item.offsetHeight,
       list.clientHeight,
     );
+    traceScrollWriter({
+      writer: "surah-input.scrollTop",
+      reason: "center initially selected surah",
+      targetY,
+      currentY: list.scrollTop,
+      target: "surah-list",
+    });
+    list.scrollTop = targetY;
   }, [isOpen]);
 
   function selectSurah(name: string) {

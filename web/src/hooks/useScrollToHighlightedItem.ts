@@ -2,6 +2,7 @@
 
 import { useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { traceScrollWriter } from "@/lib/scroll-lifecycle-trace";
 
 const HIGHLIGHT_PARAM = "highlight";
 const HIGHLIGHTS_PARAM = "highlights";
@@ -31,6 +32,12 @@ export function useScrollToHighlightedItem() {
 
     appliedRef.current = highlightKey;
 
+    traceScrollWriter({
+      writer: "highlight.scrollIntoView",
+      reason: "highlight navigation",
+      targetY: elements[0].offsetTop,
+      target: "[data-highlight]",
+    });
     elements[0].scrollIntoView({ behavior: "instant", block: "center" });
     for (const element of elements) {
       element.setAttribute(ACTIVE_ATTR, "");
