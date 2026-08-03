@@ -10,11 +10,12 @@ import { groupReleaseNotes } from "@/components/release-note-groups";
 import type { ReleaseNote } from "@/lib/release-notes";
 
 type Props = {
+  isAdmin: boolean;
   unreadPublished: ReleaseNote[];
   locale: string;
 };
 
-export default function ReleaseNotesModal({ unreadPublished, locale }: Props) {
+export default function ReleaseNotesModal({ isAdmin, unreadPublished, locale }: Props) {
   const [mounted, setMounted] = useState(false);
   const [displayedNotes] = useState<ReleaseNote[]>(unreadPublished);
   const [open, setOpen] = useState(unreadPublished.length > 0);
@@ -26,6 +27,7 @@ export default function ReleaseNotesModal({ unreadPublished, locale }: Props) {
     () => new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Jakarta" }),
     [locale],
   );
+  const historyHref = isAdmin ? "/admin/release-notes" : "/release-notes";
 
   useEffect(() => {
     setMounted(true);
@@ -55,7 +57,7 @@ export default function ReleaseNotesModal({ unreadPublished, locale }: Props) {
     <>
       <Link
         className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-900 disabled:cursor-not-allowed disabled:text-slate-400 dark:text-emerald-400 dark:hover:text-emerald-300"
-        href="/release-notes"
+        href={historyHref}
       >
         <Megaphone className="h-4 w-4" /> What&apos;s New
       </Link>
@@ -97,7 +99,7 @@ export default function ReleaseNotesModal({ unreadPublished, locale }: Props) {
                 </div>
 
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" href="/release-notes">Lihat Riwayat Pembaruan</Link>
+                  <Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" href={historyHref}>Lihat Riwayat Pembaruan</Link>
                   <button className="min-h-11 rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60" disabled={isPending} onClick={acknowledge} type="button">{isPending ? "Menyimpan..." : "Mengerti"}</button>
                 </div>
               </div>

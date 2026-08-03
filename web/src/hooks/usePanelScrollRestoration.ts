@@ -268,17 +268,9 @@ export function usePanelScrollRestoration(): void {
           currentScrollY,
         );
 
-        // A pagination URL has no saved position on its first visit. Seed it
-        // with the outgoing viewport so the cold transition behaves like later
-        // visits while still allowing each page to diverge independently.
-        const destinationIdentity = scrollRouteIdentity(
-          destinationUrl.pathname,
-          destinationUrl.search,
-        );
-        const destinationKey = storageKey(destinationIdentity);
-        if (sessionStorage.getItem(destinationKey) === null) {
-          sessionStorage.setItem(destinationKey, currentScrollY);
-        }
+        // A pagination destination is restored only after that exact page has
+        // saved its own position. Reusing the outgoing page's viewport here
+        // makes a first visit look like a late downward scroll restore.
       } catch {
         // sessionStorage may be unavailable — navigation continues normally.
       }
@@ -374,9 +366,12 @@ export function usePanelScrollRestoration(): void {
             disarmed = true;
             window.removeEventListener("scroll", onWatchdogScroll, true);
             window.removeEventListener("wheel", onUserInput, true);
+            window.removeEventListener("pointerdown", onUserInput, true);
+            window.removeEventListener("touchstart", onUserInput, true);
             window.removeEventListener("touchmove", onUserInput, true);
             window.removeEventListener("keydown", onUserInput, true);
             window.clearTimeout(watchdogTimer);
+            timers.forEach((timer) => window.clearTimeout(timer));
           };
           const onUserInput = () => {
             userInteracted = true;
@@ -404,10 +399,13 @@ export function usePanelScrollRestoration(): void {
           );
           const watchdogTimer = window.setTimeout(() => {
             disarm();
-            timers.forEach((t) => window.clearTimeout(t));
           }, WATCHDOG_MS);
           window.addEventListener("scroll", onWatchdogScroll, true);
           window.addEventListener("wheel", onUserInput, true);
+          // Pointer-down covers scrollbar drags and middle-click autoscroll;
+          // touchstart claims ownership before the first mobile scroll frame.
+          window.addEventListener("pointerdown", onUserInput, true);
+          window.addEventListener("touchstart", onUserInput, true);
           window.addEventListener("touchmove", onUserInput, true);
           window.addEventListener("keydown", onUserInput, true);
           return disarm;
