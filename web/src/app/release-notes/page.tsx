@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getLocale } from "next-intl/server";
 import AppShell from "@/components/AppShell";
+import WorkflowContextLink from "@/components/WorkflowContextLink";
 import ReleaseNotePresentation from "@/components/ReleaseNotePresentation";
 import { groupReleaseNotes } from "@/components/release-note-groups";
 import { backLink } from "@/lib/colors";
@@ -33,10 +33,10 @@ export default async function ReleaseNotesHistoryPage() {
   return (
     <AppShell currentPath="/release-notes" isAdmin={false} userName={session.user.name ?? "Guru"}>
       <header>
-        <Link className={backLink} href="/">
+        <WorkflowContextLink className={backLink} href="/">
           <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.3} />
           Kembali ke Dashboard
-        </Link>
+        </WorkflowContextLink>
         <p className="mt-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">TahfidzFlow</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">Riwayat Pembaruan</h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Semua pembaruan yang telah dipublikasikan untuk guru.</p>
