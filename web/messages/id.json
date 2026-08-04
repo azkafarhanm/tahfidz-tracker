@@ -1254,6 +1254,7 @@
     "placeholderInJuz": "Cari Surah dalam Juz {juz}",
     "ayahCount": "{count} ayat",
     "juzLabel": "Filter Juz",
+    "lastMaterialLabel": "Setoran terakhir",
     "juzOption": "Juz {juz}",
     "allSurahs": "Semua Surah",
     "selectionKept": "{surah} tetap dipertahankan meski tidak termasuk Juz {juz}."

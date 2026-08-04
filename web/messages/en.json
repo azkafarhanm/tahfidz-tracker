@@ -1254,6 +1254,7 @@
     "placeholderInJuz": "Search Surah in Juz {juz}",
     "ayahCount": "{count} verses",
     "juzLabel": "Juz filter",
+    "lastMaterialLabel": "Last material",
     "juzOption": "Juz {juz}",
     "allSurahs": "All Surahs",
     "selectionKept": "{surah} is preserved even though it is outside Juz {juz}."

@@ -1254,6 +1254,7 @@
     "placeholderInJuz": "ابحث عن سورة في الجزء {juz}",
     "ayahCount": "{count} آية",
     "juzLabel": "تصفية حسب الجزء",
+    "lastMaterialLabel": "آخر مادة",
     "juzOption": "الجزء {juz}",
     "allSurahs": "كل السور",
     "selectionKept": "سيبقى اختيار {surah} محفوظًا رغم أنه خارج الجزء {juz}."

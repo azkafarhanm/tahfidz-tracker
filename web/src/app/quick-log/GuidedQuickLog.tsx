@@ -516,6 +516,7 @@ export default function GuidedQuickLog({
                       id="quick-log-surah"
                       inputResetKey={surahInputKey}
                       key={`${selectedStudent.id}:${recordType}:${surahInputKey}`}
+                      lastMaterial={smartDefault}
                       sessionPreferenceKey={
                         meetingStatusEnabled
                           ? undefined

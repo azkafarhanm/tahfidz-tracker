@@ -124,6 +124,7 @@ export default async function NewMurojaahPage({
                   defaultFromAyah={latestMaterial?.fromAyah}
                   defaultValue={latestMaterial?.surah}
                   id="surah"
+                  lastMaterial={latestMaterial}
                   sessionPreferenceKey={
                     isAcademic ? undefined : "murojaah"
                   }

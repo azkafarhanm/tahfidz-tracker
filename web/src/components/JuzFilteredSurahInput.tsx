@@ -10,6 +10,10 @@ import {
   parseRecordMaterialPreference,
 } from "@/lib/ui-session-state";
 import { traceSmartDefault } from "@/lib/smart-default-trace";
+import {
+  formatRecordMaterial,
+  type RecordMaterial,
+} from "@/lib/record-material-format";
 
 type JuzFilter = number | "all";
 
@@ -18,6 +22,7 @@ type JuzFilteredSurahInputProps = {
   defaultValue?: string;
   id?: string;
   inputResetKey?: number;
+  lastMaterial?: RecordMaterial | null;
   name?: string;
   required?: boolean;
   sessionPreferenceKey?: "hafalan" | "murojaah";
@@ -37,6 +42,7 @@ export default function JuzFilteredSurahInput({
   defaultValue,
   id,
   inputResetKey,
+  lastMaterial,
   name = "surah",
   required = true,
   sessionPreferenceKey,
@@ -179,6 +185,12 @@ export default function JuzFilteredSurahInput({
 
   return (
     <div className="space-y-3">
+      {lastMaterial ? (
+        <p className="min-w-0 text-sm text-slate-600 dark:text-slate-400">
+          <span className="font-medium">{t("lastMaterialLabel")}:</span>{" "}
+          <span className="break-words">{formatRecordMaterial(lastMaterial)}</span>
+        </p>
+      ) : null}
       <div>
         <label
           className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"

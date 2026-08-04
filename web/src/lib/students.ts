@@ -721,7 +721,7 @@ export async function getLatestStudentRecordMaterial(
   const query = {
     where,
     orderBy: [{ date: "desc" as const }, { createdAt: "desc" as const }],
-    select: { surah: true, fromAyah: true },
+    select: { surah: true, fromAyah: true, toAyah: true },
   };
 
   const material = await (recordType === "hafalan"

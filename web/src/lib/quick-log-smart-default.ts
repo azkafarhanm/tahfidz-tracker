@@ -1,6 +1,7 @@
 export type QuickLogMaterial = {
   surah: string;
   fromAyah: number;
+  toAyah: number;
 };
 
 type QuickLogMaterialStudent = {

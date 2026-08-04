@@ -6,8 +6,8 @@ import {
 } from "@/lib/quick-log-smart-default";
 
 const student = {
-  latestHafalanMaterial: { surah: "Al-Muzzammil", fromAyah: 1 },
-  latestMurojaahMaterial: { surah: "Al-Mulk", fromAyah: 1 },
+  latestHafalanMaterial: { surah: "Al-Muzzammil", fromAyah: 1, toAyah: 20 },
+  latestMurojaahMaterial: { surah: "Al-Mulk", fromAyah: 1, toAyah: 30 },
 };
 
 describe("getQuickLogSmartDefault", () => {
