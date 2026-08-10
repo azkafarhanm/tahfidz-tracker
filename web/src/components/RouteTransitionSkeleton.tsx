@@ -250,10 +250,11 @@ export function AdminRouteTransitionSkeleton({
   kind = "dashboard",
   wide = true,
 }: PanelSkeletonProps) {
-  return (
-    <div data-admin-loading-transition="">
-      <AdminChromeSkeletonOverlay reveal={false} />
-      <PanelTransitionSkeleton kind={kind} reveal={false} wide={wide} />
-    </div>
-  );
+  // Admin loading boundaries render inside AdminShell. AdminShell already owns
+  // the mobile utility bar, safe-area spacing, and BottomNav, so rendering a
+  // second fixed chrome overlay here would cover the fallback panel and put it
+  // in a different layout hierarchy than the resolved page.
+  // Match the standard route-loading behavior: render only after the brief
+  // delayed reveal so instant/prefetched navigation does not flash a skeleton.
+  return <PanelTransitionSkeleton kind={kind} wide={wide} />;
 }

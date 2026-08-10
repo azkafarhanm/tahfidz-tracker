@@ -189,10 +189,10 @@ export default async function AdminStudentsPage({
           placeholder={t("searchPlaceholder")}
         />
 
-        <section className="mt-5 flex flex-1 flex-col">
-          <div className="flex items-center justify-between gap-3">
+        <section className="mt-5 flex min-w-0 flex-1 flex-col">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">{t("listHeading")}</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <WorkflowContextLink
                 className="inline-flex items-center gap-2 rounded-2xl bg-emerald-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-950"
                 href={buildCreateHref()}
@@ -219,7 +219,7 @@ export default async function AdminStudentsPage({
             </div>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {students.length > 0 ? (
               students.map((student) => {
                 const deleteDisabledReason =
@@ -233,16 +233,16 @@ export default async function AdminStudentsPage({
 
                 return (
                   <article
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
+                    className="min-w-0 max-w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition duration-200 hover:border-emerald-200 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:shadow-none dark:hover:border-emerald-700"
                     data-highlight={student.id}
                     key={student.id}
                   >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
                      <div className="min-w-0">
-                       <div className="flex items-center gap-3">
+                       <div className="flex min-w-0 items-center gap-3">
                          <InitialsAvatar name={student.fullName} />
                          <WorkflowContextLink
-                           className="truncate font-semibold text-slate-950 transition hover:text-emerald-800 dark:text-white dark:hover:text-emerald-300"
+                           className="min-w-0 truncate font-semibold text-slate-950 transition hover:text-emerald-800 dark:text-white dark:hover:text-emerald-300"
                            href={`/admin/students/${student.id}`}
                          >
                            {student.fullName}
@@ -259,39 +259,39 @@ export default async function AdminStudentsPage({
                     </span>
                   </div>
 
-                  <div className="mt-4 space-y-2">
-                     <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
+                  <div className="mt-4 min-w-0 space-y-2">
+                     <div className={`flex min-w-0 items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                        <InitialsAvatar name={student.teacherName} size="sm" />
-                       <span className="truncate">{student.teacherName}</span>
+                       <span className="min-w-0 truncate">{student.teacherName}</span>
                      </div>
-                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
+                    <div className={`flex min-w-0 items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <BookOpen
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={16}
                         strokeWidth={2.2}
                       />
-                      <span className="truncate">
+                      <span className="min-w-0 truncate">
                         {student.halaqahLevel
                           ? `${student.halaqahName} (${student.halaqahLevel})`
                           : student.halaqahName}
                       </span>
                     </div>
-                    <div className={`flex items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
+                    <div className={`flex min-w-0 items-center gap-3 rounded-2xl p-3 text-sm text-slate-700 dark:text-slate-300 ${widget.elevated}`}>
                       <GraduationCap
                         aria-hidden="true"
                         className="shrink-0 text-emerald-800 dark:text-emerald-400"
                         size={16}
                         strokeWidth={2.2}
                       />
-                      <span className="truncate">
+                      <span className="min-w-0 truncate">
                         {student.academicClassName}
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800">
+                  <div className="mt-4 grid min-w-0 grid-cols-2 gap-3">
+                    <div className="col-span-2 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:col-span-1 dark:border-slate-800 dark:bg-slate-800">
                       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                         {t("activeTargetLabel")}
                       </p>
@@ -328,7 +328,7 @@ export default async function AdminStudentsPage({
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-4 grid min-w-0 grid-cols-2 gap-3 sm:flex sm:flex-wrap">
                     <WorkflowContextLink
                       className={actionButtonClass("neutral")}
                       href={buildEditHref(student.id)}
@@ -371,18 +371,20 @@ export default async function AdminStudentsPage({
                         tone="success"
                       />
                     )}
-                    <AdminDeleteButton
-                      action={deleteStudent.bind(null, student.id)}
-                      cancelLabel={t("cancelDeleteButton")}
-                      confirmLabel={t("confirmDeleteButton")}
-                      confirmMessage={t("confirmDeleteMessage", {
-                        name: student.fullName,
-                      })}
-                      deletingLabel={t("deletingButton")}
-                      disabled={student.deleteBlockingDataCount > 0}
-                      disabledReason={deleteDisabledReason}
-                      label={t("deleteButton")}
-                    />
+                    <div className="col-span-2 sm:col-span-1">
+                      <AdminDeleteButton
+                        action={deleteStudent.bind(null, student.id)}
+                        cancelLabel={t("cancelDeleteButton")}
+                        confirmLabel={t("confirmDeleteButton")}
+                        confirmMessage={t("confirmDeleteMessage", {
+                          name: student.fullName,
+                        })}
+                        deletingLabel={t("deletingButton")}
+                        disabled={student.deleteBlockingDataCount > 0}
+                        disabledReason={deleteDisabledReason}
+                        label={t("deleteButton")}
+                      />
+                    </div>
                   </div>
                   </article>
                 );
