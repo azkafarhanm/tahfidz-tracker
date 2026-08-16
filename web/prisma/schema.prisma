@@ -129,7 +129,8 @@ model AcademicYear {
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
 
-  formativeMeetings FormativeMeeting[]
+  formativeMeetings      FormativeMeeting[]
+  tahsinMeetingTimelines TahsinMeetingTimeline[]
 
   @@index([isActive])
   @@index([status])
@@ -168,6 +169,38 @@ model FormativeMeeting {
 
   @@unique([academicYearId, semester, meetingNumber])
   @@index([academicYearId, semester, meetingDate])
+}
+
+model TahsinMeetingTimeline {
+  id             String   @id @default(cuid())
+  academicYearId String
+  semester       Semester
+  runNumber      Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  academicYear AcademicYear     @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  meetings     TahsinMeeting[]
+
+  @@unique([academicYearId, semester, runNumber])
+  @@index([academicYearId, semester, isActive])
+}
+
+model TahsinMeeting {
+  id            String   @id @default(cuid())
+  timelineId    String
+  meetingNumber Int
+  meetingDate   DateTime @db.Date
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  timeline TahsinMeetingTimeline @relation(fields: [timelineId], references: [id], onDelete: Restrict)
+  records  TahsinRecord[]
+
+  @@unique([timelineId, meetingNumber])
+  @@index([timelineId, isActive])
 }
 
 model ReleaseNote {
@@ -502,17 +535,20 @@ model TahsinRecord {
   notes        String?
   academicYear String
   semester     Semester
+  meetingId    String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  meeting TahsinMeeting? @relation(fields: [meetingId], references: [id], onDelete: Restrict)
 
   @@index([studentId, academicYear, semester])
   @@index([studentId, createdAt])
   @@index([teacherId, academicYear, semester])
   @@index([academicYear, semester])
   @@index([teacherId, date])
+  @@index([meetingId])
 }
 
 enum AuditAction {
@@ -520,6 +556,8 @@ enum AuditAction {
   DELETE_ARCHIVED_STUDENTS
   DELETE_ACADEMIC_YEAR
   CREATE_TAHSIN
+  ADVANCE_TAHSIN_MEETING
+  RESET_TAHSIN_MEETING_TIMELINE
   CREATE_TASMI
   UPDATE_TASMI
   DELETE_TASMI

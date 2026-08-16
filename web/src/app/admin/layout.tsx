@@ -18,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         "AdminReleaseNotes",
         "AdminStudentForm",
         "AdminTeacherForm",
+        "AdminTahsinMeeting",
         "CharacterCounter",
         "DeleteTeacher",
         "Error",

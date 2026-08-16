@@ -15,7 +15,8 @@
     "navLaporan": "Laporan",
     "navLaporanGuru": "Laporan Guru",
     "navSumatif": "Nilai Sumatif",
-    "navReleaseNotes": "Catatan Rilis"
+    "navReleaseNotes": "Catatan Rilis",
+    "navTahsin": "Tahsin"
   },
   "AdminReleaseNotes": {
     "heading": "Catatan Rilis",
@@ -199,6 +200,8 @@
     "tahsinEmpty": "Belum ada riwayat Tahsin untuk santri ini.",
     "tahsinJilid": "Jilid",
     "tahsinPage": "Halaman",
+    "tahsinMeetingContext": "Run {run} · Pertemuan {meeting}",
+    "tahsinLegacy": "Sebelum sistem pertemuan",
     "tahsinStatusLancar": "Lancar",
     "tahsinStatusCukup": "Cukup",
     "tahsinStatusPerluMurojaah": "Perlu Murojaah",
@@ -1550,6 +1553,34 @@
     "deleteDescription": "Penilaian untuk {surah} akan dihapus permanen dari semester ini.",
     "deleteButton": "Hapus Penilaian",
     "exportExcel": "Unduh Excel"
+  },
+  "AdminTahsinMeeting": {
+    "title": "Kontrol Pertemuan Tahsin",
+    "description": "Atur nomor pertemuan Tahsin yang digunakan guru saat melakukan penilaian.",
+    "backToAdmin": "Panel Admin",
+    "activeContext": "Konteks Pertemuan Aktif",
+    "contextDescription": "Pertemuan ditentukan server berdasarkan tahun ajaran dan semester aktif.",
+    "academicYear": "Tahun Ajaran",
+    "semester": "Semester",
+    "oddSemester": "Ganjil",
+    "evenSemester": "Genap",
+    "run": "Run Timeline",
+    "runValue": "Run {run}",
+    "activeMeeting": "Pertemuan Aktif",
+    "meetingValue": "Pertemuan {meeting}",
+    "meetingDate": "Tanggal Pertemuan",
+    "unavailable": "Belum tersedia",
+    "noActiveMeeting": "Belum ada pertemuan Tahsin aktif. Pertemuan pertama akan dibuat saat penilaian Tahsin pertama disimpan.",
+    "advance": "Lanjut ke Pertemuan Berikutnya",
+    "advancing": "Melanjutkan...",
+    "advanceSuccess": "Pertemuan Tahsin berikutnya berhasil dibuat.",
+    "reset": "Reset ke Pertemuan 1",
+    "resetTitle": "Reset Pertemuan Tahsin",
+    "resetConfirmation": "Timeline aktif akan dinonaktifkan dan Run baru dimulai dari Pertemuan 1. Riwayat dan penilaian lama tetap utuh.",
+    "resetConfirm": "Ya, Reset",
+    "resetting": "Mereset...",
+    "resetSuccess": "Timeline Tahsin baru dimulai dari Pertemuan 1.",
+    "cancel": "Batal"
   },
   "CharacterCounter": {
     "maxReached": "Batas karakter tercapai"

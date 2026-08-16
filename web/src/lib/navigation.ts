@@ -46,6 +46,7 @@ export const adminNavigationItems = [
   { key: "navKelas", href: "/admin/classes", iconKey: "GraduationCap" },
   { key: "navTahunAjaran", href: "/admin/academic-years", iconKey: "Calendar" },
   { key: "navHalaqah", href: "/admin/halaqah", iconKey: "BookOpen" },
+  { key: "navTahsin", href: "/admin/tahsin", iconKey: "BookOpen" },
   { key: "navSantri", href: "/admin/students", iconKey: "UserRound" },
   { key: "navFormatif", href: "/formative", iconKey: "BookText" },
   { key: "navSumatif", href: "/summative", iconKey: "ClipboardList" },

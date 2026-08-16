@@ -54,6 +54,8 @@ function makeRecord(
     createdAt: new Date("2026-08-10T01:00:00.000Z"),
     updatedAt: new Date("2026-08-10T01:00:00.000Z"),
     ...overrides,
+    meetingId: overrides.meetingId ?? null,
+    meeting: overrides.meeting ?? null,
   };
 }
 

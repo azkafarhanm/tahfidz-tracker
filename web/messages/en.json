@@ -15,7 +15,8 @@
     "navLaporan": "Reports",
     "navLaporanGuru": "Teacher Reports",
     "navSumatif": "Summative Scores",
-    "navReleaseNotes": "Release Notes"
+    "navReleaseNotes": "Release Notes",
+    "navTahsin": "Tahsin"
   },
   "AdminReleaseNotes": {
     "heading": "Release Notes",
@@ -199,6 +200,8 @@
     "tahsinEmpty": "No Tahsin history for this student yet.",
     "tahsinJilid": "Volume",
     "tahsinPage": "Page",
+    "tahsinMeetingContext": "Run {run} · Meeting {meeting}",
+    "tahsinLegacy": "Before meeting tracking",
     "tahsinStatusLancar": "Fluent",
     "tahsinStatusCukup": "Sufficient",
     "tahsinStatusPerluMurojaah": "Needs review",
@@ -1550,6 +1553,34 @@
     "deleteDescription": "The assessment for {surah} will be permanently removed from this semester.",
     "deleteButton": "Delete Assessment",
     "exportExcel": "Download Excel"
+  },
+  "AdminTahsinMeeting": {
+    "title": "Tahsin Meeting Control",
+    "description": "Manage the Tahsin meeting number used by teachers when recording assessments.",
+    "backToAdmin": "Admin Panel",
+    "activeContext": "Active Meeting Context",
+    "contextDescription": "The server determines the meeting from the active academic year and semester.",
+    "academicYear": "Academic Year",
+    "semester": "Semester",
+    "oddSemester": "Odd",
+    "evenSemester": "Even",
+    "run": "Timeline Run",
+    "runValue": "Run {run}",
+    "activeMeeting": "Active Meeting",
+    "meetingValue": "Meeting {meeting}",
+    "meetingDate": "Meeting Date",
+    "unavailable": "Not available yet",
+    "noActiveMeeting": "There is no active Tahsin meeting yet. The first meeting is created when the first Tahsin assessment is saved.",
+    "advance": "Advance to Next Meeting",
+    "advancing": "Advancing...",
+    "advanceSuccess": "The next Tahsin meeting was created.",
+    "reset": "Reset to Meeting 1",
+    "resetTitle": "Reset Tahsin Meeting",
+    "resetConfirmation": "The active timeline will become inactive and a new run will start at Meeting 1. Existing history and assessments remain intact.",
+    "resetConfirm": "Yes, Reset",
+    "resetting": "Resetting...",
+    "resetSuccess": "A new Tahsin timeline started at Meeting 1.",
+    "cancel": "Cancel"
   },
   "CharacterCounter": {
     "maxReached": "Maximum characters reached"

@@ -15,7 +15,8 @@
     "navLaporan": "التقارير",
     "navLaporanGuru": "تقارير المعلّمين",
     "navSumatif": "درجات تقييمية",
-    "navReleaseNotes": "ملاحظات الإصدار"
+    "navReleaseNotes": "ملاحظات الإصدار",
+    "navTahsin": "تحسين"
   },
   "AdminReleaseNotes": {
     "heading": "ملاحظات الإصدار",
@@ -199,6 +200,8 @@
     "tahsinEmpty": "لا يوجد سجل تحسين لهذا الطالب بعد.",
     "tahsinJilid": "الجزء",
     "tahsinPage": "الصفحة",
+    "tahsinMeetingContext": "الجولة {run} · اللقاء {meeting}",
+    "tahsinLegacy": "قبل نظام اللقاءات",
     "tahsinStatusLancar": "متقن",
     "tahsinStatusCukup": "كافٍ",
     "tahsinStatusPerluMurojaah": "يحتاج إلى مراجعة",
@@ -1550,6 +1553,34 @@
     "deleteDescription": "سيتم حذف تقييم {surah} نهائيًا من هذا الفصل.",
     "deleteButton": "حذف التقييم",
     "exportExcel": "تحميل إكسل"
+  },
+  "AdminTahsinMeeting": {
+    "title": "التحكم في لقاءات التحسين",
+    "description": "أدِر رقم لقاء التحسين الذي يستخدمه المعلمون عند إدخال التقييم.",
+    "backToAdmin": "لوحة الإدارة",
+    "activeContext": "سياق اللقاء النشط",
+    "contextDescription": "يحدد الخادم اللقاء بناءً على السنة الدراسية والفصل النشط.",
+    "academicYear": "السنة الدراسية",
+    "semester": "الفصل الدراسي",
+    "oddSemester": "الفصل الأول",
+    "evenSemester": "الفصل الثاني",
+    "run": "جولة الخط الزمني",
+    "runValue": "جولة {run}",
+    "activeMeeting": "اللقاء النشط",
+    "meetingValue": "اللقاء {meeting}",
+    "meetingDate": "تاريخ اللقاء",
+    "unavailable": "غير متاح بعد",
+    "noActiveMeeting": "لا يوجد لقاء تحسين نشط بعد. سينشأ اللقاء الأول عند حفظ أول تقييم تحسين.",
+    "advance": "الانتقال إلى اللقاء التالي",
+    "advancing": "جارٍ الانتقال...",
+    "advanceSuccess": "تم إنشاء لقاء التحسين التالي.",
+    "reset": "إعادة إلى اللقاء 1",
+    "resetTitle": "إعادة لقاء التحسين",
+    "resetConfirmation": "سيصبح الخط الزمني النشط غير نشط وتبدأ جولة جديدة من اللقاء 1. تبقى السجلات والتقييمات القديمة سليمة.",
+    "resetConfirm": "نعم، أعد الضبط",
+    "resetting": "جارٍ إعادة الضبط...",
+    "resetSuccess": "بدأ خط زمني جديد للتحسين من اللقاء 1.",
+    "cancel": "إلغاء"
   },
   "CharacterCounter": {
     "maxReached": "تم بلوغ الحد الأقصى للأحرف"

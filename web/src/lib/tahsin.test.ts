@@ -8,6 +8,11 @@ const mocks = vi.hoisted(() => ({
   tahsinCreate: vi.fn(),
   tahsinFindMany: vi.fn(),
   tahsinFindFirst: vi.fn(),
+  academicYearFindUnique: vi.fn(),
+  timelineFindFirst: vi.fn(),
+  timelineCreate: vi.fn(),
+  meetingFindFirst: vi.fn(),
+  meetingCreate: vi.fn(),
 }));
 
 vi.mock("./academic-year", async () => {
@@ -17,19 +22,26 @@ vi.mock("./academic-year", async () => {
 
 vi.mock("./prisma", () => ({
   prisma: {
+    $queryRaw: vi.fn(),
     student: { findFirst: mocks.studentFindFirst, findMany: mocks.studentFindMany },
+    academicYear: { findUnique: mocks.academicYearFindUnique },
+    tahsinMeetingTimeline: { findFirst: mocks.timelineFindFirst, create: mocks.timelineCreate },
+    tahsinMeeting: { findFirst: mocks.meetingFindFirst, create: mocks.meetingCreate },
     tahsinRecord: { create: mocks.tahsinCreate, findMany: mocks.tahsinFindMany, findFirst: mocks.tahsinFindFirst },
   },
 }));
 
 import {
   createTahsinRecord,
+  advanceTahsinMeeting,
   formatTahsinPageRange,
   getLatestTahsinForStudent,
   getTahsinForStudent,
   getTahsinForTeacher,
   getTahsinStudents,
+  resetTahsinMeetingTimeline,
   normalizeTahsinPageRange,
+  resolveTahsinMeetingContext,
   TAHSIN_METHOD_NAME,
   validateJilid,
   validatePageRange,
@@ -49,9 +61,16 @@ beforeEach(() => {
   mocks.tahsinCreate.mockImplementation(async ({ data }) => ({ id: "tahsin-a", ...data }));
   mocks.tahsinFindMany.mockResolvedValue([]);
   mocks.tahsinFindFirst.mockResolvedValue(null);
+  mocks.academicYearFindUnique.mockResolvedValue({ id: "year-1" });
+  mocks.timelineFindFirst.mockResolvedValue({ id: "timeline-1", runNumber: 1 });
+  mocks.meetingFindFirst.mockResolvedValue({ id: "meeting-1", meetingNumber: 1 });
 });
 
 describe("Tahsin domain validation", () => {
+  it("resolves meeting-aware history context and preserves legacy records", () => {
+    expect(resolveTahsinMeetingContext({ meetingNumber: 2, timeline: { runNumber: 3 } })).toEqual({ runNumber: 3, meetingNumber: 2 });
+    expect(resolveTahsinMeetingContext(null)).toBeNull();
+  });
   it("uses the fixed Ilman Wa Ruuhan method without persisting it per record", () => {
     expect(TAHSIN_METHOD_NAME).toBe("Ilman Wa Ruuhan");
   });
@@ -85,6 +104,91 @@ describe("Tahsin domain validation", () => {
 });
 
 describe("Tahsin service authorization and isolation", () => {
+  function meetingTransaction() {
+    const meetings = [
+      { id: "meeting-1", meetingNumber: 1, isActive: true },
+    ];
+    const timelines = [{ id: "timeline-1", runNumber: 1, isActive: true }];
+    const records: Array<{ id: string; meetingId: string | null }> = [{ id: "legacy-record", meetingId: null }];
+    const tx = {
+      $queryRaw: vi.fn(),
+      academicYear: { findUnique: vi.fn().mockResolvedValue({ id: "year-1" }) },
+      tahsinMeetingTimeline: {
+        findFirst: vi.fn().mockImplementation(async ({ where }: { where: { isActive?: boolean; id?: string } }) =>
+          timelines.find((timeline) => (!where.isActive || timeline.isActive) && (!where.id || timeline.id === where.id)) ?? null),
+        create: vi.fn().mockImplementation(async ({ data }: { data: { runNumber: number } }) => {
+          const timeline = { id: `timeline-${timelines.length + 1}`, ...data, isActive: true };
+          timelines.push(timeline);
+          return timeline;
+        }),
+        update: vi.fn().mockImplementation(async ({ where }: { where: { id: string } }) => {
+          const timeline = timelines.find((item) => item.id === where.id)!;
+          timeline.isActive = false;
+          return timeline;
+        }),
+      },
+      tahsinMeeting: {
+        findFirst: vi.fn().mockImplementation(async ({ where }: { where: { timelineId: string; isActive?: boolean } }) =>
+          meetings.find((meeting) => meeting.isActive === (where.isActive === undefined ? meeting.isActive : where.isActive) && where.timelineId === "timeline-1") ?? null),
+        update: vi.fn().mockImplementation(async ({ where }: { where: { id: string } }) => {
+          const meeting = meetings.find((item) => item.id === where.id)!;
+          meeting.isActive = false;
+          return meeting;
+        }),
+        create: vi.fn().mockImplementation(async ({ data }: { data: { timelineId: string; meetingNumber: number } }) => {
+          const meeting = { id: `meeting-${meetings.length + 1}`, ...data, isActive: true };
+          meetings.push(meeting);
+          return meeting;
+        }),
+      },
+      tahsinRecord: { findMany: vi.fn().mockResolvedValue(records) },
+      state: { meetings, timelines, records },
+    };
+    return tx;
+  }
+
+  it("proves P1 to P2 to P3 state transitions and sequential numbers", async () => {
+    const tx = meetingTransaction();
+    const first = await advanceTahsinMeeting(admin, new Date("2026-08-16"), tx as never);
+    const second = await advanceTahsinMeeting(admin, new Date("2027-01-15"), tx as never);
+    expect(first.meetingNumber).toBe(2);
+    expect(second.meetingNumber).toBe(3);
+    expect(tx.state.meetings.map((meeting) => [meeting.meetingNumber, meeting.isActive])).toEqual([[1, false], [2, false], [3, true]]);
+  });
+
+  it("proves reset preserves Run 1 meetings and records while creating Run 2 P1", async () => {
+    const tx = meetingTransaction();
+    tx.state.meetings.push({ id: "meeting-2", meetingNumber: 2, isActive: false });
+    tx.state.records.push({ id: "record-1", meetingId: "meeting-1" });
+    const oldMeetingId = tx.state.records[1].meetingId;
+    const created = await resetTahsinMeetingTimeline(admin, new Date("2026-08-20"), tx as never);
+    expect(created.meetingNumber).toBe(1);
+    expect(tx.state.timelines.map((timeline) => [timeline.runNumber, timeline.isActive])).toEqual([[1, false], [2, true]]);
+    expect(tx.state.meetings.some((meeting) => meeting.id === "meeting-1")).toBe(true);
+    expect(tx.state.meetings.some((meeting) => meeting.id === "meeting-2")).toBe(true);
+    expect(tx.state.records.find((record) => record.id === "record-1")?.meetingId).toBe(oldMeetingId);
+  });
+
+  it("keeps legacy records readable without assigning a meeting number", async () => {
+    const legacy = { id: "legacy-record", meetingId: null };
+    mocks.tahsinFindMany.mockResolvedValueOnce([legacy]);
+    await expect(getTahsinForStudent(admin, "student-a", { academicYear: "2026/2027" })).resolves.toEqual([legacy]);
+    expect(legacy.meetingId).toBeNull();
+  });
+
+  it.each(["advance", "reset"] as const)("rejects teacher %s", async (operation) => {
+    const tx = meetingTransaction();
+    const mutation = operation === "advance" ? advanceTahsinMeeting : resetTahsinMeetingTimeline;
+    await expect(mutation(teacher, new Date("2026-08-16"), tx as never)).rejects.toThrow("Hanya admin");
+    expect(tx.tahsinMeeting.update).not.toHaveBeenCalled();
+  });
+
+  it("locks academic-year context before determining active meeting", async () => {
+    const tx = meetingTransaction();
+    await advanceTahsinMeeting(admin, new Date("2026-08-16"), tx as never);
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
+  });
+
   it("creates only for the authenticated teacher's eligible student", async () => {
     const record = await createTahsinRecord(teacher, {
       studentId: "student-a", jilid: 1, startPage: 5, endPage: 5, date, score: 88, notes: null,
@@ -97,6 +201,28 @@ describe("Tahsin service authorization and isolation", () => {
     expect(mocks.studentFindFirst).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ id: "student-a", teacherId: "teacher-a", isActive: true }),
     }));
+  });
+
+  it("uses an explicit transaction client for both eligible-student lookup and record insert", async () => {
+    const txStudentFindFirst = vi.fn().mockResolvedValue({ id: "student-a", teacherId: "teacher-a" });
+    const txTahsinCreate = vi.fn().mockImplementation(async ({ data }) => ({ id: "tahsin-a", ...data }));
+    const tx = {
+      student: { findFirst: txStudentFindFirst },
+      tahsinRecord: { create: txTahsinCreate },
+      academicYear: { findUnique: vi.fn().mockResolvedValue({ id: "year-1" }) },
+      tahsinMeetingTimeline: { findFirst: vi.fn().mockResolvedValue({ id: "timeline-1" }) },
+      tahsinMeeting: { findFirst: vi.fn().mockResolvedValue({ id: "meeting-1" }) },
+      $queryRaw: vi.fn(),
+    };
+
+    await createTahsinRecord(teacher, {
+      studentId: "student-a", jilid: 1, startPage: 5, endPage: null, date, score: 88, notes: null,
+    }, tx as never);
+
+    expect(txStudentFindFirst).toHaveBeenCalledTimes(1);
+    expect(txTahsinCreate).toHaveBeenCalledTimes(1);
+    expect(mocks.studentFindFirst).not.toHaveBeenCalled();
+    expect(mocks.tahsinCreate).not.toHaveBeenCalled();
   });
 
   it.each([
