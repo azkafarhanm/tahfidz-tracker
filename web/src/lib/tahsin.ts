@@ -1,4 +1,5 @@
 import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
+import type { Prisma } from "@/generated/prisma-next/client";
 import { getActiveAcademicYear, getAcademicYearForDate, getSemesterForDate } from "@/lib/academic-year";
 import { prisma } from "@/lib/prisma";
 import { deriveRecordStatusFromScore } from "@/lib/record-status";
@@ -116,7 +117,11 @@ async function resolveQueryContext(options?: TahsinQueryOptions) {
   };
 }
 
-export async function createTahsinRecord(actor: TahsinActor, input: TahsinCreateInput) {
+export async function createTahsinRecord(
+  actor: TahsinActor,
+  input: TahsinCreateInput,
+  db: Prisma.TransactionClient = prisma,
+) {
   const teacherId = assertTeacherActor(actor);
   if (!(input.date instanceof Date) || Number.isNaN(input.date.getTime())) {
     throw new Error("Tanggal Tahsin tidak valid.");
@@ -132,7 +137,7 @@ export async function createTahsinRecord(actor: TahsinActor, input: TahsinCreate
     throw new Error("Tanggal Tahsin harus berada pada tahun ajaran aktif.");
   }
 
-  const student = await prisma.student.findFirst({
+  const student = await db.student.findFirst({
     where: {
       id: input.studentId,
       ...tahsinStudentWhere(academicYear, teacherId),
@@ -145,7 +150,7 @@ export async function createTahsinRecord(actor: TahsinActor, input: TahsinCreate
   }
 
   const pageRange = normalizeTahsinPageRange(input.startPage, input.endPage);
-  return prisma.tahsinRecord.create({
+  return db.tahsinRecord.create({
     data: {
       studentId: student.id,
       teacherId: student.teacherId,
