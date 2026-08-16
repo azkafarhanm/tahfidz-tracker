@@ -114,6 +114,7 @@ model Teacher {
   meetingStatuses     MeetingStatus[]
   targets             Target[]
   tasmiRecords        TasmiRecord[]
+  tahsinRecords       TahsinRecord[]
 
   @@index([isActive])
 }
@@ -265,6 +266,7 @@ model Student {
   targets             Target[]
   summativeScores     SummativeScore[]
   tasmiRecords        TasmiRecord[]
+  tahsinRecords       TahsinRecord[]
 
   @@index([teacherId])
   @@index([classGroupId])
@@ -485,6 +487,32 @@ model TasmiRecord {
   @@index([teacherId, academicYear])
   @@index([grade])
   @@index([status])
+}
+
+model TahsinRecord {
+  id           String       @id @default(cuid())
+  studentId    String
+  teacherId    String
+  jilid        Int
+  startPage    Int
+  endPage      Int?
+  date         DateTime     @default(now())
+  score        Int?
+  status       RecordStatus @default(CUKUP)
+  notes        String?
+  academicYear String
+  semester     Semester
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@index([studentId, academicYear, semester])
+  @@index([studentId, createdAt])
+  @@index([teacherId, academicYear, semester])
+  @@index([academicYear, semester])
+  @@index([teacherId, date])
 }
 
 enum AuditAction {
