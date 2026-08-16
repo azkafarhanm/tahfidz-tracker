@@ -110,6 +110,11 @@ const TAHSIN_RECORD_SELECT = {
   },
 } as const;
 
+const TAHSIN_TEACHER_RECORD_SELECT = {
+  ...TAHSIN_RECORD_SELECT,
+  student: { select: { fullName: true, academicClass: { select: { name: true } } } },
+} as const;
+
 function assertValid(result: TahsinValidationResult | { ok: true; status: RecordStatus }) {
   if (!result.ok) throw new Error(result.error);
 }
@@ -337,6 +342,22 @@ export async function getLatestTahsinForStudent(
   });
 }
 
+export async function getTahsinSmartDefaultForStudent(
+  actor: TahsinActor,
+  studentId: string,
+) {
+  const context = await resolveQueryContext();
+  return prisma.tahsinRecord.findFirst({
+    where: {
+      studentId,
+      academicYear: context.academicYear,
+      student: tahsinStudentWhere(context.academicYear, actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__"),
+    },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: { jilid: true, startPage: true, endPage: true },
+  });
+}
+
 export async function getTahsinForTeacher(actor: TahsinActor, options?: TahsinQueryOptions) {
   const teacherId = assertTeacherActor(actor);
   const context = await resolveQueryContext(options);
@@ -348,7 +369,7 @@ export async function getTahsinForTeacher(actor: TahsinActor, options?: TahsinQu
       student: tahsinStudentWhere(context.academicYear, teacherId),
     },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-    select: TAHSIN_RECORD_SELECT,
+    select: TAHSIN_TEACHER_RECORD_SELECT,
   });
 }
 

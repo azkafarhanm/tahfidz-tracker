@@ -14,7 +14,7 @@ type Defaults = TahsinMaterialDefault;
 
 export default function TahsinQuickEntry({ students }: { students: Student[] }) {
   const classes = [...new Set(students.map((student) => student.academicClass?.name).filter((name): name is string => Boolean(name)))].sort();
-  const [className, setClassName] = useState(classes[0] ?? "");
+  const [className, setClassName] = useState("");
   const classStudents = students.filter((student) => student.academicClass?.name === className);
   const [studentId, setStudentId] = useState("");
   const [defaults, setDefaults] = useState<Defaults>(emptyTahsinMaterialDefault);
@@ -26,7 +26,6 @@ export default function TahsinQuickEntry({ students }: { students: Student[] }) 
     { ok: true, recordId: "", success: "" },
   );
 
-  useEffect(() => { setStudentId(""); setDefaults(emptyTahsinMaterialDefault); setScore(""); setNotes(""); }, [className]);
   useEffect(() => {
     if (!studentId) return;
     let active = true;
@@ -37,7 +36,11 @@ export default function TahsinQuickEntry({ students }: { students: Student[] }) 
     return () => { active = false; };
   }, [studentId]);
   useEffect(() => {
-    if (result.ok && result.success) { toast.success(result.success); setScore(""); setNotes(""); }
+    if (result.ok && result.success) {
+      toast.success(result.success);
+      setClassName(""); setStudentId(""); setDefaults(emptyTahsinMaterialDefault); setScore(""); setNotes("");
+      window.dispatchEvent(new CustomEvent("tahsin-record-created", { detail: { recordId: result.recordId } }));
+    }
     if (!result.ok) toast.error(result.error);
   }, [result]);
 
@@ -46,11 +49,11 @@ export default function TahsinQuickEntry({ students }: { students: Student[] }) 
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">Metode: Ilman Wa Ruuhan</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-medium">Kelas<select className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 dark:border-slate-700 dark:bg-slate-800" value={className} onChange={(event) => setClassName(event.target.value)}>{classes.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
-        <label className="block text-sm font-medium">Santri<select className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800" value={studentId} disabled={!className || isLoadingDefault} onChange={(event) => setStudentId(event.target.value)}><option value="">{isLoadingDefault ? "Memuat default…" : "Pilih santri"}</option>{classStudents.map((student) => <option key={student.id} value={student.id}>{student.fullName}</option>)}</select></label>
+        <label className="block text-sm font-medium">Kelas<select className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 dark:border-slate-700 dark:bg-slate-800" value={className} onChange={(event) => { setClassName(event.target.value); setStudentId(""); setDefaults(emptyTahsinMaterialDefault); setScore(""); setNotes(""); }}><option value="">Pilih Kelas</option>{classes.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
+        <label className="block text-sm font-medium">Santri<select className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800" value={studentId} disabled={!className || isLoadingDefault} onChange={(event) => { setDefaults(emptyTahsinMaterialDefault); setScore(""); setNotes(""); setStudentId(event.target.value); }}><option value="">{isLoadingDefault ? "Memuat default…" : "Pilih santri"}</option>{classStudents.map((student) => <option key={student.id} value={student.id}>{student.fullName}</option>)}</select></label>
       </div>
     </section>
-    {studentId ? <>
+    {studentId ? isLoadingDefault ? <section aria-live="polite" className="flex min-h-32 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"><Loader2 className="animate-spin" size={18} />Memuat default penilaian…</section> : <>
       <input name="studentId" type="hidden" value={studentId} />
       <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900">
         <label className="block text-sm font-medium">Jilid<select name="jilid" className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 dark:border-slate-700 dark:bg-slate-800" value={defaults.jilid} onChange={(event) => setDefaults((current) => ({ ...current, jilid: Number(event.target.value) }))}><option value="1">Jilid 1</option><option value="2">Jilid 2</option></select></label>

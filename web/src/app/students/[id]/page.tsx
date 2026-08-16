@@ -621,7 +621,7 @@ export default async function StudentDetailPage({
             {tahsinRecords.length > 0 ? <div className="mt-4 space-y-3">
               {tahsinRecords.map((record) => <article className="rounded-xl border border-slate-100 p-3 dark:border-slate-800" key={record.id}>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="font-semibold">{t("tahsinJilid")} {record.jilid} · {t("tahsinPage")} {formatTahsinPageRange(record.startPage, record.endPage)}</span><span className="text-slate-500 dark:text-slate-400">{tahsinDateFormatter.format(record.date)}</span></div>
-                {(() => { const meetingContext = resolveTahsinMeetingContext(record.meeting); return <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{meetingContext ? t("tahsinMeetingContext", { run: meetingContext.runNumber, meeting: meetingContext.meetingNumber }) : t("tahsinLegacy")}</p>; })()}
+                {(() => { const meetingContext = resolveTahsinMeetingContext(record.meeting); return <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{meetingContext ? t("tahsinMeetingContext", { meeting: meetingContext.meetingNumber }) : t("tahsinLegacy")}</p>; })()}
                 <p className="mt-1 text-sm">{t("tahsinScore")} {record.score} · <span className="font-medium">{tahsinStatusLabel(record.status, t)}</span></p>
                 {record.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-400">{record.notes}</p> : null}
               </article>)}

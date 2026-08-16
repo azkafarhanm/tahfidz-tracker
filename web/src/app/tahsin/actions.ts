@@ -5,7 +5,7 @@ import { AuditAction } from "@/generated/prisma-next/enums";
 import { readInt, readOptionalString } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { advanceTahsinMeeting, createTahsinRecord, getLatestTahsinForStudent, resetTahsinMeetingTimeline } from "@/lib/tahsin";
+import { advanceTahsinMeeting, createTahsinRecord, getTahsinSmartDefaultForStudent, resetTahsinMeetingTimeline } from "@/lib/tahsin";
 
 export type TahsinActionResult =
   | { ok: true; recordId: string; success: string }
@@ -51,7 +51,7 @@ export async function createTahsinAction(formData: FormData): Promise<TahsinActi
 
 export async function getTahsinSmartDefaultAction(studentId: string) {
   const scope = await requireSessionScope();
-  const record = await getLatestTahsinForStudent(actorFromScope(scope), studentId);
+  const record = await getTahsinSmartDefaultForStudent(actorFromScope(scope), studentId);
   return record
     ? { jilid: record.jilid, startPage: record.startPage, endPage: record.endPage }
     : { jilid: 1, startPage: null, endPage: null };

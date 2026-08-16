@@ -36,6 +36,7 @@ import {
   advanceTahsinMeeting,
   formatTahsinPageRange,
   getLatestTahsinForStudent,
+  getTahsinSmartDefaultForStudent,
   getTahsinForStudent,
   getTahsinForTeacher,
   getTahsinStudents,
@@ -268,6 +269,14 @@ describe("Tahsin service authorization and isolation", () => {
       expect(call.where).toMatchObject({ studentId: "student-a", academicYear: "2026/2027", semester: Semester.GANJIL });
       expect(call.where.student).toMatchObject({ teacherId: "teacher-a", classGroup: { programType: ProgramType.ACADEMIC, grade: 7 } });
     }
+  });
+
+  it("uses a minimal scoped query for Smart Default", async () => {
+    await getTahsinSmartDefaultForStudent(teacher, "student-a");
+    expect(mocks.tahsinFindFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ studentId: "student-a", academicYear: "2026/2027" }),
+      select: { jilid: true, startPage: true, endPage: true },
+    }));
   });
 
   it("scopes teacher records and eligible students to the authenticated teacher", async () => {

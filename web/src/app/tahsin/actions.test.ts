@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
   requireSessionScope: vi.fn(),
   createTahsinRecord: vi.fn(),
-  getLatestTahsinForStudent: vi.fn(),
+  getTahsinSmartDefaultForStudent: vi.fn(),
   advanceTahsinMeeting: vi.fn(),
   resetTahsinMeetingTimeline: vi.fn(),
   revalidatePath: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: mocks.transaction } }))
 vi.mock("@/lib/session", () => ({ requireSessionScope: mocks.requireSessionScope }));
 vi.mock("@/lib/tahsin", () => ({
   createTahsinRecord: mocks.createTahsinRecord,
-  getLatestTahsinForStudent: mocks.getLatestTahsinForStudent,
+  getTahsinSmartDefaultForStudent: mocks.getTahsinSmartDefaultForStudent,
   advanceTahsinMeeting: mocks.advanceTahsinMeeting,
   resetTahsinMeetingTimeline: mocks.resetTahsinMeetingTimeline,
 }));
