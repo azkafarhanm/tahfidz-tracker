@@ -30,6 +30,9 @@ import { getSessionScope, requireSessionScope } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
 import { groupMeetingTimelineByMonth } from "@/lib/meeting-status";
+import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
+import { formatTahsinPageRange, getTahsinForStudent, validateTahsinAcademicScope } from "@/lib/tahsin";
+import { getDateFormatter } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,6 +57,18 @@ type StudentDetailPageProps = {
 
 function recordStatusClass(record: RecordItem) {
   return record.needsReview ? badge.warning : badge.success;
+}
+
+function tahsinStatusClass(status: RecordStatus) {
+  if (status === RecordStatus.LANCAR) return badge.success;
+  if (status === RecordStatus.CUKUP) return badge.progress;
+  return badge.warning;
+}
+
+function tahsinStatusLabel(status: RecordStatus, t: (key: string) => string) {
+  if (status === RecordStatus.LANCAR) return t("tahsinStatusLancar");
+  if (status === RecordStatus.CUKUP) return t("tahsinStatusCukup");
+  return t("tahsinStatusPerluMurojaah");
 }
 
 function meetingStatusDotClass(status: string | null) {
@@ -245,6 +260,16 @@ export default async function StudentDetailPage({
       </AppShell>
     );
   }
+
+  const tahsinEligible = validateTahsinAcademicScope({
+    programType: student.programType as ProgramType,
+    grade: student.classGroupGrade,
+  }).ok;
+  const tahsinRecords = tahsinEligible
+    ? await getTahsinForStudent({ isAdmin, teacherId }, student.id)
+    : [];
+  const latestTahsin = tahsinRecords[0] ?? null;
+  const tahsinDateFormatter = getDateFormatter(locale);
 
   const meetingSummary = student.meetingSummary;
   const meetingGroups = groupMeetingTimelineByMonth(student.meetingTimeline, locale);
@@ -580,6 +605,26 @@ export default async function StudentDetailPage({
                 </tbody>
               </table>
             </div>
+          </section>
+        ) : null}
+
+        {tahsinEligible ? (
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">{t("tahsinHeading")}</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("tahsinMethod")}</p>
+              </div>
+              {latestTahsin ? <span className={`rounded-full px-3 py-1 text-xs font-medium ${tahsinStatusClass(latestTahsin.status)}`}>{t("tahsinLatest")}: {t("tahsinJilid")} {latestTahsin.jilid} · {t("tahsinPage")} {formatTahsinPageRange(latestTahsin.startPage, latestTahsin.endPage)}</span> : null}
+            </div>
+            {latestTahsin ? <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">{t("tahsinScore")} {latestTahsin.score} · {tahsinStatusLabel(latestTahsin.status, t)} · {tahsinDateFormatter.format(latestTahsin.date)}</p> : <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{t("tahsinEmpty")}</p>}
+            {tahsinRecords.length > 0 ? <div className="mt-4 space-y-3">
+              {tahsinRecords.map((record) => <article className="rounded-xl border border-slate-100 p-3 dark:border-slate-800" key={record.id}>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="font-semibold">{t("tahsinJilid")} {record.jilid} · {t("tahsinPage")} {formatTahsinPageRange(record.startPage, record.endPage)}</span><span className="text-slate-500 dark:text-slate-400">{tahsinDateFormatter.format(record.date)}</span></div>
+                <p className="mt-1 text-sm">{t("tahsinScore")} {record.score} · <span className="font-medium">{tahsinStatusLabel(record.status, t)}</span></p>
+                {record.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-400">{record.notes}</p> : null}
+              </article>)}
+            </div> : null}
           </section>
         ) : null}
 
