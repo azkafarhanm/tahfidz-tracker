@@ -1,4 +1,4 @@
-type SkeletonKind = "dashboard" | "detail" | "directory" | "form" | "table";
+type SkeletonKind = "dashboard" | "detail" | "directory" | "form" | "table" | "tahsin";
 
 type PanelSkeletonProps = {
   kind?: SkeletonKind;
@@ -104,6 +104,16 @@ function DashboardSkeleton() {
   );
 }
 
+function TahsinSkeleton() {
+  return (
+    <>
+      <div className={`h-28 ${block}`} />
+      <FormSkeleton />
+      <TableSkeleton />
+    </>
+  );
+}
+
 export function PanelTransitionSkeleton({
   kind = "dashboard",
   reveal = true,
@@ -123,6 +133,7 @@ export function PanelTransitionSkeleton({
       {kind === "detail" ? <DetailSkeleton /> : null}
       {kind === "form" ? <FormSkeleton /> : null}
       {kind === "table" ? <TableSkeleton /> : null}
+      {kind === "tahsin" ? <TahsinSkeleton /> : null}
     </div>
   );
 }

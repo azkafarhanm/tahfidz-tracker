@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
   requireSessionScope: vi.fn(),
   createTahsinRecord: vi.fn(),
+  updateTahsinRecord: vi.fn(),
+  deleteTahsinRecord: vi.fn(),
   getTahsinSmartDefaultForStudent: vi.fn(),
   advanceTahsinMeeting: vi.fn(),
   resetTahsinMeetingTimeline: vi.fn(),
@@ -17,16 +19,18 @@ vi.mock("@/lib/prisma", () => ({ prisma: { $transaction: mocks.transaction } }))
 vi.mock("@/lib/session", () => ({ requireSessionScope: mocks.requireSessionScope }));
 vi.mock("@/lib/tahsin", () => ({
   createTahsinRecord: mocks.createTahsinRecord,
+  updateTahsinRecord: mocks.updateTahsinRecord,
+  deleteTahsinRecord: mocks.deleteTahsinRecord,
   getTahsinSmartDefaultForStudent: mocks.getTahsinSmartDefaultForStudent,
   advanceTahsinMeeting: mocks.advanceTahsinMeeting,
   resetTahsinMeetingTimeline: mocks.resetTahsinMeetingTimeline,
 }));
 
-import { advanceTahsinMeetingAction, createTahsinAction, resetTahsinMeetingTimelineAction } from "./actions";
+import { advanceTahsinMeetingAction, createTahsinAction, deleteTahsinAction, resetTahsinMeetingTimelineAction, updateTahsinAction } from "./actions";
 
 const record = {
   id: "tahsin-1", studentId: "student-1", teacherId: "teacher-1", jilid: 1,
-  startPage: 5, endPage: null, score: 88, academicYear: "2026/2027",
+  startPage: 5, endPage: null, score: 88, academicYear: "2026/2027", meetingId: "meeting-1",
 };
 
 function formData() {
@@ -41,6 +45,8 @@ beforeEach(() => {
     isAdmin: false, teacherId: "teacher-1", session: { user: { id: "user-1" } },
   });
   mocks.createTahsinRecord.mockResolvedValue(record);
+  mocks.updateTahsinRecord.mockResolvedValue(record);
+  mocks.deleteTahsinRecord.mockResolvedValue(record);
   mocks.auditCreate.mockResolvedValue({ id: "audit-1" });
   mocks.advanceTahsinMeeting.mockResolvedValue({ id: "meeting-2", meetingNumber: 2 });
   mocks.resetTahsinMeetingTimeline.mockResolvedValue({ id: "meeting-new-1", meetingNumber: 1 });
@@ -48,6 +54,7 @@ beforeEach(() => {
 });
 
 function meetingFormData() { const data = new FormData(); data.set("meetingDate", "2026-08-16"); return data; }
+function updateFormData() { const data = formData(); data.set("recordId", "tahsin-1"); return data; }
 
 describe("Tahsin meeting admin actions", () => {
   beforeEach(() => mocks.requireSessionScope.mockResolvedValue({ isAdmin: true, teacherId: null, session: { user: { id: "admin-1" } } }));
@@ -95,6 +102,29 @@ describe("createTahsinAction atomic audit boundary", () => {
     await expect(createTahsinAction(formData())).resolves.toEqual({ ok: false, error: "audit failed" });
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     expect(mocks.createTahsinRecord).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), tx);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe("Tahsin record management actions", () => {
+  it.each([
+    ["update", () => updateTahsinAction(updateFormData()), mocks.updateTahsinRecord, AuditAction.UPDATE_TAHSIN],
+    ["delete", () => deleteTahsinAction("tahsin-1"), mocks.deleteTahsinRecord, AuditAction.DELETE_TAHSIN],
+  ])("uses one transaction client for %s and audit", async (_label, action, mutation, auditAction) => {
+    const tx = { auditLog: { create: mocks.auditCreate } };
+    mocks.transaction.mockImplementationOnce(async (callback) => callback(tx));
+    await expect(action()).resolves.toEqual(expect.objectContaining({ ok: true, recordId: "tahsin-1" }));
+    expect(mutation).toHaveBeenCalledWith(expect.objectContaining({ teacherId: "teacher-1", isAdmin: false }), expect.anything(), ...(mutation === mocks.updateTahsinRecord ? [expect.anything(), tx] : [tx]));
+    expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: auditAction, targetId: "tahsin-1", metadata: expect.objectContaining({ meetingId: "meeting-1" }) }) });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/tahsin");
+  });
+
+  it.each([
+    ["update", () => updateTahsinAction(updateFormData())],
+    ["delete", () => deleteTahsinAction("tahsin-1")],
+  ])("returns audit failure without revalidation for %s", async (_label, action) => {
+    mocks.auditCreate.mockRejectedValueOnce(new Error("audit failed"));
+    await expect(action()).resolves.toEqual({ ok: false, error: "audit failed" });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });

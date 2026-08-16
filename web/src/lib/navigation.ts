@@ -34,6 +34,7 @@ export const teacherNavigationItems = [
   { key: "navDashboard", href: "/", iconKey: "Home" },
   { key: "navSantri", href: "/students", iconKey: "Users" },
   { key: "navCatatCepat", href: "/quick-log", iconKey: "PlusCircle" },
+  { key: "navTahsin", href: "/tahsin", iconKey: "BookOpen" },
   { key: "navFormatif", href: "/formative", iconKey: "BookText" },
   { key: "navSumatif", href: "/summative", iconKey: "ClipboardList" },
   { key: "navProfil", href: "/profile", iconKey: "UserCircle" },

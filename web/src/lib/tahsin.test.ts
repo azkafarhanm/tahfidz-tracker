@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   studentFindFirst: vi.fn(),
   studentFindMany: vi.fn(),
   tahsinCreate: vi.fn(),
+  tahsinUpdate: vi.fn(),
+  tahsinDelete: vi.fn(),
   tahsinFindMany: vi.fn(),
   tahsinFindFirst: vi.fn(),
   academicYearFindUnique: vi.fn(),
@@ -27,12 +29,13 @@ vi.mock("./prisma", () => ({
     academicYear: { findUnique: mocks.academicYearFindUnique },
     tahsinMeetingTimeline: { findFirst: mocks.timelineFindFirst, create: mocks.timelineCreate },
     tahsinMeeting: { findFirst: mocks.meetingFindFirst, create: mocks.meetingCreate },
-    tahsinRecord: { create: mocks.tahsinCreate, findMany: mocks.tahsinFindMany, findFirst: mocks.tahsinFindFirst },
+    tahsinRecord: { create: mocks.tahsinCreate, update: mocks.tahsinUpdate, delete: mocks.tahsinDelete, findMany: mocks.tahsinFindMany, findFirst: mocks.tahsinFindFirst },
   },
 }));
 
 import {
   createTahsinRecord,
+  deleteTahsinRecord,
   advanceTahsinMeeting,
   formatTahsinPageRange,
   getLatestTahsinForStudent,
@@ -41,6 +44,7 @@ import {
   getTahsinForTeacher,
   getTahsinStudents,
   resetTahsinMeetingTimeline,
+  updateTahsinRecord,
   normalizeTahsinPageRange,
   resolveTahsinMeetingContext,
   TAHSIN_METHOD_NAME,
@@ -60,6 +64,8 @@ beforeEach(() => {
   mocks.studentFindFirst.mockResolvedValue({ id: "student-a", teacherId: "teacher-a" });
   mocks.studentFindMany.mockResolvedValue([]);
   mocks.tahsinCreate.mockImplementation(async ({ data }) => ({ id: "tahsin-a", ...data }));
+  mocks.tahsinUpdate.mockImplementation(async ({ data }) => ({ id: "tahsin-a", meetingId: "meeting-1", academicYear: "2026/2027", ...data }));
+  mocks.tahsinDelete.mockResolvedValue({ id: "tahsin-a" });
   mocks.tahsinFindMany.mockResolvedValue([]);
   mocks.tahsinFindFirst.mockResolvedValue(null);
   mocks.academicYearFindUnique.mockResolvedValue({ id: "year-1" });
@@ -224,6 +230,46 @@ describe("Tahsin service authorization and isolation", () => {
     expect(txTahsinCreate).toHaveBeenCalledTimes(1);
     expect(mocks.studentFindFirst).not.toHaveBeenCalled();
     expect(mocks.tahsinCreate).not.toHaveBeenCalled();
+  });
+
+  it("allows the owning teacher to edit only assessment fields and preserves meetingId", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce({ id: "tahsin-a" });
+    mocks.tahsinUpdate.mockResolvedValueOnce({ id: "tahsin-a", meetingId: "meeting-1", academicYear: "2026/2027" });
+
+    const updated = await updateTahsinRecord(teacher, "tahsin-a", {
+      jilid: 2, startPage: 8, endPage: 10, score: 81, notes: "Koreksi tajwid",
+    });
+
+    expect(updated.meetingId).toBe("meeting-1");
+    expect(mocks.tahsinFindFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: "tahsin-a", teacherId: "teacher-a", academicYear: "2026/2027" }),
+    }));
+    expect(mocks.tahsinUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      data: { jilid: 2, startPage: 8, endPage: 10, score: 81, status: RecordStatus.CUKUP, notes: "Koreksi tajwid" },
+    }));
+    expect(mocks.tahsinUpdate.mock.calls[0][0].data).not.toHaveProperty("meetingId");
+  });
+
+  it("rejects an edit outside the teacher scope before mutation", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce(null);
+    await expect(updateTahsinRecord(teacher, "foreign-record", {
+      jilid: 1, startPage: 5, endPage: null, score: 88, notes: null,
+    })).rejects.toThrow("Penilaian Tahsin tidak tersedia");
+    expect(mocks.tahsinUpdate).not.toHaveBeenCalled();
+  });
+
+  it("allows the owning teacher to delete only the selected record without touching its meeting", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce({
+      id: "tahsin-a", studentId: "student-a", meetingId: "meeting-1", academicYear: "2026/2027", jilid: 1, startPage: 5, endPage: null, score: 88,
+    });
+    await deleteTahsinRecord(teacher, "tahsin-a");
+    expect(mocks.tahsinDelete).toHaveBeenCalledWith({ where: { id: "tahsin-a" } });
+  });
+
+  it("rejects delete outside the teacher scope before mutation", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce(null);
+    await expect(deleteTahsinRecord(teacher, "foreign-record")).rejects.toThrow("Penilaian Tahsin tidak tersedia");
+    expect(mocks.tahsinDelete).not.toHaveBeenCalled();
   });
 
   it.each([

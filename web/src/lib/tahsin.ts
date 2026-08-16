@@ -86,6 +86,8 @@ type TahsinCreateInput = {
   notes: string | null;
 };
 
+type TahsinUpdateInput = Pick<TahsinCreateInput, "jilid" | "startPage" | "endPage" | "score" | "notes">;
+
 const TAHSIN_RECORD_SELECT = {
   id: true,
   studentId: true,
@@ -304,6 +306,66 @@ export async function createTahsinRecord(
     },
     select: TAHSIN_RECORD_SELECT,
   });
+}
+
+export async function updateTahsinRecord(
+  actor: TahsinActor,
+  recordId: string,
+  input: TahsinUpdateInput,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const teacherId = assertTeacherActor(actor);
+  assertValid(validateJilid(input.jilid));
+  assertValid(validatePageRange(input.startPage, input.endPage));
+  const scoreResult = validateTahsinScore(input.score);
+  if (!scoreResult.ok) throw new Error(scoreResult.error);
+
+  const academicYear = await getActiveAcademicYear();
+  const existing = await db.tahsinRecord.findFirst({
+    where: {
+      id: recordId,
+      teacherId,
+      academicYear,
+      student: tahsinStudentWhere(academicYear, teacherId),
+    },
+    select: { id: true },
+  });
+  if (!existing) throw new Error("Penilaian Tahsin tidak tersedia.");
+
+  const pageRange = normalizeTahsinPageRange(input.startPage, input.endPage);
+  return db.tahsinRecord.update({
+    where: { id: existing.id },
+    data: {
+      jilid: input.jilid,
+      ...pageRange,
+      score: input.score,
+      status: scoreResult.status,
+      notes: input.notes,
+    },
+    select: TAHSIN_RECORD_SELECT,
+  });
+}
+
+export async function deleteTahsinRecord(
+  actor: TahsinActor,
+  recordId: string,
+  db: Prisma.TransactionClient = prisma,
+) {
+  const teacherId = assertTeacherActor(actor);
+  const academicYear = await getActiveAcademicYear();
+  const existing = await db.tahsinRecord.findFirst({
+    where: {
+      id: recordId,
+      teacherId,
+      academicYear,
+      student: tahsinStudentWhere(academicYear, teacherId),
+    },
+    select: { id: true, studentId: true, meetingId: true, academicYear: true, jilid: true, startPage: true, endPage: true, score: true },
+  });
+  if (!existing) throw new Error("Penilaian Tahsin tidak tersedia.");
+
+  await db.tahsinRecord.delete({ where: { id: existing.id } });
+  return existing;
 }
 
 export async function getTahsinForStudent(

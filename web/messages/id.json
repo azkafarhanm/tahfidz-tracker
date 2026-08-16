@@ -1575,7 +1575,21 @@
     "legacy": "Sebelum sistem pertemuan",
     "volume": "Jilid",
     "pages": "Halaman",
-    "score": "Nilai"
+    "score": "Nilai",
+    "edit": "Edit",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "editTitle": "Edit Penilaian Tahsin",
+    "editDescription": "Perbarui data penilaian tanpa mengubah pertemuan.",
+    "save": "Simpan perubahan",
+    "saving": "Menyimpan…",
+    "startPage": "Halaman mulai",
+    "endPage": "Halaman akhir",
+    "notes": "Catatan",
+    "deleteTitle": "Hapus Penilaian Tahsin",
+    "deleteConfirmation": "Penilaian ini akan dihapus. Pertemuan Tahsin dan riwayat lainnya tidak berubah.",
+    "deleteConfirm": "Ya, hapus",
+    "deleting": "Menghapus…"
   },
   "AdminTahsinMeeting": {
     "title": "Kontrol Pertemuan Tahsin",

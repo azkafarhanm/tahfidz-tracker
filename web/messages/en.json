@@ -1575,7 +1575,21 @@
     "legacy": "Before meeting tracking",
     "volume": "Volume",
     "pages": "Pages",
-    "score": "Score"
+    "score": "Score",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "editTitle": "Edit Tahsin Assessment",
+    "editDescription": "Update the assessment without changing its meeting.",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "startPage": "Start page",
+    "endPage": "End page",
+    "notes": "Notes",
+    "deleteTitle": "Delete Tahsin Assessment",
+    "deleteConfirmation": "This assessment will be deleted. Its Tahsin meeting and other history will remain unchanged.",
+    "deleteConfirm": "Yes, delete",
+    "deleting": "Deleting…"
   },
   "AdminTahsinMeeting": {
     "title": "Tahsin Meeting Control",
