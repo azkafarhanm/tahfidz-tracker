@@ -1,8 +1,11 @@
-import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
+import { getActiveAcademicYear, getAcademicYearForDate, getSemesterForDate } from "@/lib/academic-year";
+import { prisma } from "@/lib/prisma";
 import { deriveRecordStatusFromScore } from "@/lib/record-status";
 
 export const TAHSIN_ENABLED_GRADES = [7] as const;
 export const TAHSIN_JILID_VALUES = [1, 2] as const;
+export const TAHSIN_METHOD_NAME = "Ilman Wa Ruuhan";
 
 export type TahsinValidationResult =
   | { ok: true }
@@ -43,4 +46,179 @@ export function validateTahsinScore(score: number | null): { ok: true; status: R
   if (score === null || !Number.isInteger(score) || score < 0 || score > 100) return { ok: false, error: "Nilai harus berada di antara 0 sampai 100." };
   const status = deriveRecordStatusFromScore(score);
   return status ? { ok: true, status } : { ok: false, error: "Nilai harus berada dalam rentang penilaian yang berlaku." };
+}
+
+export type TahsinActor = {
+  isAdmin: boolean;
+  teacherId: string | null;
+};
+
+type TahsinQueryOptions = {
+  academicYear?: string;
+  semester?: Semester;
+};
+
+type TahsinCreateInput = {
+  studentId: string;
+  jilid: number;
+  startPage: number;
+  endPage: number | null;
+  date: Date;
+  score: number | null;
+  notes: string | null;
+};
+
+const TAHSIN_RECORD_SELECT = {
+  id: true,
+  studentId: true,
+  teacherId: true,
+  jilid: true,
+  startPage: true,
+  endPage: true,
+  date: true,
+  score: true,
+  status: true,
+  notes: true,
+  academicYear: true,
+  semester: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+function assertValid(result: TahsinValidationResult | { ok: true; status: RecordStatus }) {
+  if (!result.ok) throw new Error(result.error);
+}
+
+function assertTeacherActor(actor: TahsinActor) {
+  if (actor.isAdmin || !actor.teacherId) {
+    throw new Error("Tahsin hanya dapat dibuat oleh guru yang terautentikasi.");
+  }
+  return actor.teacherId;
+}
+
+function tahsinStudentWhere(academicYear: string, teacherId?: string) {
+  return {
+    isActive: true,
+    classGroup: {
+      isActive: true,
+      academicYear,
+      programType: ProgramType.ACADEMIC,
+      grade: TAHSIN_ENABLED_GRADES[0],
+    },
+    ...(teacherId ? { teacherId } : {}),
+  };
+}
+
+async function resolveQueryContext(options?: TahsinQueryOptions) {
+  return {
+    academicYear: options?.academicYear ?? await getActiveAcademicYear(),
+    ...(options?.semester ? { semester: options.semester } : {}),
+  };
+}
+
+export async function createTahsinRecord(actor: TahsinActor, input: TahsinCreateInput) {
+  const teacherId = assertTeacherActor(actor);
+  if (!(input.date instanceof Date) || Number.isNaN(input.date.getTime())) {
+    throw new Error("Tanggal Tahsin tidak valid.");
+  }
+
+  assertValid(validateJilid(input.jilid));
+  assertValid(validatePageRange(input.startPage, input.endPage));
+  const scoreResult = validateTahsinScore(input.score);
+  if (!scoreResult.ok) throw new Error(scoreResult.error);
+
+  const academicYear = await getActiveAcademicYear();
+  if (getAcademicYearForDate(input.date) !== academicYear) {
+    throw new Error("Tanggal Tahsin harus berada pada tahun ajaran aktif.");
+  }
+
+  const student = await prisma.student.findFirst({
+    where: {
+      id: input.studentId,
+      ...tahsinStudentWhere(academicYear, teacherId),
+    },
+    select: { id: true, teacherId: true },
+  });
+
+  if (!student) {
+    throw new Error("Santri tidak tersedia untuk penilaian Tahsin.");
+  }
+
+  const pageRange = normalizeTahsinPageRange(input.startPage, input.endPage);
+  return prisma.tahsinRecord.create({
+    data: {
+      studentId: student.id,
+      teacherId: student.teacherId,
+      jilid: input.jilid,
+      ...pageRange,
+      date: input.date,
+      score: input.score,
+      status: scoreResult.status,
+      notes: input.notes,
+      academicYear,
+      semester: getSemesterForDate(input.date),
+    },
+    select: TAHSIN_RECORD_SELECT,
+  });
+}
+
+export async function getTahsinForStudent(
+  actor: TahsinActor,
+  studentId: string,
+  options?: TahsinQueryOptions,
+) {
+  const context = await resolveQueryContext(options);
+  return prisma.tahsinRecord.findMany({
+    where: {
+      studentId,
+      academicYear: context.academicYear,
+      ...(context.semester ? { semester: context.semester } : {}),
+      student: tahsinStudentWhere(context.academicYear, actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__"),
+    },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: TAHSIN_RECORD_SELECT,
+  });
+}
+
+export async function getLatestTahsinForStudent(
+  actor: TahsinActor,
+  studentId: string,
+  options?: TahsinQueryOptions,
+) {
+  const context = await resolveQueryContext(options);
+  return prisma.tahsinRecord.findFirst({
+    where: {
+      studentId,
+      academicYear: context.academicYear,
+      ...(context.semester ? { semester: context.semester } : {}),
+      student: tahsinStudentWhere(context.academicYear, actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__"),
+    },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: TAHSIN_RECORD_SELECT,
+  });
+}
+
+export async function getTahsinForTeacher(actor: TahsinActor, options?: TahsinQueryOptions) {
+  const teacherId = assertTeacherActor(actor);
+  const context = await resolveQueryContext(options);
+  return prisma.tahsinRecord.findMany({
+    where: {
+      teacherId,
+      academicYear: context.academicYear,
+      ...(context.semester ? { semester: context.semester } : {}),
+      student: tahsinStudentWhere(context.academicYear, teacherId),
+    },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: TAHSIN_RECORD_SELECT,
+  });
+}
+
+export async function getTahsinStudents(actor: TahsinActor) {
+  const teacherId = assertTeacherActor(actor);
+  const academicYear = await getActiveAcademicYear();
+  return prisma.student.findMany({
+    where: tahsinStudentWhere(academicYear, teacherId),
+    orderBy: { fullName: "asc" },
+    select: { id: true, fullName: true, academicClass: { select: { name: true } } },
+  });
 }
