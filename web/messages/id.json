@@ -1593,7 +1593,7 @@
   },
   "AdminTahsinMeeting": {
     "title": "Kontrol Pertemuan Tahsin",
-    "description": "Atur nomor pertemuan Tahsin yang digunakan guru saat melakukan penilaian.",
+    "description": "Reset timeline Tahsin untuk memulai siklus baru. Pertemuan berikutnya dibuat otomatis dari aktivitas guru.",
     "backToAdmin": "Panel Admin",
     "activeContext": "Konteks Pertemuan Aktif",
     "contextDescription": "Pertemuan ditentukan server berdasarkan tahun ajaran dan semester aktif.",
@@ -1613,8 +1613,9 @@
     "advanceSuccess": "Pertemuan Tahsin berikutnya berhasil dibuat.",
     "reset": "Reset ke Pertemuan 1",
     "resetTitle": "Reset Pertemuan Tahsin",
-    "resetConfirmation": "Timeline aktif akan dinonaktifkan dan Run baru dimulai dari Pertemuan 1. Riwayat dan penilaian lama tetap utuh.",
-    "resetConfirm": "Ya, Reset",
+    "resetDateLabel": "Tanggal Pertemuan 1",
+    "resetConfirmation": "Timeline baru akan dimulai dari Pertemuan 1 pada {date}. Riwayat dan penilaian lama tetap utuh.",
+    "resetConfirm": "Reset Timeline",
     "resetting": "Mereset...",
     "resetSuccess": "Timeline Tahsin baru dimulai dari Pertemuan 1.",
     "cancel": "Batal"

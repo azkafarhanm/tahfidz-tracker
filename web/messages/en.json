@@ -1593,7 +1593,7 @@
   },
   "AdminTahsinMeeting": {
     "title": "Tahsin Meeting Control",
-    "description": "Manage the Tahsin meeting number used by teachers when recording assessments.",
+    "description": "Reset the Tahsin timeline to start a new cycle. Subsequent meetings are created automatically from teacher activity.",
     "backToAdmin": "Admin Panel",
     "activeContext": "Active Meeting Context",
     "contextDescription": "The server determines the meeting from the active academic year and semester.",
@@ -1613,8 +1613,9 @@
     "advanceSuccess": "The next Tahsin meeting was created.",
     "reset": "Reset to Meeting 1",
     "resetTitle": "Reset Tahsin Meeting",
-    "resetConfirmation": "The active timeline will become inactive and a new run will start at Meeting 1. Existing history and assessments remain intact.",
-    "resetConfirm": "Yes, Reset",
+    "resetDateLabel": "Meeting 1 Date",
+    "resetConfirmation": "The new timeline will start at Meeting 1 on {date}. Existing history and assessments remain intact.",
+    "resetConfirm": "Reset Timeline",
     "resetting": "Resetting...",
     "resetSuccess": "A new Tahsin timeline started at Meeting 1.",
     "cancel": "Cancel"

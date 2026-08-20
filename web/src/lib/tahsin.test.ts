@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   timelineCreate: vi.fn(),
   meetingFindFirst: vi.fn(),
   meetingCreate: vi.fn(),
+  meetingUpdate: vi.fn(),
 }));
 
 vi.mock("./academic-year", async () => {
@@ -28,7 +29,7 @@ vi.mock("./prisma", () => ({
     student: { findFirst: mocks.studentFindFirst, findMany: mocks.studentFindMany },
     academicYear: { findUnique: mocks.academicYearFindUnique },
     tahsinMeetingTimeline: { findFirst: mocks.timelineFindFirst, create: mocks.timelineCreate },
-    tahsinMeeting: { findFirst: mocks.meetingFindFirst, create: mocks.meetingCreate },
+    tahsinMeeting: { findFirst: mocks.meetingFindFirst, create: mocks.meetingCreate, update: mocks.meetingUpdate },
     tahsinRecord: { create: mocks.tahsinCreate, update: mocks.tahsinUpdate, delete: mocks.tahsinDelete, findMany: mocks.tahsinFindMany, findFirst: mocks.tahsinFindFirst },
   },
 }));
@@ -36,7 +37,6 @@ vi.mock("./prisma", () => ({
 import {
   createTahsinRecord,
   deleteTahsinRecord,
-  advanceTahsinMeeting,
   formatTahsinPageRange,
   getLatestTahsinForStudent,
   getTahsinSmartDefaultForStudent,
@@ -70,7 +70,9 @@ beforeEach(() => {
   mocks.tahsinFindFirst.mockResolvedValue(null);
   mocks.academicYearFindUnique.mockResolvedValue({ id: "year-1" });
   mocks.timelineFindFirst.mockResolvedValue({ id: "timeline-1", runNumber: 1 });
-  mocks.meetingFindFirst.mockResolvedValue({ id: "meeting-1", meetingNumber: 1 });
+  mocks.meetingFindFirst.mockResolvedValue({ id: "meeting-1", meetingNumber: 1, meetingDate: new Date("2026-08-16T00:00:00.000Z") });
+  mocks.meetingCreate.mockImplementation(async ({ data }) => ({ id: "meeting-2", ...data }));
+  mocks.meetingUpdate.mockResolvedValue({ id: "meeting-1", isActive: false });
 });
 
 describe("Tahsin domain validation", () => {
@@ -154,15 +156,6 @@ describe("Tahsin service authorization and isolation", () => {
     return tx;
   }
 
-  it("proves P1 to P2 to P3 state transitions and sequential numbers", async () => {
-    const tx = meetingTransaction();
-    const first = await advanceTahsinMeeting(admin, new Date("2026-08-16"), tx as never);
-    const second = await advanceTahsinMeeting(admin, new Date("2027-01-15"), tx as never);
-    expect(first.meetingNumber).toBe(2);
-    expect(second.meetingNumber).toBe(3);
-    expect(tx.state.meetings.map((meeting) => [meeting.meetingNumber, meeting.isActive])).toEqual([[1, false], [2, false], [3, true]]);
-  });
-
   it("proves reset preserves Run 1 meetings and records while creating Run 2 P1", async () => {
     const tx = meetingTransaction();
     tx.state.meetings.push({ id: "meeting-2", meetingNumber: 2, isActive: false });
@@ -170,6 +163,7 @@ describe("Tahsin service authorization and isolation", () => {
     const oldMeetingId = tx.state.records[1].meetingId;
     const created = await resetTahsinMeetingTimeline(admin, new Date("2026-08-20"), tx as never);
     expect(created.meetingNumber).toBe(1);
+    expect(created.meetingDate).toEqual(new Date("2026-08-20"));
     expect(tx.state.timelines.map((timeline) => [timeline.runNumber, timeline.isActive])).toEqual([[1, false], [2, true]]);
     expect(tx.state.meetings.some((meeting) => meeting.id === "meeting-1")).toBe(true);
     expect(tx.state.meetings.some((meeting) => meeting.id === "meeting-2")).toBe(true);
@@ -183,17 +177,10 @@ describe("Tahsin service authorization and isolation", () => {
     expect(legacy.meetingId).toBeNull();
   });
 
-  it.each(["advance", "reset"] as const)("rejects teacher %s", async (operation) => {
+  it("rejects teacher reset", async () => {
     const tx = meetingTransaction();
-    const mutation = operation === "advance" ? advanceTahsinMeeting : resetTahsinMeetingTimeline;
-    await expect(mutation(teacher, new Date("2026-08-16"), tx as never)).rejects.toThrow("Hanya admin");
+    await expect(resetTahsinMeetingTimeline(teacher, new Date("2026-08-16"), tx as never)).rejects.toThrow("Hanya admin");
     expect(tx.tahsinMeeting.update).not.toHaveBeenCalled();
-  });
-
-  it("locks academic-year context before determining active meeting", async () => {
-    const tx = meetingTransaction();
-    await advanceTahsinMeeting(admin, new Date("2026-08-16"), tx as never);
-    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
   it("creates only for the authenticated teacher's eligible student", async () => {
@@ -218,7 +205,7 @@ describe("Tahsin service authorization and isolation", () => {
       tahsinRecord: { create: txTahsinCreate },
       academicYear: { findUnique: vi.fn().mockResolvedValue({ id: "year-1" }) },
       tahsinMeetingTimeline: { findFirst: vi.fn().mockResolvedValue({ id: "timeline-1" }) },
-      tahsinMeeting: { findFirst: vi.fn().mockResolvedValue({ id: "meeting-1" }) },
+      tahsinMeeting: { findFirst: vi.fn().mockResolvedValue({ id: "meeting-1", meetingNumber: 1, meetingDate: date }) },
       $queryRaw: vi.fn(),
     };
 
@@ -230,6 +217,48 @@ describe("Tahsin service authorization and isolation", () => {
     expect(txTahsinCreate).toHaveBeenCalledTimes(1);
     expect(mocks.studentFindFirst).not.toHaveBeenCalled();
     expect(mocks.tahsinCreate).not.toHaveBeenCalled();
+  });
+
+  it("uses the anchor meeting for every record on its activity day", async () => {
+    const anchor = new Date("2026-08-21T00:00:00.000Z");
+    mocks.meetingFindFirst.mockResolvedValue({ id: "meeting-1", meetingNumber: 1, meetingDate: anchor });
+
+    const first = await createTahsinRecord(teacher, { studentId: "student-a", jilid: 1, startPage: 5, endPage: null, date: anchor, score: 88, notes: null });
+    const second = await createTahsinRecord(teacher, { studentId: "student-a", jilid: 1, startPage: 6, endPage: null, date: new Date("2026-08-21T10:00:00.000Z"), score: 88, notes: null });
+
+    expect(first.meetingId).toBe("meeting-1");
+    expect(second.meetingId).toBe("meeting-1");
+    expect(mocks.meetingCreate).not.toHaveBeenCalled();
+  });
+
+  it("creates exactly one next meeting for a new activity day and reuses it for the following record", async () => {
+    const meetings = [{ id: "meeting-1", meetingNumber: 1, meetingDate: new Date("2026-08-21T00:00:00.000Z"), isActive: true }];
+    mocks.meetingFindFirst.mockImplementation(async () => meetings.find((meeting) => meeting.isActive) ?? null);
+    mocks.meetingUpdate.mockImplementation(async ({ where }) => {
+      const meeting = meetings.find((item) => item.id === where.id)!;
+      meeting.isActive = false;
+      return meeting;
+    });
+    mocks.meetingCreate.mockImplementation(async ({ data }) => {
+      const meeting = { id: `meeting-${meetings.length + 1}`, ...data, isActive: true };
+      meetings.push(meeting);
+      return meeting;
+    });
+
+    const first = await createTahsinRecord(teacher, { studentId: "student-a", jilid: 1, startPage: 5, endPage: null, date: new Date("2026-08-24T08:00:00.000Z"), score: 88, notes: null });
+    const second = await createTahsinRecord(teacher, { studentId: "student-a", jilid: 1, startPage: 6, endPage: null, date: new Date("2026-08-24T10:00:00.000Z"), score: 88, notes: null });
+
+    expect(mocks.meetingCreate).toHaveBeenCalledTimes(1);
+    expect(first.meetingId).toBe("meeting-2");
+    expect(second.meetingId).toBe("meeting-2");
+    expect(meetings.map((meeting) => meeting.meetingNumber)).toEqual([1, 2]);
+  });
+
+  it("rejects backdated activity without changing the active meeting", async () => {
+    mocks.meetingFindFirst.mockResolvedValue({ id: "meeting-3", meetingNumber: 3, meetingDate: new Date("2026-08-25T00:00:00.000Z") });
+    await expect(createTahsinRecord(teacher, { studentId: "student-a", jilid: 1, startPage: 5, endPage: null, date: new Date("2026-08-24T08:00:00.000Z"), score: 88, notes: null })).rejects.toThrow("lebih awal");
+    expect(mocks.meetingUpdate).not.toHaveBeenCalled();
+    expect(mocks.meetingCreate).not.toHaveBeenCalled();
   });
 
   it("allows the owning teacher to edit only assessment fields and preserves meetingId", async () => {

@@ -5,7 +5,7 @@ import { AuditAction } from "@/generated/prisma-next/enums";
 import { readInt, readOptionalString } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { advanceTahsinMeeting, createTahsinRecord, deleteTahsinRecord, getTahsinSmartDefaultForStudent, resetTahsinMeetingTimeline, updateTahsinRecord } from "@/lib/tahsin";
+import { createTahsinRecord, deleteTahsinRecord, getTahsinSmartDefaultForStudent, resetTahsinMeetingTimeline, updateTahsinRecord } from "@/lib/tahsin";
 
 export type TahsinActionResult =
   | { ok: true; recordId: string; success: string }
@@ -128,22 +128,6 @@ function readMeetingDate(formData: FormData) {
     throw new Error("Tanggal Pertemuan Tahsin tidak valid.");
   }
   return date;
-}
-
-export async function advanceTahsinMeetingAction(formData: FormData) {
-  const scope = await requireSessionScope();
-  if (!scope.isAdmin) return { ok: false, error: "Hanya admin yang dapat melanjutkan Pertemuan Tahsin." };
-  try {
-    const meeting = await prisma.$transaction(async (tx) => {
-      const created = await advanceTahsinMeeting(actorFromScope(scope), readMeetingDate(formData), tx);
-      await tx.auditLog.create({ data: { userId: scope.session.user.id, action: AuditAction.ADVANCE_TAHSIN_MEETING, targetType: "tahsin_meeting", targetId: created.id, metadata: { meetingNumber: created.meetingNumber } } });
-      return created;
-    });
-    revalidatePath("/tahsin");
-    return { ok: true, meetingId: meeting.id };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "Gagal melanjutkan Pertemuan Tahsin." };
-  }
 }
 
 export async function resetTahsinMeetingTimelineAction(formData: FormData) {

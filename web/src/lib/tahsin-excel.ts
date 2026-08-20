@@ -9,6 +9,7 @@ type TahsinExportData = Awaited<ReturnType<typeof getTahsinExportData>>;
 export type TahsinWorkbookInput = { academicYear: string; classLevel: number; semester: Semester; schoolName: string; exportData: TahsinExportData };
 const statusLabels = { LANCAR: "Lancar", CUKUP: "Cukup", PERLU_MUROJAAH: "Perlu Murojaah" } as const;
 const classNames = ["7A", "7B", "7C"] as const;
+const shortIndonesianMonths = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"] as const;
 
 function latestByMeeting(records: TahsinExportData["records"]) {
   const latest = new Map<string, TahsinExportData["records"][number]>();
@@ -22,10 +23,15 @@ function meetingCell(record: TahsinExportData["records"][number]) {
   return `J${record.jilid} \u00b7 ${formatTahsinPageRange(record.startPage, record.endPage)}\n${record.score ?? "-"} \u00b7 ${statusLabels[record.status]}${record.notes ? `\n${record.notes}` : ""}`;
 }
 
+function meetingHeader(meetingNumber: number, meetingDate: Date | undefined) {
+  if (!meetingDate) return `P${meetingNumber}`;
+  return `P${meetingNumber}\n(${meetingDate.getUTCDate()} ${shortIndonesianMonths[meetingDate.getUTCMonth()]})`;
+}
+
 export function buildTahsinWorkbook(workbook: ExcelJS.Workbook, input: TahsinWorkbookInput) {
   const latest = latestByMeeting(input.exportData.records);
-  const maxMeeting = Math.max(0, ...[...latest.values()].map((record) => record.meeting?.meetingNumber ?? 0));
-  const meetingColumns = Array.from({ length: maxMeeting }, (_, index) => `P${index + 1}`);
+  const meetingColumns = input.exportData.meetings.map((meeting) => meetingHeader(meeting.meetingNumber, meeting.meetingDate));
+  const maxMeeting = input.exportData.meetings.at(-1)?.meetingNumber ?? 0;
   const studentsByClass = new Map(classNames.map((name) => [name, input.exportData.students.filter((student) => student.academicClass?.name === name)]));
   for (const className of classNames) {
     const sheet = workbook.addWorksheet(className);
@@ -57,6 +63,7 @@ export function buildTahsinWorkbook(workbook: ExcelJS.Workbook, input: TahsinWor
     sheet.getRow(7).height = 32;
     sheet.getRow(7).alignment = { horizontal: "center", vertical: "middle", wrapText: true };
     for (const key of meetingKeys) sheet.getColumn(key).alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    sheet.getColumn(rerataIndex + 1).numFmt = "0.0";
     sheet.views = [{ state: "frozen", ySplit: 7, xSplit: 3 }];
   }
 }

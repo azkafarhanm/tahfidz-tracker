@@ -1,6 +1,7 @@
 import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
 import type { Prisma } from "@/generated/prisma-next/client";
 import { getActiveAcademicYear, getAcademicYearForDate, getSemesterForDate } from "@/lib/academic-year";
+import { getJakartaDayKey } from "@/lib/jakarta-date";
 import { prisma } from "@/lib/prisma";
 import { deriveRecordStatusFromScore } from "@/lib/record-status";
 
@@ -107,6 +108,7 @@ const TAHSIN_RECORD_SELECT = {
   meeting: {
     select: {
       meetingNumber: true,
+      meetingDate: true,
       timeline: { select: { runNumber: true } },
     },
   },
@@ -182,10 +184,30 @@ async function getOrCreateActiveTahsinMeeting(
   });
   if (!meeting) {
     meeting = await db.tahsinMeeting.create({
-      data: { timelineId: timeline.id, meetingNumber: 1, meetingDate },
+      data: { timelineId: timeline.id, meetingNumber: 1, meetingDate: meetingDateForActivity(meetingDate) },
     });
+    return meeting;
   }
-  return meeting;
+
+  const activityDay = getJakartaDayKey(meetingDate);
+  const activeMeetingDay = getJakartaDayKey(meeting.meetingDate);
+  if (activityDay === activeMeetingDay) return meeting;
+  if (activityDay < activeMeetingDay) {
+    throw new Error("Tanggal Tahsin tidak boleh lebih awal dari pertemuan Tahsin aktif.");
+  }
+
+  await db.tahsinMeeting.update({ where: { id: meeting.id }, data: { isActive: false } });
+  return db.tahsinMeeting.create({
+    data: {
+      timelineId: timeline.id,
+      meetingNumber: meeting.meetingNumber + 1,
+      meetingDate: meetingDateForActivity(meetingDate),
+    },
+  });
+}
+
+function meetingDateForActivity(date: Date) {
+  return new Date(`${getJakartaDayKey(date)}T00:00:00.000Z`);
 }
 
 export async function getActiveTahsinMeeting(academicYear: string, semester: Semester) {
@@ -215,24 +237,6 @@ async function lockTahsinContext(
   });
   if (!meeting) throw new Error("Pertemuan Tahsin aktif belum tersedia.");
   return { year, timeline, meeting };
-}
-
-export async function advanceTahsinMeeting(
-  actor: TahsinActor,
-  meetingDate: Date,
-  db?: Prisma.TransactionClient,
-) {
-  if (!actor.isAdmin) throw new Error("Hanya admin yang dapat melanjutkan Pertemuan Tahsin.");
-  const academicYear = await getActiveAcademicYear();
-  const semester = getSemesterForDate(new Date());
-  const mutate = async (tx: Prisma.TransactionClient) => {
-    const { timeline, meeting } = await lockTahsinContext(academicYear, semester, tx);
-    await tx.tahsinMeeting.update({ where: { id: meeting.id }, data: { isActive: false } });
-    return tx.tahsinMeeting.create({
-      data: { timelineId: timeline.id, meetingNumber: meeting.meetingNumber + 1, meetingDate },
-    });
-  };
-  return db ? mutate(db) : prisma.$transaction(mutate);
 }
 
 export async function resetTahsinMeetingTimeline(
@@ -461,12 +465,25 @@ export async function getTahsinExportData(
   });
 
   const studentIds = students.map((student) => student.id);
+  const meetings = await prisma.tahsinMeeting.findMany({
+    where: {
+      isActive: true,
+      timeline: {
+        isActive: true,
+        semester: options.semester,
+        academicYear: { year: context.academicYear },
+      },
+    },
+    orderBy: { meetingNumber: "asc" },
+    select: { meetingNumber: true, meetingDate: true },
+  });
   const records = studentIds.length > 0
     ? await prisma.tahsinRecord.findMany({
         where: {
           studentId: { in: studentIds },
           academicYear: context.academicYear,
           semester: options.semester,
+          meeting: { timeline: { isActive: true } },
           ...(teacherId ? { teacherId } : {}),
         },
         orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
@@ -474,7 +491,7 @@ export async function getTahsinExportData(
       })
     : [];
 
-  return { students, records };
+  return { students, meetings, records };
 }
 
 export async function getTahsinStudents(actor: TahsinActor) {

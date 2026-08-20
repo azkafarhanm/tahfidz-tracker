@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Improved — Tahsin Meeting Timeline & Excel Export
+
+- Tahsin meetings now advance from teacher activity dates, with one shared
+  meeting for same-day records and no empty calendar-driven meetings.
+- Admin reset now starts a new preserved-history timeline from an explicitly
+  selected Meeting 1 date; manual meeting advancement is no longer used.
+- Tahsin Excel exports now follow the active timeline only, show each meeting's
+  actual short date in its header, and display averages with one decimal place.
+
 ### Improved — Surah Picker Toggle
 
 - The shared Surah input trigger now toggles its result list open and closed on

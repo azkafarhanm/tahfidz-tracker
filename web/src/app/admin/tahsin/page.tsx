@@ -31,7 +31,6 @@ export default async function AdminTahsinMeetingPage() {
   ]);
   const semester = getSemesterForDate(now);
   const meeting = await getActiveTahsinMeeting(academicYear, semester);
-  const meetingDate = meeting?.meetingDate.toISOString().slice(0, 10) ?? now.toISOString().slice(0, 10);
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] text-slate-950 dark:bg-[#0c0f1a] dark:text-white">
@@ -79,7 +78,7 @@ export default async function AdminTahsinMeetingPage() {
           </dl>
 
           {meeting ? (
-            <TahsinMeetingControls canManage meetingDate={meetingDate} />
+            <TahsinMeetingControls canManage />
           ) : (
             <div className="mt-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">
               <RotateCcw aria-hidden="true" className="mt-0.5 shrink-0" size={16} />

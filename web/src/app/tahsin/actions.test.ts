@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   updateTahsinRecord: vi.fn(),
   deleteTahsinRecord: vi.fn(),
   getTahsinSmartDefaultForStudent: vi.fn(),
-  advanceTahsinMeeting: vi.fn(),
   resetTahsinMeetingTimeline: vi.fn(),
   revalidatePath: vi.fn(),
 }));
@@ -22,11 +21,10 @@ vi.mock("@/lib/tahsin", () => ({
   updateTahsinRecord: mocks.updateTahsinRecord,
   deleteTahsinRecord: mocks.deleteTahsinRecord,
   getTahsinSmartDefaultForStudent: mocks.getTahsinSmartDefaultForStudent,
-  advanceTahsinMeeting: mocks.advanceTahsinMeeting,
   resetTahsinMeetingTimeline: mocks.resetTahsinMeetingTimeline,
 }));
 
-import { advanceTahsinMeetingAction, createTahsinAction, deleteTahsinAction, resetTahsinMeetingTimelineAction, updateTahsinAction } from "./actions";
+import { createTahsinAction, deleteTahsinAction, resetTahsinMeetingTimelineAction, updateTahsinAction } from "./actions";
 
 const record = {
   id: "tahsin-1", studentId: "student-1", teacherId: "teacher-1", jilid: 1,
@@ -48,7 +46,6 @@ beforeEach(() => {
   mocks.updateTahsinRecord.mockResolvedValue(record);
   mocks.deleteTahsinRecord.mockResolvedValue(record);
   mocks.auditCreate.mockResolvedValue({ id: "audit-1" });
-  mocks.advanceTahsinMeeting.mockResolvedValue({ id: "meeting-2", meetingNumber: 2 });
   mocks.resetTahsinMeetingTimeline.mockResolvedValue({ id: "meeting-new-1", meetingNumber: 1 });
   mocks.transaction.mockImplementation(async (callback) => callback({ auditLog: { create: mocks.auditCreate } }));
 });
@@ -59,24 +56,18 @@ function updateFormData() { const data = formData(); data.set("recordId", "tahsi
 describe("Tahsin meeting admin actions", () => {
   beforeEach(() => mocks.requireSessionScope.mockResolvedValue({ isAdmin: true, teacherId: null, session: { user: { id: "admin-1" } } }));
 
-  it.each([
-    ["advance", advanceTahsinMeetingAction, mocks.advanceTahsinMeeting, AuditAction.ADVANCE_TAHSIN_MEETING],
-    ["reset", resetTahsinMeetingTimelineAction, mocks.resetTahsinMeetingTimeline, AuditAction.RESET_TAHSIN_MEETING_TIMELINE],
-  ])("uses one transaction client for %s and audit", async (_label, action, mutation, auditAction) => {
+  it("uses one transaction client for reset and audit", async () => {
     const tx = { auditLog: { create: mocks.auditCreate } };
     mocks.transaction.mockImplementationOnce(async (callback) => callback(tx));
-    await expect(action(meetingFormData())).resolves.toEqual(expect.objectContaining({ ok: true }));
-    expect(mutation).toHaveBeenCalledWith({ isAdmin: true, teacherId: null }, expect.any(Date), tx);
-    expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: auditAction, userId: "admin-1" }) });
+    await expect(resetTahsinMeetingTimelineAction(meetingFormData())).resolves.toEqual(expect.objectContaining({ ok: true }));
+    expect(mocks.resetTahsinMeetingTimeline).toHaveBeenCalledWith({ isAdmin: true, teacherId: null }, new Date("2026-08-16T00:00:00.000Z"), tx);
+    expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: AuditAction.RESET_TAHSIN_MEETING_TIMELINE, userId: "admin-1" }) });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/tahsin");
   });
 
-  it.each([
-    ["advance", advanceTahsinMeetingAction],
-    ["reset", resetTahsinMeetingTimelineAction],
-  ])("returns an audit failure without revalidation for %s", async (_label, action) => {
+  it("returns an audit failure without revalidation for reset", async () => {
     mocks.auditCreate.mockRejectedValueOnce(new Error("audit failed"));
-    await expect(action(meetingFormData())).resolves.toEqual({ ok: false, error: "audit failed" });
+    await expect(resetTahsinMeetingTimelineAction(meetingFormData())).resolves.toEqual({ ok: false, error: "audit failed" });
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 

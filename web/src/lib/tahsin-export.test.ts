@@ -4,12 +4,14 @@ import { ProgramType, Semester } from "@/generated/prisma-next/enums";
 const mocks = vi.hoisted(() => ({
   studentFindMany: vi.fn(),
   tahsinRecordFindMany: vi.fn(),
+  tahsinMeetingFindMany: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     student: { findMany: mocks.studentFindMany },
     tahsinRecord: { findMany: mocks.tahsinRecordFindMany },
+    tahsinMeeting: { findMany: mocks.tahsinMeetingFindMany },
   },
 }));
 
@@ -25,10 +27,12 @@ describe("getTahsinExportData", () => {
   beforeEach(() => {
     mocks.studentFindMany.mockReset();
     mocks.tahsinRecordFindMany.mockReset();
+    mocks.tahsinMeetingFindMany.mockReset();
     mocks.studentFindMany.mockResolvedValue([
       { id: "student-1", fullName: "Ahmad", academicClass: { name: "7A" } },
     ]);
     mocks.tahsinRecordFindMany.mockResolvedValue([{ id: "record-1" }]);
+    mocks.tahsinMeetingFindMany.mockResolvedValue([{ meetingNumber: 1, meetingDate: new Date("2026-08-16T00:00:00.000Z") }]);
   });
 
   it("limits teachers to active Academic grade 7 students and matching records", async () => {
@@ -53,9 +57,17 @@ describe("getTahsinExportData", () => {
         studentId: { in: ["student-1"] },
         academicYear: "2026/2027",
         semester: Semester.GANJIL,
+        meeting: { timeline: { isActive: true } },
         teacherId: "teacher-a",
       },
       orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+    }));
+    expect(mocks.tahsinMeetingFindMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        isActive: true,
+        timeline: { isActive: true, semester: Semester.GANJIL, academicYear: { year: "2026/2027" } },
+      },
+      orderBy: { meetingNumber: "asc" },
     }));
   });
 
