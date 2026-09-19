@@ -25,6 +25,7 @@ import CharacterCounter from "@/components/CharacterCounter";
 import HalaqahLevelDialog from "@/components/HalaqahLevelDialog";
 import WorkflowContextLink from "@/components/WorkflowContextLink";
 import { backLink } from "@/lib/colors";
+import { stickyActionBar } from "@/lib/sticky-action-bar";
 
 const iconMap: Record<string, LucideIcon> = {
   UserPlus,
@@ -647,7 +648,7 @@ export default function StudentForm({
             </div>
           </section>
 
-          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+          <div className={`${stickyActionBar} flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl shadow-slate-950/10 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95`}>
             {restoreContext ? (
               <WorkflowContextLink
                 className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { getStudentFormContext } from "@/lib/students";
 import { requireSessionScope } from "@/lib/session";
 import { upsertMeetingStatus } from "./actions";
+import { stickyActionBar } from "@/lib/sticky-action-bar";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -119,7 +120,7 @@ export default async function MeetingStatusPage({ params, searchParams }: Props)
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{t("noteOptional")}</p>
           </section>
 
-          <div className="sticky bottom-4 flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+          <div className={`${stickyActionBar} flex gap-3 rounded-3xl border border-slate-200 bg-white/95 p-2 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95`}>
             <WorkflowContextLink className="flex min-h-12 flex-1 items-center justify-center rounded-2xl px-4 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800" href={detailHref}>
               {t("cancel")}
             </WorkflowContextLink>

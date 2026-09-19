@@ -8,6 +8,7 @@ import NumericScoreInput from "@/components/NumericScoreInput";
 import { deriveRecordStatusFromScore, recordStatusDisplay } from "@/lib/record-status";
 import { emptyTahsinMaterialDefault, isTahsinSubmitDisabled, resolveTahsinMaterialDefault, type TahsinMaterialDefault } from "@/lib/tahsin-entry-state";
 import { createTahsinAction, getTahsinSmartDefaultAction, type TahsinActionResult } from "./actions";
+import { stickyActionBar } from "@/lib/sticky-action-bar";
 
 type Student = { id: string; fullName: string; academicClass: { name: string } | null };
 type Defaults = TahsinMaterialDefault;
@@ -61,7 +62,7 @@ export default function TahsinQuickEntry({ students }: { students: Student[] }) 
       </section>
       <section className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900"><label className="block text-sm font-medium">Nilai<NumericScoreInput required name="score" value={score} onChange={(event) => setScore(event.target.value)} className="mt-2 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 dark:border-slate-700 dark:bg-slate-800" placeholder="75–95" /></label><div><p className="text-sm font-medium">Status</p><p aria-live="polite" className="mt-2 flex min-h-12 items-center rounded-2xl bg-slate-100 px-4 text-sm font-semibold dark:bg-slate-800">{status}</p></div></section>
       <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"><label className="block text-sm font-medium">Catatan<textarea name="notes" value={notes} onChange={(event) => setNotes(event.target.value)} className="mt-2 min-h-24 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800" /></label></section>
-      <button disabled={isTahsinSubmitDisabled(isPending, isLoadingDefault)} className="sticky bottom-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 font-semibold text-white disabled:opacity-60">{isPending ? <><Loader2 className="animate-spin" size={17} />Menyimpan…</> : "Simpan Penilaian"}</button>
+      <button disabled={isTahsinSubmitDisabled(isPending, isLoadingDefault)} className={`${stickyActionBar} flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 font-semibold text-white disabled:opacity-60`}>{isPending ? <><Loader2 className="animate-spin" size={17} />Menyimpan…</> : "Simpan Penilaian"}</button>
     </> : <p className="rounded-2xl border border-dashed border-slate-300 p-5 text-center text-sm text-slate-500">Pilih santri untuk mulai menilai.</p>}
   </form>;
 }
