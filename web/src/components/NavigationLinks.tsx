@@ -125,11 +125,41 @@ export default function NavigationLinks({
       const nav = el.closest("nav");
       if (!nav) return;
 
+      // The nav is resized by anything that changes the sidebar layout, most
+      // often the motivation card growing a line while it types. Re-revealing on
+      // every one of those yanked the sidebar back to the active item mid-scroll,
+      // so once the reader scrolls here themselves the nav stops being pulled
+      // back. Navigating re-runs this effect and restores the behaviour.
+      let userScrolled = false;
+      let revealing = false;
+      const scrollers = [nav, nav.closest("aside")].filter(
+        (node): node is HTMLElement => node !== null,
+      );
+      const handleScroll = () => {
+        if (!revealing) {
+          userScrolled = true;
+        }
+      };
+      for (const scroller of scrollers) {
+        scroller.addEventListener("scroll", handleScroll, { passive: true });
+      }
+
       const observer = new ResizeObserver(() => {
+        if (userScrolled) return;
+        revealing = true;
         revealIfNeeded(el);
+        requestAnimationFrame(() => {
+          revealing = false;
+        });
       });
       observer.observe(nav);
-      return () => observer.disconnect();
+
+      return () => {
+        observer.disconnect();
+        for (const scroller of scrollers) {
+          scroller.removeEventListener("scroll", handleScroll);
+        }
+      };
     }
   }, [pathname, variant]);
 

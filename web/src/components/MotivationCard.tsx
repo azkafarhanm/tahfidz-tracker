@@ -19,6 +19,72 @@ const HOLD_MS = 5500;
 const FADE_MS = 1200;
 const STORAGE_KEY = "tahfidzflow-motivation-idx";
 
+type VerseBodyProps = {
+  arabic: string;
+  cursor: "arabic" | "text" | null;
+  showArabic: boolean;
+  showClosingQuote: boolean;
+  showRef: boolean;
+  showText: boolean;
+  source: string;
+  sourceIcon: string;
+  text: string;
+};
+
+function VerseBody({
+  arabic,
+  cursor,
+  showArabic,
+  showClosingQuote,
+  showRef,
+  showText,
+  source,
+  sourceIcon,
+  text,
+}: VerseBodyProps) {
+  const refClassName = [
+    "mt-2 text-center text-xs font-medium text-emerald-700",
+    "transition-opacity duration-500 dark:text-emerald-400",
+    showRef ? "opacity-100" : "opacity-0",
+  ].join(" ");
+
+  return (
+    <>
+      {showArabic && (
+        <p
+          className="text-center text-xl leading-loose text-emerald-900 min-h-[2rem] font-arabic dark:text-emerald-300"
+          dir="rtl"
+        >
+          {arabic}
+          {cursor === "arabic" && (
+            <span
+              className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle dark:bg-emerald-400"
+              style={{ height: "1em" }}
+            />
+          )}
+        </p>
+      )}
+      <div className="mt-2 text-center text-sm italic text-slate-600 min-h-[2.5rem] dark:text-slate-400">
+        {showText && (
+          <>
+            &ldquo;{text}
+            {cursor === "text" && (
+              <span
+                className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle dark:bg-emerald-400"
+                style={{ height: "1em" }}
+              />
+            )}
+            {showClosingQuote && <span>&rdquo;</span>}
+          </>
+        )}
+      </div>
+      <p className={refClassName}>
+        {sourceIcon} {source}
+      </p>
+    </>
+  );
+}
+
 export default function MotivationCard() {
   const verses = getAllMotivations();
   const [mounted, setMounted] = useState(false);
@@ -146,44 +212,51 @@ export default function MotivationCard() {
 
   return (
     <div
-      className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition-opacity duration-[1200ms] ease-in-out dark:border-emerald-900 dark:bg-slate-900"
+      className="grid rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition-opacity duration-[1200ms] ease-in-out dark:border-emerald-900 dark:bg-slate-900"
       style={{ opacity: reducedMotion ? 1 : opacity }}
     >
-      {showArabic && (
-        <p
-          className="text-center text-xl leading-loose text-emerald-900 min-h-[2rem] font-arabic dark:text-emerald-300"
-          dir="rtl"
-        >
-          {arabicVisible}
-          {!reducedMotion && phase === "typing-arabic" && (
-            <span
-              className="inline-block w-0.5 animate-pulse bg-emerald-700 mr-1 align-middle dark:bg-emerald-400"
-              style={{ height: "1em" }}
-            />
-          )}
-        </p>
-      )}
-      <div className="mt-2 text-center text-sm italic text-slate-600 min-h-[2.5rem] dark:text-slate-400">
-        {showText && (
-          <>
-            &ldquo;{textVisible}
-            {!reducedMotion && phase === "typing-text" && (
-              <span
-                className="inline-block w-0.5 animate-pulse bg-emerald-700 ml-0.5 align-middle dark:bg-emerald-400"
-                style={{ height: "1em" }}
-              />
-            )}
-            {(reducedMotion || phase !== "typing-text") && <span>&rdquo;</span>}
-          </>
-        )}
+      {/*
+        The finished verse, laid out but invisible, holds the card at its final
+        height from the first keystroke. Without it the card grew a line at a
+        time while typing and dropped the Arabic line entirely during the fade,
+        and every one of those resizes shifted whatever sat below it — in the
+        sidebar, that meant the nav jumping under the reader mid-scroll.
+      */}
+      <div aria-hidden="true" className="invisible col-start-1 row-start-1">
+        <VerseBody
+          arabic={verse.arabic ?? ""}
+          cursor={null}
+          showArabic={hasArabic}
+          showClosingQuote
+          showRef
+          showText
+          source={verse.source}
+          sourceIcon={sourceIcon}
+          text={verse.text}
+        />
       </div>
-      <p
-        className={`mt-2 text-center text-xs font-medium text-emerald-700 transition-opacity duration-500 dark:text-emerald-400 ${
-          showRef ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        {sourceIcon} {verse.source}
-      </p>
+
+      <div className="col-start-1 row-start-1">
+        <VerseBody
+          arabic={arabicVisible}
+          cursor={
+            reducedMotion
+              ? null
+              : phase === "typing-arabic"
+              ? "arabic"
+              : phase === "typing-text"
+              ? "text"
+              : null
+          }
+          showArabic={showArabic}
+          showClosingQuote={reducedMotion || phase !== "typing-text"}
+          showRef={showRef}
+          showText={showText}
+          source={verse.source}
+          sourceIcon={sourceIcon}
+          text={textVisible}
+        />
+      </div>
     </div>
   );
 }
