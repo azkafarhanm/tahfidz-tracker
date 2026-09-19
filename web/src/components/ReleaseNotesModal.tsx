@@ -1,7 +1,15 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { Megaphone, X } from "lucide-react";
 import { markReleaseNotesSeen } from "@/app/release-notes/actions";
 import ReleaseNotePresentation from "@/components/ReleaseNotePresentation";
@@ -19,7 +27,7 @@ export default function ReleaseNotesModal({ isAdmin, unreadPublished, locale }: 
   const [mounted, setMounted] = useState(false);
   const [displayedNotes] = useState<ReleaseNote[]>(unreadPublished);
   const [open, setOpen] = useState(unreadPublished.length > 0);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
   const groupedNotes = useMemo(() => groupReleaseNotes(displayedNotes), [displayedNotes]);
@@ -33,25 +41,31 @@ export default function ReleaseNotesModal({ isAdmin, unreadPublished, locale }: 
     setMounted(true);
   }, []);
 
+  // Every way out of this dialog counts as having read it. Closing used to
+  // record the notes as seen only when "Mengerti" was pressed, so anyone who
+  // reached for the X or Escape — the obvious way to dismiss a dialog — met the
+  // same announcement again at every login. The dialog now closes straight away
+  // and sends the acknowledgement behind it; if that request fails the note
+  // reappears next time, which is the safe direction to fail in.
+  const dismiss = useCallback(() => {
+    const releaseNoteIds = displayedNotes.map(({ id }) => id);
+    setOpen(false);
+    if (releaseNoteIds.length === 0) return;
+
+    startTransition(async () => {
+      await markReleaseNotesSeen(releaseNoteIds);
+    });
+  }, [displayedNotes]);
+
   useEffect(() => {
     if (!open) return;
     closeRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isPending) setOpen(false);
+      if (event.key === "Escape") dismiss();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isPending, open]);
-
-  function acknowledge() {
-    const releaseNoteIds = displayedNotes.map(({ id }) => id);
-    if (releaseNoteIds.length === 0) return;
-
-    startTransition(async () => {
-      const result = await markReleaseNotesSeen(releaseNoteIds);
-      if (result.ok) setOpen(false);
-    });
-  }
+  }, [dismiss, open]);
 
   return (
     <>
@@ -74,7 +88,7 @@ export default function ReleaseNotesModal({ isAdmin, unreadPublished, locale }: 
                       <h2 className="text-xl font-bold text-slate-950 dark:text-white" id={titleId}>Pembaruan TahfidzFlow</h2>
                     </div>
                   </div>
-                  <button aria-label="Tutup" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" disabled={isPending} onClick={() => setOpen(false)} ref={closeRef} type="button"><X className="h-5 w-5" /></button>
+                  <button aria-label="Tutup" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={dismiss} ref={closeRef} type="button"><X className="h-5 w-5" /></button>
                 </div>
 
                 <div className="mt-5 space-y-6">
@@ -100,7 +114,7 @@ export default function ReleaseNotesModal({ isAdmin, unreadPublished, locale }: 
 
                 <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <WorkflowContextLink className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800" href={historyHref}>Lihat Riwayat Pembaruan</WorkflowContextLink>
-                  <button className="min-h-11 rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60" disabled={isPending} onClick={acknowledge} type="button">{isPending ? "Menyimpan..." : "Mengerti"}</button>
+                  <button className="min-h-11 rounded-xl bg-emerald-700 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-800" onClick={dismiss} type="button">Mengerti</button>
                 </div>
               </div>
             </div>,
