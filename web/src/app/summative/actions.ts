@@ -147,24 +147,25 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
   const additionalScores = payload.additionalScores.filter(
     (score) => !allowedSurahIds.has(score.surahId),
   );
+  // Oldest touch first, with hand-added surah rows counted as the newest
+  // entries on the sheet since they did not exist before this submission.
+  const touchOrder = [
+    ...formData
+      .getAll("changedSurahId")
+      .map((value) => String(value).trim())
+      .filter(Boolean),
+    ...payload.additionalScores.map((score) => score.surahId),
+  ];
   const scores = orderSummativeSubmission(
     student.classGroup.programType === "ACADEMIC"
       ? [...targetScores, ...additionalScores]
       : targetScores,
+    touchOrder,
   );
+  // Only scores that actually changed come back, so every one of them is worth
+  // highlighting.
   const records = await saveSummativeAssessments(scores);
-  const changedSurahIds = new Set(
-    [
-      ...formData
-        .getAll("changedSurahId")
-        .map((value) => String(value).trim())
-        .filter(Boolean),
-      ...payload.additionalScores.map((score) => score.surahId),
-    ],
-  );
-  const highlightedRecordIds = records
-    .filter((record) => changedSurahIds.has(record.surahId))
-    .map((record) => record.id);
+  const highlightedRecordIds = records.map((record) => record.id);
 
   revalidatePath("/");
   revalidatePath("/students");
@@ -176,10 +177,9 @@ export async function saveSummativeAssessmentsAction(formData: FormData) {
   revalidatePath("/formative");
   invalidateStudentRelatedCaches(payload.studentId);
 
-  const params: Record<string, string> = {};
-  if (records.length > 0) {
-    params.success = tSummative("savedSuccess");
-  }
+  const params: Record<string, string> = {
+    success: tSummative("savedSuccess"),
+  };
   if (highlightedRecordIds.length > 0) {
     params.highlights = highlightedRecordIds.join(",");
   }
@@ -357,12 +357,12 @@ async function parseSummativePayload(formData: FormData) {
     throw new Error(t("notesTooLong"));
   }
 
-  const createdAt = parseRecordDateTime(
+  const assessedAt = parseRecordDateTime(
     dateValue,
     timeValue,
     timezoneOffsetValue,
   );
-  if (!createdAt) {
+  if (!assessedAt) {
     throw new Error(t("dateInvalid"));
   }
 
@@ -373,7 +373,7 @@ async function parseSummativePayload(formData: FormData) {
     academicYear,
     score,
     notes: notesValue || null,
-    createdAt,
+    assessedAt,
   };
 }
 
@@ -396,12 +396,12 @@ async function parseBulkSummativePayload(formData: FormData) {
     throw new Error(t("summativeSemesterInvalid"));
   }
 
-  const createdAt = parseRecordDateTime(
+  const assessedAt = parseRecordDateTime(
     dateValue,
     timeValue,
     timezoneOffsetValue,
   );
-  if (!createdAt) {
+  if (!assessedAt) {
     throw new Error(t("dateInvalid"));
   }
 
@@ -429,7 +429,7 @@ async function parseBulkSummativePayload(formData: FormData) {
         semester: parseSemester(semesterValue),
         academicYear,
         score,
-        createdAt,
+        assessedAt,
         inputOrder: entry.inputOrder,
       };
     });
@@ -457,7 +457,7 @@ async function parseBulkSummativePayload(formData: FormData) {
         semester: parseSemester(semesterValue),
         academicYear,
         score,
-        createdAt,
+        assessedAt,
         inputOrder: entry.inputOrder,
       };
     });
@@ -467,7 +467,7 @@ async function parseBulkSummativePayload(formData: FormData) {
     semester: ReturnType<typeof parseSemester>;
     academicYear: string;
     score: number;
-    createdAt: Date;
+    assessedAt: Date;
     inputOrder: number;
   }> = [];
   for (const [inputOrder, [key, value]] of formEntries.entries()) {
@@ -503,7 +503,7 @@ async function parseBulkSummativePayload(formData: FormData) {
       semester: parseSemester(semesterValue),
       academicYear,
       score,
-      createdAt,
+      assessedAt,
       inputOrder,
     });
   }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { matchesSearchText, normalizeSearchText } from "./search";
+import {
+  buildStudentSearchWhere,
+  matchesSearchText,
+  normalizeSearchText,
+} from "./search";
 
 describe("shared text search", () => {
   it.each([
@@ -16,5 +20,25 @@ describe("shared text search", () => {
   it("normalizes casing and repeated whitespace before matching", () => {
     expect(normalizeSearchText("  MUHAMMAD   YUSUF  ")).toBe("muhammad yusuf");
     expect(matchesSearchText("Muhammad Yusuf", "  yUsUf  ")).toBe(true);
+  });
+});
+
+describe("student search predicate", () => {
+  it("matches nothing extra when the query is blank", () => {
+    expect(buildStudentSearchWhere("")).toEqual({});
+    expect(buildStudentSearchWhere("   ")).toEqual({});
+  });
+
+  it("searches the student name and the academic class", () => {
+    expect(buildStudentSearchWhere("  Ammar   Abdo ")).toEqual({
+      OR: [
+        { fullName: { contains: "ammar abdo", mode: "insensitive" } },
+        {
+          academicClass: {
+            name: { contains: "ammar abdo", mode: "insensitive" },
+          },
+        },
+      ],
+    });
   });
 });

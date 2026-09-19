@@ -23,6 +23,7 @@ import {
   getStudentSummativeHistory,
   getTeacherSummativeExportData,
 } from "@/lib/summative";
+import { isMoreRecentSummativeScore } from "@/lib/summative-latest";
 import { tasmiGradeLabels, tasmiStatusLabel } from "@/lib/tasmi";
 
 export async function getReportAttendancePeriods() {
@@ -703,17 +704,21 @@ function summarizeTeacherFormativeExport(
 function summarizeTeacherSummativeExport(
   exportData: TeacherSummativeExportBundle,
 ) {
+  // Same rule as the Nilai Sumatif list, so a printed report never disagrees
+  // with the screen it was generated from.
   const latestByStudent = new Map<
     string,
-    { createdAt: number; assessment: string }
+    { assessment: string; surahNumber: number; updatedAt: Date }
   >();
 
   for (const row of exportData.rows) {
     const current = latestByStudent.get(row.studentId);
-    const assessment = `${row.surahNumber}. ${row.surahName}`;
-    const createdAt = row.createdAt.getTime();
-    if (!current || createdAt > current.createdAt) {
-      latestByStudent.set(row.studentId, { createdAt, assessment });
+    if (!current || isMoreRecentSummativeScore(row, current)) {
+      latestByStudent.set(row.studentId, {
+        assessment: `${row.surahNumber}. ${row.surahName}`,
+        surahNumber: row.surahNumber,
+        updatedAt: row.updatedAt,
+      });
     }
   }
 

@@ -8,6 +8,7 @@ import {
   formatRange,
   statusLabels,
 } from "@/lib/format";
+import { buildStudentSearchWhere } from "@/lib/search";
 
 type FormativeRow = {
   id: string;
@@ -25,6 +26,20 @@ type FormativeRow = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+/**
+ * Newest record first, breaking ties on the entry timestamp.
+ *
+ * Two setoran recorded for the same calendar day are indistinguishable by date
+ * alone, which made "Setoran terakhir" flip between them across reloads. The
+ * later-entered row wins.
+ */
+function byMostRecentRecord(left: FormativeRow, right: FormativeRow) {
+  const byDate = right.date.getTime() - left.date.getTime();
+  return byDate !== 0
+    ? byDate
+    : right.createdAt.getTime() - left.createdAt.getTime();
+}
 
 export type FormativeOverviewStudent = {
   id: string;
@@ -71,8 +86,9 @@ export async function getTeacherFormativeOverview(
   page?: number,
   pageSize?: number,
   programType?: ProgramType,
+  query = "",
 ) {
-  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}`;
+  const cacheKey = `formative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}:${query.trim().toLocaleLowerCase() || "all"}`;
   return cached(cacheKey, 30_000, () =>
     withRetry(() =>
       getTeacherFormativeOverviewInner(
@@ -84,6 +100,7 @@ export async function getTeacherFormativeOverview(
         page,
         pageSize,
         programType,
+        query,
       ),
     ),
   );
@@ -98,6 +115,7 @@ async function getTeacherFormativeOverviewInner(
   page?: number,
   pageSize?: number,
   programType?: ProgramType,
+  query = "",
 ) {
   const dateFormatter = getDateFormatter(locale);
   const studentWhere = {
@@ -108,6 +126,7 @@ async function getTeacherFormativeOverviewInner(
       ...(programType ? { programType } : {}),
       ...(classLevel ? { grade: classLevel } : {}),
     },
+    ...buildStudentSearchWhere(query),
   };
   const safePage = page ? Math.max(1, page) : undefined;
   const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
@@ -210,7 +229,7 @@ async function getTeacherFormativeOverviewInner(
   return {
     students: students.map((student) => {
       const studentRows = (grouped.get(student.id) ?? []).sort(
-        (left, right) => right.date.getTime() - left.date.getTime(),
+        byMostRecentRecord,
       );
       const latest = studentRows[0];
       const scoredRows = studentRows
@@ -332,9 +351,7 @@ async function getStudentFormativeDetailInner(
     academicYear,
   );
 
-  const sortedRows = rows.sort(
-    (left, right) => right.date.getTime() - left.date.getTime(),
-  );
+  const sortedRows = rows.sort(byMostRecentRecord);
   const scores = sortedRows
     .map((row) => row.score)
     .filter((score): score is number => score !== null);

@@ -4,6 +4,8 @@ import { cached, invalidateCache } from "@/lib/cache";
 import { getActiveAcademicYear } from "@/lib/academic-year";
 import { getDateFormatter, halaqahLevelLabels } from "@/lib/format";
 import { prisma, withRetry } from "@/lib/prisma";
+import { buildStudentSearchWhere } from "@/lib/search";
+import { isMoreRecentSummativeScore } from "@/lib/summative-latest";
 import { assignSequentialSummativeSubmissionTimes } from "@/lib/summative-submission";
 
 export type ClassTargetSurah = {
@@ -119,7 +121,9 @@ export type SummativeExportRow = {
   surahArabicName: string;
   score: number;
   notes: string | null;
+  assessedAt: Date;
   createdAt: Date;
+  updatedAt: Date;
 };
 
 export function semesterLabel(value: Semester | string): string {
@@ -377,8 +381,9 @@ export async function getTeacherSummativeOverview(
   page?: number,
   pageSize?: number,
   programType?: ProgramType,
+  query = "",
 ) {
-  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}`;
+  const cacheKey = `summative-overview:${teacherId ?? "admin"}:${semester}:${academicYear}:${classLevel ?? "all"}:${locale}:${page ?? 1}:${pageSize ?? "all"}:${programType ?? "all"}:${query.trim().toLocaleLowerCase() || "all"}`;
   return cached(cacheKey, 30_000, () =>
     withRetry(() =>
       getTeacherSummativeOverviewInner(
@@ -390,6 +395,7 @@ export async function getTeacherSummativeOverview(
         page,
         pageSize,
         programType,
+        query,
       ),
     ),
   );
@@ -404,6 +410,7 @@ async function getTeacherSummativeOverviewInner(
   page?: number,
   pageSize?: number,
   programType?: ProgramType,
+  query = "",
 ) {
   const dateFormatter = getDateFormatter(locale);
   const studentWhere = {
@@ -414,6 +421,7 @@ async function getTeacherSummativeOverviewInner(
       ...(programType ? { programType } : {}),
       ...(classLevel ? { grade: classLevel } : {}),
     },
+    ...buildStudentSearchWhere(query),
   };
   const safePage = page ? Math.max(1, page) : undefined;
   const safePageSize = pageSize ? Math.max(1, pageSize) : undefined;
@@ -509,10 +517,12 @@ async function getTeacherSummativeOverviewInner(
           },
           select: {
             studentId: true,
-            createdAt: true,
+            assessedAt: true,
+            updatedAt: true,
             surah: {
               select: {
                 name: true,
+                number: true,
               },
             },
           },
@@ -529,14 +539,35 @@ async function getTeacherSummativeOverviewInner(
       },
     ]),
   );
-  const latestByStudent = new Map<string, { latestAssessment: string; latestDate: string }>();
+  // "Penilaian terakhir" means the surah the teacher edited most recently, so
+  // the row is chosen by save time. The date beside it is the assessment date
+  // the teacher entered, which answers a different question: when the santri
+  // was assessed, not when Save was pressed.
+  const latestRowByStudent = new Map<
+    string,
+    { assessedAt: Date; surahName: string; surahNumber: number; updatedAt: Date }
+  >();
   for (const row of latestRows) {
-    if (latestByStudent.has(row.studentId)) {
-      continue;
+    const candidate = {
+      assessedAt: row.assessedAt,
+      surahName: row.surah.name,
+      surahNumber: row.surah.number,
+      updatedAt: row.updatedAt,
+    };
+    const current = latestRowByStudent.get(row.studentId);
+    if (!current || isMoreRecentSummativeScore(candidate, current)) {
+      latestRowByStudent.set(row.studentId, candidate);
     }
-    latestByStudent.set(row.studentId, {
-      latestAssessment: row.surah.name,
-      latestDate: dateFormatter.format(row.createdAt),
+  }
+
+  const latestByStudent = new Map<
+    string,
+    { latestAssessment: string; latestDate: string }
+  >();
+  for (const [studentId, row] of latestRowByStudent) {
+    latestByStudent.set(studentId, {
+      latestAssessment: row.surahName,
+      latestDate: dateFormatter.format(row.assessedAt),
     });
   }
 
@@ -779,7 +810,9 @@ async function getTeacherSummativeExportDataInner(
             studentId: true,
             score: true,
             notes: true,
+            assessedAt: true,
             createdAt: true,
+            updatedAt: true,
             semester: true,
             surah: {
               select: {
@@ -846,7 +879,9 @@ async function getTeacherSummativeExportDataInner(
       surahArabicName: assessment.surah.arabicName,
       score: assessment.score,
       notes: assessment.notes,
+      assessedAt: assessment.assessedAt,
       createdAt: assessment.createdAt,
+      updatedAt: assessment.updatedAt,
     };
   });
 
@@ -912,7 +947,7 @@ export async function saveSummativeAssessment(input: {
   semester: Semester;
   academicYear: string;
   score: number;
-  createdAt: Date;
+  assessedAt: Date;
   notes?: string | null;
 }) {
   if (input.score < 0 || input.score > 100) {
@@ -931,7 +966,7 @@ export async function saveSummativeAssessment(input: {
     update: {
       score: input.score,
       notes: input.notes ?? null,
-      createdAt: input.createdAt,
+      assessedAt: input.assessedAt,
     },
     create: {
       studentId: input.studentId,
@@ -939,7 +974,7 @@ export async function saveSummativeAssessment(input: {
       semester: input.semester,
       academicYear: input.academicYear,
       score: input.score,
-      createdAt: input.createdAt,
+      assessedAt: input.assessedAt,
       notes: input.notes ?? null,
     },
   });
@@ -948,15 +983,40 @@ export async function saveSummativeAssessment(input: {
   return record;
 }
 
+type SummativeScoreInput = {
+  studentId: string;
+  surahId: string;
+  semester: Semester;
+  academicYear: string;
+  score: number;
+  assessedAt: Date;
+};
+
+function summativeScoreKey(input: {
+  studentId: string;
+  surahId: string;
+  semester: Semester;
+  academicYear: string;
+}) {
+  return [
+    input.studentId,
+    input.surahId,
+    input.semester,
+    input.academicYear,
+  ].join(":");
+}
+
+/**
+ * Persists a bulk submission, writing only the scores that actually differ.
+ *
+ * The form posts every surah on the sheet, changed or not. Writing all of them
+ * pushed every row updatedAt forward on each save, so "Penilaian terakhir" only
+ * ever reflected the last field on the page. Inputs arrive in the order the
+ * teacher touched them and are stamped a millisecond apart, so the surah edited
+ * last is the one that reads as most recent.
+ */
 export async function saveSummativeAssessments(
-  inputs: Array<{
-    studentId: string;
-    surahId: string;
-    semester: Semester;
-    academicYear: string;
-    score: number;
-    createdAt: Date;
-  }>,
+  inputs: Array<SummativeScoreInput>,
 ) {
   if (inputs.length === 0) {
     return [];
@@ -968,7 +1028,37 @@ export async function saveSummativeAssessments(
     }
   }
 
-  const orderedInputs = assignSequentialSummativeSubmissionTimes(inputs);
+  const existing = await prisma.summativeScore.findMany({
+    where: {
+      OR: inputs.map((input) => ({
+        studentId: input.studentId,
+        surahId: input.surahId,
+        semester: input.semester,
+        academicYear: input.academicYear,
+      })),
+    },
+    select: {
+      studentId: true,
+      surahId: true,
+      semester: true,
+      academicYear: true,
+      score: true,
+    },
+  });
+  const storedScoreByKey = new Map(
+    existing.map((row) => [summativeScoreKey(row), row.score]),
+  );
+
+  // Checked against the database rather than trusting the client, so a missed
+  // change event cannot silently drop a score the teacher did edit.
+  const changedInputs = inputs.filter(
+    (input) => storedScoreByKey.get(summativeScoreKey(input)) !== input.score,
+  );
+  if (changedInputs.length === 0) {
+    return [];
+  }
+
+  const orderedInputs = assignSequentialSummativeSubmissionTimes(changedInputs);
   const records = await prisma.$transaction(
     orderedInputs.map((input) =>
       prisma.summativeScore.upsert({
@@ -982,6 +1072,7 @@ export async function saveSummativeAssessments(
         },
         update: {
           score: input.score,
+          assessedAt: input.assessedAt,
           updatedAt: input.submittedAt,
         },
         create: {
@@ -990,7 +1081,7 @@ export async function saveSummativeAssessments(
           semester: input.semester,
           academicYear: input.academicYear,
           score: input.score,
-          createdAt: input.createdAt,
+          assessedAt: input.assessedAt,
           updatedAt: input.submittedAt,
         },
       }),
@@ -1009,7 +1100,7 @@ export async function updateSummativeAssessment(
     semester: Semester;
     academicYear: string;
     score: number;
-    createdAt: Date;
+    assessedAt: Date;
     notes?: string | null;
   },
 ) {
@@ -1027,7 +1118,7 @@ export async function updateSummativeAssessment(
       semester: input.semester,
       academicYear: input.academicYear,
       score: input.score,
-      createdAt: input.createdAt,
+      assessedAt: input.assessedAt,
       notes: input.notes ?? null,
     },
   });

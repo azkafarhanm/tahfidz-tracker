@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import { getLocale, getTranslations } from "next-intl/server";
 import AppShell from "@/components/AppShell";
 import ExportSection from "@/components/ExportSection";
+import GradingSearchEmptyState from "@/components/GradingSearchEmptyState";
+import LiveSearchForm from "@/components/LiveSearchForm";
 import FilterPreferenceSync from "@/components/FilterPreferenceSync";
 import ActiveYearBadge from "@/components/ActiveYearBadge";
 import SegmentedLinkTabs from "@/components/SegmentedLinkTabs";
@@ -21,6 +23,7 @@ import {
   parseStoredGradingView,
 } from "@/lib/grading-view";
 import { requireSessionScope } from "@/lib/session";
+import { countStudentMatchesByClassLevel } from "@/lib/student-search";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
 import { badge, statCard, statValue, statLabel, backLink } from "@/lib/colors";
 import { programTypeLabels } from "@/lib/format";
@@ -34,6 +37,7 @@ type FormativePageProps = {
     classLevel?: string;
     page?: string;
     programType?: string;
+    q?: string;
     returnTo?: string;
   }>;
 };
@@ -73,6 +77,7 @@ export default async function FormativePage({
   const explicitClassLevel = parseClassLevelValue(params?.classLevel);
   const classLevel = explicitClassLevel ?? preferredClassLevel;
   const classLevelValue = String(classLevel);
+  const query = params?.q?.trim() ?? "";
   const page = parsePage(params?.page);
 
   const academicYear = await getActiveAcademicYear();
@@ -96,15 +101,31 @@ export default async function FormativePage({
     page,
     PAGE_SIZE,
     programType,
+    query,
   );
-  const buildPageHref = (nextPage: number) => {
-    const nextParams = new URLSearchParams();
-    nextParams.set("semester", semesterValue);
-    nextParams.set("classLevel", classLevelValue);
-    if (programType) nextParams.set("programType", programType);
-    if (nextPage > 1) nextParams.set("page", String(nextPage));
+  const buildListHref = (overrides: Record<string, string> = {}) => {
+    const nextParams = new URLSearchParams({
+      semester: semesterValue,
+      classLevel: classLevelValue,
+      ...(programType ? { programType } : {}),
+      ...(query ? { q: query } : {}),
+      ...overrides,
+    });
     return `/formative?${nextParams.toString()}`;
   };
+  const buildPageHref = (nextPage: number) =>
+    buildListHref(nextPage > 1 ? { page: String(nextPage) } : {});
+  // Only worth asking once the active tab has come back empty.
+  const otherClassMatches =
+    query && overview.students.length === 0
+      ? await countStudentMatchesByClassLevel({
+          academicYear,
+          excludeClassLevel: classLevel,
+          programType,
+          query,
+          teacherId,
+        })
+      : [];
   const hasPreviousPage = (overview.pagination?.page ?? 1) > 1;
   const hasNextPage =
     overview.pagination !== null &&
@@ -171,7 +192,7 @@ export default async function FormativePage({
             currentValue={classLevelValue}
             options={classOptions.map((option) => ({
               ...option,
-              href: `/formative?semester=${semesterValue}&classLevel=${option.value}${programType ? `&programType=${programType}` : ""}`,
+              href: buildListHref({ classLevel: option.value }),
             }))}
           />
         </div>
@@ -185,7 +206,7 @@ export default async function FormativePage({
             currentValue={semesterValue}
             options={semesterOptions.map((option) => ({
               ...option,
-              href: `/formative?semester=${option.value}&classLevel=${classLevelValue}${programType ? `&programType=${programType}` : ""}`,
+              href: buildListHref({ semester: option.value }),
             }))}
           />
         </div>
@@ -225,11 +246,34 @@ export default async function FormativePage({
         </article>
       </section>
 
+      <LiveSearchForm
+        action={`/formative?${new URLSearchParams({
+          semester: semesterValue,
+          classLevel: classLevelValue,
+          ...(programType ? { programType } : {}),
+        }).toString()}`}
+        buttonLabel={t("searchButton")}
+        className="mt-6 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-600 shadow-sm focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:shadow-none dark:focus-within:border-emerald-400 dark:focus-within:ring-emerald-900"
+        defaultValue={query}
+        inputClassName="min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder-slate-500"
+        placeholder={t("searchPlaceholder")}
+      />
+
       {overview.students.length === 0 ? (
-        <div className="mt-6 rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 p-8 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-400">
-          <p className="font-medium">{t("emptyStudentsHeading")}</p>
-          <p className="mt-1">{t("emptyStudentsDescription")}</p>
-        </div>
+        <GradingSearchEmptyState
+          description={
+            query ? t("searchEmptyDescription", { query }) : t("emptyStudentsDescription")
+          }
+          heading={query ? t("searchEmptyHeading") : t("emptyStudentsHeading")}
+          otherClassLinks={otherClassMatches.map((match) => ({
+            href: buildListHref({ classLevel: String(match.classLevel) }),
+            label: t("searchOtherClass", {
+              count: match.count,
+              classLevel: match.classLevel,
+            }),
+            match,
+          }))}
+        />
       ) : (
         <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-none">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">

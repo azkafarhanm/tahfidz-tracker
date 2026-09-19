@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { Semester } from "@/generated/prisma-next/enums";
 import { finalizeTableSheet } from "@/lib/excel";
+import { isMoreRecentSummativeScore } from "@/lib/summative-latest";
 import type { ClassTargetSurah, SummativeExportRow } from "@/lib/summative";
 import { semesterLabel } from "@/lib/summative";
 import { surahList } from "@/lib/surahs";
@@ -394,7 +395,7 @@ function addBoardingStudentBlock(
   [
     ["Total Penilaian :", String(sortedRows.length)],
     ["Surat Terakhir :", latestRow?.surahName ?? "-"],
-    ["Tanggal Terakhir :", latestRow ? jakartaDateFormatter.format(latestRow.createdAt) : "-"],
+    ["Tanggal Terakhir :", latestRow ? jakartaDateFormatter.format(latestRow.assessedAt) : "-"],
   ].forEach(([label, value]) => {
     const row = sheet.getRow(input.rowNumber);
     row.getCell(1).value = label;
@@ -680,17 +681,11 @@ function groupSummativeRowsByStudent(rows: SummativeExportRow[]) {
 }
 
 function getLatestSummativeRow(rows: SummativeExportRow[]) {
-  return rows.reduce<SummativeExportRow | null>((latest, row) => {
-    if (!latest) return row;
-    if (row.createdAt.getTime() > latest.createdAt.getTime()) return row;
-    if (
-      row.createdAt.getTime() === latest.createdAt.getTime() &&
-      row.surahNumber > latest.surahNumber
-    ) {
-      return row;
-    }
-    return latest;
-  }, null);
+  return rows.reduce<SummativeExportRow | null>(
+    (latest, row) =>
+      !latest || isMoreRecentSummativeScore(row, latest) ? row : latest,
+    null,
+  );
 }
 
 function styleBoardingSectionHeader(cell: ExcelJS.Cell, value: string) {

@@ -7,16 +7,47 @@ import {
 describe("summative submission order", () => {
   it("preserves input order across score categories", () => {
     const ordered = orderSummativeSubmission([
-      { inputOrder: 4, surah: "Al-Ikhlas" },
-      { inputOrder: 0, surah: "An-Nas" },
-      { inputOrder: 2, surah: "Al-Falaq" },
+      { inputOrder: 4, surahId: "al-ikhlas" },
+      { inputOrder: 0, surahId: "an-nas" },
+      { inputOrder: 2, surahId: "al-falaq" },
     ]);
 
-    expect(ordered.map((item) => item.surah)).toEqual([
-      "An-Nas",
-      "Al-Falaq",
-      "Al-Ikhlas",
+    expect(ordered.map((item) => item.surahId)).toEqual([
+      "an-nas",
+      "al-falaq",
+      "al-ikhlas",
     ]);
+  });
+
+  it("moves touched scores to the end, newest touch last", () => {
+    const ordered = orderSummativeSubmission(
+      [
+        { inputOrder: 0, surahId: "an-naba" },
+        { inputOrder: 1, surahId: "an-naziat" },
+        { inputOrder: 2, surahId: "abasa" },
+        { inputOrder: 3, surahId: "al-lail" },
+      ],
+      ["abasa", "an-naba"],
+    );
+
+    expect(ordered.map((item) => item.surahId)).toEqual([
+      "an-naziat",
+      "al-lail",
+      "abasa",
+      "an-naba",
+    ]);
+  });
+
+  it("keeps the last surah of the sheet from winning when it was never touched", () => {
+    const ordered = orderSummativeSubmission(
+      [
+        { inputOrder: 0, surahId: "an-naba" },
+        { inputOrder: 9, surahId: "al-lail" },
+      ],
+      ["an-naba"],
+    );
+
+    expect(ordered.at(-1)?.surahId).toBe("an-naba");
   });
 
   it("makes the final submitted item the latest timestamp", () => {

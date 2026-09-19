@@ -43,9 +43,10 @@ export default function SummativeBulkScoreForm({
   const [enteredScoreKeys, setEnteredScoreKeys] = useState<Set<string>>(
     () => new Set(),
   );
-  const [changedSurahIds, setChangedSurahIds] = useState<Set<string>>(
-    () => new Set(),
-  );
+  // Ordered by when each surah was last touched, oldest first, so the server
+  // can tell which score the teacher entered last. A Set rebuilt on every change
+  // would only ever reproduce the order the fields happen to appear in.
+  const [changedSurahIds, setChangedSurahIds] = useState<string[]>(() => []);
   const scoreBySurahId = useMemo(
     () => new Map(existingScores.map((score) => [score.surahId, score.score])),
     [existingScores],
@@ -65,8 +66,33 @@ export default function SummativeBulkScoreForm({
       return next;
     });
   };
-  const updateChangedSurahIds = (event: FormEvent<HTMLFormElement>) => {
-    const form = event.currentTarget;
+  /** Maps the element that fired the change back to the surah it scores. */
+  const resolveTouchedSurahId = (
+    form: HTMLFormElement,
+    target: EventTarget | null,
+  ) => {
+    if (
+      !(target instanceof HTMLInputElement) &&
+      !(target instanceof HTMLSelectElement)
+    ) {
+      return null;
+    }
+
+    const name = target.name;
+    if (name.startsWith("score:")) {
+      return name.slice("score:".length);
+    }
+
+    if (name.startsWith("choiceScore:") || name.startsWith("choice:")) {
+      const choiceId = name.slice(name.indexOf(":") + 1);
+      const select = form.elements.namedItem(`choice:${choiceId}`);
+      return select instanceof HTMLSelectElement ? select.value : null;
+    }
+
+    return null;
+  };
+
+  const collectChangedSurahIds = (form: HTMLFormElement) => {
     const next = new Set<string>();
 
     for (const group of targetGroups) {
@@ -103,7 +129,29 @@ export default function SummativeBulkScoreForm({
       }
     }
 
-    setChangedSurahIds(next);
+    return next;
+  };
+
+  const updateChangedSurahIds = (event: FormEvent<HTMLFormElement>) => {
+    const form = event.currentTarget;
+    const changed = collectChangedSurahIds(form);
+    const touched = resolveTouchedSurahId(form, event.target);
+
+    setChangedSurahIds((previous) => {
+      const next = previous.filter((surahId) => changed.has(surahId));
+      for (const surahId of changed) {
+        if (!next.includes(surahId)) {
+          next.push(surahId);
+        }
+      }
+
+      // A surah edited again moves back to the end: it is now the latest entry.
+      if (touched && changed.has(touched)) {
+        return [...next.filter((surahId) => surahId !== touched), touched];
+      }
+
+      return next;
+    });
   };
 
   return (
@@ -116,7 +164,7 @@ export default function SummativeBulkScoreForm({
       <input type="hidden" name="studentId" value={studentId} />
       <input type="hidden" name="academicYear" value={academicYear} />
       <input type="hidden" name="semester" value={defaultSemester} />
-      {[...changedSurahIds].map((surahId) => (
+      {changedSurahIds.map((surahId) => (
         <input
           key={surahId}
           type="hidden"

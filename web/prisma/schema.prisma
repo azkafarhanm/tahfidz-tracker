@@ -460,6 +460,10 @@ model SummativeScore {
   academicYear String
   score        Int
   notes        String?
+  /// Assessment date chosen by the teacher in the form, refreshed on every real
+  /// edit. Kept separate from createdAt so that column stays an honest record of
+  /// when the row was first written.
+  assessedAt   DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
