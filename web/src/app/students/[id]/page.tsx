@@ -31,7 +31,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { badge, heroSummary, backLink } from "@/lib/colors";
 import { groupMeetingTimelineByMonth } from "@/lib/meeting-status";
 import { ProgramType, RecordStatus } from "@/generated/prisma-next/enums";
-import { formatTahsinPageRange, getTahsinForStudent, resolveTahsinMeetingContext, validateTahsinAcademicScope } from "@/lib/tahsin";
+import { getTahsinForStudent, validateTahsinAcademicScope } from "@/lib/tahsin";
+import { describeTahsinMaterial, tahsinMaterialForGrade, tahsinRecordMeetingNumber } from "@/lib/tahsin-material";
 import { getDateFormatter } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -270,6 +271,7 @@ export default async function StudentDetailPage({
     : [];
   const latestTahsin = tahsinRecords[0] ?? null;
   const tahsinDateFormatter = getDateFormatter(locale);
+  const tahsinReadsQuran = tahsinMaterialForGrade(student.classGroupGrade) === "QURAN";
 
   const meetingSummary = student.meetingSummary;
   const meetingGroups = groupMeetingTimelineByMonth(student.meetingTimeline, locale);
@@ -613,15 +615,15 @@ export default async function StudentDetailPage({
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">{t("tahsinHeading")}</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t("tahsinMethod")}</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{tahsinReadsQuran ? t("tahsinMethodQuran") : t("tahsinMethod")}</p>
               </div>
-              {latestTahsin ? <span className={`rounded-full px-3 py-1 text-xs font-medium ${tahsinStatusClass(latestTahsin.status)}`}>{t("tahsinLatest")}: {t("tahsinJilid")} {latestTahsin.jilid} · {t("tahsinPage")} {formatTahsinPageRange(latestTahsin.startPage, latestTahsin.endPage)}</span> : null}
+              {latestTahsin ? <span className={`rounded-full px-3 py-1 text-xs font-medium ${tahsinStatusClass(latestTahsin.status)}`}>{t("tahsinLatest")}: {describeTahsinMaterial(latestTahsin, { jilid: t("tahsinJilid"), page: t("tahsinPage") })}</span> : null}
             </div>
             {latestTahsin ? <p className="mt-3 text-sm text-slate-700 dark:text-slate-300">{t("tahsinScore")} {latestTahsin.score} · {tahsinStatusLabel(latestTahsin.status, t)} · {tahsinDateFormatter.format(latestTahsin.date)}</p> : <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{t("tahsinEmpty")}</p>}
             {tahsinRecords.length > 0 ? <div className="mt-4 space-y-3">
               {tahsinRecords.map((record) => <article className="rounded-xl border border-slate-100 p-3 dark:border-slate-800" key={record.id}>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="font-semibold">{t("tahsinJilid")} {record.jilid} · {t("tahsinPage")} {formatTahsinPageRange(record.startPage, record.endPage)}</span><span className="text-slate-500 dark:text-slate-400">{tahsinDateFormatter.format(record.date)}</span></div>
-                {(() => { const meetingContext = resolveTahsinMeetingContext(record.meeting); return <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{meetingContext ? t("tahsinMeetingContext", { meeting: meetingContext.meetingNumber }) : t("tahsinLegacy")}</p>; })()}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="font-semibold">{describeTahsinMaterial(record, { jilid: t("tahsinJilid"), page: t("tahsinPage") })}</span><span className="text-slate-500 dark:text-slate-400">{tahsinDateFormatter.format(record.date)}</span></div>
+                {(() => { const meetingNumber = tahsinRecordMeetingNumber(record); return <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">{meetingNumber !== null ? t("tahsinMeetingContext", { meeting: meetingNumber }) : t("tahsinLegacy")}</p>; })()}
                 <p className="mt-1 text-sm">{t("tahsinScore")} {record.score} · <span className="font-medium">{tahsinStatusLabel(record.status, t)}</span></p>
                 {record.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-400">{record.notes}</p> : null}
               </article>)}

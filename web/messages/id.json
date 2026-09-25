@@ -249,7 +249,8 @@
     "tableStatus": "Status",
     "scoreLabel": "Nilai",
     "deactivateHeading": "Nonaktifkan santri",
-    "deactivateDescription": "Santri tidak akan muncul di daftar aktif."
+    "deactivateDescription": "Santri tidak akan muncul di daftar aktif.",
+    "tahsinMethodQuran": "Bacaan Al-Qur'an berurutan"
   },
   "MeetingStatusForm": {
     "title": "Status Pertemuan",
@@ -1566,7 +1567,7 @@
     "exportExcel": "Unduh Excel"
   },
   "TahsinPanel": {
-    "academicGrade": "Academic · Kelas 7",
+    "academicGrade": "Academic \u00b7 Kelas 7\u20139",
     "meetingOnly": "Pertemuan {meeting}",
     "title": "Penilaian Tahsin",
     "description": "Input cepat metode Ilman Wa Ruuhan.",
@@ -1599,7 +1600,16 @@
     "deleteTitle": "Hapus Penilaian Tahsin",
     "deleteConfirmation": "Penilaian ini akan dihapus. Pertemuan Tahsin dan riwayat lainnya tidak berubah.",
     "deleteConfirm": "Ya, hapus",
-    "deleting": "Menghapus…"
+    "deleting": "Menghapus…",
+    "surah": "Surah",
+    "ayahs": "Ayat",
+    "startAyah": "Ayat awal",
+    "endAyah": "Ayat akhir",
+    "grade7Meeting": "Kelas 7 \u00b7 Pertemuan {meeting}",
+    "halaqahMeeting": "Kelas {grade} \u00b7 Pertemuan {meeting}",
+    "halaqahNoMeeting": "Kelas {grade} \u00b7 belum ada pertemuan semester ini",
+    "halaqahMeetingHint": "Kelas 8\u20139: satu minggu dihitung satu pertemuan untuk halaqah Anda, termasuk susulan di hari lain.",
+    "exportGrade": "Excel Kelas {grade}"
   },
   "AdminTahsinMeeting": {
     "title": "Kontrol Pertemuan Tahsin",

@@ -29,6 +29,13 @@ enum RecordStatus {
   PERLU_MUROJAAH
 }
 
+/// What a Tahsin record assesses. Grade 7 works through the Ilman Wa Ruuhan
+/// jilid books by page; grades 8 and 9 read the Qur'an itself by surah and ayah.
+enum TahsinMaterial {
+  JILID
+  QURAN
+}
+
 enum TargetType {
   HAFALAN
   MUROJAAH
@@ -87,10 +94,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  teacher   Teacher?
-  accounts  Account[]
-  sessions  Session[]
-  auditLogs AuditLog[]
+  teacher      Teacher?
+  accounts     Account[]
+  sessions     Session[]
+  auditLogs    AuditLog[]
   releaseViews UserReleaseView[]
 
   @@index([role])
@@ -120,14 +127,14 @@ model Teacher {
 }
 
 model AcademicYear {
-  id                       String             @id @default(cuid())
-  year                     String             @unique
-  startDate                DateTime
-  endDate                  DateTime
-  isActive                 Boolean            @default(false)
-  status                   AcademicYearStatus @default(ACTIVE)
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
+  id        String             @id @default(cuid())
+  year      String             @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean            @default(false)
+  status    AcademicYearStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   formativeMeetings      FormativeMeeting[]
   tahsinMeetingTimelines TahsinMeetingTimeline[]
@@ -180,7 +187,7 @@ model TahsinMeetingTimeline {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  academicYear AcademicYear     @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
+  academicYear AcademicYear    @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
   meetings     TahsinMeeting[]
 
   @@unique([academicYearId, semester, runNumber])
@@ -204,15 +211,15 @@ model TahsinMeeting {
 }
 
 model ReleaseNote {
-  id                 String   @id @default(cuid())
-  applicationVersion String   @map("version")
+  id                 String    @id @default(cuid())
+  applicationVersion String    @map("version")
   title              String
   summary            String
   content            String
-  isPublished        Boolean  @default(false)
+  isPublished        Boolean   @default(false)
   publishedAt        DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   views UserReleaseView[]
 
@@ -264,9 +271,11 @@ model ClassGroup {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  teacher  Teacher   @relation(fields: [teacherId], references: [id], onDelete: Restrict)
-  students Student[]
+  teacher        Teacher                @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  students       Student[]
+  tahsinMeetings TahsinHalaqahMeeting[]
 
+  @@unique([teacherId, academicYear, grade, programType])
   @@index([teacherId])
   @@index([academicYear])
   @@index([grade])
@@ -274,7 +283,6 @@ model ClassGroup {
   @@index([isActive])
   @@index([teacherId, isActive, grade, level])
   @@index([programType])
-  @@unique([teacherId, academicYear, grade, programType])
 }
 
 model Student {
@@ -447,6 +455,7 @@ model Surah {
 
   summativeScores SummativeScore[]
   targetSurahs    TargetSurah[]
+  tahsinRecords   TahsinRecord[]
 
   @@index([juz])
   @@index([name])
@@ -479,14 +488,14 @@ model SummativeScore {
 }
 
 model TargetSurah {
-  id          String   @id @default(cuid())
-  classLevel  Int
-  semester    Semester
-  surahId     String
-  isRequired  Boolean  @default(true)
+  id           String   @id @default(cuid())
+  classLevel   Int
+  semester     Semester
+  surahId      String
+  isRequired   Boolean  @default(true)
   academicYear String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   surah Surah @relation(fields: [surahId], references: [id], onDelete: Cascade)
 
@@ -526,26 +535,61 @@ model TasmiRecord {
   @@index([status])
 }
 
-model TahsinRecord {
-  id           String       @id @default(cuid())
-  studentId    String
-  teacherId    String
-  jilid        Int
-  startPage    Int
-  endPage      Int?
-  date         DateTime     @default(now())
-  score        Int?
-  status       RecordStatus @default(CUKUP)
-  notes        String?
-  academicYear String
-  semester     Semester
-  meetingId    String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+/// A weekly Tahsin session of one halaqah, used by grades 8 and 9.
+///
+/// A halaqah mixes students from several rombel (8A, 8B, 8C) and meets for
+/// Tahsin once a week, so every assessment in the same Monday-to-Sunday week
+/// belongs to the same meeting, including catch-up sessions later that week.
+/// Numbering is per halaqah and semester, so another teacher's halaqah meeting
+/// on a different weekday never advances this one.
+model TahsinHalaqahMeeting {
+  id            String   @id @default(cuid())
+  classGroupId  String
+  semester      Semester
+  meetingNumber Int
+  /// Monday of the meeting week, Asia/Jakarta calendar.
+  weekStart     DateTime @db.Date
+  /// First day in that week with an assessment, shown to teachers.
+  meetingDate   DateTime @db.Date
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Restrict)
-  meeting TahsinMeeting? @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  classGroup ClassGroup     @relation(fields: [classGroupId], references: [id], onDelete: Restrict)
+  records    TahsinRecord[]
+
+  @@unique([classGroupId, semester, weekStart])
+  @@unique([classGroupId, semester, meetingNumber])
+}
+
+model TahsinRecord {
+  id               String         @id @default(cuid())
+  studentId        String
+  teacherId        String
+  material         TahsinMaterial @default(JILID)
+  /// Set for JILID records only.
+  jilid            Int?
+  startPage        Int?
+  endPage          Int?
+  /// Set for QURAN records only; one surah per record.
+  surahId          String?
+  startAyah        Int?
+  endAyah          Int?
+  date             DateTime       @default(now())
+  score            Int?
+  status           RecordStatus   @default(CUKUP)
+  notes            String?
+  academicYear     String
+  semester         Semester
+  meetingId        String?
+  halaqahMeetingId String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  student        Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher        Teacher               @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  meeting        TahsinMeeting?        @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  halaqahMeeting TahsinHalaqahMeeting? @relation(fields: [halaqahMeetingId], references: [id], onDelete: Restrict)
+  surah          Surah?                @relation(fields: [surahId], references: [id], onDelete: Restrict)
 
   @@index([studentId, academicYear, semester])
   @@index([studentId, createdAt])
@@ -553,6 +597,8 @@ model TahsinRecord {
   @@index([academicYear, semester])
   @@index([teacherId, date])
   @@index([meetingId])
+  @@index([halaqahMeetingId])
+  @@index([studentId, material, date])
 }
 
 enum AuditAction {

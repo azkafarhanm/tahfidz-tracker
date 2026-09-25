@@ -11,7 +11,7 @@ function record(overrides: Partial<TahsinWorkbookInput["exportData"]["records"][
 }
 function input(records: TahsinWorkbookInput["exportData"]["records"], activeMeetings?: Array<{ meetingNumber: number; meetingDate: Date }>): TahsinWorkbookInput {
   const meetings = activeMeetings ?? [...new Map(records.flatMap((item) => item.meeting ? [[item.meeting.meetingNumber, { meetingNumber: item.meeting.meetingNumber, meetingDate: item.meeting.meetingDate }]] : [])).values()];
-  return { academicYear: "2026/2027", classLevel: 7, semester: Semester.GANJIL, schoolName: "Flow", exportData: { students: [{ id: "a", fullName: "Ahmad", academicClass: { name: "7A" } }, { id: "b", fullName: "Budi", academicClass: { name: "7B" } }, { id: "c", fullName: "Citra", academicClass: { name: "7C" } }], meetings, records } };
+  return { academicYear: "2026/2027", classLevel: 7, semester: Semester.GANJIL, schoolName: "Flow", exportData: { students: [{ id: "a", fullName: "Ahmad", classGroupId: "g7", academicClass: { name: "7A" } }, { id: "b", fullName: "Budi", classGroupId: "g7", academicClass: { name: "7B" } }, { id: "c", fullName: "Citra", classGroupId: "g7", academicClass: { name: "7C" } }], material: "JILID" as const, meetings, records } };
 }
 
 describe("Tahsin Excel matrix", () => {
@@ -78,5 +78,72 @@ describe("Tahsin Excel matrix", () => {
     expect(rerata.value).toBe(83.66666666666667);
     expect(typeof rerata.value).toBe("number");
     expect(rerata.numFmt).toBe("0.0");
+  });
+});
+
+describe("Tahsin Excel columns", () => {
+  it("keeps every meeting cell under its own header across several meetings", () => {
+    const workbook = new ExcelJS.Workbook();
+    const meetings = [1, 2, 3].map((meetingNumber) => ({ meetingNumber, meetingDate: new Date(`2026-08-${10 + meetingNumber}T00:00:00Z`) }));
+    buildTahsinWorkbook(workbook, input([
+      record({ id: "p2", meeting: { meetingNumber: 2, meetingDate: meetings[1].meetingDate, timeline: { runNumber: 1 } } }),
+    ], meetings));
+    const sheet = workbook.getWorksheet("7A")!;
+    expect([sheet.getCell("D7").value, sheet.getCell("E7").value, sheet.getCell("F7").value]).toEqual(["P1\n(11 Agu)", "P2\n(12 Agu)", "P3\n(13 Agu)"]);
+    expect(sheet.getCell("D8").value).toBe("");
+    expect(sheet.getCell("E8").value).toBe("J1 · 1–2\n85 · Cukup");
+    expect(sheet.getCell("F8").value).toBe("");
+    expect(sheet.getCell("G7").value).toBe("Rerata");
+  });
+});
+
+describe("Tahsin Excel for grades 8 and 9", () => {
+  function quranInput(): TahsinWorkbookInput {
+    const quranRecord = record({
+      id: "q1",
+      studentId: "d",
+      material: "QURAN",
+      jilid: null,
+      startPage: null,
+      endPage: null,
+      surahId: "baqarah",
+      startAyah: 17,
+      endAyah: 18,
+      surah: { name: "Al-Baqarah", number: 2, totalAyahs: 286 },
+      meetingId: null,
+      meeting: null,
+      halaqahMeetingId: "hm1",
+      halaqahMeeting: { meetingNumber: 1, meetingDate: new Date("2026-10-06T00:00:00Z"), classGroupId: "g8" },
+    } as never);
+    return {
+      academicYear: "2026/2027",
+      classLevel: 8,
+      semester: Semester.GANJIL,
+      schoolName: "Flow",
+      exportData: {
+        material: "QURAN",
+        students: [
+          { id: "d", fullName: "Dimas", classGroupId: "g8", academicClass: { name: "8B" } },
+          { id: "e", fullName: "Eka", classGroupId: "g8", academicClass: { name: "8A" } },
+        ],
+        meetings: [{ meetingNumber: 1, meetingDate: new Date("2026-10-06T00:00:00Z") }],
+        records: [quranRecord],
+      },
+    };
+  }
+
+  it("makes one sheet per rombel found in the halaqah, in order", () => {
+    const workbook = new ExcelJS.Workbook();
+    buildTahsinWorkbook(workbook, quranInput());
+    expect(workbook.worksheets.map((sheet) => sheet.name)).toEqual(["8A", "8B"]);
+  });
+
+  it("writes the reading as a Qur'an citation and titles the sheet accordingly", () => {
+    const workbook = new ExcelJS.Workbook();
+    buildTahsinWorkbook(workbook, quranInput());
+    const sheet = workbook.getWorksheet("8B")!;
+    expect(sheet.getCell("A1").value).toBe("PENILAIAN TAHSIN AL-QUR'AN");
+    expect(sheet.getCell("D7").value).toBe("P1\n(6 Okt)");
+    expect(sheet.getCell("D8").value).toBe("QS. Al-Baqarah: 17–18\n85 · Cukup");
   });
 });

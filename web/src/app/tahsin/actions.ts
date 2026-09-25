@@ -5,7 +5,17 @@ import { AuditAction } from "@/generated/prisma-next/enums";
 import { readInt, readOptionalString } from "@/lib/form-helpers";
 import { prisma } from "@/lib/prisma";
 import { requireSessionScope } from "@/lib/session";
-import { createTahsinRecord, deleteTahsinRecord, getTahsinSmartDefaultForStudent, resetTahsinMeetingTimeline, updateTahsinRecord } from "@/lib/tahsin";
+import {
+  createTahsinRecord,
+  deleteTahsinRecord,
+  getTahsinQuranEntryContext,
+  getTahsinSmartDefaultForStudent,
+  getTahsinSurahOptions,
+  resetTahsinMeetingTimeline,
+  updateTahsinRecord,
+  type TahsinMaterialInput,
+} from "@/lib/tahsin";
+import { tahsinRecordMeetingNumber } from "@/lib/tahsin-material";
 
 export type TahsinActionResult =
   | { ok: true; recordId: string; success: string }
@@ -13,6 +23,38 @@ export type TahsinActionResult =
 
 function actorFromScope(scope: Awaited<ReturnType<typeof requireSessionScope>>) {
   return { isAdmin: scope.isAdmin, teacherId: scope.teacherId };
+}
+
+/** Reads jilid fields or surah/ayat fields depending on the submitted material. */
+function readMaterialInput(formData: FormData): TahsinMaterialInput {
+  if (String(formData.get("material") ?? "") === "QURAN") {
+    return {
+      material: "QURAN",
+      surahId: String(formData.get("surahId") ?? "").trim(),
+      startAyah: readInt(formData, "startAyah") ?? 0,
+      endAyah: readInt(formData, "endAyah"),
+    };
+  }
+  return {
+    jilid: readInt(formData, "jilid") ?? 0,
+    startPage: readInt(formData, "startPage") ?? 0,
+    endPage: readInt(formData, "endPage"),
+  };
+}
+
+/** Audit payload covering both kinds of material. */
+function materialAuditMetadata(record: {
+  material: string;
+  jilid: number | null;
+  startPage: number | null;
+  endPage: number | null;
+  surahId: string | null;
+  startAyah: number | null;
+  endAyah: number | null;
+}) {
+  return record.material === "QURAN"
+    ? { material: record.material, surahId: record.surahId, startAyah: record.startAyah, endAyah: record.endAyah }
+    : { material: record.material, jilid: record.jilid, startPage: record.startPage, endPage: record.endPage };
 }
 
 export async function createTahsinAction(formData: FormData): Promise<TahsinActionResult> {
@@ -23,9 +65,7 @@ export async function createTahsinAction(formData: FormData): Promise<TahsinActi
     const record = await prisma.$transaction(async (tx) => {
       const created = await createTahsinRecord(actorFromScope(scope), {
         studentId: String(formData.get("studentId") ?? ""),
-        jilid: readInt(formData, "jilid") ?? 0,
-        startPage: readInt(formData, "startPage") ?? 0,
-        endPage: readInt(formData, "endPage"),
+        ...readMaterialInput(formData),
         score: readInt(formData, "score"),
         notes,
         date: new Date(),
@@ -37,7 +77,7 @@ export async function createTahsinAction(formData: FormData): Promise<TahsinActi
           academicYear: created.academicYear,
           targetType: "tahsin",
           targetId: created.id,
-          metadata: { studentId: created.studentId, meetingId: created.meetingId, jilid: created.jilid, startPage: created.startPage, endPage: created.endPage, score: created.score },
+          metadata: { studentId: created.studentId, meetingId: created.meetingId, halaqahMeetingId: created.halaqahMeetingId, ...materialAuditMetadata(created), score: created.score },
         },
       });
       return created;
@@ -53,17 +93,49 @@ export async function getTahsinSmartDefaultAction(studentId: string) {
   const scope = await requireSessionScope();
   const record = await getTahsinSmartDefaultForStudent(actorFromScope(scope), studentId);
   return record
-    ? { jilid: record.jilid, startPage: record.startPage, endPage: record.endPage }
+    ? { jilid: record.jilid ?? 1, startPage: record.startPage, endPage: record.endPage }
     : { jilid: 1, startPage: null, endPage: null };
+}
+
+export type TahsinQuranEntryDefault = {
+  next: { surahId: string; startAyah: number; endAyah: number | null } | null;
+  last: {
+    meetingNumber: number | null;
+    date: string;
+    surahName: string;
+    startAyah: number;
+    endAyah: number | null;
+    score: number | null;
+    status: string;
+  } | null;
+};
+
+/** Pre-fill and last-reading summary for a grade 8 or 9 student. */
+export async function getTahsinQuranEntryDefaultAction(studentId: string): Promise<TahsinQuranEntryDefault> {
+  const scope = await requireSessionScope();
+  const surahs = await getTahsinSurahOptions();
+  const { last, next } = await getTahsinQuranEntryContext(actorFromScope(scope), studentId, surahs);
+  return {
+    next,
+    last: last && last.surah && last.startAyah !== null
+      ? {
+          meetingNumber: tahsinRecordMeetingNumber(last),
+          date: last.date.toISOString(),
+          surahName: last.surah.name,
+          startAyah: last.startAyah,
+          endAyah: last.endAyah,
+          score: last.score,
+          status: last.status,
+        }
+      : null,
+  };
 }
 
 function readTahsinUpdateInput(formData: FormData) {
   const notes = readOptionalString(formData, "notes");
   if (notes && notes.length > 1500) throw new Error("Catatan maksimal 1500 karakter.");
   return {
-    jilid: readInt(formData, "jilid") ?? 0,
-    startPage: readInt(formData, "startPage") ?? 0,
-    endPage: readInt(formData, "endPage"),
+    ...readMaterialInput(formData),
     score: readInt(formData, "score"),
     notes,
   };
@@ -83,7 +155,7 @@ export async function updateTahsinAction(formData: FormData) {
           academicYear: updated.academicYear,
           targetType: "tahsin",
           targetId: updated.id,
-          metadata: { studentId: updated.studentId, meetingId: updated.meetingId, jilid: updated.jilid, startPage: updated.startPage, endPage: updated.endPage, score: updated.score },
+          metadata: { studentId: updated.studentId, meetingId: updated.meetingId, halaqahMeetingId: updated.halaqahMeetingId, ...materialAuditMetadata(updated), score: updated.score },
         },
       });
       return updated;
@@ -109,7 +181,7 @@ export async function deleteTahsinAction(recordId: string) {
           academicYear: deleted.academicYear,
           targetType: "tahsin",
           targetId: deleted.id,
-          metadata: { studentId: deleted.studentId, meetingId: deleted.meetingId, jilid: deleted.jilid, startPage: deleted.startPage, endPage: deleted.endPage, score: deleted.score },
+          metadata: { studentId: deleted.studentId, meetingId: deleted.meetingId, halaqahMeetingId: deleted.halaqahMeetingId, ...materialAuditMetadata(deleted), score: deleted.score },
         },
       });
       return deleted;

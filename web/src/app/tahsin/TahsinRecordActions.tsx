@@ -6,32 +6,46 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { actionButtonClass } from "@/components/action-button-styles";
 import ConfirmActionDialogButton, { ConfirmActionDialog } from "@/components/ConfirmActionDialogButton";
+import type { TahsinSurahOption } from "@/lib/tahsin-quran";
 import { deleteTahsinAction, updateTahsinAction } from "./actions";
 
 type EditableRecord = {
   id: string;
-  jilid: number;
-  startPage: number;
+  material: "JILID" | "QURAN";
+  jilid: number | null;
+  startPage: number | null;
   endPage: number | null;
+  surahId: string | null;
+  startAyah: number | null;
+  endAyah: number | null;
   score: number | null;
   notes: string | null;
 };
 
-export default function TahsinRecordActions({ record }: { record: EditableRecord }) {
+const text = (value: number | null) => (value === null ? "" : String(value));
+
+export default function TahsinRecordActions({ record, surahs }: { record: EditableRecord; surahs: TahsinSurahOption[] }) {
   const t = useTranslations("TahsinPanel");
   const router = useRouter();
+  const isQuran = record.material === "QURAN";
   const [editOpen, setEditOpen] = useState(false);
-  const [jilid, setJilid] = useState(String(record.jilid));
-  const [startPage, setStartPage] = useState(String(record.startPage));
-  const [endPage, setEndPage] = useState(record.endPage === null ? "" : String(record.endPage));
-  const [score, setScore] = useState(record.score === null ? "" : String(record.score));
+  const [jilid, setJilid] = useState(text(record.jilid));
+  const [startPage, setStartPage] = useState(text(record.startPage));
+  const [endPage, setEndPage] = useState(text(record.endPage));
+  const [surahId, setSurahId] = useState(record.surahId ?? "");
+  const [startAyah, setStartAyah] = useState(text(record.startAyah));
+  const [endAyah, setEndAyah] = useState(text(record.endAyah));
+  const [score, setScore] = useState(text(record.score));
   const [notes, setNotes] = useState(record.notes ?? "");
 
   function openEditor() {
-    setJilid(String(record.jilid));
-    setStartPage(String(record.startPage));
-    setEndPage(record.endPage === null ? "" : String(record.endPage));
-    setScore(record.score === null ? "" : String(record.score));
+    setJilid(text(record.jilid));
+    setStartPage(text(record.startPage));
+    setEndPage(text(record.endPage));
+    setSurahId(record.surahId ?? "");
+    setStartAyah(text(record.startAyah));
+    setEndAyah(text(record.endAyah));
+    setScore(text(record.score));
     setNotes(record.notes ?? "");
     setEditOpen(true);
   }
@@ -39,9 +53,16 @@ export default function TahsinRecordActions({ record }: { record: EditableRecord
   async function update() {
     const formData = new FormData();
     formData.set("recordId", record.id);
-    formData.set("jilid", jilid);
-    formData.set("startPage", startPage);
-    formData.set("endPage", endPage);
+    formData.set("material", record.material);
+    if (isQuran) {
+      formData.set("surahId", surahId);
+      formData.set("startAyah", startAyah);
+      formData.set("endAyah", endAyah);
+    } else {
+      formData.set("jilid", jilid);
+      formData.set("startPage", startPage);
+      formData.set("endPage", endPage);
+    }
     formData.set("score", score);
     formData.set("notes", notes);
     return updateTahsinAction(formData);
@@ -77,10 +98,17 @@ export default function TahsinRecordActions({ record }: { record: EditableRecord
       tone="success"
     >
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-sm font-medium">{t("volume")}<select className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" onChange={(event) => setJilid(event.target.value)} value={jilid}><option value="1">1</option><option value="2">2</option></select></label>
-        <label className="text-sm font-medium">{t("score")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setScore(event.target.value)} required type="number" value={score} /></label>
-        <label className="text-sm font-medium">{t("startPage")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setStartPage(event.target.value)} required type="number" value={startPage} /></label>
-        <label className="text-sm font-medium">{t("endPage")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setEndPage(event.target.value)} type="number" value={endPage} /></label>
+        {isQuran ? <>
+          <label className="text-sm font-medium sm:col-span-2">{t("surah")}<select className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" onChange={(event) => setSurahId(event.target.value)} value={surahId}>{surahs.map((surah) => <option key={surah.id} value={surah.id}>{surah.number}. {surah.name}</option>)}</select></label>
+          <label className="text-sm font-medium">{t("startAyah")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setStartAyah(event.target.value)} required type="number" value={startAyah} /></label>
+          <label className="text-sm font-medium">{t("endAyah")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setEndAyah(event.target.value)} type="number" value={endAyah} /></label>
+          <label className="text-sm font-medium sm:col-span-2">{t("score")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setScore(event.target.value)} required type="number" value={score} /></label>
+        </> : <>
+          <label className="text-sm font-medium">{t("volume")}<select className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" onChange={(event) => setJilid(event.target.value)} value={jilid}><option value="1">1</option><option value="2">2</option></select></label>
+          <label className="text-sm font-medium">{t("score")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setScore(event.target.value)} required type="number" value={score} /></label>
+          <label className="text-sm font-medium">{t("startPage")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setStartPage(event.target.value)} required type="number" value={startPage} /></label>
+          <label className="text-sm font-medium">{t("endPage")}<input className="mt-1 min-h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800" inputMode="numeric" onChange={(event) => setEndPage(event.target.value)} type="number" value={endPage} /></label>
+        </>}
         <label className="text-sm font-medium sm:col-span-2">{t("notes")}<textarea className="mt-1 min-h-20 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800" maxLength={1500} onChange={(event) => setNotes(event.target.value)} value={notes} /></label>
       </div>
     </ConfirmActionDialog>

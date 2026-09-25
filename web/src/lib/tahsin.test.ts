@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, Semester, TahsinMaterial } from "@/generated/prisma-next/enums";
 
 const mocks = vi.hoisted(() => ({
   getActiveAcademicYear: vi.fn(),
@@ -16,6 +16,11 @@ const mocks = vi.hoisted(() => ({
   meetingFindFirst: vi.fn(),
   meetingCreate: vi.fn(),
   meetingUpdate: vi.fn(),
+  surahFindUnique: vi.fn(),
+  halaqahMeetingFindUnique: vi.fn(),
+  halaqahMeetingFindFirst: vi.fn(),
+  halaqahMeetingCreate: vi.fn(),
+  queryRaw: vi.fn(),
 }));
 
 vi.mock("./academic-year", async () => {
@@ -25,8 +30,14 @@ vi.mock("./academic-year", async () => {
 
 vi.mock("./prisma", () => ({
   prisma: {
-    $queryRaw: vi.fn(),
+    $queryRaw: mocks.queryRaw,
     student: { findFirst: mocks.studentFindFirst, findMany: mocks.studentFindMany },
+    surah: { findUnique: mocks.surahFindUnique },
+    tahsinHalaqahMeeting: {
+      findUnique: mocks.halaqahMeetingFindUnique,
+      findFirst: mocks.halaqahMeetingFindFirst,
+      create: mocks.halaqahMeetingCreate,
+    },
     academicYear: { findUnique: mocks.academicYearFindUnique },
     tahsinMeetingTimeline: { findFirst: mocks.timelineFindFirst, create: mocks.timelineCreate },
     tahsinMeeting: { findFirst: mocks.meetingFindFirst, create: mocks.meetingCreate, update: mocks.meetingUpdate },
@@ -98,9 +109,11 @@ describe("Tahsin domain validation", () => {
     expect(normalizeTahsinPageRange(5, 5)).toEqual({ startPage: 5, endPage: null });
   });
   it("rejects an end page before the start page", () => expect(validatePageRange(8, 5).ok).toBe(false));
-  it("allows Academic grade 7 only during the rollout", () => {
-    expect(validateTahsinAcademicScope({ programType: ProgramType.ACADEMIC, grade: 7 })).toEqual({ ok: true });
-    expect(validateTahsinAcademicScope({ programType: ProgramType.ACADEMIC, grade: 8 }).ok).toBe(false);
+  it("allows Academic grades 7, 8, and 9", () => {
+    for (const grade of [7, 8, 9]) {
+      expect(validateTahsinAcademicScope({ programType: ProgramType.ACADEMIC, grade })).toEqual({ ok: true });
+    }
+    expect(validateTahsinAcademicScope({ programType: ProgramType.ACADEMIC, grade: 10 }).ok).toBe(false);
   });
   it("rejects Boarding regardless of grade", () => expect(validateTahsinAcademicScope({ programType: ProgramType.BOARDING, grade: 7 }).ok).toBe(false));
   it("derives the existing RecordStatus score bands", () => {
@@ -262,7 +275,7 @@ describe("Tahsin service authorization and isolation", () => {
   });
 
   it("allows the owning teacher to edit only assessment fields and preserves meetingId", async () => {
-    mocks.tahsinFindFirst.mockResolvedValueOnce({ id: "tahsin-a" });
+    mocks.tahsinFindFirst.mockResolvedValueOnce({ id: "tahsin-a", material: TahsinMaterial.JILID });
     mocks.tahsinUpdate.mockResolvedValueOnce({ id: "tahsin-a", meetingId: "meeting-1", academicYear: "2026/2027" });
 
     const updated = await updateTahsinRecord(teacher, "tahsin-a", {
@@ -274,7 +287,11 @@ describe("Tahsin service authorization and isolation", () => {
       where: expect.objectContaining({ id: "tahsin-a", teacherId: "teacher-a", academicYear: "2026/2027" }),
     }));
     expect(mocks.tahsinUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      data: { jilid: 2, startPage: 8, endPage: 10, score: 81, status: RecordStatus.CUKUP, notes: "Koreksi tajwid" },
+      data: {
+        material: TahsinMaterial.JILID, jilid: 2, startPage: 8, endPage: 10,
+        surahId: null, startAyah: null, endAyah: null,
+        score: 81, status: RecordStatus.CUKUP, notes: "Koreksi tajwid",
+      },
     }));
     expect(mocks.tahsinUpdate.mock.calls[0][0].data).not.toHaveProperty("meetingId");
   });
@@ -301,12 +318,15 @@ describe("Tahsin service authorization and isolation", () => {
     expect(mocks.tahsinDelete).not.toHaveBeenCalled();
   });
 
+  it("excludes Boarding from Tahsin entirely", () => {
+    expect(validateTahsinAcademicScope({ programType: ProgramType.BOARDING, grade: 7 }).ok).toBe(false);
+  });
+
   it.each([
     [ProgramType.BOARDING, 7],
     [ProgramType.ACADEMIC, 8],
     [ProgramType.ACADEMIC, 9],
-  ])("excludes %s grade %i from the student lookup", async (programType, grade) => {
-    expect(validateTahsinAcademicScope({ programType, grade }).ok).toBe(false);
+  ])("keeps jilid material to grade 7: %s grade %i is outside the jilid lookup", async () => {
     mocks.studentFindFirst.mockResolvedValue(null);
     await expect(createTahsinRecord(teacher, {
       studentId: "student-a", jilid: 1, startPage: 5, endPage: null, date, score: 88, notes: null,
@@ -342,7 +362,7 @@ describe("Tahsin service authorization and isolation", () => {
     await getLatestTahsinForStudent(teacher, "student-a", { academicYear: "2026/2027", semester: Semester.GANJIL });
     for (const call of [mocks.tahsinFindMany.mock.calls[0][0], mocks.tahsinFindFirst.mock.calls[0][0]]) {
       expect(call.where).toMatchObject({ studentId: "student-a", academicYear: "2026/2027", semester: Semester.GANJIL });
-      expect(call.where.student).toMatchObject({ teacherId: "teacher-a", classGroup: { programType: ProgramType.ACADEMIC, grade: 7 } });
+      expect(call.where.student).toMatchObject({ teacherId: "teacher-a", classGroup: { programType: ProgramType.ACADEMIC, grade: { in: [7, 8, 9] } } });
     }
   });
 
@@ -358,11 +378,137 @@ describe("Tahsin service authorization and isolation", () => {
     await getTahsinForTeacher(teacher, { semester: Semester.GENAP });
     await getTahsinStudents(teacher);
     expect(mocks.tahsinFindMany.mock.calls[0][0].where).toMatchObject({ teacherId: "teacher-a", semester: Semester.GENAP });
-    expect(mocks.studentFindMany.mock.calls[0][0].where).toMatchObject({ teacherId: "teacher-a", classGroup: { academicYear: "2026/2027", programType: ProgramType.ACADEMIC, grade: 7 } });
+    expect(mocks.studentFindMany.mock.calls[0][0].where).toMatchObject({ teacherId: "teacher-a", classGroup: { academicYear: "2026/2027", programType: ProgramType.ACADEMIC, grade: { in: [7, 8, 9] } } });
   });
 
   it("allows admin read-only student history without assigning a teacher ownership filter", async () => {
     await getTahsinForStudent(admin, "student-a", { semester: Semester.GANJIL });
     expect(mocks.tahsinFindMany.mock.calls[0][0].where.student).not.toHaveProperty("teacherId");
+  });
+});
+
+describe("Tahsin Qur'an reading for grades 8 and 9", () => {
+  const quran = (overrides: Partial<{ studentId: string; surahId: string; startAyah: number; endAyah: number | null; date: Date; score: number }> = {}) => ({
+    studentId: "student-8",
+    material: "QURAN" as const,
+    surahId: "baqarah",
+    startAyah: 1,
+    endAyah: 15,
+    date: new Date("2026-10-06T03:00:00.000Z"), // Tuesday
+    score: 85,
+    notes: null,
+    ...overrides,
+  });
+
+  function halaqahMeetings() {
+    const meetings: Array<{ id: string; classGroupId: string; semester: Semester; meetingNumber: number; weekStart: Date; meetingDate: Date }> = [];
+    mocks.halaqahMeetingFindUnique.mockImplementation(async ({ where }) => {
+      const key = where.classGroupId_semester_weekStart;
+      return meetings.find((meeting) => meeting.classGroupId === key.classGroupId && meeting.semester === key.semester && meeting.weekStart.getTime() === key.weekStart.getTime()) ?? null;
+    });
+    mocks.halaqahMeetingFindFirst.mockImplementation(async ({ where }) =>
+      [...meetings].filter((meeting) => meeting.classGroupId === where.classGroupId && meeting.semester === where.semester)
+        .sort((left, right) => right.meetingNumber - left.meetingNumber)[0] ?? null);
+    mocks.halaqahMeetingCreate.mockImplementation(async ({ data }) => {
+      const meeting = { id: `halaqah-meeting-${meetings.length + 1}`, ...data };
+      meetings.push(meeting);
+      return meeting;
+    });
+    return meetings;
+  }
+
+  beforeEach(() => {
+    mocks.studentFindFirst.mockResolvedValue({ id: "student-8", teacherId: "teacher-a", classGroupId: "halaqah-8" });
+    mocks.surahFindUnique.mockResolvedValue({ id: "baqarah", totalAyahs: 286 });
+  });
+
+  it("looks the student up among grades 8 and 9 only", async () => {
+    halaqahMeetings();
+    await createTahsinRecord(teacher, quran());
+    expect(mocks.studentFindFirst.mock.calls[0][0].where.classGroup).toMatchObject({
+      programType: ProgramType.ACADEMIC,
+      grade: { in: [8, 9] },
+    });
+  });
+
+  it("stores surah and ayat, clears the jilid columns, and uses no school-wide meeting", async () => {
+    halaqahMeetings();
+    const record = await createTahsinRecord(teacher, quran({ startAyah: 16, endAyah: 16 }));
+    expect(mocks.tahsinCreate.mock.calls[0][0].data).toMatchObject({
+      material: TahsinMaterial.QURAN,
+      surahId: "baqarah",
+      startAyah: 16,
+      endAyah: null,
+      jilid: null,
+      startPage: null,
+      endPage: null,
+      halaqahMeetingId: "halaqah-meeting-1",
+    });
+    expect(mocks.tahsinCreate.mock.calls[0][0].data).not.toHaveProperty("meetingId");
+    expect(record.status).toBe(RecordStatus.CUKUP);
+    expect(mocks.meetingCreate).not.toHaveBeenCalled();
+    expect(mocks.timelineFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("keeps a catch-up session later in the week in the same meeting", async () => {
+    const meetings = halaqahMeetings();
+    await createTahsinRecord(teacher, quran({ date: new Date("2026-10-06T03:00:00.000Z") })); // Tuesday
+    await createTahsinRecord(teacher, quran({ date: new Date("2026-10-08T03:00:00.000Z") })); // Thursday
+    expect(meetings).toHaveLength(1);
+    expect(meetings[0]).toMatchObject({ meetingNumber: 1, meetingDate: new Date("2026-10-06T00:00:00.000Z") });
+    expect(mocks.tahsinCreate.mock.calls.map((call) => call[0].data.halaqahMeetingId)).toEqual(["halaqah-meeting-1", "halaqah-meeting-1"]);
+  });
+
+  it("opens the next meeting number in the following week", async () => {
+    const meetings = halaqahMeetings();
+    await createTahsinRecord(teacher, quran({ date: new Date("2026-10-06T03:00:00.000Z") }));
+    await createTahsinRecord(teacher, quran({ date: new Date("2026-10-13T03:00:00.000Z") }));
+    expect(meetings.map((meeting) => meeting.meetingNumber)).toEqual([1, 2]);
+  });
+
+  it("numbers each halaqah separately", async () => {
+    const meetings = halaqahMeetings();
+    await createTahsinRecord(teacher, quran());
+    mocks.studentFindFirst.mockResolvedValue({ id: "student-other", teacherId: "teacher-a", classGroupId: "halaqah-9" });
+    await createTahsinRecord(teacher, quran({ studentId: "student-other", date: new Date("2026-10-08T03:00:00.000Z") }));
+    expect(meetings.map((meeting) => [meeting.classGroupId, meeting.meetingNumber])).toEqual([["halaqah-8", 1], ["halaqah-9", 1]]);
+  });
+
+  it("locks the halaqah row before deciding the meeting", async () => {
+    halaqahMeetings();
+    await createTahsinRecord(teacher, quran());
+    expect(mocks.queryRaw).toHaveBeenCalled();
+    expect(mocks.queryRaw.mock.invocationCallOrder[0]).toBeLessThan(mocks.halaqahMeetingFindUnique.mock.invocationCallOrder[0]);
+  });
+
+  it("rejects ayat beyond the end of the surah before writing", async () => {
+    halaqahMeetings();
+    await expect(createTahsinRecord(teacher, quran({ startAyah: 280, endAyah: 290 }))).rejects.toThrow("286 ayat");
+    expect(mocks.tahsinCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an unknown surah", async () => {
+    mocks.surahFindUnique.mockResolvedValue(null);
+    await expect(createTahsinRecord(teacher, quran({ surahId: "missing" }))).rejects.toThrow("Surah Tahsin tidak ditemukan");
+    expect(mocks.tahsinCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses to turn a jilid record into a Qur'an reading on edit", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce({ id: "tahsin-a", material: TahsinMaterial.JILID });
+    await expect(updateTahsinRecord(teacher, "tahsin-a", {
+      material: "QURAN", surahId: "baqarah", startAyah: 1, endAyah: 5, score: 85, notes: null,
+    })).rejects.toThrow("Jenis bacaan Tahsin tidak dapat diubah");
+    expect(mocks.tahsinUpdate).not.toHaveBeenCalled();
+  });
+
+  it("edits the ayat of a Qur'an reading", async () => {
+    mocks.tahsinFindFirst.mockResolvedValueOnce({ id: "tahsin-q", material: TahsinMaterial.QURAN });
+    mocks.tahsinUpdate.mockResolvedValueOnce({ id: "tahsin-q", halaqahMeetingId: "halaqah-meeting-1", academicYear: "2026/2027" });
+    await updateTahsinRecord(teacher, "tahsin-q", {
+      material: "QURAN", surahId: "baqarah", startAyah: 17, endAyah: 20, score: 90, notes: null,
+    });
+    expect(mocks.tahsinUpdate.mock.calls[0][0].data).toMatchObject({
+      material: TahsinMaterial.QURAN, surahId: "baqarah", startAyah: 17, endAyah: 20, status: RecordStatus.LANCAR,
+    });
   });
 });

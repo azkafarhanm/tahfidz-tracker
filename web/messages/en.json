@@ -249,7 +249,8 @@
     "tableStatus": "Status",
     "scoreLabel": "Score",
     "deactivateHeading": "Deactivate santri",
-    "deactivateDescription": "Santri will not appear in the active list."
+    "deactivateDescription": "Santri will not appear in the active list.",
+    "tahsinMethodQuran": "Sequential Qur'an reading"
   },
   "MeetingStatusForm": {
     "title": "Meeting Status",
@@ -1566,7 +1567,7 @@
     "exportExcel": "Download Excel"
   },
   "TahsinPanel": {
-    "academicGrade": "Academic · Grade 7",
+    "academicGrade": "Academic \u00b7 Grades 7\u20139",
     "meetingOnly": "Meeting {meeting}",
     "title": "Tahsin Assessment",
     "description": "Quick entry using the Ilman Wa Ruuhan method.",
@@ -1599,7 +1600,16 @@
     "deleteTitle": "Delete Tahsin Assessment",
     "deleteConfirmation": "This assessment will be deleted. Its Tahsin meeting and other history will remain unchanged.",
     "deleteConfirm": "Yes, delete",
-    "deleting": "Deleting…"
+    "deleting": "Deleting…",
+    "surah": "Surah",
+    "ayahs": "Ayat",
+    "startAyah": "First ayah",
+    "endAyah": "Last ayah",
+    "grade7Meeting": "Grade 7 \u00b7 Meeting {meeting}",
+    "halaqahMeeting": "Grade {grade} \u00b7 Meeting {meeting}",
+    "halaqahNoMeeting": "Grade {grade} \u00b7 no meeting yet this semester",
+    "halaqahMeetingHint": "Grades 8\u20139: each week counts as one meeting for your halaqah, including catch-up sessions on another day.",
+    "exportGrade": "Excel Grade {grade}"
   },
   "AdminTahsinMeeting": {
     "title": "Tahsin Meeting Control",

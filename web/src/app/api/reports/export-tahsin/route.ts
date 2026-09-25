@@ -6,6 +6,7 @@ import { getRequestSessionScope } from "@/lib/session";
 import { isSemesterValue, parseSemester } from "@/lib/summative";
 import { buildTahsinWorkbook } from "@/lib/tahsin-excel";
 import { getTahsinExportData } from "@/lib/tahsin";
+import { tahsinMaterialForGrade } from "@/lib/tahsin-material";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,8 +32,8 @@ export async function GET(request: Request) {
     }
 
     const classLevel = Number.parseInt(classLevelValue, 10);
-    if (classLevel !== 7) {
-      return NextResponse.json({ error: "Tahsin export is available for grade 7 only" }, { status: 400 });
+    if (!tahsinMaterialForGrade(classLevel)) {
+      return NextResponse.json({ error: "Tahsin export is available for grades 7, 8, and 9" }, { status: 400 });
     }
 
     const semester = parseSemester(semesterValue);
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
     const date = new Date().toISOString().split("T")[0];
     return createWorkbookStreamResponse(
       workbook,
-      `penilaian-tahsin-akademik-7-${semesterValue.toLowerCase()}-${date}.xlsx`,
+      `penilaian-tahsin-akademik-${classLevel}-${semesterValue.toLowerCase()}-${date}.xlsx`,
     );
   } catch (error) {
     console.error("Failed to export Tahsin Excel report", error);

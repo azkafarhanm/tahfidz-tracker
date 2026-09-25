@@ -1,11 +1,24 @@
-import { ProgramType, RecordStatus, Semester } from "@/generated/prisma-next/enums";
+import { ProgramType, RecordStatus, Semester, TahsinMaterial } from "@/generated/prisma-next/enums";
 import type { Prisma } from "@/generated/prisma-next/client";
 import { getActiveAcademicYear, getAcademicYearForDate, getSemesterForDate } from "@/lib/academic-year";
 import { getJakartaDayKey } from "@/lib/jakarta-date";
 import { prisma } from "@/lib/prisma";
 import { deriveRecordStatusFromScore } from "@/lib/record-status";
+import {
+  TAHSIN_ENABLED_GRADES,
+  TAHSIN_JILID_GRADES,
+  TAHSIN_QURAN_GRADES,
+  tahsinMaterialForGrade,
+} from "@/lib/tahsin-material";
+import {
+  normalizeTahsinAyahRange,
+  resolveTahsinQuranDefault,
+  tahsinMeetingWeekStart,
+  validateTahsinAyahRange,
+  type TahsinSurahOption,
+} from "@/lib/tahsin-quran";
 
-export const TAHSIN_ENABLED_GRADES = [7] as const;
+export { TAHSIN_ENABLED_GRADES } from "@/lib/tahsin-material";
 export const TAHSIN_JILID_VALUES = [1, 2] as const;
 export const TAHSIN_METHOD_NAME = "Ilman Wa Ruuhan";
 
@@ -53,7 +66,7 @@ export function normalizeTahsinPageRange(startPage: number, endPage: number | nu
 
 export function validateTahsinAcademicScope(input: { programType: ProgramType; grade: number }): TahsinValidationResult {
   if (input.programType !== ProgramType.ACADEMIC) return { ok: false, error: "Tahsin hanya tersedia untuk program Academic." };
-  if (!TAHSIN_ENABLED_GRADES.includes(input.grade as 7)) return { ok: false, error: "Tahsin belum tersedia untuk kelas ini." };
+  if (!tahsinMaterialForGrade(input.grade)) return { ok: false, error: "Tahsin belum tersedia untuk kelas ini." };
   return { ok: true };
 }
 
@@ -77,25 +90,90 @@ export type TahsinExportOptions = TahsinQueryOptions & {
   classLevel: number;
 };
 
-type TahsinCreateInput = {
+/**
+ * What was read. Grade 7 records a jilid and pages; grades 8 and 9 record a
+ * surah and ayat. Omitting `material` means jilid, which keeps every existing
+ * grade 7 caller unchanged.
+ */
+export type TahsinMaterialInput =
+  | { material?: "JILID"; jilid: number; startPage: number; endPage: number | null }
+  | { material: "QURAN"; surahId: string; startAyah: number; endAyah: number | null };
+
+type TahsinCreateInput = TahsinMaterialInput & {
   studentId: string;
-  jilid: number;
-  startPage: number;
-  endPage: number | null;
   date: Date;
   score: number | null;
   notes: string | null;
 };
 
-type TahsinUpdateInput = Pick<TahsinCreateInput, "jilid" | "startPage" | "endPage" | "score" | "notes">;
+type TahsinUpdateInput = TahsinMaterialInput & {
+  score: number | null;
+  notes: string | null;
+};
+
+function isQuranInput(input: TahsinMaterialInput): input is Extract<TahsinMaterialInput, { material: "QURAN" }> {
+  return input.material === "QURAN";
+}
+
+function gradesForMaterial(input: TahsinMaterialInput): readonly number[] {
+  return isQuranInput(input) ? TAHSIN_QURAN_GRADES : TAHSIN_JILID_GRADES;
+}
+
+function validateJilidInput(input: Extract<TahsinMaterialInput, { material?: "JILID" }>) {
+  assertValid(validateJilid(input.jilid));
+  assertValid(validatePageRange(input.startPage, input.endPage));
+}
+
+/** Checks the surah exists and the ayat fall inside it, returning the stored fields. */
+async function resolveQuranMaterial(
+  input: Extract<TahsinMaterialInput, { material: "QURAN" }>,
+  db: Prisma.TransactionClient,
+) {
+  const surah = input.surahId
+    ? await db.surah.findUnique({ where: { id: input.surahId }, select: { id: true, totalAyahs: true } })
+    : null;
+  if (!surah) throw new Error("Surah Tahsin tidak ditemukan.");
+  assertValid(validateTahsinAyahRange(input.startAyah, input.endAyah, surah.totalAyahs));
+  return { surahId: surah.id, ...normalizeTahsinAyahRange(input.startAyah, input.endAyah) };
+}
+
+/** Column values for one kind of material, clearing the other kind's columns. */
+function materialColumns(
+  input: TahsinMaterialInput,
+  quran: { surahId: string; startAyah: number; endAyah: number | null } | null,
+) {
+  if (quran) {
+    return {
+      material: TahsinMaterial.QURAN,
+      ...quran,
+      jilid: null,
+      startPage: null,
+      endPage: null,
+    };
+  }
+  const jilidInput = input as Extract<TahsinMaterialInput, { material?: "JILID" }>;
+  return {
+    material: TahsinMaterial.JILID,
+    jilid: jilidInput.jilid,
+    ...normalizeTahsinPageRange(jilidInput.startPage, jilidInput.endPage),
+    surahId: null,
+    startAyah: null,
+    endAyah: null,
+  };
+}
 
 const TAHSIN_RECORD_SELECT = {
   id: true,
   studentId: true,
   teacherId: true,
+  material: true,
   jilid: true,
   startPage: true,
   endPage: true,
+  surahId: true,
+  startAyah: true,
+  endAyah: true,
+  surah: { select: { name: true, number: true, totalAyahs: true } },
   date: true,
   score: true,
   status: true,
@@ -110,6 +188,14 @@ const TAHSIN_RECORD_SELECT = {
       meetingNumber: true,
       meetingDate: true,
       timeline: { select: { runNumber: true } },
+    },
+  },
+  halaqahMeetingId: true,
+  halaqahMeeting: {
+    select: {
+      meetingNumber: true,
+      meetingDate: true,
+      classGroupId: true,
     },
   },
 } as const;
@@ -130,14 +216,18 @@ function assertTeacherActor(actor: TahsinActor) {
   return actor.teacherId;
 }
 
-function tahsinStudentWhere(academicYear: string, teacherId?: string) {
+function tahsinStudentWhere(
+  academicYear: string,
+  teacherId?: string,
+  grades: readonly number[] = TAHSIN_ENABLED_GRADES,
+) {
   return {
     isActive: true,
     classGroup: {
       isActive: true,
       academicYear,
       programType: ProgramType.ACADEMIC,
-      grade: TAHSIN_ENABLED_GRADES[0],
+      grade: grades.length === 1 ? grades[0] : { in: [...grades] },
     },
     ...(teacherId ? { teacherId } : {}),
   };
@@ -206,6 +296,48 @@ async function getOrCreateActiveTahsinMeeting(
   });
 }
 
+/**
+ * The weekly meeting of one halaqah that an assessment on `activityDate` belongs to.
+ *
+ * Grades 8 and 9 meet for Tahsin once a week, and a halaqah mixes students from
+ * several rombel, so the meeting is keyed on halaqah and Jakarta week. The first
+ * assessment of a new week opens the next meeting number; later assessments that
+ * week, including catch-up sessions on another day, join it.
+ */
+async function getOrCreateHalaqahMeeting(
+  classGroupId: string,
+  semester: Semester,
+  activityDate: Date,
+  db: Prisma.TransactionClient,
+) {
+  // Serialises concurrent saves for the same halaqah so two first-of-the-week
+  // assessments cannot both open a meeting.
+  await db.$queryRaw`SELECT "id" FROM "ClassGroup" WHERE "id" = ${classGroupId} FOR UPDATE`;
+  const weekStart = tahsinMeetingWeekStart(activityDate);
+  const existing = await db.tahsinHalaqahMeeting.findUnique({
+    where: { classGroupId_semester_weekStart: { classGroupId, semester, weekStart } },
+  });
+  if (existing) return existing;
+
+  const latest = await db.tahsinHalaqahMeeting.findFirst({
+    where: { classGroupId, semester },
+    orderBy: { meetingNumber: "desc" },
+  });
+  if (latest && latest.weekStart.getTime() > weekStart.getTime()) {
+    throw new Error("Tanggal Tahsin tidak boleh lebih awal dari pertemuan Tahsin terakhir.");
+  }
+
+  return db.tahsinHalaqahMeeting.create({
+    data: {
+      classGroupId,
+      semester,
+      weekStart,
+      meetingDate: meetingDateForActivity(activityDate),
+      meetingNumber: (latest?.meetingNumber ?? 0) + 1,
+    },
+  });
+}
+
 function meetingDateForActivity(date: Date) {
   return new Date(`${getJakartaDayKey(date)}T00:00:00.000Z`);
 }
@@ -269,8 +401,7 @@ export async function createTahsinRecord(
     throw new Error("Tanggal Tahsin tidak valid.");
   }
 
-  assertValid(validateJilid(input.jilid));
-  assertValid(validatePageRange(input.startPage, input.endPage));
+  if (!isQuranInput(input)) validateJilidInput(input);
   const scoreResult = validateTahsinScore(input.score);
   if (!scoreResult.ok) throw new Error(scoreResult.error);
 
@@ -279,34 +410,37 @@ export async function createTahsinRecord(
     throw new Error("Tanggal Tahsin harus berada pada tahun ajaran aktif.");
   }
 
+  // The grade filter pairs material with class: jilid can only be recorded for
+  // grade 7 students and surah/ayat only for grades 8 and 9.
   const student = await db.student.findFirst({
     where: {
       id: input.studentId,
-      ...tahsinStudentWhere(academicYear, teacherId),
+      ...tahsinStudentWhere(academicYear, teacherId, gradesForMaterial(input)),
     },
-    select: { id: true, teacherId: true },
+    select: { id: true, teacherId: true, classGroupId: true },
   });
 
   if (!student) {
     throw new Error("Santri tidak tersedia untuk penilaian Tahsin.");
   }
 
-  const pageRange = normalizeTahsinPageRange(input.startPage, input.endPage);
+  const quran = isQuranInput(input) ? await resolveQuranMaterial(input, db) : null;
   const semester = getSemesterForDate(input.date);
-  const meeting = await getOrCreateActiveTahsinMeeting(academicYear, semester, input.date, db);
+  const meetingLink = quran
+    ? { halaqahMeetingId: (await getOrCreateHalaqahMeeting(student.classGroupId, semester, input.date, db)).id }
+    : { meetingId: (await getOrCreateActiveTahsinMeeting(academicYear, semester, input.date, db)).id };
   return db.tahsinRecord.create({
     data: {
       studentId: student.id,
       teacherId: student.teacherId,
-      jilid: input.jilid,
-      ...pageRange,
+      ...materialColumns(input, quran),
       date: input.date,
       score: input.score,
       status: scoreResult.status,
       notes: input.notes,
       academicYear,
       semester,
-      meetingId: meeting.id,
+      ...meetingLink,
     },
     select: TAHSIN_RECORD_SELECT,
   });
@@ -319,8 +453,7 @@ export async function updateTahsinRecord(
   db: Prisma.TransactionClient = prisma,
 ) {
   const teacherId = assertTeacherActor(actor);
-  assertValid(validateJilid(input.jilid));
-  assertValid(validatePageRange(input.startPage, input.endPage));
+  if (!isQuranInput(input)) validateJilidInput(input);
   const scoreResult = validateTahsinScore(input.score);
   if (!scoreResult.ok) throw new Error(scoreResult.error);
 
@@ -332,16 +465,19 @@ export async function updateTahsinRecord(
       academicYear,
       student: tahsinStudentWhere(academicYear, teacherId),
     },
-    select: { id: true },
+    select: { id: true, material: true },
   });
   if (!existing) throw new Error("Penilaian Tahsin tidak tersedia.");
+  // Material follows the student's grade and the meeting it was filed under, so
+  // an edit may change what was read but never which kind of reading it is.
+  const expected = isQuranInput(input) ? TahsinMaterial.QURAN : TahsinMaterial.JILID;
+  if (existing.material !== expected) throw new Error("Jenis bacaan Tahsin tidak dapat diubah.");
 
-  const pageRange = normalizeTahsinPageRange(input.startPage, input.endPage);
+  const quran = isQuranInput(input) ? await resolveQuranMaterial(input, db) : null;
   return db.tahsinRecord.update({
     where: { id: existing.id },
     data: {
-      jilid: input.jilid,
-      ...pageRange,
+      ...materialColumns(input, quran),
       score: input.score,
       status: scoreResult.status,
       notes: input.notes,
@@ -364,7 +500,7 @@ export async function deleteTahsinRecord(
       academicYear,
       student: tahsinStudentWhere(academicYear, teacherId),
     },
-    select: { id: true, studentId: true, meetingId: true, academicYear: true, jilid: true, startPage: true, endPage: true, score: true },
+    select: { id: true, studentId: true, meetingId: true, halaqahMeetingId: true, academicYear: true, material: true, jilid: true, startPage: true, endPage: true, surahId: true, startAyah: true, endAyah: true, score: true },
   });
   if (!existing) throw new Error("Penilaian Tahsin tidak tersedia.");
 
@@ -417,11 +553,89 @@ export async function getTahsinSmartDefaultForStudent(
     where: {
       studentId,
       academicYear: context.academicYear,
+      material: TahsinMaterial.JILID,
       student: tahsinStudentWhere(context.academicYear, actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__"),
     },
     orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     select: { jilid: true, startPage: true, endPage: true },
   });
+}
+
+/**
+ * The last Qur'an reading of a student and where the next one should start.
+ *
+ * Deliberately not limited to the current academic year: the reading runs on
+ * from Al-Baqarah through grades 8 and 9, so a student starting grade 9 picks up
+ * where grade 8 ended rather than going back to ayah 1. The student must still
+ * be in the teacher's current Tahsin scope.
+ */
+export async function getTahsinQuranEntryContext(
+  actor: TahsinActor,
+  studentId: string,
+  surahs: readonly TahsinSurahOption[],
+) {
+  const context = await resolveQueryContext();
+  const teacherId = actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__";
+  const student = await prisma.student.findFirst({
+    where: { id: studentId, ...tahsinStudentWhere(context.academicYear, teacherId, TAHSIN_QURAN_GRADES) },
+    select: { id: true },
+  });
+  if (!student) throw new Error("Santri tidak tersedia untuk penilaian Tahsin.");
+
+  const last = await prisma.tahsinRecord.findFirst({
+    where: { studentId: student.id, material: TahsinMaterial.QURAN },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+    select: TAHSIN_RECORD_SELECT,
+  });
+  const next = resolveTahsinQuranDefault(
+    last?.surahId && last.startAyah !== null
+      ? { surahId: last.surahId, startAyah: last.startAyah, endAyah: last.endAyah, status: last.status }
+      : null,
+    surahs,
+  );
+  return { last, next };
+}
+
+/** Surahs in mushaf order for the grade 8 and 9 reading picker. */
+export async function getTahsinSurahOptions(): Promise<TahsinSurahOption[]> {
+  return prisma.surah.findMany({
+    orderBy: { number: "asc" },
+    select: { id: true, number: true, name: true, totalAyahs: true },
+  });
+}
+
+/**
+ * The latest weekly meeting of each grade 8 or 9 halaqah the teacher holds,
+ * for the meeting summary at the top of the Tahsin page.
+ */
+export async function getTahsinHalaqahMeetingSummaries(actor: TahsinActor, semester: Semester) {
+  const teacherId = assertTeacherActor(actor);
+  const academicYear = await getActiveAcademicYear();
+  const halaqahs = await prisma.classGroup.findMany({
+    where: {
+      teacherId,
+      academicYear,
+      isActive: true,
+      programType: ProgramType.ACADEMIC,
+      grade: { in: [...TAHSIN_QURAN_GRADES] },
+    },
+    orderBy: { grade: "asc" },
+    select: {
+      id: true,
+      grade: true,
+      tahsinMeetings: {
+        where: { semester },
+        orderBy: { meetingNumber: "desc" },
+        take: 1,
+        select: { meetingNumber: true, meetingDate: true },
+      },
+    },
+  });
+  return halaqahs.map((halaqah) => ({
+    classGroupId: halaqah.id,
+    grade: halaqah.grade,
+    latestMeeting: halaqah.tahsinMeetings[0] ?? null,
+  }));
 }
 
 export async function getTahsinForTeacher(actor: TahsinActor, options?: TahsinQueryOptions) {
@@ -443,7 +657,8 @@ export async function getTahsinExportData(
   actor: TahsinActor,
   options: TahsinExportOptions,
 ) {
-  if (!TAHSIN_ENABLED_GRADES.includes(options.classLevel as 7)) {
+  const material = tahsinMaterialForGrade(options.classLevel);
+  if (!material) {
     throw new Error("Export Tahsin belum tersedia untuk kelas ini.");
   }
 
@@ -453,21 +668,58 @@ export async function getTahsinExportData(
 
   const context = await resolveQueryContext(options);
   const teacherId = actor.isAdmin ? undefined : actor.teacherId ?? "__missing_teacher__";
-  const studentWhere = tahsinStudentWhere(context.academicYear, teacherId);
+  const studentWhere = tahsinStudentWhere(context.academicYear, teacherId, [options.classLevel]);
   const students = await prisma.student.findMany({
     where: studentWhere,
     select: {
       id: true,
       fullName: true,
+      classGroupId: true,
       academicClass: { select: { name: true } },
     },
     orderBy: { fullName: "asc" },
   });
 
   const studentIds = students.map((student) => student.id);
+
+  if (material === "QURAN") {
+    const classGroupIds = [...new Set(students.map((student) => student.classGroupId))];
+    const halaqahMeetings = classGroupIds.length > 0
+      ? await prisma.tahsinHalaqahMeeting.findMany({
+          where: { classGroupId: { in: classGroupIds }, semester: options.semester },
+          orderBy: [{ meetingNumber: "asc" }, { meetingDate: "asc" }],
+          select: { meetingNumber: true, meetingDate: true, classGroupId: true },
+        })
+      : [];
+    // Each halaqah numbers its own weeks, so a meeting date only describes a
+    // column when the sheet covers a single halaqah — which it does for a
+    // teacher, who holds one halaqah per grade.
+    const singleHalaqah = classGroupIds.length === 1;
+    const meetings = [...new Map(halaqahMeetings.map((meeting) => [meeting.meetingNumber, {
+      meetingNumber: meeting.meetingNumber,
+      meetingDate: singleHalaqah ? meeting.meetingDate : undefined,
+    }])).values()];
+    const records = studentIds.length > 0
+      ? await prisma.tahsinRecord.findMany({
+          where: {
+            studentId: { in: studentIds },
+            academicYear: context.academicYear,
+            semester: options.semester,
+            material: TahsinMaterial.QURAN,
+            ...(teacherId ? { teacherId } : {}),
+          },
+          orderBy: [{ date: "asc" }, { createdAt: "asc" }, { id: "asc" }],
+          select: TAHSIN_RECORD_SELECT,
+        })
+      : [];
+    return { material, students, meetings, records };
+  }
+
+  // Every meeting of the active timeline. Opening a new meeting deactivates the
+  // previous one, so filtering on the meeting's own flag returned only the
+  // latest meeting and left the sheet with one header over several columns.
   const meetings = await prisma.tahsinMeeting.findMany({
     where: {
-      isActive: true,
       timeline: {
         isActive: true,
         semester: options.semester,
@@ -483,6 +735,7 @@ export async function getTahsinExportData(
           studentId: { in: studentIds },
           academicYear: context.academicYear,
           semester: options.semester,
+          material: TahsinMaterial.JILID,
           meeting: { timeline: { isActive: true } },
           ...(teacherId ? { teacherId } : {}),
         },
@@ -491,7 +744,7 @@ export async function getTahsinExportData(
       })
     : [];
 
-  return { students, meetings, records };
+  return { material, students, meetings, records };
 }
 
 export async function getTahsinStudents(actor: TahsinActor) {
@@ -500,6 +753,11 @@ export async function getTahsinStudents(actor: TahsinActor) {
   return prisma.student.findMany({
     where: tahsinStudentWhere(academicYear, teacherId),
     orderBy: { fullName: "asc" },
-    select: { id: true, fullName: true, academicClass: { select: { name: true } } },
+    select: {
+      id: true,
+      fullName: true,
+      academicClass: { select: { name: true } },
+      classGroup: { select: { grade: true } },
+    },
   });
 }

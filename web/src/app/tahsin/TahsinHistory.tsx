@@ -4,26 +4,23 @@ import { useEffect, useState } from "react";
 import { BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getVisibleTahsinHistory, toggleTahsinHistoryExpanded } from "@/lib/tahsin-history-state";
+import { describeTahsinMaterial, tahsinRecordMeetingNumber, type TahsinMaterialFields } from "@/lib/tahsin-material";
+import type { TahsinSurahOption } from "@/lib/tahsin-quran";
 import TahsinRecordActions from "./TahsinRecordActions";
 
-type HistoryRecord = {
+type HistoryRecord = TahsinMaterialFields & {
   id: string;
-  jilid: number;
-  startPage: number;
-  endPage: number | null;
+  surahId: string | null;
   score: number | null;
   status: string;
   notes: string | null;
   date: Date;
   meeting: { meetingNumber: number } | null;
+  halaqahMeeting: { meetingNumber: number } | null;
   student: { fullName: string };
 };
 
-function formatPageRange(startPage: number, endPage: number | null) {
-  return endPage === null || endPage === startPage ? String(startPage) : `${startPage}–${endPage}`;
-}
-
-export default function TahsinHistory({ locale, records }: { locale: string; records: HistoryRecord[] }) {
+export default function TahsinHistory({ locale, records, surahs }: { locale: string; records: HistoryRecord[]; surahs: TahsinSurahOption[] }) {
   const t = useTranslations("TahsinPanel");
   const [expanded, setExpanded] = useState(false);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -61,15 +58,15 @@ export default function TahsinHistory({ locale, records }: { locale: string; rec
                   </span>
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold">{record.student.fullName}</h3>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{record.meeting ? t("meetingOnly", { meeting: record.meeting.meetingNumber }) : t("legacy")}</p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{(() => { const meetingNumber = tahsinRecordMeetingNumber(record); return meetingNumber !== null ? t("meetingOnly", { meeting: meetingNumber }) : t("legacy"); })()}</p>
                   </div>
                 </div>
                 <time className="shrink-0 pt-1 text-xs text-slate-500 dark:text-slate-400">{record.date.toLocaleDateString(locale)}</time>
               </div>
-              <p className="mt-3 text-sm">{t("volume")} {record.jilid} · {t("pages")} {formatPageRange(record.startPage, record.endPage)} · {t("score")} {record.score ?? "-"} · {record.status}</p>
+              <p className="mt-3 text-sm">{describeTahsinMaterial(record, { jilid: t("volume"), page: t("pages") })} · {t("score")} {record.score ?? "-"} · {record.status}</p>
               {record.notes ? <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{record.notes}</p> : null}
               <div className="mt-3 flex justify-end">
-                <TahsinRecordActions record={record} />
+                <TahsinRecordActions record={record} surahs={surahs} />
               </div>
             </article>
           ))}
