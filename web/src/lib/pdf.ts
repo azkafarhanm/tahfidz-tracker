@@ -1,7 +1,7 @@
 import { PassThrough, Readable } from "node:stream";
 import PDFDocument from "pdfkit";
 
-type PdfSection =
+export type PdfSection =
   | { type: "title"; text: string }
   | { type: "subtitle"; text: string }
   | {
@@ -14,7 +14,17 @@ type PdfSection =
       headers: string[];
       rows: (string | number)[][];
     }
-  | { type: "text"; text: string };
+  | { type: "text"; text: string }
+  /**
+   * A bordered block of label/value lines kept together on one page, used for
+   * one student at a time. Indented lines sit under the line above them.
+   */
+  | {
+      type: "block";
+      heading: string;
+      meta?: string;
+      rows: { label: string; value: string; indent?: boolean }[];
+    };
 
 function renderPdfDocument(
   doc: InstanceType<typeof PDFDocument>,
@@ -206,6 +216,54 @@ function renderPdfDocument(
         doc.fontSize(9).fillColor(muted).text(section.text);
         doc.moveDown(0.3);
         break;
+
+      case "block": {
+        const startX = doc.page.margins.left;
+        const width = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+        const padding = 10;
+        const labelWidth = 92;
+        const indentWidth = 14;
+        const headingHeight = 18;
+        const rowGap = 3;
+        const valueWidth = (indent?: boolean) =>
+          width - padding * 2 - labelWidth - (indent ? indentWidth : 0);
+
+        doc.font("Helvetica").fontSize(8.5);
+        const rowHeights = section.rows.map((row) =>
+          Math.max(11, doc.heightOfString(row.value, { width: valueWidth(row.indent) })),
+        );
+        const height =
+          padding * 2 +
+          headingHeight +
+          rowHeights.reduce((sum, rowHeight) => sum + rowHeight + rowGap, 0);
+
+        if (doc.y + height > doc.page.height - doc.page.margins.bottom) doc.addPage();
+        const top = doc.y;
+
+        doc.roundedRect(startX, top, width, height, 4).lineWidth(0.8).strokeColor(border).stroke();
+        doc.font("Helvetica-Bold").fontSize(10.5).fillColor(dark)
+          .text(section.heading, startX + padding, top + padding, { width: width - padding * 2 - 140 });
+        if (section.meta) {
+          doc.font("Helvetica").fontSize(8).fillColor(muted)
+            .text(section.meta, startX + width - padding - 140, top + padding + 2, { width: 140, align: "right" });
+        }
+
+        let y = top + padding + headingHeight;
+        section.rows.forEach((row, index) => {
+          const labelX = startX + padding + (row.indent ? indentWidth : 0);
+          doc.font(row.indent ? "Helvetica" : "Helvetica-Bold").fontSize(8.5)
+            .fillColor(row.indent ? muted : green)
+            .text(row.label, labelX, y, { width: labelWidth });
+          doc.font("Helvetica").fontSize(8.5).fillColor(dark)
+            .text(row.value, labelX + labelWidth, y, { width: valueWidth(row.indent) });
+          y += rowHeights[index] + rowGap;
+        });
+
+        doc.font("Helvetica");
+        doc.x = startX;
+        doc.y = top + height + 8;
+        break;
+      }
     }
   }
 

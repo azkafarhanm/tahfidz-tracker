@@ -16,6 +16,8 @@ import {
 import AppShell from "@/components/AppShell";
 import AttendanceSemesterFilter from "@/components/AttendanceSemesterFilter";
 import ExportSection from "@/components/ExportSection";
+import { getFoundationReportContext } from "@/lib/foundation-report-data";
+import FoundationReportPanel from "./FoundationReportPanel";
 import ProgramSelector from "@/components/ProgramSelector";
 import ProgramBadge from "@/components/ProgramBadge";
 import { requireSessionScope } from "@/lib/session";
@@ -123,6 +125,11 @@ export default async function ReportsPage({
         academicReportView.selectedPeriod.semester,
       )
     : await getTeacherReportData(teacherId, locale, programType, academicYear);
+  // The foundation report is a Boarding responsibility; Academic keeps its
+  // semester reports only.
+  const foundationContext = programType === ProgramType.BOARDING
+    ? await getFoundationReportContext(teacherId)
+    : null;
 
   return (
     <AppShell currentPath="/reports" userName={session.user.name} isAdmin={isAdmin}>
@@ -220,6 +227,16 @@ export default async function ReportsPage({
             <p className="mt-2 text-2xl font-bold text-white">{data.activeTargetCount}</p>
           </article>
         </section>
+
+        {foundationContext ? (
+          <FoundationReportPanel
+            // Remount after marking so the date fields move to the new period.
+            key={`${foundationContext.suggested.from}:${foundationContext.last?.periodEnd ?? ""}`}
+            last={foundationContext.last}
+            suggested={foundationContext.suggested}
+            today={foundationContext.today}
+          />
+        ) : null}
 
         <section className="mt-6">
           <div className="flex items-center justify-between">

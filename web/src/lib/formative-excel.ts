@@ -3,8 +3,8 @@ import { Semester } from "@/generated/prisma-next/enums";
 import { finalizeTableSheet } from "@/lib/excel";
 import type { getTeacherFormativeExportData } from "@/lib/formative";
 import { formatRange, statusLabels } from "@/lib/format";
-import { getJuz } from "@/lib/juz";
-import { surahList } from "@/lib/surahs";
+import { resolveHafalanTimeline } from "@/lib/hafalan-sequence";
+import { buildAyahCounts, formatHafalanSummary, formatMurojaahSummary } from "@/lib/quran-progress";
 import { buildFormativeWorkbook } from "@/lib/summative-excel";
 import { semesterLabel } from "@/lib/summative";
 import { getJakartaDayKey } from "@/lib/jakarta-date";
@@ -23,7 +23,6 @@ type FormativeExportData = Awaited<
 type FormativeExportRow = FormativeExportData["rows"][number];
 type ScoredFormativeExportRow = FormativeExportRow & { score: number };
 type FormativeRecordType = FormativeExportRow["type"];
-type ProgressUnit = "juz" | "surah";
 
 export type AcademicFormativeWorkbookInput = {
   academicYear: string;
@@ -288,6 +287,7 @@ function addBoardingProgressSheet(
     const hafalanRows = filterRowsByType(studentRows, "Hafalan");
     const murojaahRows = filterRowsByType(studentRows, "Murojaah");
     const latestRow = studentRows[0];
+    const hafalanProgress = formatHafalanProgress(hafalanRows);
 
     sheet.addRow({
       no: index + 1,
@@ -296,8 +296,8 @@ function addBoardingProgressSheet(
       halaqahName: student.classGroup.name,
       hafalanCount: hafalanRows.length,
       murojaahCount: murojaahRows.length,
-      hafalanProgress: formatProgress(hafalanRows, { deduplicate: true }),
-      murojaahProgress: formatProgress(murojaahRows, { deduplicate: false }),
+      hafalanProgress,
+      murojaahProgress: formatMurojaahProgress(murojaahRows),
       latestRange: latestRow ? formatSetoranRange(latestRow) : "-",
       latestDate: latestRow ? jakartaDateFormatter.format(latestRow.date) : "-",
     });
@@ -319,6 +319,7 @@ function addBoardingProgressSheet(
       "latestDate",
     ],
   });
+
 }
 
 function isLaterScoredRecord(
@@ -460,108 +461,18 @@ function formatSetoranRange(row: FormativeExportRow) {
     : `${row.surah} ${row.fromAyah}-${row.toAyah}`;
 }
 
-function formatProgress(
-  rows: FormativeExportRow[],
-  options: { deduplicate: boolean },
-) {
-  const ayahCounts = buildAyahCounts(rows, options);
-  const counts = summarizeAyahCounts(ayahCounts);
-  const parts = [
-    counts.juz > 0 ? `${counts.juz} Juz` : null,
-    counts.surah > 0 ? `${counts.surah} Surah` : null,
-    counts.ayah > 0 ? `${counts.ayah} Ayat` : null,
-  ].filter((part): part is string => Boolean(part));
-
-  return parts.length > 0 ? parts.join(" + ") : "0 Ayat";
+/**
+ * Semester hafalan, with forgotten ayat recovered from the memorisation order
+ * so it agrees with the foundation report.
+ */
+function formatHafalanProgress(rows: FormativeExportRow[]) {
+  return formatHafalanSummary(resolveHafalanTimeline(rows).ayat);
 }
 
-function buildAyahCounts(
-  rows: FormativeExportRow[],
-  options: { deduplicate: boolean },
-) {
-  const counts = new Map<string, number>();
-
-  for (const row of rows) {
-    const maxAyah = surahAyahCountByName.get(row.surah) ?? row.toAyah;
-    const fromAyah = Math.max(1, Math.min(row.fromAyah, maxAyah));
-    const toAyah = Math.max(fromAyah, Math.min(row.toAyah, maxAyah));
-
-    for (let ayah = fromAyah; ayah <= toAyah; ayah += 1) {
-      const key = ayahKey(row.surah, ayah);
-      counts.set(key, options.deduplicate ? 1 : (counts.get(key) ?? 0) + 1);
-    }
-  }
-
-  return counts;
+/** Semester murojaah, counted the same way as the foundation report. */
+function formatMurojaahProgress(rows: FormativeExportRow[]) {
+  return formatMurojaahSummary(buildAyahCounts(rows, { deduplicate: false }));
 }
-
-function summarizeAyahCounts(ayahCounts: Map<string, number>) {
-  const remaining = new Map(ayahCounts);
-  const result = { juz: 0, surah: 0, ayah: 0 };
-
-  for (const piece of progressPieces) {
-    let availableCount = getAvailablePieceCount(remaining, piece.keys);
-    while (availableCount > 0) {
-      for (const key of piece.keys) {
-        const nextCount = (remaining.get(key) ?? 0) - 1;
-        if (nextCount > 0) {
-          remaining.set(key, nextCount);
-        } else {
-          remaining.delete(key);
-        }
-      }
-      result[piece.unit] += 1;
-      availableCount -= 1;
-    }
-  }
-
-  result.ayah = [...remaining.values()].reduce((total, count) => total + count, 0);
-  return result;
-}
-
-function getAvailablePieceCount(counts: Map<string, number>, keys: string[]) {
-  return keys.reduce((available, key) => Math.min(available, counts.get(key) ?? 0), Number.POSITIVE_INFINITY);
-}
-
-function buildProgressPieces() {
-  const juzKeys = new Map<number, string[]>();
-  for (const surah of surahList) {
-    for (let ayah = 1; ayah <= surah.ayahs; ayah += 1) {
-      const juz = getJuz(surah.name, ayah);
-      if (!juz) continue;
-      const keys = juzKeys.get(juz) ?? [];
-      keys.push(ayahKey(surah.name, ayah));
-      juzKeys.set(juz, keys);
-    }
-  }
-
-  const pieces: Array<{ unit: ProgressUnit; keys: string[] }> = [
-    ...[...juzKeys.values()].map((keys) => ({ unit: "juz" as const, keys })),
-    ...surahList.map((surah) => ({
-      unit: "surah" as const,
-      keys: Array.from({ length: surah.ayahs }, (_, index) =>
-        ayahKey(surah.name, index + 1),
-      ),
-    })),
-  ];
-
-  return pieces.sort((left, right) => {
-    const lengthDifference = right.keys.length - left.keys.length;
-    if (lengthDifference !== 0) return lengthDifference;
-    if (left.unit === right.unit) return 0;
-    return left.unit === "juz" ? -1 : 1;
-  });
-}
-
-function ayahKey(surah: string, ayah: number) {
-  return `${surah}:${ayah}`;
-}
-
-const surahAyahCountByName = new Map(
-  surahList.map((surah) => [surah.name, surah.ayahs]),
-);
-
-const progressPieces = buildProgressPieces();
 
 function uniqueSheetName(workbook: ExcelJS.Workbook, rawName: string) {
   const baseName = safeSheetName(rawName);
